@@ -7,7 +7,7 @@
 5 /.grepgod/                 5 /.grepgod/
 
 Cargo.lock --- 1/2 --- TOML
-1437                            1437 
+1437                            1437
 1438 [[package]]                1438 [[package]]
 1439 name = "uac-api"           1439 name = "uac-api"
 1440 version = "0.2.0"          1440 version = "0.3.0"
@@ -16,7 +16,7 @@ Cargo.lock --- 1/2 --- TOML
 1443  "base64 0.22.1",          1443  "base64 0.22.1",
 
 Cargo.lock --- 2/2 --- TOML
-1455                            1455 
+1455                            1455
 1456 [[package]]                1456 [[package]]
 1457 name = "uac-verifier"      1457 name = "uac-verifier"
 1458 version = "0.2.0"          1458 version = "0.3.0"
@@ -26,7 +26,7 @@ Cargo.lock --- 2/2 --- TOML
 
 Cargo.toml --- TOML
  3 resolver = "2"              3 resolver = "2"
- 4                             4 
+ 4                             4
  5 [workspace.package]         5 [workspace.package]
  6 version = "0.2.0"           6 version = "0.3.0"
  7 edition = "2024"            7 edition = "2024"
@@ -35,9 +35,9 @@ Cargo.toml --- TOML
 
 NOTICE.md --- Text
 7  7 The implementation reuses axum, tokio, rusqlite, ed25519-dalek, serde, sha2 and related crates. TypeScript and playwright-core are development dependencies. No third-party implementation was copied from Metacode donor repositories.
-8  8 
+8  8
 9  9 The README hero was generated for this project. It is illustrative artwork, not hardware evidence. Browser screenshots use synthetic local fixtures. No external fonts, customer records or stock photographs are included. See docs/assets/README.md.
-  10 
+  10
   11 HeavenKey 0.3 uses @simplewebauthn/browser 14.0.0 as its browser ceremony adapter. The MIT license and Matthew Miller copyright notice are preserved in docs/licenses/simplewebauthn-browser-MIT.txt and included in every generated browser bundle. It introduces no transitive runtime dependency. The exact package SHA-512 is pinned in bun.lock; donor decisions and source links are recorded in docs/DONORS.md.
 
 README.md --- 1/4 --- Text
@@ -45,21 +45,21 @@ README.md --- 1/4 --- Text
  .. e/Rust-edition_2024-202722)           .. e/Rust-edition_2024-202722)
  12 ![TypeScript](https://img.shields.i   12 ![TypeScript](https://img.shields.i
  .. o/badge/TypeScript-7.0.2-245c45)      .. o/badge/TypeScript-7.0.2-245c45)
- 13                                       13 
+ 13                                       13
  14 ![HeavenKey — ein Schlüssel vor ein   14 <p align="center">
- .. em leuchtenden Tor über den Wolken]   .. 
- .. (docs/assets/heavenkey-hero.png)      .. 
+ .. em leuchtenden Tor über den Wolken]   ..
+ .. (docs/assets/heavenkey-hero.png)      ..
  ..                                       15   <img src="docs/assets/heavenkey-h
  ..                                       .. ero-square.png" alt="HeavenKey: ein
  ..                                       ..  schwebender Schlüssel vor dem Himm
  ..                                       .. elstor" width="560">
  ..                                       16 </p>
- 15                                       17 
+ 15                                       17
  16 [Quick start](#quick-start) · [Arch   18 [Quick start](#quick-start) · [Arch
  .. itektur](#architektur) · [Nachweise   .. itektur](#architektur) · [Nachweise
  .. ](#nachweise) · [Roadmap](docs/ROAD   .. ](#nachweise) · [Roadmap](docs/ROAD
  .. MAP.md)                               .. MAP.md)
- 17                                       19 
+ 17                                       19
 
 README.md --- 2/4 --- Text
  25 | Passkey-Anmeldung | Rust prüft Or   27 | Passkey-Anmeldung | Rust prüft Or
@@ -67,17 +67,17 @@ README.md --- 2/4 --- Text
  .. ser Verification über `webauthn-rs`   .. ser Verification über `webauthn-rs`
  .. . |                                   .. . |
  26 | Begrenzter Zugang | Signiertes Le   28 | Begrenzter Zugang | Signiertes Le
- .. serecht für eine Testressource mit    .. serecht für eine Testressource mit 
+ .. serecht für eine Testressource mit    .. serecht für eine Testressource mit
  .. einer Gültigkeit von 1–3.600 Sekund   .. einer Gültigkeit von 1–3.600 Sekund
  .. en. |                                 .. en. |
- 27 | Gebundener Aufruf | Ein frischer    29 | Gebundener Aufruf | Ein frischer 
+ 27 | Gebundener Aufruf | Ein frischer    29 | Gebundener Aufruf | Ein frischer
  .. Passkey-Nachweis bestätigt die gena   .. Passkey-Nachweis bestätigt die gena
  .. ue Operation einschließlich ihrer A   .. ue Operation einschließlich ihrer A
  .. rgumente. |                           .. rgumente. |
  ..                                       30 | Mehrere Passkeys | Bis zu acht ak
  ..                                       .. tive Schlüssel pro Konto. Die Verwa
  ..                                       .. ltung verlangt eine frische Anmeldu
- ..                                       .. ng; Widerruf ist bestätigt und der 
+ ..                                       .. ng; Widerruf ist bestätigt und der
  ..                                       .. letzte Schlüssel geschützt. |
  28 | Widerruf und Neustart | Der Serve   31 | Widerruf und Neustart | Der Serve
  .. r prüft Widerruf vor der Ausführung   .. r prüft Widerruf vor der Ausführung
@@ -85,32 +85,32 @@ README.md --- 2/4 --- Text
  ..  in SQLite. Offene Dialoge und Sitz   ..  in SQLite. Offene Dialoge und Sitz
  .. ungen werden beim Neustart ungültig   .. ungen werden beim Neustart ungültig
  .. . |                                   .. . |
- 29                                       32 
- 30 **Stand: Forschungsprototyp 0.2.**    33 **Stand: Forschungsprototyp 0.3.** 
+ 29                                       32
+ 30 **Stand: Forschungsprototyp 0.2.**    33 **Stand: Forschungsprototyp 0.3.**
  .. Tests verwenden virtuelle CTAP2-Ger   .. Tests verwenden virtuelle CTAP2-Ger
  .. äte im echten Chrome-Browser und de   .. äte im echten Chrome-Browser und de
  .. n echten Rust-Verifier. Touch ID un   .. n echten Rust-Verifier. Touch ID un
  .. d weitere Geräte werden später live   .. d weitere Geräte werden später live
  ..  geprüft. Das Grant-Format ist expe   ..  geprüft. Das Grant-Format ist expe
- .. rimentell; UCAN-Interoperabilität,    .. rimentell; UCAN-Interoperabilität, 
+ .. rimentell; UCAN-Interoperabilität,    .. rimentell; UCAN-Interoperabilität,
  .. Wallets und physische Geräte sind n   .. Wallets und physische Geräte sind n
  .. och offen.                            .. och offen.
- 31                                       34 
+ 31                                       34
  32 ## Quick start                        35 ## Quick start
- 33                                       36 
+ 33                                       36
 
 README.md --- 3/4 --- Text
  42 just e2e                              45 just e2e
  43 ```                                   46 ```
- 44                                       47 
+ 44                                       47
  45 Dieser Quick Start wurde mit einem    48 Der Quick Start wurde für 0.2 aus e
  .. frischen Clone und leerem Build-Ver   .. inem frischen Clone mit leerem Buil
  .. zeichnis auf macOS ausgeführt: **41   .. d-Verzeichnis ausgeführt. Die aktue
- .. /41 Browser-Fälle bestanden**.        .. lle lokale Abnahme von 0.3 umfasst 
+ .. /41 Browser-Fälle bestanden**.        .. lle lokale Abnahme von 0.3 umfasst
  ..                                       .. **69 Browser-Fälle und 29 Rust-Test
  ..                                       .. s**; Details stehen im [Ausbauberic
  ..                                       .. ht](docs/V03-RESULT.md).
- 46                                       49 
+ 46                                       49
  47 Der Test startet einen isolierten B   50 Der Test startet einen isolierten B
  .. rowser und einen lokalen Server und   .. rowser und einen lokalen Server und
  ..  beendet beide danach. Er verwendet   ..  beendet beide danach. Er verwendet
@@ -119,7 +119,7 @@ README.md --- 3/4 --- Text
  .. rden gelöscht. Ein anderer Chrome-P   .. rden gelöscht. Ein anderer Chrome-P
  .. fad lässt sich mit `CHROME_PATH=/pf   .. fad lässt sich mit `CHROME_PATH=/pf
  .. ad/zu/chrome just e2e` angeben.       .. ad/zu/chrome just e2e` angeben.
- 48                                       51 
+ 48                                       51
  49 Für `just check` werden außerdem `c   52 Für `just check` werden außerdem `c
  .. argo-nextest` **0.9.146**, `cargo-d   .. argo-nextest` **0.9.146**, `cargo-d
  .. eny` **0.20.2** und `cargo-audit` *   .. eny` **0.20.2** und `cargo-audit` *
@@ -127,10 +127,10 @@ README.md --- 3/4 --- Text
  .. e Prüfung umfasst Formatierung, Typ   .. e Prüfung umfasst Formatierung, Typ
  .. eScript, Clippy, Rust-Tests, Lizenz   .. eScript, Clippy, Rust-Tests, Lizenz
  .. -/Quellenregeln, Advisories und Bui   .. -/Quellenregeln, Advisories und Bui
- .. ld. CI führt den portablen Source-    .. ld. CI führt den portablen Source- 
+ .. ld. CI führt den portablen Source-    .. ld. CI führt den portablen Source-
  .. und Browser-Testablauf aus; er enth   .. und Browser-Testablauf aus; er enth
  .. ält keine Deployment-Schritte.        .. ält keine Deployment-Schritte.
- 50                                       53 
+ 50                                       53
  51 Der erste GitHub-CI-Job wurde vor A   54 Der erste GitHub-CI-Job wurde vor A
  .. usführung eines Schritts durch eine   .. usführung eines Schritts durch eine
  ..  Zahlungs-/Ausgabenlimit-Sperre des   ..  Zahlungs-/Ausgabenlimit-Sperre des
@@ -140,16 +140,16 @@ README.md --- 3/4 --- Text
  .. ust-Tests**. Die [CI-Diagnose](docs   .. ust-Tests**. Die [CI-Diagnose](docs
  .. /VERIFICATION.md) hält diese Grenze   .. /VERIFICATION.md) hält diese Grenze
  ..  fest.                                ..  fest.
- 52                                       55 
+ 52                                       55
  53 ## Späterer Live-Test                 56 ## Späterer Live-Test
- 54                                       57 
+ 54                                       57
 
 README.md --- 4/4 --- Text
- 98                                      101 
+ 98                                      101
  99 ![HeavenKey — erfolgreicher Zugriff  102 ![HeavenKey — erfolgreicher Zugriff
  ..  in der geprüften Oberfläche](docs/  ...  in der geprüften Oberfläche](docs/
  .. evidence/browser-success.png)        ... evidence/browser-success.png)
-100                                      103 
+100                                      103
 ...                                      104 - [Ausbau 0.3 und aktuelle Nachweis
 ...                                      ... e](docs/V03-RESULT.md)
 ...                                      105 - [Enpass-Prinzipien und konkrete C
@@ -165,33 +165,33 @@ README.md --- 4/4 --- Text
 ... r und zehn ausgewählte Skills](docs  ... r und zehn ausgewählte Skills](docs
 ... /DEVELOPMENT.md)                     ... /DEVELOPMENT.md)
 106 - [Änderungen](CHANGELOG.md)         111 - [Änderungen](CHANGELOG.md)
-107                                      112 
+107                                      112
 108 Offen sind reale Hardware, mehrere   113 Offen sind reale Hardware, Recovery
 ... Credentials, Recovery, Mandanten, S  ... , Mandanten, Schlüsselrotation, ver
 ... chlüsselrotation, verteilte Ausführ  ... teilte Ausführung, sichere Offline-
 ... ung, sichere Offline-Zeit und ein i  ... Zeit und ein interoperables Protoko
 ... nteroperables Protokoll. Ein getren  ... ll. Ein getrenntes Offline-Ziel ken
-... ntes Offline-Ziel kennt einen neuen  ... nt einen neuen entfernten Widerruf 
+... ntes Offline-Ziel kennt einen neuen  ... nt einen neuen entfernten Widerruf
 ...  entfernten Widerruf erst nach Empf  ... erst nach Empfang entsprechender In
 ... ang entsprechender Information.      ... formation.
-...                                      114 
+...                                      114
 ...                                      115 Bestehende Zugänge gehören in diese
 ...                                      ... m Profil zum Konto. Ein widerrufene
 ...                                      ... r Passkey kann sich nicht mehr anme
 ...                                      ... lden; ein anderer aktiver Schlüssel
 ...                                      ...  desselben Kontos kann den Zugang w
-...                                      ... eiter verwenden. Zum Entziehen des 
+...                                      ... eiter verwenden. Zum Entziehen des
 ...                                      ... Zugangs wird der Grant widerrufen.
-109                                      116 
+109                                      116
 110 ## Mitwirken, Sicherheit und Rechte  117 ## Mitwirken, Sicherheit und Rechte
-111                                      118 
+111                                      118
 
 apps/api/src/main.rs --- 1/20 --- Text (exceeded DFT_GRAPH_LIMIT)
  30   30 const RESOURCE: &str = "urn:uac:lab:document";
  31   31 const CEREMONY_TTL: u64 = 120;
  32   32 const MAX_PENDING: usize = 128;
  ..   33 const MAX_CREDENTIALS: usize = 8;
- 33   34 
+ 33   34
  34   35 #[derive(Clone)]
  35   36 struct App {
 
@@ -247,7 +247,7 @@ apps/api/src/main.rs --- 4/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ...  140 struct CredentialRevoke {
 ...  141     id: String,
 ...  142 }
-118  143 
+118  143
 ...  144 #[derive(Debug)]
 119  145 struct ApiError(StatusCode, &'static str);
 120  146 type ApiResult<T> = Result<T, ApiError>;
@@ -324,8 +324,8 @@ apps/api/src/main.rs --- 7/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ... ool>(2)?,                            ... ool>(2)?,
 169                     row.get::<_, S   210                     row.get::<_, S
 ... tring>(3)?,                          ... tring>(3)?,
-170                     row.get::<_, u   ... 
-... 32>(4)?,                             ... 
+170                     row.get::<_, u   ...
+... 32>(4)?,                             ...
 171                 ))                   211                 ))
 172             })                       212             })
 173             .optional()              213             .optional()
@@ -342,7 +342,7 @@ apps/api/src/main.rs --- 7/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 181             passkey: serde_json::f   221             subject: Sha256::diges
 ... rom_str(&key).map_err(internal)?,    ... t(URL_SAFE_NO_PAD.decode(subject_i
 ...                                      ... d).map_err(internal)?).into(),
-182             counter,                 ... 
+182             counter,                 ...
 183         })                           222         })
 184     }                                223     }
 ...                                      224     fn active_credentials(&self, u
@@ -356,7 +356,7 @@ apps/api/src/main.rs --- 7/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ...                                      ... Y created,id")
 ...                                      228             .map_err(internal)?;
 ...                                      229         let rows = stmt
-...                                      230             .query_map([user_id], 
+...                                      230             .query_map([user_id],
 ...                                      ... |row| {
 ...                                      231                 Ok((
 ...                                      232                     row.get::<_, S
@@ -442,14 +442,14 @@ apps/api/src/main.rs --- 7/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 186         self.prune();                286         self.prune();
 187         let token = headers          287         let token = session_token(
 ...                                      ... headers)?;
-188             .get("authorization")    ... 
-189             .and_then(|h| h.to_str   ... 
-... ().ok())                             ... 
-190             .and_then(|v| v.strip_   ... 
-... prefix("Bearer "))                   ... 
-191             .ok_or(ApiError(Status   ... 
-... Code::UNAUTHORIZED, "session_requi   ... 
-... red"))?;                             ... 
+188             .get("authorization")    ...
+189             .and_then(|h| h.to_str   ...
+... ().ok())                             ...
+190             .and_then(|v| v.strip_   ...
+... prefix("Bearer "))                   ...
+191             .ok_or(ApiError(Status   ...
+... Code::UNAUTHORIZED, "session_requi   ...
+... red"))?;                             ...
 192         let s = self                 288         let s = self
 193             .sessions                289             .sessions
 194             .get(token)              290             .get(token)
@@ -465,7 +465,7 @@ apps/api/src/main.rs --- 7/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 196         self.user("id", &s.user_id   295         self.user("id", &s.user_id
 ... )                                    ... )
 197     }                                296     }
-198     fn grant_allowed(&self, user:    297     fn grant_allowed(&self, user: 
+198     fn grant_allowed(&self, user:    297     fn grant_allowed(&self, user:
 ... &User, invocation: &Invocation) ->   ... &User, invocation: &Invocation) ->
 ...  ApiResult<()> {                     ...  ApiResult<()> {
 
@@ -475,7 +475,7 @@ apps/api/src/main.rs --- 8/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 221             &self.issuer.verifying   320             &self.issuer.verifying
 ... _key().to_bytes(),                   ... _key().to_bytes(),
 222             &holder(&user.passkey)   321             &user.subject,
-... ,                                    ... 
+... ,                                    ...
 223             RESOURCE,                322             RESOURCE,
 224             invocation.action,       323             invocation.action,
 225             now(),                   324             now(),
@@ -503,22 +503,22 @@ apps/api/src/main.rs --- 10/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ... usCode::UNAUTHORIZED, "registratio   ... usCode::UNAUTHORIZED, "registratio
 ... n_invalid"))?;                       ... n_invalid"))?;
 346     let duplicate: bool = inner      445     let id = credential_id(&key);
-347         .db                          ... 
-348         .query_row(                  ... 
-349             "SELECT EXISTS(SELECT    ... 
-... 1 FROM users WHERE credential_id=?   ... 
-... 1)",                                 ... 
-350             [URL_SAFE_NO_PAD.encod   ... 
-... e(key.cred_id().as_ref())],          ... 
+347         .db                          ...
+348         .query_row(                  ...
+349             "SELECT EXISTS(SELECT    ...
+... 1 FROM users WHERE credential_id=?   ...
+... 1)",                                 ...
+350             [URL_SAFE_NO_PAD.encod   ...
+... e(key.cred_id().as_ref())],          ...
 351             |r| r.get(0),            446     inner.check_credential_unique(
 ...                                      ... &id)?;
-352         )                            ... 
-353         .map_err(internal)?;         ... 
-354     if duplicate {                   ... 
-355         return Err(ApiError(Status   ... 
-... Code::CONFLICT, "credential_exists   ... 
-... "));                                 ... 
-356     }                                ... 
+352         )                            ...
+353         .map_err(internal)?;         ...
+354     if duplicate {                   ...
+355         return Err(ApiError(Status   ...
+... Code::CONFLICT, "credential_exists   ...
+... "));                                 ...
+356     }                                ...
 357     let owner = pending.owner;       447     let owner = pending.owner;
 358     inner                            448     let key_json = serde_json::to_
 ...                                      ... string(&key).map_err(internal)?;
@@ -534,9 +534,9 @@ apps/api/src/main.rs --- 10/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 364                 pending.name,        454             pending.name,
 365                 owner,               455             owner,
 366                 URL_SAFE_NO_PAD.en   456             id,
-... code(key.cred_id().as_ref()),        ... 
+... code(key.cred_id().as_ref()),        ...
 367                 serde_json::to_str   457             key_json,
-... ing(&key).map_err(internal)?         ... 
+... ing(&key).map_err(internal)?         ...
 368             ],                       458         ],
 369         )                            459     )
 370         .map_err(|_| ApiError(Stat   460     .map_err(|_| ApiError(StatusCo
@@ -581,7 +581,7 @@ apps/api/src/main.rs --- 11/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 390         .webauthn                    494         .webauthn
 391         .start_passkey_authenticat   495         .start_passkey_authenticat
 ... ion(std::slice::from_ref(&user.pas   ... ion(&keys)
-... skey))                               ... 
+... skey))                               ...
 392         .map_err(internal)?;         496         .map_err(internal)?;
 393     let request_id = Uuid::new_v4(   497     let request_id = Uuid::new_v4(
 ... ).to_string();                       ... ).to_string();
@@ -599,16 +599,16 @@ apps/api/src/main.rs --- 12/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 418         .ok_or(forbidden("ceremony   522         .ok_or(forbidden("ceremony
 ... _missing"))?;                        ... _missing"))?;
 419     if binding(&pending.invocation   523     if binding(&pending.invocation
-... )? != binding(&input.invocation)?    ... )? != binding(&input.invocation)? 
+... )? != binding(&input.invocation)?    ... )? != binding(&input.invocation)?
 ... {                                    ... {
 420         return Err(forbidden("invo   524         return Err(forbidden("invo
 ... cation_changed"));                   ... cation_changed"));
 421     }                                525     }
 422     // Reload the current counter    526     let user = inner.user("id", &p
 ... before accepting concurrent ceremo   ... ending.user.id)?;
-... nies.                                ... 
-423     let current = inner.user("id",   ... 
-...  &pending.user.id)?;                 ... 
+... nies.                                ...
+423     let current = inner.user("id",   ...
+...  &pending.user.id)?;                 ...
 424     let result = inner               527     let result = inner
 425         .webauthn                    528         .webauthn
 426         .finish_passkey_authentica   529         .finish_passkey_authentica
@@ -639,8 +639,8 @@ apps/api/src/main.rs --- 13/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 436     }                                545     }
 437     pending.user.passkey = current   546     if current.passkey.update_cred
 ... .passkey;                            ... ential(&result).is_none() {
-438     if pending.user.passkey.update   ... 
-... _credential(&result).is_none() {     ... 
+438     if pending.user.passkey.update   ...
+... _credential(&result).is_none() {     ...
 439         return Err(ApiError(Status   547         return Err(ApiError(Status
 ... Code::UNAUTHORIZED, "credential_mi   ... Code::UNAUTHORIZED, "credential_mi
 ... smatch"));                           ... smatch"));
@@ -698,7 +698,7 @@ apps/api/src/main.rs --- 14/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 466             session.clone(),         583             session.clone(),
 467             Session {                584             Session {
 468                 user_id: pending.u   585                 user_id: user.id,
-... ser.id,                              ... 
+... ser.id,                              ...
 ...                                      586                 credential_id: id,
 469                 expires: now() + 3   587                 expires: now() + 3
 ... 00,                                  ... 00,
@@ -711,9 +711,9 @@ apps/api/src/main.rs --- 14/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 474         ))                           592         ))
 475     }                                593     }
 476 }                                    594 }
-477                                      595 
+477                                      595
 ...                                      596 async fn credentials(State(app): S
-...                                      ... tate<App>, headers: HeaderMap) -> 
+...                                      ... tate<App>, headers: HeaderMap) ->
 ...                                      ... ApiResult<Json<Value>> {
 ...                                      597     let mut inner = app.inner.lock
 ...                                      ... ().map_err(internal)?;
@@ -734,7 +734,7 @@ apps/api/src/main.rs --- 14/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ...                                      607         .query_map([&user.id], |ro
 ...                                      ... w| {
 ...                                      608             Ok(json!({
-...                                      609                 "id":row.get::<_, 
+...                                      609                 "id":row.get::<_,
 ...                                      ... String>(0)?,
 ...                                      610                 "label":row.get::<
 ...                                      ... _, String>(1)?,
@@ -754,7 +754,7 @@ apps/api/src/main.rs --- 14/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ...                                      ... ),
 ...                                      619     ))
 ...                                      620 }
-...                                      621 
+...                                      621
 ...                                      622 async fn credential_start(
 ...                                      623     State(app): State<App>,
 ...                                      624     headers: HeaderMap,
@@ -778,7 +778,7 @@ apps/api/src/main.rs --- 14/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ...                                      ... y(&user.id)?;
 ...                                      634     let token = session_token(&hea
 ...                                      ... ders)?.to_owned();
-...                                      635     let authorizing_credential_id 
+...                                      635     let authorizing_credential_id
 ...                                      ... = inner.sessions[&token].credentia
 ...                                      ... l_id.clone();
 ...                                      636     let excluded = inner
@@ -817,7 +817,7 @@ apps/api/src/main.rs --- 14/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ...                                      662     Ok(Json(json!({"request_id":re
 ...                                      ... quest_id,"options":options})))
 ...                                      663 }
-...                                      664 
+...                                      664
 ...                                      665 async fn credential_finish(
 ...                                      666     State(app): State<App>,
 ...                                      667     headers: HeaderMap,
@@ -891,7 +891,7 @@ apps/api/src/main.rs --- 14/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ...                                      ... ding.label,"registered":true}),
 ...                                      712     ))
 ...                                      713 }
-...                                      714 
+...                                      714
 ...                                      715 async fn credential_revoke(
 ...                                      716     State(app): State<App>,
 ...                                      717     headers: HeaderMap,
@@ -926,7 +926,7 @@ apps/api/src/main.rs --- 14/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ...                                      734     }
 ...                                      735     let count = tx
 ...                                      736         .query_row(
-...                                      737             "SELECT COUNT(*) FROM 
+...                                      737             "SELECT COUNT(*) FROM
 ...                                      ... credentials WHERE user_id=?1 AND a
 ...                                      ... ctive=1",
 ...                                      738             [&user.id],
@@ -941,7 +941,7 @@ apps/api/src/main.rs --- 14/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ...                                      744     }
 ...                                      745     tx.execute(
 ...                                      746         "UPDATE credentials SET ac
-...                                      ... tive=0 WHERE id=?1 AND user_id=?2 
+...                                      ... tive=0 WHERE id=?1 AND user_id=?2
 ...                                      ... AND active=1",
 ...                                      747         params![input.id, user.id]
 ...                                      ... ,
@@ -967,7 +967,7 @@ apps/api/src/main.rs --- 14/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ...                                      ... ed":true}),
 ...                                      762     ))
 ...                                      763 }
-...                                      764 
+...                                      764
 478 async fn create_grant(               765 async fn create_grant(
 479     State(app): State<App>,          766     State(app): State<App>,
 
@@ -987,7 +987,7 @@ apps/api/src/main.rs --- 15/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 apps/api/src/main.rs --- 16/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 611  898     Ok(Sha256::digest(token.as_bytes()).into())
 612  899 }
-613  900 
+613  900
 ...  901 fn initialize_database(db: &mut Connection) -> rusqlite::Result<()> {
 ...  902     db.execute_batch("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;")?;
 ...  903     let tx = db.transaction()?;
@@ -1006,7 +1006,7 @@ apps/api/src/main.rs --- 16/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 ...  916     )?;
 ...  917     tx.commit()
 ...  918 }
-...  919 
+...  919
 614  920 #[tokio::main]
 615  921 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 616  922     let port: u16 = std::env::var("UAC_PORT")
@@ -1023,25 +1023,25 @@ apps/api/src/main.rs --- 17/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 643     db.busy_timeout(Duration::from   949     db.busy_timeout(Duration::from
 ... _secs(2))?;                          ... _secs(2))?;
 644     db.execute_batch("PRAGMA journ   950     initialize_database(&mut db)?;
-... al_mode=WAL; PRAGMA foreign_keys=O   ... 
-... N; CREATE TABLE IF NOT EXISTS user   ... 
-... s(id TEXT PRIMARY KEY,name TEXT UN   ... 
-... IQUE NOT NULL,owner INTEGER NOT NU   ... 
-... LL,credential_id TEXT UNIQUE NOT N   ... 
-... ULL,passkey TEXT NOT NULL,counter    ... 
-... INTEGER NOT NULL DEFAULT 0); CREAT   ... 
-... E TABLE IF NOT EXISTS grants(id TE   ... 
-... XT PRIMARY KEY,guest_id TEXT REFER   ... 
-... ENCES users(id),token TEXT NOT NUL   ... 
-... L,revoked INTEGER NOT NULL DEFAULT   ... 
-...  0); CREATE TABLE IF NOT EXISTS op   ... 
-... erations(id TEXT PRIMARY KEY,grant   ... 
-... _id TEXT REFERENCES grants(id),hol   ... 
-... der TEXT REFERENCES users(id),crea   ... 
-... ted INTEGER NOT NULL);")?;           ... 
-645     db.execute_batch("CREATE UNIQU   ... 
-... E INDEX IF NOT EXISTS one_owner ON   ... 
-...  users(owner) WHERE owner=1;")?;     ... 
+... al_mode=WAL; PRAGMA foreign_keys=O   ...
+... N; CREATE TABLE IF NOT EXISTS user   ...
+... s(id TEXT PRIMARY KEY,name TEXT UN   ...
+... IQUE NOT NULL,owner INTEGER NOT NU   ...
+... LL,credential_id TEXT UNIQUE NOT N   ...
+... ULL,passkey TEXT NOT NULL,counter    ...
+... INTEGER NOT NULL DEFAULT 0); CREAT   ...
+... E TABLE IF NOT EXISTS grants(id TE   ...
+... XT PRIMARY KEY,guest_id TEXT REFER   ...
+... ENCES users(id),token TEXT NOT NUL   ...
+... L,revoked INTEGER NOT NULL DEFAULT   ...
+...  0); CREATE TABLE IF NOT EXISTS op   ...
+... erations(id TEXT PRIMARY KEY,grant   ...
+... _id TEXT REFERENCES grants(id),hol   ...
+... der TEXT REFERENCES users(id),crea   ...
+... ted INTEGER NOT NULL);")?;           ...
+645     db.execute_batch("CREATE UNIQU   ...
+... E INDEX IF NOT EXISTS one_owner ON   ...
+...  users(owner) WHERE owner=1;")?;     ...
 646     let webauthn = WebauthnBuilder   951     let webauthn = WebauthnBuilder
 ... ::new("localhost", &Url::parse(&or   ... ::new("localhost", &Url::parse(&or
 ... igin)?)?                             ... igin)?)?
@@ -1073,11 +1073,11 @@ apps/api/src/main.rs --- 19/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 apps/api/src/main.rs --- 20/20 --- Text (exceeded DFT_GRAPH_LIMIT)
 688  998     Ok(())
 689  999 }
-    1000 
+    1000
     1001 #[cfg(test)]
     1002 mod tests {
     1003     use super::*;
-    1004 
+    1004
     1005     fn app() -> App {
     1006         let mut db = Connection::open_in_memory().expect("synthetic database");
     1007         initialize_database(&mut db).expect("schema");
@@ -1100,7 +1100,7 @@ apps/api/src/main.rs --- 20/20 --- Text (exceeded DFT_GRAPH_LIMIT)
     1024             host: "localhost:18240".into(),
     1025         }
     1026     }
-    1027 
+    1027
     1028     fn add_user(inner: &mut Inner, name: &str, owner: bool) -> (String, String) {
     1029         let user_id = Uuid::new_v4().to_string();
     1030         let id = URL_SAFE_NO_PAD.encode(format!("synthetic-{name}"));
@@ -1114,14 +1114,14 @@ apps/api/src/main.rs --- 20/20 --- Text (exceeded DFT_GRAPH_LIMIT)
     1038         initialize_database(&mut inner.db).expect("migrate user");
     1039         (user_id, id)
     1040     }
-    1041 
+    1041
     1042     fn add_credential(inner: &Inner, user_id: &str, id: &str) {
     1043         inner.db.execute(
     1044             "INSERT INTO credentials(id,user_id,passkey,label,created) VALUES(?1,?2,'{}','Synthetic extra',1)",
     1045             params![id,user_id],
     1046         ).expect("synthetic credential metadata");
     1047     }
-    1048 
+    1048
     1049     fn add_session(inner: &mut Inner, user_id: &str, credential_id: &str) -> String {
     1050         let token = Uuid::new_v4().to_string();
     1051         inner.sessions.insert(
@@ -1134,7 +1134,7 @@ apps/api/src/main.rs --- 20/20 --- Text (exceeded DFT_GRAPH_LIMIT)
     1058         );
     1059         token
     1060     }
-    1061 
+    1061
     1062     fn headers(token: &str) -> HeaderMap {
     1063         let mut headers = HeaderMap::new();
     1064         headers.insert(
@@ -1143,7 +1143,7 @@ apps/api/src/main.rs --- 20/20 --- Text (exceeded DFT_GRAPH_LIMIT)
     1067         );
     1068         headers
     1069     }
-    1070 
+    1070
     1071     fn add_enrollment(inner: &mut Inner, user_id: &str, token: &str, key_id: &str) {
     1072         let (_, state) = inner
     1073             .webauthn
@@ -1166,7 +1166,7 @@ apps/api/src/main.rs --- 20/20 --- Text (exceeded DFT_GRAPH_LIMIT)
     1090             },
     1091         );
     1092     }
-    1093 
+    1093
     1094     #[test]
     1095     fn legacy_migration_survives_restart_without_resurrecting_revoked_keys() {
     1096         let path =
@@ -1251,7 +1251,7 @@ apps/api/src/main.rs --- 20/20 --- Text (exceeded DFT_GRAPH_LIMIT)
     1175         drop(db);
     1176         fs::remove_file(path).expect("remove synthetic file");
     1177     }
-    1178 
+    1178
     1179     #[tokio::test]
     1180     async fn revoke_is_account_scoped_invalidates_sessions_and_preserves_last_key() {
     1181         let app = app();
@@ -1324,7 +1324,7 @@ apps/api/src/main.rs --- 20/20 --- Text (exceeded DFT_GRAPH_LIMIT)
     1248         assert_eq!(list["current_credential_id"], "extra");
     1249         assert_eq!(list["credentials"].as_array().expect("keys").len(), 2);
     1250     }
-    1251 
+    1251
     1252     #[tokio::test]
     1253     async fn active_key_rechecks_and_zero_key_authentication_fail_closed() {
     1254         let app = app();
@@ -1359,7 +1359,7 @@ apps/api/src/main.rs --- 20/20 --- Text (exceeded DFT_GRAPH_LIMIT)
     1283             (StatusCode::FORBIDDEN, "no_active_credentials")
     1284         );
     1285     }
-    1286 
+    1286
     1287     #[tokio::test]
     1288     async fn credential_cap_counts_active_keys_and_rejects_retired_duplicates() {
     1289         let app = app();
@@ -1399,7 +1399,7 @@ apps/api/src/main.rs --- 20/20 --- Text (exceeded DFT_GRAPH_LIMIT)
     1323             (StatusCode::CONFLICT, "credential_exists")
     1324         );
     1325     }
-    1326 
+    1326
     1327     #[tokio::test]
     1328     async fn existing_grant_keeps_initial_subject_after_original_key_revocation() {
     1329         let app = app();
@@ -1469,7 +1469,7 @@ apps/web/index.html --- HTML
 4 <div class="workspace"><aside><p clas  4 <div class="workspace"><aside><p clas
 . s="eyebrow">01 · Identität</p><h1>Ein  . s="eyebrow">01 · Identität</p><h1>Dei
 .  Schlüssel.<br>Ein begrenztes Recht.<  . ne Schlüssel.<br>Begrenzte Rechte.</h
-. /h1><p>Passkey erstellen, anmelden un  . 1><p>Passkey erstellen, anmelden und 
+. /h1><p>Passkey erstellen, anmelden un  . 1><p>Passkey erstellen, anmelden und
 . d einen Zugang prüfen.</p><label for=  . einen Zugang prüfen.</p><label for="n
 . "name">Name im Labor</label><input id  . ame">Name im Labor</label><input id="
 . ="name" value="owner" maxlength="32"   . name" value="owner" maxlength="32" au
@@ -1488,7 +1488,7 @@ apps/web/index.html --- HTML
 . en virtuelle FIDO2-Geräte. Hardware u  .  virtuelle FIDO2-Geräte. Hardware und
 . nd Biometrie werden später live geprü  .  Biometrie werden später live geprüft
 . ft.</p></aside>                        . .</p></aside>
-5 <main><section><p class="eyebrow">02   5 <main><section><p class="eyebrow">02 
+5 <main><section><p class="eyebrow">02   5 <main><section><p class="eyebrow">02
 . · Zugang vergeben</p><h2>Nur Lesen. M  . · Zugang vergeben</p><h2>Nur Lesen. M
 . it Ablauf.</h2><div class="fields"><d  . it Ablauf.</h2><div class="fields"><d
 . iv><label for="guest">Empfänger im La  . iv><label for="guest">Empfänger im La
@@ -1535,7 +1535,7 @@ apps/web/index.html --- HTML
 .                                        . ss="note field-status" aria-live="pol
 .                                        . ite">1 bis 48 Zeichen.</p></div><butt
 .                                        . on id="credential-add" disabled>Passk
-.                                        . ey hinzufügen</button></form><dialog 
+.                                        . ey hinzufügen</button></form><dialog
 .                                        . id="credential-revoke-dialog" aria-la
 .                                        . belledby="credential-revoke-title" ar
 .                                        . ia-describedby="credential-revoke-hel
@@ -1543,8 +1543,8 @@ apps/web/index.html --- HTML
 .                                        . asskey widerrufen</h2><p id="credenti
 .                                        . al-revoke-name"></p><p id="credential
 .                                        . -revoke-help">Dieser Schlüssel kann s
-.                                        . ich danach nicht mehr anmelden. Alle 
-.                                        . Sitzungen dieses Kontos enden. Melde 
+.                                        . ich danach nicht mehr anmelden. Alle
+.                                        . Sitzungen dieses Kontos enden. Melde
 .                                        . dich anschließend mit einem verbleibe
 .                                        . nden Schlüssel an.</p><div class="dia
 .                                        . log-actions"><button id="credential-r
@@ -1565,8 +1565,8 @@ apps/web/index.html --- HTML
 
 apps/web/package.json --- JSON
 1 { "name": "heavenkey-web", "version":  1 {
-.  "0.2.0", "private": true, "type": "m  . 
-. odule" }                               . 
+.  "0.2.0", "private": true, "type": "m  .
+. odule" }                               .
                                          2   "name": "heavenkey-web",
                                          3   "version": "0.3.0",
                                          4   "private": true,
@@ -1582,9 +1582,9 @@ apps/web/src/main.ts --- 1/3 --- TypeScript
  ..                                        . thentication, type PublicKeyCredent
  ..                                        . ialCreationOptionsJSON, type Public
  ..                                        . KeyCredentialRequestOptionsJSON, ty
- ..                                        . pe RegistrationResponseJSON } from 
+ ..                                        . pe RegistrationResponseJSON } from
  ..                                        . "@simplewebauthn/browser";
-  .                                        2 
+  .                                        2
   1 type Grant = { id: string; guest: s    3 type Grant = { id: string; guest: s
   . tring; revoked: boolean; grant: { b    . tring; revoked: boolean; grant: { b
   . ody: { expires_at: number; resource    . ody: { expires_at: number; resource
@@ -1592,7 +1592,7 @@ apps/web/src/main.ts --- 1/3 --- TypeScript
   . ;                                      . ;
   2 type Ceremony = { request_id: strin    4 type Ceremony<T> = { request_id: st
   . g; options: { publicKey: Record<str    . ring; options: { publicKey: T } };
-  . ing, unknown> } };                     . 
+  . ing, unknown> } };                     .
   .                                        5 type Credential = { id: string; lab
   .                                        . el: string; active: boolean; create
   .                                        . d: number };
@@ -1601,7 +1601,7 @@ apps/web/src/main.ts --- 1/3 --- TypeScript
   .                                        . ;
   4 let isOwner = false;                   8 let isOwner = false;
   .                                        9 let activeCredentialCount = 0;
-  .                                       10 let credentialToRevoke: Credential 
+  .                                       10 let credentialToRevoke: Credential
   .                                       .. | undefined;
   .                                       11 let inFlight = false;
   5 const el = <T extends HTMLElement>(   12 const el = <T extends HTMLElement>(
@@ -1614,19 +1614,19 @@ apps/web/src/main.ts --- 1/3 --- TypeScript
   9 };                                    16 };
  10 const input = (id: string) => el<HT   17 const input = (id: string) => el<HT
  .. MLInputElement>(id).value;            .. MLInputElement>(id).value;
- 11 export function decode(value: strin   .. 
- .. g): Uint8Array {                      .. 
- 12   return Uint8Array.from(atob(value   .. 
- .. .replace(/-/g, "+").replace(/_/g, "   .. 
- .. /")), c => c.charCodeAt(0));          .. 
- 13 }                                     .. 
- 14 export function encode(value: Array   .. 
- .. Buffer): string {                     .. 
- 15   return btoa(String.fromCharCode(.   .. 
- .. ..new Uint8Array(value))).replace(/   .. 
- .. \+/g, "-").replace(/\//g, "_").repl   .. 
- .. ace(/=+$/, "");                       .. 
- 16 }                                     .. 
+ 11 export function decode(value: strin   ..
+ .. g): Uint8Array {                      ..
+ 12   return Uint8Array.from(atob(value   ..
+ .. .replace(/-/g, "+").replace(/_/g, "   ..
+ .. /")), c => c.charCodeAt(0));          ..
+ 13 }                                     ..
+ 14 export function encode(value: Array   ..
+ .. Buffer): string {                     ..
+ 15   return btoa(String.fromCharCode(.   ..
+ .. ..new Uint8Array(value))).replace(/   ..
+ .. \+/g, "-").replace(/\//g, "_").repl   ..
+ .. ace(/=+$/, "");                       ..
+ 16 }                                     ..
  17 async function api<T>(path: string,   18 async function api<T>(path: string,
  ..  body?: unknown): Promise<T> {        ..  body?: unknown): Promise<T> {
  18   const response = await fetch(path   19   const response = await fetch(path
@@ -1640,25 +1640,25 @@ apps/web/src/main.ts --- 1/3 --- TypeScript
  19   const value = await response.json   20   const value = await response.json
  .. ();                                   .. ();
  20   if (!response.ok) throw new Error   21   if (!response.ok) {
- .. (value.error || `HTTP ${response.st   .. 
- .. atus}`);                              .. 
- ..                                       22     if (response.status === 401 && 
+ .. (value.error || `HTTP ${response.st   ..
+ .. atus}`);                              ..
+ ..                                       22     if (response.status === 401 &&
  ..                                       .. (path.startsWith("/api/credentials"
  ..                                       .. ) || path.startsWith("/api/grants")
  ..                                       .. )) clearSession();
- ..                                       23     const messages: Record<string, 
+ ..                                       23     const messages: Record<string,
  ..                                       .. string> = {
  ..                                       24       session_required: "Bitte zuer
  ..                                       .. st mit einem aktiven Passkey anmeld
  ..                                       .. en.",
  ..                                       25       session_expired: "Die Sitzung
- ..                                       ..  ist abgelaufen. Melde dich erneut 
+ ..                                       ..  ist abgelaufen. Melde dich erneut
  ..                                       .. an.",
  ..                                       26       credential_revoked: "Dieser P
  ..                                       .. asskey wurde widerrufen. Melde dich
  ..                                       ..  mit einem aktiven Schlüssel an.",
  ..                                       27       credential_limit: "Es sind be
- ..                                       .. reits 8 aktive Passkeys vorhanden. 
+ ..                                       .. reits 8 aktive Passkeys vorhanden.
  ..                                       .. Widerrufe zuerst einen zusätzlichen
  ..                                       ..  Schlüssel.",
  ..                                       28       last_credential_required: "De
@@ -1682,33 +1682,33 @@ apps/web/src/main.ts --- 1/3 --- TypeScript
  .. icKeyCredential): object {            .. rt: Ceremony<PublicKeyCredentialCre
  ..                                       .. ationOptionsJSON>): Promise<Registr
  ..                                       .. ationResponseJSON> {
- 24   if ("toJSON" in value && typeof v   .. 
- .. alue.toJSON === "function") return    .. 
- .. value.toJSON();                       .. 
- 25   const response = value.response;    .. 
- 26   const common = { id: value.id, ra   .. 
- .. wId: encode(value.rawId), type: val   .. 
- .. ue.type, extensions: value.getClien   .. 
- .. tExtensionResults() };                .. 
- 27   if (response instanceof Authentic   .. 
- .. atorAttestationResponse) return { .   .. 
- .. ..common, response: { attestationOb   .. 
- .. ject: encode(response.attestationOb   .. 
- .. ject), clientDataJSON: encode(respo   .. 
- .. nse.clientDataJSON), transports: re   .. 
- .. sponse.getTransports() } };           .. 
+ 24   if ("toJSON" in value && typeof v   ..
+ .. alue.toJSON === "function") return    ..
+ .. value.toJSON();                       ..
+ 25   const response = value.response;    ..
+ 26   const common = { id: value.id, ra   ..
+ .. wId: encode(value.rawId), type: val   ..
+ .. ue.type, extensions: value.getClien   ..
+ .. tExtensionResults() };                ..
+ 27   if (response instanceof Authentic   ..
+ .. atorAttestationResponse) return { .   ..
+ .. ..common, response: { attestationOb   ..
+ .. ject: encode(response.attestationOb   ..
+ .. ject), clientDataJSON: encode(respo   ..
+ .. nse.clientDataJSON), transports: re   ..
+ .. sponse.getTransports() } };           ..
  28   if (response instanceof Authentic   37   return startRegistration({ option
  .. atorAssertionResponse) return { ...   .. sJSON: start.options.publicKey });
- .. common, response: { authenticatorDa   .. 
- .. ta: encode(response.authenticatorDa   .. 
- .. ta), clientDataJSON: encode(respons   .. 
- .. e.clientDataJSON), signature: encod   .. 
- .. e(response.signature), userHandle:    .. 
- .. response.userHandle ? encode(respon   .. 
- .. se.userHandle) : null } };            .. 
+ .. common, response: { authenticatorDa   ..
+ .. ta: encode(response.authenticatorDa   ..
+ .. ta), clientDataJSON: encode(respons   ..
+ .. e.clientDataJSON), signature: encod   ..
+ .. e(response.signature), userHandle:    ..
+ .. response.userHandle ? encode(respon   ..
+ .. se.userHandle) : null } };            ..
  29   throw new Error("Unbekannte Crede   38 }
- .. ntial-Antwort");                      .. 
- 30 }                                     .. 
+ .. ntial-Antwort");                      ..
+ 30 }                                     ..
  31 async function register(): Promise<   39 async function register(): Promise<
  .. void> {                               .. void> {
  32   const name = input("name");         40   const name = input("name");
@@ -1717,29 +1717,29 @@ apps/web/src/main.ts --- 1/3 --- TypeScript
  .. tstrap_token: input("bootstrap") ||   .. SON>>("/api/register/start", { name
  ..  null });                             .. , bootstrap_token: input("bootstrap
  ..                                       .. ") || null });
- 34   const key = start.options.publicK   .. 
- .. ey;                                   .. 
- 35   key.challenge = decode(key.challe   .. 
- .. nge as string);                       .. 
- 36   const user = key.user as Record<s   .. 
- .. tring, unknown>;                      .. 
- 37   user.id = decode(user.id as strin   .. 
- .. g);                                   .. 
- 38   if (key.excludeCredentials) for (   .. 
- .. const c of key.excludeCredentials a   .. 
- .. s Record<string, unknown>[]) c.id =   .. 
- ..  decode(c.id as string);              .. 
+ 34   const key = start.options.publicK   ..
+ .. ey;                                   ..
+ 35   key.challenge = decode(key.challe   ..
+ .. nge as string);                       ..
+ 36   const user = key.user as Record<s   ..
+ .. tring, unknown>;                      ..
+ 37   user.id = decode(user.id as strin   ..
+ .. g);                                   ..
+ 38   if (key.excludeCredentials) for (   ..
+ .. const c of key.excludeCredentials a   ..
+ .. s Record<string, unknown>[]) c.id =   ..
+ ..  decode(c.id as string);              ..
  39   const created = await navigator.c   42   const created = await createCrede
  .. redentials.create({ publicKey: key    .. ntial(start);
- .. as unknown as PublicKeyCredentialCr   .. 
- .. eationOptions });                     .. 
- 40   if (!(created instanceof PublicKe   .. 
- .. yCredential)) throw new Error("Eins   .. 
- .. chreibung abgebrochen");              .. 
+ .. as unknown as PublicKeyCredentialCr   ..
+ .. eationOptions });                     ..
+ 40   if (!(created instanceof PublicKe   ..
+ .. yCredential)) throw new Error("Eins   ..
+ .. chreibung abgebrochen");              ..
  41   await api("/api/register/finish",   43   await api("/api/register/finish",
  ..  { request_id: start.request_id, cr   ..  { request_id: start.request_id, cr
  .. edential: credentialJSON(created) }   .. edential: created });
- .. );                                    .. 
+ .. );                                    ..
  42   el<HTMLInputElement>("bootstrap")   44   el<HTMLInputElement>("bootstrap")
  .. .value = "";                          .. .value = "";
  43   status(`Passkey für ${name} einge   45   status(`Passkey für ${name} einge
@@ -1748,27 +1748,27 @@ apps/web/src/main.ts --- 1/3 --- TypeScript
  44 }                                     46 }
  45 async function authenticate(invocat   47 async function authenticate(invocat
  .. ion?: object): Promise<Record<strin   .. ion?: object, name = input("name"))
- .. g, unknown>> {                        .. : Promise<Record<string, unknown>> 
+ .. g, unknown>> {                        .. : Promise<Record<string, unknown>>
  ..                                       .. {
  46   const start = await api<Ceremony>   48   const start = await api<Ceremony<
  .. ("/api/auth/start", { name: input("   .. PublicKeyCredentialRequestOptionsJS
  .. name"), invocation: invocation || n   .. ON>>("/api/auth/start", { name, inv
  .. ull });                               .. ocation: invocation || null });
- 47   const key = start.options.publicK   .. 
- .. ey;                                   .. 
- 48   key.challenge = decode(key.challe   .. 
- .. nge as string);                       .. 
- 49   for (const c of key.allowCredenti   .. 
- .. als as Record<string, unknown>[]) c   .. 
- .. .id = decode(c.id as string);         .. 
+ 47   const key = start.options.publicK   ..
+ .. ey;                                   ..
+ 48   key.challenge = decode(key.challe   ..
+ .. nge as string);                       ..
+ 49   for (const c of key.allowCredenti   ..
+ .. als as Record<string, unknown>[]) c   ..
+ .. .id = decode(c.id as string);         ..
  50   const credential = await navigato   49   const credential = await startAut
  .. r.credentials.get({ publicKey: key    .. hentication({ optionsJSON: start.op
  .. as unknown as PublicKeyCredentialRe   .. tions.publicKey });
- .. questOptions });                      .. 
- 51   if (!(credential instanceof Publi   .. 
- .. cKeyCredential)) throw new Error("A   .. 
- .. nmeldung abgebrochen");               .. 
- 52   return api("/api/auth/finish", {    50   return api("/api/auth/finish", { 
+ .. questOptions });                      ..
+ 51   if (!(credential instanceof Publi   ..
+ .. cKeyCredential)) throw new Error("A   ..
+ .. nmeldung abgebrochen");               ..
+ 52   return api("/api/auth/finish", {    50   return api("/api/auth/finish", {
  .. request_id: start.request_id, crede   .. request_id: start.request_id, crede
  .. ntial: credentialJSON(credential),    .. ntial, invocation: invocation || nu
  .. invocation: invocation || null });    .. ll });
@@ -1776,7 +1776,7 @@ apps/web/src/main.ts --- 1/3 --- TypeScript
  54 async function login(): Promise<voi   52 async function login(): Promise<voi
  .. d> {                                  .. d> {
  ..                                       53   setSession(await authenticate());
- ..                                       54   status("Passkey geprüft. Sitzung 
+ ..                                       54   status("Passkey geprüft. Sitzung
  ..                                       .. ist aktiv.", false);
  ..                                       55   await refresh();
  ..                                       56 }
@@ -1795,7 +1795,7 @@ apps/web/src/main.ts --- 1/3 --- TypeScript
  ..                                       63 }
  ..                                       64 function sessionControls(): void {
  ..                                       65   for (const id of ["register", "lo
- ..                                       .. gin", "credential-revoke-confirm", 
+ ..                                       .. gin", "credential-revoke-confirm",
  ..                                       .. "credential-revoke-cancel"]) el<HTM
  ..                                       .. LButtonElement>(id).disabled = inFl
  ..                                       .. ight;
@@ -1819,7 +1819,7 @@ apps/web/src/main.ts --- 1/3 --- TypeScript
  ..                                       72   }
  ..                                       73 }
  ..                                       74 function clearSession(): void {
- ..                                       75   session = undefined; sessionName 
+ ..                                       75   session = undefined; sessionName
  ..                                       .. = undefined; isOwner = false; activ
  ..                                       .. eCredentialCount = 0;
  ..                                       76   el("identity").textContent = "Ern
@@ -1831,7 +1831,7 @@ apps/web/src/main.ts --- 1/3 --- TypeScript
  ..                                       80   credentialToRevoke = undefined;
  ..                                       81   const message = document.createEl
  ..                                       .. ement("p"); message.className = "em
- ..                                       .. pty"; message.textContent = "Melde 
+ ..                                       .. pty"; message.textContent = "Melde
  ..                                       .. dich mit einem aktiven Passkey erne
  ..                                       .. ut an.";
  ..                                       82   el("credentials").replaceChildren
@@ -1960,7 +1960,7 @@ apps/web/src/style.css --- CSS
 1 /* Hallmark · genre: modern-minimal ·  1 /* Hallmark · genre: modern-minimal ·
 .  macrostructure: Workbench · theme: p  .  macrostructure: Workbench · theme: p
 . roject-system · nav: N9 · footer: Ft2  . roject-system · nav: N9 · footer: Ft2
-.  */                                    .  · pre-emit critique: P4 H4 E4 S5 R5 
+.  */                                    .  · pre-emit critique: P4 H4 E4 S5 R5
 .                                        . V3 */
 2 :root{--paper:#f4f3ee;--ink:#202722;-  2 :root{--paper:#f4f3ee;--ink:#202722;-
 . -accent:#245c45;--line:#d8ddd4;--mute  . -accent:#245c45;--line:#d8ddd4;--mute
@@ -1968,7 +1968,7 @@ apps/web/src/style.css --- CSS
 . 6d94;--space:8px}*{box-sizing:border-  . 6d94;--space:8px}*{box-sizing:border-
 . box}body{margin:0;background:var(--pa  . box}body{margin:0;background:var(--pa
 . per);color:var(--ink);font-family:-ap  . per);color:var(--ink);font-family:-ap
-. ple-system,BlinkMacSystemFont,"Segoe   . ple-system,BlinkMacSystemFont,"Segoe 
+. ple-system,BlinkMacSystemFont,"Segoe   . ple-system,BlinkMacSystemFont,"Segoe
 . UI",sans-serif;font-size:16px;line-he  . UI",sans-serif;font-size:16px;line-he
 . ight:1.5}header{display:flex;align-it  . ight:1.5}header{display:flex;align-it
 . ems:center;justify-content:space-betw  . ems:center;justify-content:space-betw
@@ -2006,7 +2006,7 @@ apps/web/src/style.css --- CSS
 . ink);border-color:var(--line)}button:  . ink);border-color:var(--line)}button:
 . hover{opacity:.85}button:active{trans  . hover{opacity:.85}button:active{trans
 . form:translateY(1px)}button:focus-vis  . form:translateY(1px)}button:focus-vis
-. ible,input:focus-visible{outline:3px   . ible,input:focus-visible{outline:3px 
+. ible,input:focus-visible{outline:3px   . ible,input:focus-visible{outline:3px
 . solid var(--focus);outline-offset:3px  . solid var(--focus);outline-offset:3px
 . }button:disabled{cursor:default;opaci  . }button:disabled{cursor:default;opaci
 . ty:.45}button[aria-busy=true]{cursor:  . ty:.45}button[aria-busy=true]{cursor:
@@ -2051,7 +2051,7 @@ apps/web/src/style.css --- CSS
 . oter{padding:24px}}                    . oter{padding:24px}}
                                          3 .credential{display:grid;grid-templat
 .                                        . e-columns:minmax(0,1fr) auto;gap:16px
-.                                        . ;padding:20px 0;border-top:1px solid 
+.                                        . ;padding:20px 0;border-top:1px solid
 .                                        . var(--line)}.credential strong{displa
 .                                        . y:block;overflow-wrap:anywhere}.crede
 .                                        . ntial code{font-size:12px;overflow-wr
@@ -2111,7 +2111,7 @@ bun.lock --- Text
 ..                                       .. , "sha512-1odWVqeEBTl7lJ9zMKLEsmTlny
 ..                                       .. rDO5iRcTvfMKKk1WThUnp/i8JJdffdj2icP+
 ..                                       .. tty159s4PgwE3BiMoEW9NFow=="],
-..                                       22 
+..                                       22
 18     "@typescript/typescript-aix-ppc6  23     "@typescript/typescript-aix-ppc6
 .. 4": ["@typescript/typescript-aix-ppc  .. 4": ["@typescript/typescript-aix-ppc
 .. 64@7.0.2", "", { "os": "aix", "cpu":  .. 64@7.0.2", "", { "os": "aix", "cpu":
@@ -2119,7 +2119,7 @@ bun.lock --- Text
 .. d1tHtZ5PiLkGEMIq88pK2CubZjOsLtYTLqhg  .. d1tHtZ5PiLkGEMIq88pK2CubZjOsLtYTLqhg
 .. Igi6zepFa+9GHZ6h05NMCkQxGKiPXMxXtQ==  .. Igi6zepFa+9GHZ6h05NMCkQxGKiPXMxXtQ==
 .. "],                                   .. "],
-19                                       24 
+19                                       24
 20     "@typescript/typescript-darwin-a  25     "@typescript/typescript-darwin-a
 .. rm64": ["@typescript/typescript-darw  .. rm64": ["@typescript/typescript-darw
 .. in-arm64@7.0.2", "", { "os": "darwin  .. in-arm64@7.0.2", "", { "os": "darwin
@@ -2129,7 +2129,7 @@ bun.lock --- Text
 .. ebJ8syA=="],                          .. ebJ8syA=="],
 
 docs/DEVELOPMENT.md --- 1/2 --- Text
- 2                                        2 
+ 2                                        2
  3 The main cost is security rework. In   3 The main cost is security rework. In
  . tegration access is still uncertain.   . tegration access is still uncertain.
  .  The loop is objective, executable a   .  The loop is objective, executable a
@@ -2139,40 +2139,40 @@ docs/DEVELOPMENT.md --- 1/2 --- Text
  . uires a comparison that includes the   . uires a comparison that includes the
  .  failures and checking needed to pro   .  failures and checking needed to pro
  . duce the same accepted result.         . duce the same accepted result.
- 4                                        4 
+ 4                                        4
  5 Metacode was used during preflight t   5 Metacode was used during preflight a
  . o check reusable sources. No donor i   . nd v0.3 to find reusable sources, fo
  . mplementation was copied. The Effici   . llowed by primary-source checks. Hea
- . ency Orchestrator bounds work, seque   . venKey consumes webauthn-rs and the 
- . nces dependent changes and ties clai   . MIT SimpleWebAuthn browser package. 
+ . ency Orchestrator bounds work, seque   . venKey consumes webauthn-rs and the
+ . nces dependent changes and ties clai   . MIT SimpleWebAuthn browser package.
  . ms to output. They are optional deve   . No product implementation was copied
  . lopment aids and are not application   .  from Enpass or the reference tools.
- .  dependencies.                         .  The Efficiency Orchestrator bounds 
+ .  dependencies.                         .  The Efficiency Orchestrator bounds
  .                                        . work and ties claims to output. Skil
  .                                        . ls are development aids; the selecte
  .                                        . d libraries are pinned application d
  .                                        . ependencies. See DONORS.md for the d
  .                                        . istinction.
- 6                                        6 
+ 6                                        6
  7 | Selected SI Atlas skill | Contribu   7 | Selected SI Atlas skill | Contribu
  . tion |                                 . tion |
  8 | --- | --- |                          8 | --- | --- |
 
 docs/DEVELOPMENT.md --- 2/2 --- Text
 22 22 Run `just check` for the full local gate and `just e2e` for browser acceptance. Portable CI uses `bash scripts/ci.sh` after fetching locked dependencies. Commands have timeouts; HEAVENKEY_DEADLINE_UTC can impose a shared cutoff. The original eight-hour spike budget remains historical evidence.
-23 23 
+23 23
 24 24 CI uses read-only permission, pinned action commit SHAs and a 20-minute job limit. It runs on push, pull_request and manual dispatch, with no deployment or real authenticator. The design follows [GitHub secure-use guidance](https://docs.github.com/en/actions/reference/security/secure-use).
-   25 
+   25
    26 The user explicitly authorized v0.3 expert subagents. Three lanes own Rust credential lifecycle, browser UI/E2E and donor research/security review. The controller owns image, documentation, package pins, integration and acceptance. Writers have disjoint files and no commit authority; only one fixed-port E2E runs at a time. No acceleration multiplier or financial saving is inferred from parallel work.
 
 docs/REVIEW.md --- 1/2 --- Text
- 8 - Owner bootstrap requires a random    8 - Owner bootstrap requires a random 
+ 8 - Owner bootstrap requires a random    8 - Owner bootstrap requires a random
  . operator-only local token and verifi   . operator-only local token and verifi
  . ed WebAuthn enrollment. A guest-firs   . ed WebAuthn enrollment. A guest-firs
  . t ceremony stays a guest. A database   . t ceremony stays a guest. A database
  .  unique index limits owners; start a   .  unique index limits owners; start a
  . nd finish recheck consumption. The a   . nd finish recheck consumption. The a
- . uthority stays consumed on restart.    . uthority stays consumed on restart. 
+ . uthority stays consumed on restart.    . uthority stays consumed on restart.
  . Legacy first-enrollment data remains   . Legacy first-enrollment data remains
  .  a separate migration boundary.        .  a separate migration boundary.
  9 - WebAuthn registration/authenticati   9 - WebAuthn registration/authenticati
@@ -2181,7 +2181,7 @@ docs/REVIEW.md --- 1/2 --- Text
  . ying; restart invalidates pending st   . ying; restart invalidates pending st
  . ate.                                   . ate.
 10 - Credential IDs are unique across u  10 - Credential IDs are unique across u
-.. sers. Authentication checks library   .. sers. Authentication checks library 
+.. sers. Authentication checks library   .. sers. Authentication checks library
 .. validation, user verification and th  .. validation, user verification and th
 .. e current persisted counter.          .. e current persisted counter.
 11 - A grant's audience derives from th  11 - The original credential ID remains
@@ -2189,7 +2189,7 @@ docs/REVIEW.md --- 1/2 --- Text
 .. rtion must match that user's stored   ..  An assertion must match an active s
 .. public key. The Rust grant verifier   .. tored key of that account. Removed k
 .. checks its trusted issuer, scope, au  .. eys are denied; surviving keys can u
-.. dience, signature, expiry and revoca  .. se preexisting account grants. This 
+.. dience, signature, expiry and revoca  .. se preexisting account grants. This
 .. tion.                                 .. is account authority, not device-bou
 ..                                       .. nd delegation. The verifier checks t
 ..                                       .. rusted issuer, scope, audience, sign
@@ -2209,45 +2209,45 @@ docs/REVIEW.md --- 1/2 --- Text
 .. tion before execution; a request can  .. tion before execution; a request can
 .. not switch action, arguments or beco  .. not switch action, arguments or beco
 .. me a login.                           .. me a login.
-13 - Revocation is checked again after   14 - Revocation is checked again after 
+13 - Revocation is checked again after   14 - Revocation is checked again after
 .. authentication and inside the operat  .. authentication and inside the operat
 .. ion transaction. The committed opera  .. ion transaction. The committed opera
 .. tion ID is unique. Expired/revoked g  .. tion ID is unique. Expired/revoked g
-.. rants and replays after restart are   .. rants and replays after restart are 
+.. rants and replays after restart are   .. rants and replays after restart are
 .. rejected.                             .. rejected.
 14 - Mutating endpoints check Origin; a  15 - Mutating endpoints check Origin; a
 .. ll requests check Host. SQLite state  .. ll requests check Host. SQLite state
-.. ments use bound parameters. No CORS   .. ments use bound parameters. No CORS 
+.. ments use bound parameters. No CORS   .. ments use bound parameters. No CORS
 .. is enabled. Bodies and concurrent pe  .. is enabled. Bodies and concurrent pe
 .. nding ceremonies are bounded.         .. nding ceremonies are bounded.
 
 docs/REVIEW.md --- 2/2 --- Text
-17                                       18 
+17                                       18
 18 Executed evidence is in e2e.json and  19 Executed evidence is in e2e.json and
 ..  the native check log. Semgrep's sec  ..  the native check log. Semgrep's sec
 .. urity-audit rules scanned four sourc  .. urity-audit rules scanned four sourc
 .. e files without findings or parser e  .. e files without findings or parser e
 .. rrors. Gitleaks scoped to apps/, cra  .. rrors. Gitleaks scoped to apps/, cra
 .. tes/ and scripts/ found zero secrets  .. tes/ and scripts/ found zero secrets
-.. . The earlier default scan included   .. . The earlier default scan included 
+.. . The earlier default scan included   .. . The earlier default scan included
 .. dependencies/build artifacts; its me  .. dependencies/build artifacts; its me
 .. tadata is separately diagnosed rathe  .. tadata is separately diagnosed rathe
 .. r than treated as a successful sourc  .. r than treated as a successful sourc
 .. e scan.                               .. e scan.
-19                                       20 
+19                                       20
 ..                                       21 The v0.3 expert reviewer is separate
-..                                       ..  from the implementation lanes. Its 
+..                                       ..  from the implementation lanes. Its
 ..                                       .. source hashes and findings are recor
 ..                                       .. ded in evidence/v03-independent-revi
 ..                                       .. ew.json. This is not a penetration t
 ..                                       .. est or production certification. The
 ..                                       ..  browser donor's MIT notice is inclu
 ..                                       .. ded in the generated bundle.
-..                                       22 
+..                                       22
 20 Remaining release gates: real-device  23 Remaining release gates: real-device
 ..  UX, production owner identity/provi  ..  UX, production owner identity/provi
 .. sioning, multiple devices and recove  .. sioning, recovery, key rotation, ten
-.. ry, key rotation, tenant model, dist  .. ant model, distributed concurrency, 
+.. ry, key rotation, tenant model, dist  .. ant model, distributed concurrency,
 .. ributed concurrency, rate limits, ha  .. rate limits, hardened storage/permis
 .. rdened storage/permissions, secure t  .. sions, secure time for offline opera
 .. ime for offline operation, formal wi  .. tion, formal wire-profile choice, se
@@ -2263,7 +2263,7 @@ docs/ROADMAP.md --- Text
  8 | 0.2 | Operator bootstrap and GitHu   8 | 0.2 | Operator bootstrap and GitHu
  . b foundation | Guest-first and wrong   . b foundation | Guest-first and wrong
  . -token denial, one owner under compe   . -token denial, one owner under compe
- . ting ceremonies, restart and source    . ting ceremonies, restart and source 
+ . ting ceremonies, restart and source    . ting ceremonies, restart and source
  . checks | Completed locally; hosted C   . checks | Completed locally; hosted C
  . I account gate open |                  . I account gate open |
  9 | 0.3 | Multiple credentials and dev   9 | 0.3 | Multiple credentials and dev
@@ -2282,18 +2282,18 @@ docs/ROADMAP.md --- Text
 .. iew | Planned |                       .. iew | Planned |
 12 | Hardware | Touch ID, phone, securi  12 | Hardware | Touch ID, phone, securi
 .. ty key | Operator-confirmed enrollme  .. ty key | Operator-confirmed enrollme
-.. nt, cancel/error and recovery tests   .. nt, cancel/error and recovery tests 
+.. nt, cancel/error and recovery tests   .. nt, cancel/error and recovery tests
 .. | Deferred by user |                  .. | Deferred by user |
 
 docs/SPEC.md --- Text
-2                                        2 
+2                                        2
 3 Owner enrollment requires a 256-bit,   3 Owner enrollment requires a 256-bit,
 .  operator-only bootstrap token gener   .  operator-only bootstrap token gener
 . ated by the server and a verified We   . ated by the server and a verified We
 . bAuthn registration. Guests may enro   . bAuthn registration. Guests may enro
 . ll first without acquiring ownership   . ll first without acquiring ownership
 . . The reserved owner name requires t   . . The reserved owner name requires t
-. he token. Only one successful owner    . he token. Only one successful owner 
+. he token. Only one successful owner    . he token. Only one successful owner
 . enrollment is permitted; pending com   . enrollment is permitted; pending com
 . peting enrollments are rejected afte   . peting enrollments are rejected afte
 . r consumption, including after resta   . r consumption, including after resta
@@ -2302,14 +2302,14 @@ docs/SPEC.md --- Text
 . ken after successful enrollment. The   . ken after successful enrollment. The
 .  token never appears in API response   .  token never appears in API response
 . s or runtime logs.                     . s or runtime logs.
-4                                        4 
+4                                        4
 5 The browser creates and uses WebAuth   5 The browser creates and uses WebAuth
 . n credentials through real navigator   . n credentials through real navigator
 . .credentials APIs. The authenticator   . .credentials APIs, with @simplewebau
 .  is an isolated virtual CTAP2 device   . thn/browser 14.0.0 as its ceremony a
 . . Rust verifies the signatures throu   . dapter. Tests use isolated virtual C
 . gh webauthn-rs. A signed access gran   . TAP2 devices; Rust verifies signatur
-. t is bound to the enrolled guest cre   . es through webauthn-rs. The grant's 
+. t is bound to the enrolled guest cre   . es through webauthn-rs. The grant's
 . dential. A server-side, single-use W   . original credential-derived audience
 . ebAuthn challenge is paired with the   .  remains a stable server-resolved ac
 .  exact invocation. SQLite stores cre   . count alias. Any active credential o
@@ -2317,13 +2317,13 @@ docs/SPEC.md --- Text
 . perations. Challenges stay server-si   . ng a credential prevents that key fr
 . de and expire; process restart inval   . om authenticating but does not revok
 . idates outstanding challenges.         . e account grants; grant revocation i
-.                                        . s separate. This contract is not an 
+.                                        . s separate. This contract is not an
 .                                        . offline or interoperable DID profile
 .                                        . .
-.                                        6 
+.                                        6
 .                                        7 Accounts may have eight active crede
 .                                        . ntials. Addition binds the exact ini
-.                                        . tiating session, account and active 
+.                                        . tiating session, account and active
 .                                        . authorizing key. Initial registratio
 .                                        . n and credential addition have separ
 .                                        . ate ceremony purposes. Authenticatio
@@ -2333,14 +2333,14 @@ docs/SPEC.md --- Text
 .                                        . fuses the last active key and invali
 .                                        . dates all account sessions/pending a
 .                                        . uthentication and enrollment. Idempo
-.                                        . tent legacy migration preserves the 
+.                                        . tent legacy migration preserves the
 .                                        . initial alias and counters without r
 .                                        . eactivating tombstones. The UI reque
 .                                        . sts a fresh passkey assertion before
 .                                        .  management actions and names the af
 .                                        . fected credential in its confirmatio
 .                                        . n dialog.
-.                                        8 
+.                                        8
 .                                        9 A server-side, single-use WebAuthn c
 .                                        . hallenge is paired with the exact in
 .                                        . vocation. SQLite stores credentials,
@@ -2348,22 +2348,22 @@ docs/SPEC.md --- Text
 .                                        . . Challenges stay server-side and ex
 .                                        . pire; process restart invalidates ou
 .                                        . tstanding challenges.
-6                                       10 
+6                                       10
 7 Tests: owner and guest enrollment, r  11 Tests: owner and guest enrollment, r
 . ead grant creation, guest invocation  .. ead grant creation, guest invocation
 . , changed action/resource/arguments,  .. , changed action/resource/arguments,
 .  wrong origin/RP/challenge/signature  ..  wrong origin/RP/challenge/signature
-. /user-verification, replay, foreign   .. /user-verification, replay, foreign 
+. /user-verification, replay, foreign   .. /user-verification, replay, foreign
 . holder, expired/revoked grant, resta  .. holder, expired/revoked grant, resta
-. rt and duplicate registration. Live   .. rt and duplicate registration. Live 
+. rt and duplicate registration. Live   .. rt and duplicate registration. Live
 . hardware is deferred by the user.     .. hardware is deferred by the user.
-8                                       12 
+8                                       12
 
 docs/assets/README.md --- Text
 5 5 The image is branding, not a screenshot, hardware proof or performance evidence. Browser screenshots are separate artifacts produced from synthetic users by scripts/e2e.mjs.
-6 6 
+6 6
 7 7 social-preview.jpg, when present, is an encoded copy of the generated artwork for GitHub packaging. Committing it does not configure GitHub's separate social-preview setting; that setting requires a UI upload.
-  8 
+  8
   9 The square hero heavenkey-hero-square.png was created on 2026-10-12 by editing the original through the image-generation tool. It recomposes the key and portal on the central axis with a 1:1 canvas; it is not a cropped screenshot. The original wide artwork is retained. The README uses a centered image with width 560 and its intrinsic square aspect ratio.
 
 docs/evidence/browser-mobile.png --- Binary
@@ -2419,7 +2419,7 @@ docs/evidence/check.log --- 1/18 --- Text
  16         PASS [   0.010s] ( 6/24) ua   17         PASS [   0.046s] ( 6/29) ua
  .. c-verifier tests::rejects_oversized   .. c-verifier tests::rejects_delegatio
  .. _and_unknown_fields_before_verifica   .. n_budget_expansion
- .. tion                                  .. 
+ .. tion                                  ..
  17         PASS [   0.010s] ( 7/24) ua   18         PASS [   0.046s] ( 7/29) ua
  .. c-verifier tests::rejects_child_out   .. c-verifier tests::rejects_clock_rol
  .. living_parent                         .. lback_within_process
@@ -2508,10 +2508,10 @@ docs/evidence/check.log --- 1/18 --- Text
  ..                                       .. BSD-3-Clause", "BSD-2-Clause", "ISC
  ..                                       .. ", "Unicode-3.0", "MPL-2.0", "OpenS
  ..                                       .. SL", "Zlib"]
- ..                                       48   │                                
+ ..                                       48   │
  ..                                       ..                                 ━━━
  ..                                       ..  unmatched license allowance
- ..                                       49 
+ ..                                       49
  ..                                       50 warning[license-not-encountered]: l
  ..                                       .. icense was not encountered
  ..                                       51   ┌─ /Users/master/Documents/Codex/
@@ -2521,16 +2521,16 @@ docs/evidence/check.log --- 1/18 --- Text
  ..                                       .. BSD-3-Clause", "BSD-2-Clause", "ISC
  ..                                       .. ", "Unicode-3.0", "MPL-2.0", "OpenS
  ..                                       .. SL", "Zlib"]
- ..                                       54   │                                
- ..                                       ..                                    
+ ..                                       54   │
+ ..                                       ..
  ..                                       ..                               ━━━━━
  ..                                       .. ━━ unmatched license allowance
- ..                                       55 
+ ..                                       55
  38 warning[duplicate]: found 2 duplica   56 warning[duplicate]: found 2 duplica
  .. te entries for crate 'base64'         .. te entries for crate 'base64'
  39   ┌─ /Users/master/Documents/Codex/   57   ┌─ /Users/master/Documents/Codex/
  .. work/uac-spike/Cargo.lock:8:1         .. work/uac-spike/Cargo.lock:8:1
- 40   │                                   58   │  
+ 40   │                                   58   │
 
 docs/evidence/check.log --- 2/18 --- Text
  47     │   ├── webauthn-attestation-ca   65     │   ├── webauthn-attestation-ca
@@ -2553,7 +2553,7 @@ docs/evidence/check.log --- 2/18 --- Text
  .. )                                     .. )
  57   ├ base64 v0.22.1                    75   ├ base64 v0.22.1
  58     └── uac-api v0.2.0                76     └── uac-api v0.3.0
- 59                                       77 
+ 59                                       77
  60 warning[duplicate]: found 2 duplica   78 warning[duplicate]: found 2 duplica
  .. te entries for crate 'getrandom'      .. te entries for crate 'getrandom'
  61    ┌─ /Users/master/Documents/Codex   79    ┌─ /Users/master/Documents/Codex
@@ -2588,7 +2588,7 @@ docs/evidence/check.log --- 3/18 --- Text
  84          ├── webauthn-rs v0.5.5 (*)  102          ├── webauthn-rs v0.5.5 (*)
  85          └── webauthn-rs-core v0.5.  103          └── webauthn-rs-core v0.5.
  .. 5 (*)                                ... 5 (*)
- 86                                      104 
+ 86                                      104
 
 docs/evidence/check.log --- 4/18 --- Text
  95      └── rsqlite-vfs v0.1.1          113      └── rsqlite-vfs v0.1.1
@@ -2599,34 +2599,34 @@ docs/evidence/check.log --- 4/18 --- Text
 100      └── hashlink v0.12.2            118      └── hashlink v0.12.2
 101          └── rusqlite v0.40.2        119          └── rusqlite v0.40.2
 102              └── uac-api v0.2.0      120              └── uac-api v0.3.0
-103                                      ... 
-104 warning[license-not-encountered]: l  ... 
-... icense was not encountered           ... 
-105   ┌─ /Users/master/Documents/Codex/  ... 
-... work/uac-spike/deny.toml:5:64        ... 
-106   │                                  ... 
-107 5 │ allow = ["MIT", "Apache-2.0", "  ... 
-... BSD-3-Clause", "BSD-2-Clause", "ISC  ... 
-... ", "Unicode-3.0", "MPL-2.0", "OpenS  ... 
-... SL", "Zlib"]                         ... 
-108   │                                  ... 
-...                                 ━━━  ... 
-...  unmatched license allowance         ... 
-109                                      ... 
-110 warning[license-not-encountered]: l  ... 
-... icense was not encountered           ... 
-111   ┌─ /Users/master/Documents/Codex/  ... 
-... work/uac-spike/deny.toml:5:97        ... 
-112   │                                  ... 
-113 5 │ allow = ["MIT", "Apache-2.0", "  ... 
-... BSD-3-Clause", "BSD-2-Clause", "ISC  ... 
-... ", "Unicode-3.0", "MPL-2.0", "OpenS  ... 
-... SL", "Zlib"]                         ... 
-114   │                                  ... 
-...                                      ... 
-...                               ━━━━━  ... 
-... ━━ unmatched license allowance       ... 
-115                                      121 
+103                                      ...
+104 warning[license-not-encountered]: l  ...
+... icense was not encountered           ...
+105   ┌─ /Users/master/Documents/Codex/  ...
+... work/uac-spike/deny.toml:5:64        ...
+106   │                                  ...
+107 5 │ allow = ["MIT", "Apache-2.0", "  ...
+... BSD-3-Clause", "BSD-2-Clause", "ISC  ...
+... ", "Unicode-3.0", "MPL-2.0", "OpenS  ...
+... SL", "Zlib"]                         ...
+108   │                                  ...
+...                                 ━━━  ...
+...  unmatched license allowance         ...
+109                                      ...
+110 warning[license-not-encountered]: l  ...
+... icense was not encountered           ...
+111   ┌─ /Users/master/Documents/Codex/  ...
+... work/uac-spike/deny.toml:5:97        ...
+112   │                                  ...
+113 5 │ allow = ["MIT", "Apache-2.0", "  ...
+... BSD-3-Clause", "BSD-2-Clause", "ISC  ...
+... ", "Unicode-3.0", "MPL-2.0", "OpenS  ...
+... SL", "Zlib"]                         ...
+114   │                                  ...
+...                                      ...
+...                               ━━━━━  ...
+... ━━ unmatched license allowance       ...
+115                                      121
 116 warning[duplicate]: found 2 duplica  122 warning[duplicate]: found 2 duplica
 ... te entries for crate 'r-efi'         ... te entries for crate 'r-efi'
 117    ┌─ /Users/master/Documents/Codex  123    ┌─ /Users/master/Documents/Codex
@@ -2664,7 +2664,7 @@ docs/evidence/check.log --- 5/18 --- Text
 ...  (*)                                 ...  (*)
 143              └── webauthn-rs-core v  149              └── webauthn-rs-core v
 ... 0.5.5 (*)                            ... 0.5.5 (*)
-144                                      150 
+144                                      150
 
 docs/evidence/check.log --- 6/18 --- Text
 155       │       ├── der-parser v9.0.0  161       │       ├── der-parser v9.0.0
@@ -2690,7 +2690,7 @@ docs/evidence/check.log --- 7/18 --- Text
 ... 2.0                                  ... 2.0
 169       │           ├── uac-api v0.2.  175       │           ├── uac-api v0.3.
 ... 0 (*)                                ... 0 (*)
-170       │           └── uac-verifier   176       │           └── uac-verifier 
+170       │           └── uac-verifier   176       │           └── uac-verifier
 ... v0.2.0                               ... v0.3.0
 171       │               └── uac-api v  177       │               └── uac-api v
 ... 0.2.0 (*)                            ... 0.3.0 (*)
@@ -2702,7 +2702,7 @@ docs/evidence/check.log --- 7/18 --- Text
 docs/evidence/check.log --- 8/18 --- Text
 186       │   │   │   └── webauthn-rs-c  192       │   │   │   └── webauthn-rs-c
 ... ore v0.5.5 (*)                       ... ore v0.5.5 (*)
-187       │   │   ├── serde_urlencoded   193       │   │   ├── serde_urlencoded 
+187       │   │   ├── serde_urlencoded   193       │   │   ├── serde_urlencoded
 ... v0.7.1                               ... v0.7.1
 188       │   │   │   └── axum v0.8.9    194       │   │   │   └── axum v0.8.9
 189       │   │   │       └── uac-api v  195       │   │   │       └── uac-api v
@@ -2752,7 +2752,7 @@ docs/evidence/check.log --- 11/18 --- Text
 ... 1                                    ... 1
 289       │           └── sqlite-wasm-r  295       │           └── sqlite-wasm-r
 ... s v0.5.5                             ... s v0.5.5
-290       │               └── rusqlite   296       │               └── rusqlite 
+290       │               └── rusqlite   296       │               └── rusqlite
 ... v0.40.2                              ... v0.40.2
 291       │                   └── uac-a  297       │                   └── uac-a
 ... pi v0.2.0 (*)                        ... pi v0.3.0 (*)
@@ -2798,7 +2798,7 @@ docs/evidence/check.log --- 12/18 --- Text
 ... .1                                   ... .1
 
 docs/evidence/check.log --- 13/18 --- Text
-340       │       │   │       └── idna   346       │       │   │       └── idna 
+340       │       │   │       └── idna   346       │       │   │       └── idna
 ... v1.1.0                               ... v1.1.0
 341       │       │   │           └── u  347       │       │   │           └── u
 ... rl v2.5.8                            ... rl v2.5.8
@@ -2815,7 +2815,7 @@ docs/evidence/check.log --- 13/18 --- Text
 
 docs/evidence/check.log --- 14/18 --- Text
 385       │   ├── der-parser v9.0.0      391       │   ├── der-parser v9.0.0
-386       │   │   ├── webauthn-rs-core   392       │   │   ├── webauthn-rs-core 
+386       │   │   ├── webauthn-rs-core   392       │   │   ├── webauthn-rs-core
 ... v0.5.5                               ... v0.5.5
 387       │   │   │   └── webauthn-rs v  393       │   │   │   └── webauthn-rs v
 ... 0.5.5                                ... 0.5.5
@@ -2833,7 +2833,7 @@ docs/evidence/check.log --- 15/18 --- Text
 399               └── rusqlite v0.40.2   405               └── rusqlite v0.40.2
 400                   └── uac-api v0.2.  406                   └── uac-api v0.3.
 ... 0                                    ... 0
-401                                      407 
+401                                      407
 402 warning[duplicate]: found 2 duplica  408 warning[duplicate]: found 2 duplica
 ... te entries for crate 'thiserror-imp  ... te entries for crate 'thiserror-imp
 ... l'                                   ... l'
@@ -2863,7 +2863,7 @@ docs/evidence/check.log --- 17/18 --- Text
 ... 0.2                                  ... 0.2
 428                       └── uac-api v  434                       └── uac-api v
 ... 0.2.0                                ... 0.3.0
-429                                      435 
+429                                      435
 430 advisories ok, bans ok, licenses ok  436 advisories ok, bans ok, licenses ok
 ... , sources ok                         ... , sources ok
 431 cargo audit --no-fetch --no-yanked   437 cargo audit --no-fetch --no-yanked
@@ -2871,7 +2871,7 @@ docs/evidence/check.log --- 17/18 --- Text
 docs/evidence/check.log --- 18/18 --- Text
 434 bun audit                            440 bun audit
 435 bun audit v1.4.2 (744846f84)         441 bun audit v1.4.2 (744846f84)
-436                                      442 
+436                                      442
 437 No vulnerabilities found (checked 2  443 No vulnerabilities found (checked 2
 ... 2 packages) [249.00ms]               ... 3 packages) [236.00ms]
 438 python3 scripts/startup_probe.py     444 python3 scripts/startup_probe.py
@@ -2885,12 +2885,12 @@ docs/evidence/check.log --- 18/18 --- Text
 ... ebug/uac-api'", "passed": true}      ... bug/uac-api'", "passed": true}
 440 bun run build                        446 bun run build
 441 $ bun build apps/web/src/main.ts --  447 $ python3 scripts/build_web.py
-... outdir apps/web/dist --target brows  ... 
-... er                                   ... 
+... outdir apps/web/dist --target brows  ...
+... er                                   ...
 442 Bundled 1 module in 2ms              448 Bundled 21 modules in 10ms
-443                                      449 
+443                                      449
 444   main.js  6.76 KB  (entry point)    450   main.js  29.32 KB  (entry point)
-445                                      451 
+445                                      451
 446 cargo build --locked --offline       452 cargo build --locked --offline
 447     Finished `dev` profile [unoptim  453     Finished `dev` profile [unoptim
 ... ized + debuginfo] target(s) in 0.11  ... ized + debuginfo] target(s) in 0.25
@@ -2915,7 +2915,7 @@ docs/evidence/commands.jsonl --- JSON
 docs/evidence/e2e.json --- 1/5 --- JSON
   2   "completed": true,                   2   "completed": true,
   3   "mode": "virtual CTAP2 authentica    3   "mode": "virtual CTAP2 authentica
-  . tors; real navigator.credentials +     . tors; real navigator.credentials + 
+  . tors; real navigator.credentials +     . tors; real navigator.credentials +
   . Rust verification",                    . Rust verification",
   4   "hardware": "deferred by user",      4   "hardware": "deferred by user",
   5   "total": 41,                         5   "total": 69,
@@ -2929,7 +2929,7 @@ docs/evidence/e2e.json --- 1/5 --- JSON
  12       "elapsed_ms": 73                12       "elapsed_ms": 146
  13     },                                13     },
  14     {                                 14     {
- 15       "name": "reserved owner name    15       "name": "reserved owner name 
+ 15       "name": "reserved owner name    15       "name": "reserved owner name
  .. requires bootstrap",                  .. requires bootstrap",
  16       "pass": true,                   16       "pass": true,
  17       "elapsed_ms": 2                 17       "elapsed_ms": 4
@@ -3152,7 +3152,7 @@ docs/evidence/e2e.json --- 4/5 --- JSON
 197       "elapsed_ms": 112              197       "elapsed_ms": 156
 198     },                               198     },
 199     {                                199     {
-200       "name": "revocation survives   200       "name": "revocation survives 
+200       "name": "revocation survives   200       "name": "revocation survives
 ... server restart",                     ... server restart",
 201       "pass": true,                  201       "pass": true,
 202       "elapsed_ms": 2                202       "elapsed_ms": 4
@@ -3162,7 +3162,7 @@ docs/evidence/e2e.json --- 4/5 --- JSON
 ... r server restart",                   ... r server restart",
 
 docs/evidence/e2e.json --- 5/5 --- JSON
-210       "name": "mobile width has no   210       "name": "mobile width has no 
+210       "name": "mobile width has no   210       "name": "mobile width has no
 ... horizontal overflow",                ... horizontal overflow",
 211       "pass": true,                  211       "pass": true,
 212       "elapsed_ms": 1                212       "elapsed_ms": 1
@@ -3181,7 +3181,7 @@ docs/evidence/e2e.json --- 5/5 --- JSON
 ...                                      222       "elapsed_ms": 3
 ...                                      223     },
 ...                                      224     {
-...                                      225       "name": "last active passkey 
+...                                      225       "name": "last active passkey
 ...                                      ... cannot be revoked through UI or API
 ...                                      ... ",
 ...                                      226       "pass": true,
@@ -3195,7 +3195,7 @@ docs/evidence/e2e.json --- 5/5 --- JSON
 ...                                      233     },
 ...                                      234     {
 ...                                      235       "name": "credential enrollmen
-...                                      ... t cannot finish in another account 
+...                                      ... t cannot finish in another account
 ...                                      ... session",
 ...                                      236       "pass": true,
 ...                                      237       "elapsed_ms": 50
@@ -3209,7 +3209,7 @@ docs/evidence/e2e.json --- 5/5 --- JSON
 ...                                      243     },
 ...                                      244     {
 ...                                      245       "name": "browser enrolls seco
-...                                      ... nd passkey on a separate device in 
+...                                      ... nd passkey on a separate device in
 ...                                      ... the same account",
 ...                                      246       "pass": true,
 ...                                      247       "elapsed_ms": 136
@@ -3236,7 +3236,7 @@ docs/evidence/e2e.json --- 5/5 --- JSON
 ...                                      263     },
 ...                                      264     {
 ...                                      265       "name": "browser passkey revo
-...                                      ... cation forces reauthentication and 
+...                                      ... cation forces reauthentication and
 ...                                      ... disables mutations",
 ...                                      266       "pass": true,
 ...                                      267       "elapsed_ms": 82
@@ -3257,7 +3257,7 @@ docs/evidence/e2e.json --- 5/5 --- JSON
 ...                                      278     },
 ...                                      279     {
 ...                                      280       "name": "last surviving passk
-...                                      ... ey remains protected after another 
+...                                      ... ey remains protected after another
 ...                                      ... key is revoked",
 ...                                      281       "pass": true,
 ...                                      282       "elapsed_ms": 3
@@ -3305,7 +3305,7 @@ docs/evidence/e2e.json --- 5/5 --- JSON
 ...                                      313     },
 ...                                      314     {
 ...                                      315       "name": "credential cap rejec
-...                                      ... ts new enrollment and disables the 
+...                                      ... ts new enrollment and disables the
 ...                                      ... add control",
 ...                                      316       "pass": true,
 ...                                      317       "elapsed_ms": 36
@@ -3340,7 +3340,7 @@ docs/evidence/e2e.json --- 5/5 --- JSON
 ...                                      338     },
 ...                                      339     {
 ...                                      340       "name": "multiple passkeys an
-...                                      ... d inactive original survive server 
+...                                      ... d inactive original survive server
 ...                                      ... restart",
 ...                                      341       "pass": true,
 ...                                      342       "elapsed_ms": 115
@@ -3368,7 +3368,7 @@ docs/evidence/e2e.log --- Text
 .. art                                   .. art
 40 PASS replay rejected after server re  40 PASS replay rejected after server re
 .. start                                 .. start
-41 PASS mobile width has no horizontal   41 PASS mobile width has no horizontal 
+41 PASS mobile width has no horizontal   41 PASS mobile width has no horizontal
 .. overflow                              .. overflow
 ..                                       42 PASS credential list is scoped and e
 ..                                       .. xposes only public metadata
@@ -3380,10 +3380,10 @@ docs/evidence/e2e.log --- Text
 ..                                       .. pty 48-character bound
 ..                                       46 PASS credential enrollment cannot fi
 ..                                       .. nish in another account session
-..                                       47 PASS credential enrollment is bound 
+..                                       47 PASS credential enrollment is bound
 ..                                       .. to the initiating same-account sessi
 ..                                       .. on
-..                                       48 PASS browser enrolls second passkey 
+..                                       48 PASS browser enrolls second passkey
 ..                                       .. on a separate device in the same acc
 ..                                       .. ount
 ..                                       49 PASS second device authenticates aft
@@ -3396,15 +3396,15 @@ docs/evidence/e2e.log --- Text
 ..                                       52 PASS browser passkey revocation forc
 ..                                       .. es reauthentication and disables mut
 ..                                       .. ations
-..                                       53 PASS passkey revocation invalidates 
+..                                       53 PASS passkey revocation invalidates
 ..                                       .. every session for the account
-..                                       54 PASS passkey revocation invalidates 
+..                                       54 PASS passkey revocation invalidates
 ..                                       .. pending login and invocation ceremon
 ..                                       .. ies
-..                                       55 PASS last surviving passkey remains 
+..                                       55 PASS last surviving passkey remains
 ..                                       .. protected after another key is revok
 ..                                       .. ed
-..                                       56 PASS passkey revocation invalidates 
+..                                       56 PASS passkey revocation invalidates
 ..                                       .. pending enrollment despite fresh sur
 ..                                       .. viving session
 ..                                       57 PASS revoked passkey is excluded fro
@@ -3428,12 +3428,12 @@ docs/evidence/e2e.log --- Text
 ..                                       ..  and keeps buttons on one line
 ..                                       66 PASS credential workbench fits 768px
 ..                                       ..  and keeps buttons on one line
-..                                       67 PASS multiple passkeys and inactive 
+..                                       67 PASS multiple passkeys and inactive
 ..                                       .. original survive server restart
-..                                       68 PASS legacy single-passkey database 
-..                                       .. migrates and authenticates with the 
+..                                       68 PASS legacy single-passkey database
+..                                       .. migrates and authenticates with the
 ..                                       .. same key
-..                                       69 PASS legacy credential migration is 
+..                                       69 PASS legacy credential migration is
 ..                                       .. idempotent across a second restart
 42 {"total":41,"passed":41,"failed":0,"  70 {"total":69,"passed":69,"failed":0,"
 .. elapsed_seconds":4.1}                 .. elapsed_seconds":8.6}
@@ -3460,7 +3460,7 @@ docs/evidence/failure-diagnostic.json --- JSON
  .                                       16   },
 10   {                                   17   {
 11     "actor": "foreign",               18     "actor": "contender",
-12     "status": "Bereit für die erste   19     "status": "Bereit für die erste 
+12     "status": "Bereit für die erste   19     "status": "Bereit für die erste
 .. Einschreibung."                       .. Einschreibung.",
 ..                                       20     "errors": []
 13   }                                   21   }
@@ -3481,7 +3481,7 @@ docs/evidence/heavenkey-missing-binary.json --- JSON
 3   "elapsed_seconds": 0.22,             3   "elapsed_seconds": 1.91,
 4   "completed": false,                  4   "completed": false,
 5   "fatal_error": "server spawn failed  5   "fatal_error": "server spawn failed
-. : ENOENT: no such file or directory,   . : ENOENT: no such file or directory, 
+. : ENOENT: no such file or directory,   . : ENOENT: no such file or directory,
 . posix_spawn '/private/var/folders/bm/  . posix_spawn '/private/var/folders/bm/
 . 0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heav  . 0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heav
 . enkey-startup-probe-9jcmuco1/target/d  . enkey-startup-probe-mrw6mn26/target/d
@@ -3494,14 +3494,14 @@ package.json --- JSON
 .                                        5     "apps/web"
 .                                        6   ],
 5   "scripts": { "build": "bun build a   7   "scripts": {
-. pps/web/src/main.ts --outdir apps/we   . 
-. b/dist --target browser" },            . 
+. pps/web/src/main.ts --outdir apps/we   .
+. b/dist --target browser" },            .
 .                                        8     "build": "python3 scripts/build_
 .                                        . web.py"
 .                                        9   },
 6   "devDependencies": { "playwright-c  10   "devDependencies": {
-. ore": "1.62.1", "typescript": "7.0.2  .. 
-. " }                                   .. 
+. ore": "1.62.1", "typescript": "7.0.2  ..
+. " }                                   ..
 .                                       11     "playwright-core": "1.62.1",
 
 scripts/e2e.mjs --- 1/6 --- JavaScript
@@ -3509,7 +3509,7 @@ scripts/e2e.mjs --- 1/6 --- JavaScript
   6   6 import { tmpdir } from "node:os";
   7   7 import assert from "node:assert/strict";
   .   8 import { Database } from "bun:sqlite";
-  8   9 
+  8   9
   9  10 const root = resolve(".");
  10  11 const evidence = join(root, "docs/evidence");
  11  12 await mkdir(evidence, { recursive: true });
@@ -3547,10 +3547,10 @@ scripts/e2e.mjs --- 3/6 --- JavaScript
  .. .send("WebAuthn.addVirtualAuthentic   .. .send("WebAuthn.addVirtualAuthentic
  .. ator",{ options:{ protocol:"ctap2",   .. ator",{ options:authenticatorOption
  .. ctap2Version:"ctap2_1",transport:"i   .. s });
- .. nternal",hasResidentKey:true,hasUse   .. 
- .. rVerification:true,isUserVerified:t   .. 
- .. rue,automaticPresenceSimulation:tru   .. 
- .. e } });                               .. 
+ .. nternal",hasResidentKey:true,hasUse   ..
+ .. rVerification:true,isUserVerified:t   ..
+ .. rue,automaticPresenceSimulation:tru   ..
+ .. e } });                               ..
  60   await page.goto(origin);            63   await page.goto(origin);
  61   await page.waitForFunction(()=>do   64   await page.waitForFunction(()=>do
  .. cument.documentElement.dataset.read   .. cument.documentElement.dataset.read
@@ -3591,7 +3591,7 @@ scripts/e2e.mjs --- 3/6 --- JavaScript
  ..                                       .. atorId,credential:{...credential,rp
  ..                                       .. Id:new URL(origin).hostname}});
  ..                                       77 }
- ..                                       78 async function get(a,path,session) 
+ ..                                       78 async function get(a,path,session)
  ..                                       .. {
  ..                                       79   return a.page.evaluate(async ({pa
  ..                                       .. th,session})=>{
@@ -3604,7 +3604,7 @@ scripts/e2e.mjs --- 3/6 --- JavaScript
  ..                                       83 }
  65 async function post(actor,path,body   84 async function post(actor,path,body
  .. ,session) {                           .. ,session) {
- 66   return actor.page.evaluate(async    85   return actor.page.evaluate(async 
+ 66   return actor.page.evaluate(async    85   return actor.page.evaluate(async
  .. ({path,body,session})=>{              .. ({path,body,session})=>{
  67     const r=await fetch(path,{metho   86     const r=await fetch(path,{metho
  .. d:"POST",headers:{"Content-Type":"a   .. d:"POST",headers:{"Content-Type":"a
@@ -3622,7 +3622,7 @@ scripts/e2e.mjs --- 4/6 --- JavaScript
  .. t.equal(r.status(),200);             ... t.equal(r.status(),200);
  83   return r.json();                   102   return r.json();
  84 }                                    103 }
- 85 async function enrollment(a,token)   104 async function enrollment(a,token) 
+ 85 async function enrollment(a,token)   104 async function enrollment(a,token)
  .. {                                    ... {
  86   const start=await post(a,"/api/re  105   const start=await post(a,"/api/re
  .. gister/start",{name:a.name,bootstra  ... gister/start",{name:a.name,bootstra
@@ -3634,7 +3634,7 @@ scripts/e2e.mjs --- 4/6 --- JavaScript
  ..                                      108   return {request_id:start.body.req
  ..                                      ... uest_id,credential};
  ..                                      109 }
- ..                                      110 async function creation(a,options) 
+ ..                                      110 async function creation(a,options)
  ..                                      ... {
  88   const credential=await a.page.eva  111   return a.page.evaluate(async opti
  .. luate(async options=>{               ... ons=>{
@@ -3691,8 +3691,8 @@ scripts/e2e.mjs --- 4/6 --- JavaScript
 104     return credential.toJSON();      137     return credential.toJSON();
 105   },start.body.options);             138   },options);
 106   return {request_id:start.body.req  139 }
-... uest_id,credential,invocation};      ... 
-107 }                                    ... 
+... uest_id,credential,invocation};      ...
+107 }                                    ...
 108 function invoke(grant) { return {gr  140 function invoke(grant) { return {gr
 ... ant:grant.grant,resource:"urn:uac:l  ... ant:grant.grant,resource:"urn:uac:l
 ... ab:document",action:"Read",argument  ... ab:document",action:"Read",argument

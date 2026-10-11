@@ -45,7 +45,7 @@ just build
 just e2e
 ```
 
-Der Quick Start wurde für 0.2 aus einem frischen Clone mit leerem Build-Verzeichnis ausgeführt. Die aktuelle lokale Abnahme von 0.3 umfasst **69 Browser-Fälle und 29 Rust-Tests**; Details stehen im [Ausbaubericht](docs/V03-RESULT.md).
+Der Quick Start für 0.3 wurde mit einem frischen GitHub-Clone und leerem Build-Verzeichnis ausgeführt: **69/69 Browser-Fälle bestanden**. Die vollständige lokale Abnahme umfasst außerdem **29 Rust-Tests**. Details stehen im [Ausbaubericht](docs/V03-RESULT.md).
 
 Der Test startet einen isolierten Browser und einen lokalen Server und beendet beide danach. Er verwendet kein persönliches Browserprofil. Testdaten und virtuelle Schlüssel werden gelöscht. Ein anderer Chrome-Pfad lässt sich mit `CHROME_PATH=/pfad/zu/chrome just e2e` angeben.
 

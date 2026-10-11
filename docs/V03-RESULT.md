@@ -22,6 +22,7 @@ Enpass liefert Prinzipien für lokale Datenhoheit und für eine später optional
 | --- | --- |
 | just check | 29/29 Rust-Tests: 24 Verifier-Tests und 5 API-/Migrations-Tests; TypeScript, Clippy, Build und Abhängigkeitsprüfungen grün |
 | just e2e | 69/69 Fälle; bisherige 41 sowie zweite Schlüssel, Sitzungs-/Zweckbindung, Cap, Widerruf, Neustart, Migration und responsive Ansichten |
+| Frischer GitHub-Clone | Gelockte Installation, leeres Build-Verzeichnis und 69/69 Browser-Fälle auf macOS bestanden; rund 23 Sekunden |
 | Portabler CI-Ablauf lokal | Exit 0 auf macOS; kein Ubuntu-Ausführungsnachweis |
 | Unabhängiger Expertenreview | 12 Quell-/Manifest-/Lizenz-/Bundle-Hashes geprüft, 0 offene Blocker |
 | Semgrep | 8 eigene Quelldateien, 0 Findings, 0 Fehler |

@@ -1,0 +1,12 @@
+[
+  {
+    "path": "docs/evidence/v03-grepgod-review.log",
+    "original_sha256": "98e83d8fc27862c6acf745d6190d3989f3398540a197deedffda2bfba7eb62e1",
+    "normalization": "trim trailing spaces only"
+  },
+  {
+    "path": "docs/evidence/v03-security.log",
+    "original_sha256": "ae088c36a8acda63aedd81b361598202890482e8902e0192841c571f4623a809",
+    "normalization": "trim trailing spaces only"
+  }
+]

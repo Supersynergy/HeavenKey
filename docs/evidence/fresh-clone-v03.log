@@ -1,0 +1,16 @@
+Repository: /private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v03-clone-1bfst5hv/HeavenKey
+Git: yes
+REVIEW repository-controlled execution/context: package.json
+REVIEW package scripts (names only): build
+Execution trust: no
+Doctor complete: 2 review signal(s); no repository code executed.
+bun install v1.4.2 (744846f84)
+
++ playwright-core@1.62.1
++ typescript@7.0.2
+
+4 packages installed [19.00ms]
+python3 scripts/run.py build 900 -- just _build
+{"name": "build", "command": ["just", "_build"], "exit_code": 0, "elapsed_seconds": 14.204, "time_utc": "2026-10-11T23:40:31.851090+00:00", "log": "/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v03-clone-1bfst5hv/HeavenKey/docs/evidence/build.log", "timeout_cleanup_pids": []}
+python3 scripts/run.py e2e 180 -- bun scripts/e2e.mjs
+{"name": "e2e", "command": ["bun", "scripts/e2e.mjs"], "exit_code": 0, "elapsed_seconds": 5.969, "time_utc": "2026-10-11T23:40:37.854194+00:00", "log": "/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v03-clone-1bfst5hv/HeavenKey/docs/evidence/e2e.log", "timeout_cleanup_pids": []}

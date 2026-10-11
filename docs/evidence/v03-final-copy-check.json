@@ -1,0 +1,50 @@
+[
+  {
+    "file": "README.md",
+    "stats": {
+      "words": 739,
+      "emdash_per_1k": 1.4,
+      "bold-leadin_per_1k": 2.7,
+      "tricolon_per_1k": 6.8,
+      "sentences": 44,
+      "sent_median": 10.0,
+      "sent_stdev": 8.9
+    },
+    "findings": []
+  },
+  {
+    "file": "docs/V03-RESULT.md",
+    "stats": {
+      "words": 668,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 4.5,
+      "sentences": 49,
+      "sent_median": 9,
+      "sent_stdev": 4.0
+    },
+    "findings": [
+      {
+        "rule": "FLAT-RHYTHM",
+        "line": 1,
+        "col": 1,
+        "text": "Satzlängen-Streuung 4.0 (Ziel > 5)",
+        "hint": "Gleichmäßiger Rhythmus. Zwei kurze Sätze einbauen."
+      },
+      {
+        "rule": "EMPTY-ADV",
+        "line": 23,
+        "col": 3,
+        "text": "just",
+        "hint": "Streichen, wenn es keine echte Betonung oder Unsicherheit trägt."
+      },
+      {
+        "rule": "EMPTY-ADV",
+        "line": 24,
+        "col": 3,
+        "text": "just",
+        "hint": "Streichen, wenn es keine echte Betonung oder Unsicherheit trägt."
+      }
+    ]
+  }
+]

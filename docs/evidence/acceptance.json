@@ -80,7 +80,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "4e4c6c7ddef135fed8f649adc058403b39f3160bcf1131ee5127fd315dcfb506"
+      "sha256": "c569a2144f51f9b86d97b7e39e1a386a541576de4c5819fcbee9d69f188ce2c5"
     },
     {
       "path": "docs/assets/heavenkey-hero-square.png",
@@ -120,6 +120,77 @@
   },
   "hardware": "virtual CTAP2 only; real devices deferred",
   "linux": "not executed; last hosted CI blocked by account condition",
-  "fresh_clone_v03": "pending publication",
-  "saving_claim": "none; no comparable baseline or billing measurement"
+  "fresh_clone_v03": {
+    "passed": true,
+    "commit": "ea36f36fb5857e7ba1701c2cda113b4f7c21da83",
+    "steps": [
+      {
+        "command": [
+          "gh",
+          "repo",
+          "clone",
+          "Supersynergy/HeavenKey",
+          "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v03-clone-1bfst5hv/HeavenKey",
+          "--",
+          "--quiet"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1.79
+      },
+      {
+        "command": [
+          "aidev",
+          "doctor",
+          "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v03-clone-1bfst5hv/HeavenKey"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.12
+      },
+      {
+        "command": [
+          "bun",
+          "install",
+          "--frozen-lockfile",
+          "--ignore-scripts"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.02
+      },
+      {
+        "command": [
+          "cargo",
+          "fetch",
+          "--locked"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.44
+      },
+      {
+        "command": [
+          "just",
+          "build"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 14.23
+      },
+      {
+        "command": [
+          "just",
+          "e2e"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 6.0
+      }
+    ],
+    "e2e_passed": 69,
+    "target": "initially empty clone-local target; registry cache warm",
+    "elapsed_seconds": 22.61,
+    "clone_path": "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v03-clone-1bfst5hv/HeavenKey"
+  },
+  "saving_claim": "none; no comparable baseline or billing measurement",
+  "github_ci": {
+    "status": "account_gate_before_any_step",
+    "run_url": "https://github.com/Supersynergy/HeavenKey/actions/runs/38185048027",
+    "annotation": "Recent account payments failed OR spending limit must be increased; exact cause unknown"
+  }
 }

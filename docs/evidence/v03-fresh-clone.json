@@ -1,0 +1,67 @@
+{
+  "passed": true,
+  "commit": "ea36f36fb5857e7ba1701c2cda113b4f7c21da83",
+  "steps": [
+    {
+      "command": [
+        "gh",
+        "repo",
+        "clone",
+        "Supersynergy/HeavenKey",
+        "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v03-clone-1bfst5hv/HeavenKey",
+        "--",
+        "--quiet"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.79
+    },
+    {
+      "command": [
+        "aidev",
+        "doctor",
+        "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v03-clone-1bfst5hv/HeavenKey"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.12
+    },
+    {
+      "command": [
+        "bun",
+        "install",
+        "--frozen-lockfile",
+        "--ignore-scripts"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.02
+    },
+    {
+      "command": [
+        "cargo",
+        "fetch",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.44
+    },
+    {
+      "command": [
+        "just",
+        "build"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 14.23
+    },
+    {
+      "command": [
+        "just",
+        "e2e"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 6.0
+    }
+  ],
+  "e2e_passed": 69,
+  "target": "initially empty clone-local target; registry cache warm",
+  "elapsed_seconds": 22.61,
+  "clone_path": "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v03-clone-1bfst5hv/HeavenKey"
+}
