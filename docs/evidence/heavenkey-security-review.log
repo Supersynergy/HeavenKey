@@ -1,0 +1,8 @@
+=== semgrep (OWASP + lang-auto) ===
+
+=== gitleaks (secrets) ===
+12:56AM INF 0 commits scanned.
+12:56AM INF scanned ~0 bytes (0) in 32.8ms
+12:56AM INF no leaks found
+
+=== osv-scanner (deps CVE) ===

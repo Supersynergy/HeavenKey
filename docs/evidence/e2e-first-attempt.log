@@ -1,0 +1,7 @@
+waitForResponse: Timeout 30000ms exceeded while waiting for event "response"
+    at registration (/Users/master/Documents/Codex/work/uac-spike/scripts/e2e.mjs:67:25)
+    at <anonymous> (/Users/master/Documents/Codex/work/uac-spike/scripts/e2e.mjs:105:80)
+    at test (/Users/master/Documents/Codex/work/uac-spike/scripts/e2e.mjs:20:15)
+    at /Users/master/Documents/Codex/work/uac-spike/scripts/e2e.mjs:105:9
+    at processTicksAndRejections (native:7:39)
+{"total":1,"passed":0,"failed":1,"elapsed_seconds":36}

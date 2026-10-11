@@ -1,0 +1,65 @@
+[
+  {
+    "file": "README.md",
+    "stats": {
+      "words": 239,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 4.2,
+      "sentences": 22,
+      "sent_median": 10.0,
+      "sent_stdev": 4.5
+    },
+    "findings": [
+      {
+        "rule": "FLAT-RHYTHM",
+        "line": 1,
+        "col": 1,
+        "text": "Satzlängen-Streuung 4.5 (Ziel > 5)",
+        "hint": "Gleichmäßiger Rhythmus. Zwei kurze Sätze einbauen."
+      }
+    ]
+  },
+  {
+    "file": "docs/REVIEW.md",
+    "stats": {
+      "words": 363,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 2.8,
+      "sentences": 29,
+      "sent_median": 10,
+      "sent_stdev": 6.9
+    },
+    "findings": [
+      {
+        "rule": "COLON-REVEAL",
+        "line": 20,
+        "col": 1,
+        "text": "Remaining release gates: real-device UX, trusted owner provisioning, m",
+        "hint": "Doppelpunkt-Enthüllung. Als normalen Satz schreiben."
+      }
+    ]
+  },
+  {
+    "file": "docs/SPIKE-RESULT.md",
+    "stats": {
+      "words": 1245,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 10.4,
+      "sentences": 76,
+      "sent_median": 10.0,
+      "sent_stdev": 5.5
+    },
+    "findings": [
+      {
+        "rule": "TRICOLON",
+        "line": 7,
+        "col": 130,
+        "text": "13x = 10.4/1000 Wörter (Grenze 10.0, 1 zu viel)",
+        "hint": "Dreier-Rhythmus überdosiert. Auf zwei oder vier ändern."
+      }
+    ]
+  }
+]

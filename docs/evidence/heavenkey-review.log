@@ -1,0 +1,1830 @@
+=== structural diff (working tree) ===
+.gitignore --- Text
+3 3 /apps/web/dist/
+4 4 /data/
+5 5 /.grepgod/
+  6 .env
+  7 .env.*
+
+AGENTS.md --- Text
+1 # UAC spike                            1 # HeavenKey
+2                                        2 
+3 Scope: local Rust + TypeScript simula  3 Scope: local Rust + TypeScript access
+. tor. No deployment, real wallet, vehi  .  lab, published in the Supersynergy G
+. cle, or user credential import. Eight  . itHub account. No production deployme
+. -hour foreground budget. Respect othe  . nt, real wallet, vehicle, or user cre
+. r edits.                               . dential import. The original spike ha
+.                                        . d an eight-hour budget; new commands 
+.                                        . have explicit foreground timeouts and
+.                                        .  may use HEAVENKEY_DEADLINE_UTC for a
+.                                        .  phase cutoff. Respect other edits. P
+.                                        . ublishing this repository is authoriz
+.                                        . ed; hardware testing remains deferred
+.                                        . .
+4                                        4 
+5 Oracle: `just check` and `just e2e`;   5 Oracle: `just check` and `just e2e`; 
+. browser tests use isolated virtual CT  . browser tests use isolated virtual CT
+. AP2 authenticators and the real Rust   . AP2 authenticators and the real Rust 
+. WebAuthn verifier. Label hardware ver  . WebAuthn verifier. Label hardware ver
+. ification as deferred.                 . ification as deferred.
+6                                        6 
+7 Structure: deployables in apps/, shar  7 Structure: deployables in apps/, shar
+. ed Rust in crates/, helpers in script  . ed Rust in crates/, helpers in script
+. s/, evidence in docs/evidence/. Reuse  . s/, evidence in docs/evidence/. Reuse
+.  reviewed crypto and WebAuthn librari  .  reviewed crypto and WebAuthn librari
+. es. No custom signing primitives. No   . es. No custom signing primitives. No 
+. secrets in logs.                       . secrets in logs.
+                                         8 
+                                         9 Owner provisioning requires the opera
+.                                        . tor's local single-use bootstrap toke
+.                                        . n and verified passkey enrollment. Ne
+.                                        . ver restore first-visitor ownership. 
+.                                        . Use synthetic data in tests; never co
+.                                        . mmit data/, local tokens, issuer keys
+.                                        .  or user credentials. The grant wire 
+.                                        . format remains experimental and is no
+.                                        . t UCAN interoperability.
+
+Cargo.lock --- 1/2 --- TOML
+1437                            1437 
+1438 [[package]]                1438 [[package]]
+1439 name = "uac-api"           1439 name = "uac-api"
+1440 version = "0.1.0"          1440 version = "0.2.0"
+1441 dependencies = [           1441 dependencies = [
+1442  "axum",                   1442  "axum",
+1443  "base64 0.22.1",          1443  "base64 0.22.1",
+
+Cargo.lock --- 2/2 --- TOML
+1455                            1455 
+1456 [[package]]                1456 [[package]]
+1457 name = "uac-verifier"      1457 name = "uac-verifier"
+1458 version = "0.1.0"          1458 version = "0.2.0"
+1459 dependencies = [           1459 dependencies = [
+1460  "ed25519-dalek",          1460  "ed25519-dalek",
+1461  "serde",                  1461  "serde",
+
+Cargo.toml --- TOML
+ 3 resolver = "2"              3 resolver = "2"
+ 4                             4 
+ 5 [workspace.package]         5 [workspace.package]
+ 6 version = "0.1.0"           6 version = "0.2.0"
+ 7 edition = "2024"            7 edition = "2024"
+ 8 rust-version = "1.88"       8 rust-version = "1.88"
+ 9 publish = false             9 publish = false
+
+README.md --- Text
+ 1 # UAC simulation spike                 1 <div align="center">
+ 2                                        2 
+ .                                        3 # HeavenKey
+ .                                        4 
+ .                                        5 **Zugang beginnt mit Zustimmung.**
+ .                                        6 
+ 3 Rust + TypeScript access lab. The b    7 Passkeys und begrenzte Zugangsrecht
+ . rowser uses real WebAuthn APIs with    . e für Entwickler, die Autorisierung
+ .  virtual CTAP2 authenticators in th    .  bis zur Ausführung prüfen wollen. 
+ . e automated tests. Rust verifies ge    . Rust verifiziert Identität und Rech
+ . nuine signatures. Live Touch ID, ph    . te; TypeScript führt durch Einschre
+ . ones and hardware security keys rem    . ibung, Freigabe und Widerruf.
+ . ain untested.                          . 
+ .                                        8 
+ .                                        9 [![CI](https://github.com/Supersyne
+ .                                        . rgy/HeavenKey/actions/workflows/ci.
+ .                                        . yml/badge.svg)](https://github.com/
+ .                                        . Supersynergy/HeavenKey/actions/work
+ .                                        . flows/ci.yml)
+ .                                       10 ![Status](https://img.shields.io/ba
+ .                                       .. dge/status-research_preview-c5a36a)
+ .                                       11 ![Rust](https://img.shields.io/badg
+ .                                       .. e/Rust-edition_2024-202722)
+ .                                       12 ![TypeScript](https://img.shields.i
+ .                                       .. o/badge/TypeScript-7.0.2-245c45)
+ .                                       13 
+ .                                       14 ![HeavenKey — ein Schlüssel vor ein
+ .                                       .. em leuchtenden Tor über den Wolken]
+ .                                       .. (docs/assets/heavenkey-hero.png)
+ .                                       15 
+ .                                       16 [Quick start](#quick-start) · [Arch
+ .                                       .. itektur](#architektur) · [Nachweise
+ .                                       .. ](#nachweise) · [Roadmap](docs/ROAD
+ .                                       .. MAP.md)
+ .                                       17 
+ .                                       18 </div>
+ .                                       19 
+ .                                       20 ## Was heute funktioniert
+ .                                       21 
+ .                                       22 | Funktion | Verhalten |
+ .                                       23 | --- | --- |
+ .                                       24 | Kontrollierte Einrichtung | Ein l
+ .                                       .. okaler Einrichtungscode und eine er
+ .                                       .. folgreiche Passkey-Einschreibung ve
+ .                                       .. rgeben einmalig die Eigentümerrolle
+ .                                       .. . Ein früher Gast erhält diese Roll
+ .                                       .. e nicht. |
+ .                                       25 | Passkey-Anmeldung | Rust prüft Or
+ .                                       .. igin, RP, Challenge, Signatur und U
+ .                                       .. ser Verification über `webauthn-rs`
+ .                                       .. . |
+ .                                       26 | Begrenzter Zugang | Signiertes Le
+ .                                       .. serecht für eine Testressource mit 
+ .                                       .. einer Gültigkeit von 1–3.600 Sekund
+ .                                       .. en. |
+ .                                       27 | Gebundener Aufruf | Ein frischer 
+ .                                       .. Passkey-Nachweis bestätigt Ressourc
+ .                                       .. e, Aktion und Argumente des konkret
+ .                                       .. en Aufrufs. |
+ .                                       28 | Widerruf und Neustart | Der Serve
+ .                                       .. r prüft Widerruf vor der Ausführung
+ .                                       .. ; Credentials und Widerrufe bleiben
+ .                                       ..  in SQLite. Offene Dialoge und Sitz
+ .                                       .. ungen werden beim Neustart ungültig
+ .                                       .. . |
+ .                                       29 
+ .                                       30 **Stand: Forschungsprototyp 0.2.** 
+ .                                       .. Tests verwenden virtuelle CTAP2-Ger
+ .                                       .. äte im echten Chrome-Browser und de
+ .                                       .. n echten Rust-Verifier. Touch ID, T
+ .                                       .. elefone und Hardware-Schlüssel werd
+ .                                       .. en später live geprüft. Das Grant-F
+ .                                       .. ormat ist experimentell; UCAN-Inter
+ .                                       .. operabilität, Wallets und physische
+ .                                       ..  Geräte sind noch offen.
+ .                                       31 
+ .                                       32 ## Quick start
+ .                                       33 
+ .                                       34 Voraussetzungen: Rustup, Bun **1.4.
+ .                                       .. 2**, `just`, Python 3 und Google Ch
+ .                                       .. rome. Rustup lädt die festgelegte N
+ .                                       .. ightly-Version. Die Simulation unte
+ .                                       .. rstützt macOS und Linux; Windows wu
+ .                                       .. rde nicht geprüft. Das private Repo
+ .                                       .. sitory setzt GitHub-Zugriff voraus.
+ 4                                       35 
+ 5 ```sh                                 36 ```sh
+ .                                       37 git clone https://github.com/Supers
+ .                                       .. ynergy/HeavenKey.git
+ 6 cd /Users/master/Documents/Codex/wo   38 cd HeavenKey
+ . rk/uac-spike                          .. 
+ .                                       39 bun install --frozen-lockfile --ign
+ .                                       .. ore-scripts
+ .                                       40 cargo fetch --locked
+ 7 just check                            41 just build
+ 8 just e2e                              42 just e2e
+ 9 ```                                   43 ```
+10                                       44 
+11 `just check` verifies formatting, T   45 Der Test startet einen isolierten B
+.. ypeScript, Clippy, 24 core tests, l   .. rowser und einen lokalen Server und
+.. icense/source/advisory rules, JavaS   ..  beendet beide danach. Er verwendet
+.. cript advisories and builds. `just    ..  kein persönliches Browserprofil. T
+.. e2e` launches isolated headless Chr   .. estdaten und virtuelle Schlüssel we
+.. ome and the Rust server, runs 35 br   .. rden gelöscht. Ein anderer Chrome-P
+.. owser/API cases, restarts the serve   .. fad lässt sich mit `CHROME_PATH=/pf
+.. r to test persisted credentials and   .. ad/zu/chrome just e2e` angeben.
+..  revocations, saves screenshots and   .. 
+..  exits. No user browser profile is    .. 
+.. used. Ephemeral authenticator keys    .. 
+.. and test databases are removed at t   .. 
+.. he end.                               .. 
+12                                       46 
+13 The spike's automated commands obey   47 Für `just check` werden außerdem `c
+..  the deadline in `docs/evidence/bud   .. argo-nextest` **0.9.146**, `cargo-d
+.. get.json`. For a later explicitly s   .. eny` **0.20.2** und `cargo-audit` *
+.. tarted manual test:                   .. *0.22.2** benötigt. Die vollständig
+..                                       .. e Prüfung umfasst Formatierung, Typ
+..                                       .. eScript, Clippy, Rust-Tests, Lizenz
+..                                       .. -/Quellenregeln, Advisories und Bui
+..                                       .. ld. CI führt den portablen Source- 
+..                                       .. und Browser-Testablauf aus; er enth
+..                                       .. ält keine Deployment-Schritte.
+..                                       48 
+..                                       49 ## Späterer Live-Test
+14                                       50 
+15 ```sh                                 51 ```sh
+16 just dev                              52 just dev
+17 ```                                   53 ```
+18                                       54 
+19 Open http://localhost:18240. This s   55 Öffne `http://localhost:18240`. Der
+.. eparate manual launch is foreground   ..  Server erzeugt `data/owner-bootstr
+.. ed and capped at two hours. It is n   .. ap.txt` mit einem zufälligen Einric
+.. ot started automatically. Creating    .. htungscode, unter Unix nur für den 
+.. a real passkey requires the operato   .. Betreiber lesbar. Lies ihn in einem
+.. r to confirm the authenticator dial   ..  zweiten Terminal mit `cat data/own
+.. og. Local test data stays under `da   .. er-bootstrap.txt` und trage ihn bei
+.. ta/`; `issuer.key` is private and m   ..  der Eigentümer-Einschreibung ein. 
+.. ode 0600. The first registered user   .. Gäste lassen das Feld leer. Nach er
+..  owns this artificial lab resource.   .. folgreicher Eigentümer-Einschreibun
+..  Production ownership must be provi   .. g kann der Code keine weitere Eigen
+.. sioned through a separate trusted s   .. tümerrolle vergeben.
+.. etup.                                 .. 
+20                                       56 
+21 Browser/device support and HTTPS on   57 Der Server läuft im Vordergrund und
+..  a second physical device require t   ..  endet spätestens nach zwei Stunden
+.. he next live test. This local profi   .. . Daten bleiben lokal unter `data/`
+.. le is neither UCAN-compatible nor a   ..  und sind von Git ausgeschlossen. V
+..  wallet implementation. Registratio   .. erwende für den späteren Test ein f
+.. n/authentication challenges and ses   .. risches Datenverzeichnis: Alte Eige
+.. sions are transient and become inva   .. ntümer aus dem ursprünglichen Spike
+.. lid on restart. Credentials, grant    ..  bleiben erhalten und werden dadurc
+.. revocation and accepted operations    .. h nicht nachträglich als vertrauens
+.. persist in SQLite. Revocation is ch   .. würdig provisioniert bestätigt.
+.. ecked again when executing an alrea   .. 
+.. dy-started ceremony.                  .. 
+22                                       58 
+..                                       59 ## Architektur
+..                                       60 
+..                                       61 ```mermaid
+..                                       62 sequenceDiagram
+..                                       63     actor Betreiber
+..                                       64     participant B as TypeScript / W
+..                                       .. ebAuthn
+..                                       65     participant A as Rust / Axum
+..                                       66     participant V as Rust-Verifier
+..                                       67     participant D as SQLite
+23 Evidence: `docs/evidence/check.log`   68     Betreiber->>B: Einrichtungscode
+.. , `e2e.json`, `semgrep.json`, per-s   ..  + Passkey-Einschreibung
+.. ource Gitleaks reports and three br   .. 
+.. owser screenshots. Audit database f   .. 
+.. reshness and manual-review limits a   .. 
+.. re described in `docs/SPIKE-RESULT.   .. 
+.. md`.                                  .. 
+                                         69     B->>A: Einschreibung abschließe
+..                                       .. n
+                                         70     A->>D: Einmalige Eigentümerroll
+..                                       .. e speichern
+                                         71     Betreiber->>A: Leserecht für re
+..                                       .. gistrierten Gast
+                                         72     A->>B: Signierter Grant mit Abl
+..                                       .. auf
+                                         73     B->>A: Konkreten Aufruf beginne
+..                                       .. n
+                                         74     A->>B: Frische WebAuthn-Challen
+..                                       .. ge
+                                         75     B->>A: Signierter Passkey-Nachw
+..                                       .. eis
+                                         76     A->>V: Identität, Scope, Ablauf
+..                                       .. , Bindung und Widerruf prüfen
+                                         77     V-->>A: Erlauben oder abweisen
+                                         78     A->>D: Einmalige Testoperation 
+..                                       .. atomar speichern
+                                         79 ```
+                                         80 
+                                         81 ```text
+                                         82 apps/api/          Rust-API, WebAut
+..                                       .. hn und persistente Zustände
+                                         83 apps/web/          TypeScript-Oberf
+..                                       .. läche ohne UI-Framework
+                                         84 crates/verifier/   Signaturen und B
+..                                       .. erechtigungsregeln
+                                         85 scripts/          Browser-Simulatio
+..                                       .. n und begrenzte Ausführung
+                                         86 docs/             Vertrag, Roadmap,
+..                                       ..  Reviews und Nachweise
+                                         87 ```
+                                         88 
+                                         89 Der Passkey beweist die Identität; 
+..                                       .. der separate Grant begrenzt die erl
+..                                       .. aubte Aktion. Das API verwendet ein
+..                                       .. en Prozess und lokales SQLite. Die 
+..                                       .. zugrunde liegende Testoperation lie
+..                                       .. st ein künstliches Dokument.
+                                         90 
+                                         91 ## Nachweise
+                                         92 
+                                         93 Die [Browser-Ergebnisse](docs/evide
+..                                       .. nce/e2e.json) zeigen jeden ausgefüh
+..                                       .. rten Fall: fremde Empfänger, manipu
+..                                       .. lierte Rechte, falsche Origin/RP/Ch
+..                                       .. allenge, fehlende User Verification
+..                                       .. , Signaturfehler, Counter-Rücksprun
+..                                       .. g, Replay, parallele Duplikate, Abl
+..                                       .. auf, Widerruf und Neustart. Der Aus
+..                                       .. bau prüft zusätzlich Gast-vor-Eigen
+..                                       .. tümer, falsche Einrichtungscodes un
+..                                       .. d konkurrierende Eigentümer-Einschr
+..                                       .. eibungen.
+                                         94 
+                                         95 ![HeavenKey — erfolgreicher Zugriff
+..                                       ..  in der geprüften Oberfläche](docs/
+..                                       .. evidence/browser-success.png)
+                                         96 
+                                         97 - [Verhaltensvertrag](docs/SPEC.md)
+                                         98 - [Roadmap und Gesamtschätzung](doc
+..                                       .. s/ROADMAP.md)
+                                         99 - [Aktueller Source-Review](docs/RE
+..                                       .. VIEW.md)
+                                        100 - [Spike-Ergebnis](docs/SPIKE-RESUL
+..                                      ... T.md)
+                                        101 - [Metacode, Efficiency Orchestrato
+..                                      ... r und zehn ausgewählte Skills](docs
+..                                      ... /DEVELOPMENT.md)
+                                        102 - [Änderungen](CHANGELOG.md)
+                                        103 
+                                        104 Offen sind reale Hardware, mehrere 
+..                                      ... Credentials, Recovery, Mandanten, S
+..                                      ... chlüsselrotation, verteilte Ausführ
+..                                      ... ung, sichere Offline-Zeit und ein i
+..                                      ... nteroperables Protokoll. Ein getren
+..                                      ... ntes Offline-Ziel kennt einen neuen
+..                                      ...  entfernten Widerruf erst nach Empf
+..                                      ... ang entsprechender Information.
+                                        105 
+                                        106 ## Mitwirken, Sicherheit und Rechte
+                                        107 
+                                        108 Änderungen brauchen überprüfbares V
+..                                      ... erhalten und passende Prüfungen: [C
+..                                      ... ONTRIBUTING.md](CONTRIBUTING.md). S
+..                                      ... icherheitsprobleme werden privat ge
+..                                      ... meldet: [SECURITY.md](SECURITY.md).
+                                        109 
+                                        110 HeavenKey ist ein privates Supersyn
+..                                      ... ergy-Projekt mit vorbehaltenen Rech
+..                                      ... ten. Eine Open-Source-Lizenz wurde 
+..                                      ... nicht vergeben. Abhängigkeiten beha
+..                                      ... lten ihre Lizenzen; Hinweise stehen
+..                                      ...  in [NOTICE.md](NOTICE.md) und der 
+..                                      ... [Bildherkunft](docs/assets/README.m
+..                                      ... d).
+
+apps/api/src/main.rs --- 1/11 --- Rust
+ 41  41     db: Connection,
+ 42  42     webauthn: Webauthn,
+ 43  43     issuer: SigningKey,
+ ..  44     bootstrap_hash: [u8; 32],
+ 44  45     registrations: HashMap<String, Registration>,
+ 45  46     authentications: HashMap<String, Authentication>,
+ 46  47     sessions: HashMap<String, Session>,
+ 47  48 }
+ 48  49 struct Registration {
+ 49  50     name: String,
+ 50  51     user_id: Uuid,
+ ..  52     owner: bool,
+ 51  53     state: PasskeyRegistration,
+ 52  54     expires: u64,
+ 53  55 }
+
+apps/api/src/main.rs --- 2/11 --- Rust
+ 73  75 #[serde(deny_unknown_fields)]
+ 74  76 struct RegisterStart {
+ 75  77     name: String,
+ ..  78     bootstrap_token: Option<String>,
+ 76  79 }
+ 77  80 #[derive(Deserialize)]
+ 78  81 #[serde(deny_unknown_fields)]
+
+apps/api/src/main.rs --- 3/11 --- Rust
+274 277     if exists {
+275 278         return Err(ApiError(StatusCode::CONFLICT, "user_exists"));
+276 279     }
+... 280     let owner_exists: bool = inner
+... 281         .db
+... 282         .query_row(
+... 283             "SELECT EXISTS(SELECT 1 FROM users WHERE owner=1)",
+... 284             [],
+... 285             |r| r.get(0),
+... 286         )
+... 287         .map_err(internal)?;
+... 288     let owner = match input.bootstrap_token.as_deref() {
+... 289         Some(token)
+... 290             if !owner_exists
+... 291                 && token.len() == 43
+... 292                 && <[u8; 32]>::from(Sha256::digest(token.as_bytes())) == inner.bootstrap_hash =>
+... 293         {
+... 294             true
+... 295         }
+... 296         Some(_) => return Err(forbidden("bootstrap_denied")),
+... 297         None if input.name == "owner" => return Err(forbidden("bootstrap_required")),
+... 298         None => false,
+... 299     };
+277 300     let user_id = Uuid::new_v4();
+278 301     let (options, state) = inner
+279 302         .webauthn
+
+apps/api/src/main.rs --- 4/11 --- Rust
+285 308         Registration {
+286 309             name: input.name,
+287 310             user_id,
+... 311             owner,
+288 312             state,
+289 313             expires: now() + CEREMONY_TTL,
+290 314         },
+
+apps/api/src/main.rs --- 5/11 --- Rust
+302 326         .registrations
+303 327         .remove(&input.request_id)
+304 328         .ok_or(forbidden("ceremony_missing"))?;
+... 329     if pending.owner {
+... 330         let consumed: bool = inner
+... 331             .db
+... 332             .query_row(
+... 333                 "SELECT EXISTS(SELECT 1 FROM users WHERE owner=1)",
+... 334                 [],
+... 335                 |r| r.get(0),
+... 336             )
+... 337             .map_err(internal)?;
+... 338         if consumed {
+... 339             return Err(forbidden("bootstrap_consumed"));
+... 340         }
+... 341     }
+305 342     let key = inner
+306 343         .webauthn
+307 344         .finish_passkey_registration(&input.credential, &pending.state)
+
+apps/api/src/main.rs --- 6/11 --- Rust
+317     if duplicate {                   354     if duplicate {
+318         return Err(ApiError(StatusC  355         return Err(ApiError(StatusC
+... ode::CONFLICT, "credential_exists")  ... ode::CONFLICT, "credential_exists")
+... );                                   ... );
+319     }                                356     }
+320     let owner: bool = inner          357     let owner = pending.owner;
+321         .db                          ... 
+322         .query_row("SELECT COUNT(*)  ... 
+... =0 FROM users", [], |r| r.get(0))    ... 
+323         .map_err(internal)?;         ... 
+324     inner                            358     inner
+325         .db                          359         .db
+326         .execute(                    360         .execute(
+
+apps/api/src/main.rs --- 7/11 --- Rust
+424     tx.commit().map_err(internal)?;  458     tx.commit().map_err(internal)?;
+425     if let Some(invocation) = pendi  459     if let Some(invocation) = pendi
+... ng.invocation {                      ... ng.invocation {
+426         Ok(Json(                     460         Ok(Json(
+427             json!({"authorized":tru  461             json!({"authorized":tru
+... e,"resource":invocation.resource,"a  ... e,"resource":invocation.resource,"a
+... ction":invocation.action,"arguments  ... ction":invocation.action,"arguments
+... ":invocation.arguments,"operation":  ... ":invocation.arguments,"operation":
+... input.request_id,"data":"UAC exampl  ... input.request_id,"data":"HeavenKey 
+... e document — verified access"}),     ... example document — verified access"
+...                                      ... }),
+428         ))                           462         ))
+429     } else {                         463     } else {
+430         let session = Uuid::new_v4(  464         let session = Uuid::new_v4(
+... ).to_string();                       ... ).to_string();
+
+apps/api/src/main.rs --- 8/11 --- Rust
+546 580         .into_response()
+547 581 }
+... 582 
+... 583 fn bootstrap_hash(data: &Path) -> Result<[u8; 32], Box<dyn std::error::Error>> {
+... 584     let path = data.join("owner-bootstrap.txt");
+... 585     if !path.exists() {
+... 586         let mut random = [0; 32];
+... 587         rand::rng().fill_bytes(&mut random);
+... 588         let mut options = fs::OpenOptions::new();
+... 589         options.write(true).create_new(true);
+... 590         #[cfg(unix)]
+... 591         {
+... 592             use std::os::unix::fs::OpenOptionsExt;
+... 593             options.mode(0o600);
+... 594         }
+... 595         let mut file = options.open(&path)?;
+... 596         writeln!(file, "{}", URL_SAFE_NO_PAD.encode(random))?;
+... 597         file.sync_all()?;
+... 598     }
+... 599     #[cfg(unix)]
+... 600     {
+... 601         use std::os::unix::fs::PermissionsExt;
+... 602         if fs::metadata(&path)?.permissions().mode() & 0o077 != 0 {
+... 603             return Err("owner bootstrap file must be accessible only by its operator".into());
+... 604         }
+... 605     }
+... 606     let token = fs::read_to_string(path)?;
+... 607     let token = token.trim();
+... 608     if token.len() != 43 || URL_SAFE_NO_PAD.decode(token)?.len() != 32 {
+... 609         return Err("invalid owner bootstrap file".into());
+... 610     }
+... 611     Ok(Sha256::digest(token.as_bytes()).into())
+... 612 }
+548 613 
+549 614 #[tokio::main]
+550 615 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+apps/api/src/main.rs --- 9/11 --- Rust
+554 619     let origin = format!("http://localhost:{port}");
+555 620     let data = std::env::var("UAC_DATA").unwrap_or_else(|_| "data".into());
+556 621     fs::create_dir_all(&data)?;
+... 622     let bootstrap_hash = bootstrap_hash(Path::new(&data))?;
+557 623     let key_path = Path::new(&data).join("issuer.key");
+558 624     let bytes = if key_path.exists() {
+559 625         fs::read(&key_path)?
+
+apps/api/src/main.rs --- 10/11 --- Rust
+576     let db = Connection::open(Path:  642     let db = Connection::open(Path:
+... :new(&data).join("uac.sqlite"))?;    ... :new(&data).join("uac.sqlite"))?;
+577     db.busy_timeout(Duration::from_  643     db.busy_timeout(Duration::from_
+... secs(2))?;                           ... secs(2))?;
+578     db.execute_batch("PRAGMA journa  644     db.execute_batch("PRAGMA journa
+... l_mode=WAL; PRAGMA foreign_keys=ON;  ... l_mode=WAL; PRAGMA foreign_keys=ON;
+...  CREATE TABLE IF NOT EXISTS users(i  ...  CREATE TABLE IF NOT EXISTS users(i
+... d TEXT PRIMARY KEY,name TEXT UNIQUE  ... d TEXT PRIMARY KEY,name TEXT UNIQUE
+...  NOT NULL,owner INTEGER NOT NULL,cr  ...  NOT NULL,owner INTEGER NOT NULL,cr
+... edential_id TEXT UNIQUE NOT NULL,pa  ... edential_id TEXT UNIQUE NOT NULL,pa
+... sskey TEXT NOT NULL,counter INTEGER  ... sskey TEXT NOT NULL,counter INTEGER
+...  NOT NULL DEFAULT 0); CREATE TABLE   ...  NOT NULL DEFAULT 0); CREATE TABLE 
+... IF NOT EXISTS grants(id TEXT PRIMAR  ... IF NOT EXISTS grants(id TEXT PRIMAR
+... Y KEY,guest_id TEXT REFERENCES user  ... Y KEY,guest_id TEXT REFERENCES user
+... s(id),token TEXT NOT NULL,revoked I  ... s(id),token TEXT NOT NULL,revoked I
+... NTEGER NOT NULL DEFAULT 0); CREATE   ... NTEGER NOT NULL DEFAULT 0); CREATE 
+... TABLE IF NOT EXISTS operations(id T  ... TABLE IF NOT EXISTS operations(id T
+... EXT PRIMARY KEY,grant_id TEXT REFER  ... EXT PRIMARY KEY,grant_id TEXT REFER
+... ENCES grants(id),holder TEXT REFERE  ... ENCES grants(id),holder TEXT REFERE
+... NCES users(id),created INTEGER NOT   ... NCES users(id),created INTEGER NOT 
+... NULL);")?;                           ... NULL);")?;
+...                                      645     db.execute_batch("CREATE UNIQUE
+...                                      ...  INDEX IF NOT EXISTS one_owner ON u
+...                                      ... sers(owner) WHERE owner=1;")?;
+579     let webauthn = WebauthnBuilder:  646     let webauthn = WebauthnBuilder:
+... :new("localhost", &Url::parse(&orig  ... :new("localhost", &Url::parse(&orig
+... in)?)?                               ... in)?)?
+580         .rp_name("UAC local lab")    647         .rp_name("HeavenKey access 
+...                                      ... lab")
+581         .build()?;                   648         .build()?;
+582     let app = App {                  649     let app = App {
+583         inner: Arc::new(Mutex::new(  650         inner: Arc::new(Mutex::new(
+... Inner {                              ... Inner {
+584             db,                      651             db,
+585             webauthn,                652             webauthn,
+586             issuer,                  653             issuer,
+...                                      654             bootstrap_hash,
+587             registrations: HashMap:  655             registrations: HashMap:
+... :new(),                              ... :new(),
+588             authentications: HashMa  656             authentications: HashMa
+... p::new(),                            ... p::new(),
+589             sessions: HashMap::new(  657             sessions: HashMap::new(
+... ),                                   ... ),
+
+apps/api/src/main.rs --- 11/11 --- Rust
+609         .layer(middleware::from_fn_  677         .layer(middleware::from_fn_
+... with_state(app.clone(), origin_guar  ... with_state(app.clone(), origin_guar
+... d))                                  ... d))
+610         .with_state(app);            678         .with_state(app);
+611     let listener = tokio::net::TcpL  679     let listener = tokio::net::TcpL
+... istener::bind((std::net::Ipv4Addr::  ... istener::bind((std::net::Ipv4Addr::
+... LOCALHOST, port)).await?;            ... LOCALHOST, port)).await?;
+612     println!("UAC lab listening on   680     println!("HeavenKey listening o
+... {origin}; hardware verification def  ... n {origin}; hardware verification d
+... erred");                             ... eferred");
+613     axum::serve(listener, router)    681     axum::serve(listener, router)
+614         .with_graceful_shutdown(asy  682         .with_graceful_shutdown(asy
+... nc {                                 ... nc {
+615             if let Err(e) = tokio::  683             if let Err(e) = tokio::
+... signal::ctrl_c().await {             ... signal::ctrl_c().await {
+
+apps/web/index.html --- HTML
+1 <!doctype html>                        1 <!doctype html>
+2 <html lang="de"><head><meta charset="  2 <html lang="de"><head><meta charset="
+. utf-8"><meta name="viewport" content=  . utf-8"><meta name="viewport" content=
+. "width=device-width,initial-scale=1">  . "width=device-width,initial-scale=1">
+. <title>UAC · Zugangslabor</title><lin  . <title>HeavenKey · Zugangslabor</titl
+. k rel="stylesheet" href="/style.css">  . e><link rel="stylesheet" href="/style
+. <script src="/main.js" type="module">  . .css"><script src="/main.js" type="mo
+. </script></head>                       . dule"></script></head>
+3 <body><header><a href="/" class="word  3 <body><header><a href="/" class="word
+. mark">UAC<span>Zugangslabor</span></a  . mark">HeavenKey<span>Zugangslabor</sp
+. ><span class="mode">Lokaler Spike</sp  . an></a><span class="mode">Lokales Zug
+. an></header>                           . angslabor</span></header>
+4 <div class="workspace"><aside><p clas  4 <div class="workspace"><aside><p clas
+. s="eyebrow">01 · Identität</p><h1>Ein  . s="eyebrow">01 · Identität</p><h1>Ein
+.  Schlüssel.<br>Ein begrenztes Recht.<  .  Schlüssel.<br>Ein begrenztes Recht.<
+. /h1><p>Passkey erstellen, anmelden un  . /h1><p>Passkey erstellen, anmelden un
+. d einen Zugang prüfen.</p><label for=  . d einen Zugang prüfen.</p><label for=
+. "name">Name im Labor</label><input id  . "name">Name im Labor</label><input id
+. ="name" value="owner" maxlength="32"   . ="name" value="owner" maxlength="32" 
+. autocomplete="off"><div class="button  . autocomplete="off"><label for="bootst
+. s"><button id="register">Passkey erst  . rap">Einrichtungscode · nur für Eigen
+. ellen</button><button id="login" clas  . tümer</label><input id="bootstrap" ty
+. s="secondary">Mit Passkey anmelden</b  . pe="password" maxlength="43" autocomp
+. utton></div><output id="identity" ari  . lete="off" placeholder="Gäste lassen 
+. a-live="polite">Noch nicht angemeldet  . dieses Feld leer"><div class="buttons
+. </output><p class="note">Tests verwen  . "><button id="register">Passkey erste
+. den virtuelle FIDO2-Geräte. Hardware   . llen</button><button id="login" class
+. und Biometrie werden später live gepr  . ="secondary">Mit Passkey anmelden</bu
+. üft.</p></aside>                       . tton></div><output id="identity" aria
+.                                        . -live="polite">Noch nicht angemeldet<
+.                                        . /output><p class="note">Tests verwend
+.                                        . en virtuelle FIDO2-Geräte. Hardware u
+.                                        . nd Biometrie werden später live geprü
+.                                        . ft.</p></aside>
+5 <main><section><p class="eyebrow">02   5 <main><section><p class="eyebrow">02 
+. · Zugang vergeben</p><h2>Nur Lesen. M  . · Zugang vergeben</p><h2>Nur Lesen. M
+. it Ablauf.</h2><div class="fields"><d  . it Ablauf.</h2><div class="fields"><d
+. iv><label for="guest">Empfänger im La  . iv><label for="guest">Empfänger im La
+. bor</label><input id="guest" value="g  . bor</label><input id="guest" value="g
+. uest" maxlength="32"></div><div><labe  . uest" maxlength="32"></div><div><labe
+. l for="ttl">Gültigkeit in Sekunden</l  . l for="ttl">Gültigkeit in Sekunden</l
+. abel><input id="ttl" type="number" mi  . abel><input id="ttl" type="number" mi
+. n="1" max="3600" value="300"></div></  . n="1" max="3600" value="300"></div></
+. div><button id="issue" disabled>Zugan  . div><button id="issue" disabled>Zugan
+. g vergeben</button><p class="note">De  . g vergeben</button><p class="note">Di
+. r erste eingeschriebene Nutzer ist de  . e Eigentümerrolle wird einmalig mit d
+. r Eigentümer dieser lokalen Testresso  . em lokalen Einrichtungscode vergeben.
+. urce.</p></section>                    . </p></section>
+6 <section><div class="section-head"><d  6 <section><div class="section-head"><d
+. iv><p class="eyebrow">03 · Zugang ver  . iv><p class="eyebrow">03 · Zugang ver
+. wenden</p><h2>Aktive Berechtigungen</  . wenden</p><h2>Aktive Berechtigungen</
+. h2></div><button id="refresh" class="  . h2></div><button id="refresh" class="
+. secondary" disabled>Aktualisieren</bu  . secondary" disabled>Aktualisieren</bu
+. tton></div><div id="grants"><p class=  . tton></div><div id="grants"><p class=
+. "empty">Nach der Anmeldung erscheinen  . "empty">Nach der Anmeldung erscheinen
+.  hier die zugeordneten Zugänge.</p></  .  hier die zugeordneten Zugänge.</p></
+. div></section>                         . div></section>
+7 <section class="result"><p class="eye  7 <section class="result"><p class="eye
+. brow">Ergebnis</p><output id="status"  . brow">Ergebnis</p><output id="status"
+.  role="status" aria-live="polite">Ber  .  role="status" aria-live="polite">Ber
+. eit für die erste Einschreibung.</out  . eit für die erste Einschreibung.</out
+. put><pre id="result" aria-label="Prüf  . put><pre id="result" aria-label="Prüf
+. ergebnis">—</pre></section></main></d  . ergebnis">—</pre></section></main></d
+. iv>                                    . iv>
+8 <footer>Rust prüft WebAuthn und Berec  8 <footer>Rust prüft WebAuthn und Berec
+. htigungen. Die Hardware-Abnahme ist o  . htigungen. Die Hardware-Abnahme ist o
+. ffen.</footer></body></html>           . ffen.</footer></body></html>
+
+apps/web/package.json --- JSON
+1 { "name": "uac-web", "version": "0.1.  1 { "name": "heavenkey-web", "version":
+. 0", "private": true, "type": "module"  .  "0.2.0", "private": true, "type": "m
+.  }                                     . odule" }
+
+apps/web/src/main.ts --- 1/2 --- TypeScript
+30 }
+31 async function register(): Promise<void> {
+32   const name = input("name");
+33   const start = await api<Ceremony>("/api/register/start", { name, bootstrap_token: input("bootstrap") || null });
+34   const key = start.options.publicKey;
+35   key.challenge = decode(key.challenge as string);
+36   const user = key.user as Record<string, unknown>;
+
+apps/web/src/main.ts --- 2/2 --- TypeScript
+39 39   const created = await navigator.credentials.create({ publicKey: key as unknown as PublicKeyCredentialCreationOptions });
+40 40   if (!(created instanceof PublicKeyCredential)) throw new Error("Einschreibung abgebrochen");
+41 41   await api("/api/register/finish", { request_id: start.request_id, credential: credentialJSON(created) });
+.. 42   el<HTMLInputElement>("bootstrap").value = "";
+42 43   status(`Passkey für ${name} eingeschrieben. Jetzt anmelden.`, false);
+43 44 }
+44 45 async function authenticate(invocation?: object): Promise<Record<string, unknown>> {
+
+bun.lock --- 1/2 --- Text
+10       },                              10       },
+11     },                                11     },
+12     "apps/web": {                     12     "apps/web": {
+13       "name": "uac-web",              13       "name": "heavenkey-web",
+14       "version": "0.1.0",             14       "version": "0.2.0",
+15     },                                15     },
+16   },                                  16   },
+17   "packages": {                       17   "packages": {
+
+bun.lock --- 2/2 --- Text
+55                                       55 
+56     "@typescript/typescript-win32-x6  56     "@typescript/typescript-win32-x6
+.. 4": ["@typescript/typescript-win32-x  .. 4": ["@typescript/typescript-win32-x
+.. 64@7.0.2", "", { "os": "win32", "cpu  .. 64@7.0.2", "", { "os": "win32", "cpu
+.. ": "x64" }, "sha512-0BQ3HkAHHlKLSp1q  .. ": "x64" }, "sha512-0BQ3HkAHHlKLSp1q
+.. Rvf3SUhGpGsDuhB/jgFw75guyqbxJqEaS0Cw  .. Rvf3SUhGpGsDuhB/jgFw75guyqbxJqEaS0Cw
+.. /VFO8i2nHglJUzQCRtMMR/IBAKE3ETMC4g==  .. /VFO8i2nHglJUzQCRtMMR/IBAKE3ETMC4g==
+.. "],                                   .. "],
+57                                       57 
+..                                       58     "heavenkey-web": ["heavenkey-web
+..                                       .. @workspace:apps/web"],
+..                                       59 
+58     "playwright-core": ["playwright-  60     "playwright-core": ["playwright-
+.. core@1.62.1", "", { "bin": { "playwr  .. core@1.62.1", "", { "bin": { "playwr
+.. ight-core": "cli.js" } }, "sha512-wP  .. ight-core": "cli.js" } }, "sha512-wP
+.. YSwEBJY9GHraISXqyqtx0na0LpO3XEX7jNDh  .. YSwEBJY9GHraISXqyqtx0na0LpO3XEX7jNDh
+.. ntbex7tzUS7kLnZsOlFruFJB4Hi/rhDMjXGq  .. ntbex7tzUS7kLnZsOlFruFJB4Hi/rhDMjXGq
+.. HewDZ68nYZVw=="],                     .. HewDZ68nYZVw=="],
+59                                       61 
+60     "typescript": ["typescript@7.0.2  62     "typescript": ["typescript@7.0.2
+.. ", "", { "optionalDependencies": { "  .. ", "", { "optionalDependencies": { "
+.. @typescript/typescript-aix-ppc64": "  .. @typescript/typescript-aix-ppc64": "
+.. 7.0.2", "@typescript/typescript-darw  .. 7.0.2", "@typescript/typescript-darw
+.. in-arm64": "7.0.2", "@typescript/typ  .. in-arm64": "7.0.2", "@typescript/typ
+.. escript-darwin-x64": "7.0.2", "@type  .. escript-darwin-x64": "7.0.2", "@type
+.. script/typescript-freebsd-arm64": "7  .. script/typescript-freebsd-arm64": "7
+.. .0.2", "@typescript/typescript-freeb  .. .0.2", "@typescript/typescript-freeb
+.. sd-x64": "7.0.2", "@typescript/types  .. sd-x64": "7.0.2", "@typescript/types
+.. cript-linux-arm": "7.0.2", "@typescr  .. cript-linux-arm": "7.0.2", "@typescr
+.. ipt/typescript-linux-arm64": "7.0.2"  .. ipt/typescript-linux-arm64": "7.0.2"
+.. , "@typescript/typescript-linux-loon  .. , "@typescript/typescript-linux-loon
+.. g64": "7.0.2", "@typescript/typescri  .. g64": "7.0.2", "@typescript/typescri
+.. pt-linux-mips64el": "7.0.2", "@types  .. pt-linux-mips64el": "7.0.2", "@types
+.. cript/typescript-linux-ppc64": "7.0.  .. cript/typescript-linux-ppc64": "7.0.
+.. 2", "@typescript/typescript-linux-ri  .. 2", "@typescript/typescript-linux-ri
+.. scv64": "7.0.2", "@typescript/typesc  .. scv64": "7.0.2", "@typescript/typesc
+.. ript-linux-s390x": "7.0.2", "@typesc  .. ript-linux-s390x": "7.0.2", "@typesc
+.. ript/typescript-linux-x64": "7.0.2",  .. ript/typescript-linux-x64": "7.0.2",
+..  "@typescript/typescript-netbsd-arm6  ..  "@typescript/typescript-netbsd-arm6
+.. 4": "7.0.2", "@typescript/typescript  .. 4": "7.0.2", "@typescript/typescript
+.. -netbsd-x64": "7.0.2", "@typescript/  .. -netbsd-x64": "7.0.2", "@typescript/
+.. typescript-openbsd-arm64": "7.0.2",   .. typescript-openbsd-arm64": "7.0.2", 
+.. "@typescript/typescript-openbsd-x64"  .. "@typescript/typescript-openbsd-x64"
+.. : "7.0.2", "@typescript/typescript-s  .. : "7.0.2", "@typescript/typescript-s
+.. unos-x64": "7.0.2", "@typescript/typ  .. unos-x64": "7.0.2", "@typescript/typ
+.. escript-win32-arm64": "7.0.2", "@typ  .. escript-win32-arm64": "7.0.2", "@typ
+.. escript/typescript-win32-x64": "7.0.  .. escript/typescript-win32-x64": "7.0.
+.. 2" }, "bin": { "tsc": "bin/tsc" } },  .. 2" }, "bin": { "tsc": "bin/tsc" } },
+..  "sha512-8FYau96o3NKOhbjKi/qNvG/W5jh  ..  "sha512-8FYau96o3NKOhbjKi/qNvG/W5jh
+.. zxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZW  .. zxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZW
+.. TvyzCP8dLRBTf5tBTSRVUNA=="],          .. TvyzCP8dLRBTf5tBTSRVUNA=="],
+61                                       .. 
+62     "uac-web": ["uac-web@workspace:a  .. 
+.. pps/web"],                            .. 
+63   }                                   63   }
+64 }                                     64 }
+
+docs/REVIEW.md --- 1/2 --- Text
+ 5 Trust and failure paths reviewed:      5 Trust and failure paths reviewed:
+ 6                                        6 
+ 7 - The issuer key is generated with O   7 - The issuer key is generated with O
+ . S-seeded RNG, never sent to the brow   . S-seeded RNG, never sent to the brow
+ . ser, persisted privately and reused    . ser, persisted privately and reused 
+ . after restart.                         . after restart.
+ 8 - Owner bootstrap is first-enrollmen   8 - Owner bootstrap requires a random 
+ . t in a local artificial lab. This is   . operator-only local token and verifi
+ .  an explicit prototype boundary, not   . ed WebAuthn enrollment. A guest-firs
+ .  a production ownership procedure.     . t ceremony stays a guest. A database
+ .                                        .  unique index limits owners; start a
+ .                                        . nd finish recheck consumption. The a
+ .                                        . uthority stays consumed on restart. 
+ .                                        . Legacy first-enrollment data remains
+ .                                        .  a separate migration boundary.
+ 9 - WebAuthn registration/authenticati   9 - WebAuthn registration/authenticati
+ . on state stays server-side. Every fi   . on state stays server-side. Every fi
+ . nish consumes the state before verif   . nish consumes the state before verif
+ . ying; restart invalidates pending st   . ying; restart invalidates pending st
+ . ate.                                   . ate.
+10 - Credential IDs are unique across u  10 - Credential IDs are unique across u
+.. sers. Authentication checks library   .. sers. Authentication checks library 
+.. validation, user verification and th  .. validation, user verification and th
+.. e current persisted counter.          .. e current persisted counter.
+11 - A grant's audience derives from th  11 - A grant's audience derives from th
+.. e registered credential ID; the asse  .. e registered credential ID; the asse
+.. rtion must match that user's stored   .. rtion must match that user's stored 
+.. public key. The Rust grant verifier   .. public key. The Rust grant verifier 
+.. checks its trusted issuer, scope, au  .. checks its trusted issuer, scope, au
+.. dience, signature, expiry and revoca  .. dience, signature, expiry and revoca
+.. tion.                                 .. tion.
+
+docs/REVIEW.md --- 2/2 --- Text
+17                                       17 
+18 Executed evidence is in e2e.json and  18 Executed evidence is in e2e.json and
+..  the native check log. Semgrep's sec  ..  the native check log. Semgrep's sec
+.. urity-audit rules scanned four sourc  .. urity-audit rules scanned four sourc
+.. e files without findings or parser e  .. e files without findings or parser e
+.. rrors. Gitleaks scoped to apps/, cra  .. rrors. Gitleaks scoped to apps/, cra
+.. tes/ and scripts/ found zero secrets  .. tes/ and scripts/ found zero secrets
+.. . The earlier default scan included   .. . The earlier default scan included 
+.. dependencies/build artifacts; its me  .. dependencies/build artifacts; its me
+.. tadata is separately diagnosed rathe  .. tadata is separately diagnosed rathe
+.. r than treated as a successful sourc  .. r than treated as a successful sourc
+.. e scan.                               .. e scan.
+19                                       19 
+20 Remaining release gates: real-device  20 Remaining release gates: real-device
+..  UX, trusted owner provisioning, mul  ..  UX, production owner identity/provi
+.. tiple devices and recovery, key rota  .. sioning, multiple devices and recove
+.. tion, tenant model, distributed conc  .. ry, key rotation, tenant model, dist
+.. urrency, rate limits, hardened stora  .. ributed concurrency, rate limits, ha
+.. ge/permissions, secure time for offl  .. rdened storage/permissions, secure t
+.. ine operation, formal wire-profile c  .. ime for offline operation, formal wi
+.. hoice, second independent verifier a  .. re-profile choice, second independen
+.. nd external review. No production re  .. t verifier and external review. No p
+.. lease is claimed.                     .. roduction release is claimed.
+
+docs/SPEC.md --- Text
+1 # UAC simulation spike                 1 # HeavenKey access lab
+.                                        2 
+.                                        3 Owner enrollment requires a 256-bit, 
+.                                        . operator-only bootstrap token generat
+.                                        . ed by the server and a verified WebAu
+.                                        . thn registration. Guests may enroll f
+.                                        . irst without acquiring ownership. The
+.                                        .  reserved owner name requires the tok
+.                                        . en. Only one successful owner enrollm
+.                                        . ent is permitted; pending competing e
+.                                        . nrollments are rejected after consump
+.                                        . tion, including after restart. Legacy
+.                                        .  spike data is not retroactively trus
+.                                        . ted. The UI clears the token after su
+.                                        . ccessful enrollment. The token never 
+.                                        . appears in API responses or runtime l
+.                                        . ogs.
+2                                        4 
+3 The browser creates and uses WebAuthn  5 The browser creates and uses WebAuthn
+.  credentials through real navigator.c  .  credentials through real navigator.c
+. redentials APIs. The authenticator is  . redentials APIs. The authenticator is
+.  an isolated virtual CTAP2 device. Ru  .  an isolated virtual CTAP2 device. Ru
+. st verifies the signatures through we  . st verifies the signatures through we
+. bauthn-rs. A signed access grant is b  . bauthn-rs. A signed access grant is b
+. ound to the enrolled guest credential  . ound to the enrolled guest credential
+. . A server-side, single-use WebAuthn   . . A server-side, single-use WebAuthn 
+. challenge is paired with the exact in  . challenge is paired with the exact in
+. vocation. SQLite stores credentials,   . vocation. SQLite stores credentials, 
+. revocations and accepted operations.   . revocations and accepted operations. 
+. Challenges stay server-side and expir  . Challenges stay server-side and expir
+. e; process restart invalidates outsta  . e; process restart invalidates outsta
+. nding challenges.                      . nding challenges.
+4                                        6 
+
+docs/evidence/acceptance.json --- JSON
+32 32   "missing_links": [],
+33 33   "hardware": "deferred by user",
+34 34   "recorded_elapsed_seconds": 2448.2,
+35 35   "max_seconds": 28800,
+.. 36   "lab_ports_closed": true
+36 37 }
+
+docs/evidence/browser-mobile.png --- Binary
+Binary file modified (old: 98.4 KiB, new: 106.4 KiB).
+
+docs/evidence/browser-revoked.png --- Binary
+Binary file modified (old: 105.1 KiB, new: 114.0 KiB).
+
+docs/evidence/browser-success.png --- Binary
+Binary file modified (old: 116.2 KiB, new: 125.3 KiB).
+
+docs/evidence/check.log --- 1/18 --- Text
+  1 cargo fmt --check                      1 cargo fmt --check
+  2 bun run node_modules/typescript/bin    2 bun run node_modules/typescript/bin
+  . /tsc --noEmit                          . /tsc --noEmit
+  3 cargo clippy --locked --offline --a    3 cargo clippy --locked --offline --a
+  . ll-targets -- -D warnings              . ll-targets -- -D warnings
+  4     Finished `dev` profile [unoptim    4     Checking uac-verifier v0.2.0 (/
+  . ized + debuginfo] target(s) in 0.39    . Users/master/Documents/Codex/work/u
+  . s                                      . ac-spike/crates/verifier)
+  .                                        5     Checking uac-api v0.2.0 (/Users
+  .                                        . /master/Documents/Codex/work/uac-sp
+  .                                        . ike/apps/api)
+  .                                        6     Finished `dev` profile [unoptim
+  .                                        . ized + debuginfo] target(s) in 0.72
+  .                                        . s
+  5 cargo nextest run --locked --offlin    7 cargo nextest run --locked --offlin
+  . e                                      . e
+  6     Finished `test` profile [unopti    8    Compiling uac-verifier v0.2.0 (/
+  . mized + debuginfo] target(s) in 0.1    . Users/master/Documents/Codex/work/u
+  . 8s                                     . ac-spike/crates/verifier)
+  .                                        9    Compiling uac-api v0.2.0 (/Users
+  .                                        . /master/Documents/Codex/work/uac-sp
+  .                                        . ike/apps/api)
+  .                                       10     Finished `test` profile [unopti
+  .                                       .. mized + debuginfo] target(s) in 0.5
+  .                                       .. 2s
+  7 ────────────                          11 ────────────
+  8  Nextest run ID 2c465aba-d6b7-47c4-   12  Nextest run ID b282c2f3-1027-4558-
+  . 9ac5-3425735018dc with nextest prof   .. 9150-d8fc33c2ac21 with nextest prof
+  . ile: default                          .. ile: default
+  9     Starting 24 tests across 2 bina   13     Starting 24 tests across 2 bina
+  . ries                                  .. ries
+ 10         PASS [   0.010s] ( 1/24) ua   14         PASS [   0.010s] ( 1/24) ua
+ .. c-verifier tests::rejects_oversized   .. c-verifier tests::rejects_delegatio
+ .. _and_unknown_fields_before_verifica   .. n_budget_expansion
+ .. tion                                  .. 
+ 11         PASS [   0.012s] ( 2/24) ua   15         PASS [   0.011s] ( 2/24) ua
+ .. c-verifier tests::rejects_empty_and   .. c-verifier tests::rejects_descendan
+ .. _excessive_chains                     .. t_of_revoked_parent
+ 12         PASS [   0.013s] ( 3/24) ua   16         PASS [   0.011s] ( 3/24) ua
+ .. c-verifier tests::rejects_child_out   .. c-verifier tests::rejects_broken_pa
+ .. living_parent                         .. rent_binding
+ 13         PASS [   0.013s] ( 4/24) ua   17         PASS [   0.011s] ( 4/24) ua
+ .. c-verifier tests::rejects_changed_r   .. c-verifier tests::rejects_changed_r
+ .. equest_arguments                      .. equest_arguments
+ 14         PASS [   0.013s] ( 5/24) ua   18         PASS [   0.011s] ( 5/24) ua
+ .. c-verifier tests::rejects_old_invoc   .. c-verifier tests::rejects_delegatio
+ .. ation_at_boundary                     .. n_when_parent_forbids_it
+ 15         PASS [   0.014s] ( 6/24) ua   .. 
+ .. c-verifier tests::rejects_clock_rol   .. 
+ .. lback_within_process                  .. 
+ 16         PASS [   0.014s] ( 7/24) ua   .. 
+ .. c-verifier tests::rejects_descendan   .. 
+ .. t_of_revoked_parent                   .. 
+ 17         PASS [   0.015s] ( 8/24) ua   .. 
+ .. c-verifier tests::rejects_delegatio   .. 
+ .. n_budget_expansion                    .. 
+ 18         PASS [   0.016s] ( 9/24) ua   .. 
+ .. c-verifier tests::offline_verifier_   .. 
+ .. cannot_know_remote_revocation         .. 
+ 19         PASS [   0.016s] (10/24) ua   .. 
+ .. c-verifier tests::rejects_expired_g   .. 
+ .. rant_at_boundary                      .. 
+ 20         PASS [   0.017s] (11/24) ua   .. 
+ .. c-verifier tests::rejects_future_gr   .. 
+ .. ant                                   .. 
+ 21         PASS [   0.020s] (12/24) ua   .. 
+ .. c-verifier tests::rejects_different   .. 
+ .. _resource                             .. 
+ 22         PASS [   0.022s] (13/24) ua   .. 
+ .. c-verifier tests::rejects_child_wit   .. 
+ .. h_earlier_validity                    .. 
+ 23         PASS [   0.022s] (14/24) ua   .. 
+ .. c-verifier tests::rejects_delegatio   .. 
+ .. n_when_parent_forbids_it              .. 
+ 24         PASS [   0.010s] (15/24) ua   19         PASS [   0.011s] ( 6/24) ua
+ .. c-verifier tests::rejects_request_a   .. c-verifier tests::rejects_oversized
+ .. ction_outside_context                 .. _and_unknown_fields_before_verifica
+ ..                                       .. tion
+ 25         PASS [   0.022s] (16/24) ua   20         PASS [   0.011s] ( 7/24) ua
+ .. c-verifier tests::rejects_broken_pa   .. c-verifier tests::rejects_child_wit
+ .. rent_binding                          .. h_earlier_validity
+ 26         PASS [   0.012s] (17/24) ua   21         PASS [   0.011s] ( 8/24) ua
+ .. c-verifier tests::rejects_replayed_   .. c-verifier tests::accepts_valid_att
+ .. invocation                            .. enuated_chain
+ 27         PASS [   0.023s] (18/24) ua   .. 
+ .. c-verifier tests::accepts_valid_att   .. 
+ .. enuated_chain                         .. 
+ 28         PASS [   0.010s] (19/24) ua   22         PASS [   0.012s] ( 9/24) ua
+ .. c-verifier tests::rejects_tampered_   .. c-verifier tests::rejects_old_invoc
+ .. signature                             .. ation_at_boundary
+ ..                                       23         PASS [   0.013s] (10/24) ua
+ ..                                       .. c-verifier tests::rejects_future_gr
+ ..                                       .. ant
+ ..                                       24         PASS [   0.013s] (11/24) ua
+ ..                                       .. c-verifier tests::rejects_different
+ ..                                       .. _resource
+ ..                                       25         PASS [   0.014s] (12/24) ua
+ ..                                       .. c-verifier tests::rejects_empty_and
+ ..                                       .. _excessive_chains
+ ..                                       26         PASS [   0.015s] (13/24) ua
+ ..                                       .. c-verifier tests::rejects_child_out
+ ..                                       .. living_parent
+ ..                                       27         PASS [   0.015s] (14/24) ua
+ ..                                       .. c-verifier tests::rejects_expired_g
+ ..                                       .. rant_at_boundary
+ ..                                       28         PASS [   0.015s] (15/24) ua
+ ..                                       .. c-verifier tests::rejects_clock_rol
+ ..                                       .. lback_within_process
+ ..                                       29         PASS [   0.016s] (16/24) ua
+ ..                                       .. c-verifier tests::offline_verifier_
+ ..                                       .. cannot_know_remote_revocation
+ ..                                       30         PASS [   0.008s] (17/24) ua
+ ..                                       .. c-verifier tests::rejects_tampered_
+ ..                                       .. signature
+ 29         PASS [   0.011s] (20/24) ua   31         PASS [   0.008s] (18/24) ua
+ .. c-verifier tests::rejects_signed_ri   .. c-verifier tests::rejects_untrusted
+ .. ghts_escalation                       .. _root
+ 30         PASS [   0.012s] (21/24) ua   32         PASS [   0.009s] (19/24) ua
+ .. c-verifier tests::rejects_unknown_c   .. c-verifier tests::rejects_request_a
+ .. hallenge                              .. ction_outside_context
+ ..                                       33         PASS [   0.009s] (20/24) ua
+ ..                                       .. c-verifier tests::rejects_wrong_int
+ ..                                       .. ermediate_issuer
+ ..                                       34         PASS [   0.009s] (21/24) ua
+ ..                                       .. c-verifier tests::rejects_unknown_c
+ ..                                       .. hallenge
+ 31         PASS [   0.011s] (22/24) ua   35         PASS [   0.009s] (22/24) ua
+ .. c-verifier tests::rejects_untrusted   .. c-verifier tests::rejects_replayed_
+ .. _root                                 .. invocation
+ 32         PASS [   0.010s] (23/24) ua   36         PASS [   0.009s] (23/24) ua
+ .. c-verifier tests::requires_holder_p   .. c-verifier tests::requires_holder_p
+ .. roof_even_with_valid_chain            .. roof_even_with_valid_chain
+ 33         PASS [   0.012s] (24/24) ua   37         PASS [   0.011s] (24/24) ua
+ .. c-verifier tests::rejects_wrong_int   .. c-verifier tests::rejects_signed_ri
+ .. ermediate_issuer                      .. ghts_escalation
+ 34 ────────────                          38 ────────────
+ 35      Summary [   0.028s] 24 tests r   39      Summary [   0.023s] 24 tests r
+ .. un: 24 passed, 0 skipped              .. un: 24 passed, 0 skipped
+ 36 cargo deny --offline check            40 cargo deny --offline check
+ 37 warning[license-not-encountered]: l   .. 
+ .. icense was not encountered            .. 
+ 38   ┌─ /Users/master/Documents/Codex/   .. 
+ .. work/uac-spike/deny.toml:5:64         .. 
+ 39   │                                   .. 
+ 40 5 │ allow = ["MIT", "Apache-2.0", "   .. 
+ .. BSD-3-Clause", "BSD-2-Clause", "ISC   .. 
+ .. ", "Unicode-3.0", "MPL-2.0", "OpenS   .. 
+ .. SL", "Zlib"]                          .. 
+ 41   │                                   .. 
+ ..                                 ━━━   .. 
+ ..  unmatched license allowance          .. 
+ 42                                       .. 
+ 43 warning[license-not-encountered]: l   .. 
+ .. icense was not encountered            .. 
+ 44   ┌─ /Users/master/Documents/Codex/   .. 
+ .. work/uac-spike/deny.toml:5:97         .. 
+ 45   │                                   .. 
+ 46 5 │ allow = ["MIT", "Apache-2.0", "   .. 
+ .. BSD-3-Clause", "BSD-2-Clause", "ISC   .. 
+ .. ", "Unicode-3.0", "MPL-2.0", "OpenS   .. 
+ .. SL", "Zlib"]                          .. 
+ 47   │                                   .. 
+ ..                                       .. 
+ ..                               ━━━━━   .. 
+ .. ━━ unmatched license allowance        .. 
+ 48                                       .. 
+ 49 warning[duplicate]: found 2 duplica   41 warning[duplicate]: found 2 duplica
+ .. te entries for crate 'base64'         .. te entries for crate 'base64'
+ 50   ┌─ /Users/master/Documents/Codex/   42   ┌─ /Users/master/Documents/Codex/
+ .. work/uac-spike/Cargo.lock:8:1         .. work/uac-spike/Cargo.lock:8:1
+ 51   │                                   43   │  
+
+docs/evidence/check.log --- 2/18 --- Text
+ 58     │   ├── webauthn-attestation-ca   50     │   ├── webauthn-attestation-ca
+ ..  v0.5.5                               ..  v0.5.5
+ 59     │   │   └── webauthn-rs-core v0   51     │   │   └── webauthn-rs-core v0
+ .. .5.5                                  .. .5.5
+ 60     │   │       └── webauthn-rs v0.   52     │   │       └── webauthn-rs v0.
+ .. 5.5                                   .. 5.5
+ 61     │   │           └── uac-api v0.   53     │   │           └── uac-api v0.
+ .. 1.0                                   .. 2.0
+ 62     │   ├── webauthn-rs v0.5.5 (*)    54     │   ├── webauthn-rs v0.5.5 (*)
+ 63     │   ├── webauthn-rs-core v0.5.5   55     │   ├── webauthn-rs-core v0.5.5
+ ..  (*)                                  ..  (*)
+ 64     │   └── webauthn-rs-proto v0.5.   56     │   └── webauthn-rs-proto v0.5.
+ .. 5                                     .. 5
+ 65     │       └── webauthn-rs-core v0   57     │       └── webauthn-rs-core v0
+ .. .5.5 (*)                              .. .5.5 (*)
+ 66     ├── webauthn-rs-core v0.5.5 (*)   58     ├── webauthn-rs-core v0.5.5 (*)
+ 67     └── webauthn-rs-proto v0.5.5 (*   59     └── webauthn-rs-proto v0.5.5 (*
+ .. )                                     .. )
+ 68   ├ base64 v0.22.1                    60   ├ base64 v0.22.1
+ 69     └── uac-api v0.1.0                61     └── uac-api v0.2.0
+ 70                                       62 
+ 71 warning[duplicate]: found 2 duplica   63 warning[duplicate]: found 2 duplica
+ .. te entries for crate 'getrandom'      .. te entries for crate 'getrandom'
+ 72    ┌─ /Users/master/Documents/Codex   64    ┌─ /Users/master/Documents/Codex
+ .. /work/uac-spike/Cargo.lock:42:1       .. /work/uac-spike/Cargo.lock:42:1
+
+docs/evidence/check.log --- 3/18 --- Text
+ 78    ├ getrandom v0.3.4                 70    ├ getrandom v0.3.4
+ 79      └── rand_core v0.9.5             71      └── rand_core v0.9.5
+ 80          ├── rand v0.9.5              72          ├── rand v0.9.5
+ 81          │   ├── uac-api v0.1.0       73          │   ├── uac-api v0.2.0
+ 82          │   └── webauthn-rs-core v   74          │   └── webauthn-rs-core v
+ .. 0.5.5                                 .. 0.5.5
+ 83          │       └── webauthn-rs v0   75          │       └── webauthn-rs v0
+ .. .5.5                                  .. .5.5
+ 84          │           └── uac-api v0   76          │           └── uac-api v0
+ .. .1.0 (*)                              .. .2.0 (*)
+ 85          └── rand_chacha v0.9.0       77          └── rand_chacha v0.9.0
+ 86              ├── rand v0.9.5 (*)      78              ├── rand v0.9.5 (*)
+ 87              └── webauthn-rs-core v   79              └── webauthn-rs-core v
+ .. 0.5.5 (*)                             .. 0.5.5 (*)
+ 88    ├ getrandom v0.4.3                 80    ├ getrandom v0.4.3
+ 89      └── uuid v1.26.1                 81      └── uuid v1.26.1
+ 90          ├── uac-api v0.1.0           82          ├── uac-api v0.2.0
+ 91          ├── webauthn-attestation-c   83          ├── webauthn-attestation-c
+ .. a v0.5.5                              .. a v0.5.5
+ 92          │   └── webauthn-rs-core v   84          │   └── webauthn-rs-core v
+ .. 0.5.5                                 .. 0.5.5
+ 93          │       └── webauthn-rs v0   85          │       └── webauthn-rs v0
+ .. .5.5                                  .. .5.5
+ 94          │           └── uac-api v0   86          │           └── uac-api v0
+ .. .1.0 (*)                              .. .2.0 (*)
+ 95          ├── webauthn-rs v0.5.5 (*)   87          ├── webauthn-rs v0.5.5 (*)
+ 96          └── webauthn-rs-core v0.5.   88          └── webauthn-rs-core v0.5.
+ .. 5 (*)                                 .. 5 (*)
+ 97                                       89 
+
+docs/evidence/check.log --- 4/18 --- Text
+106      └── rsqlite-vfs v0.1.1           98      └── rsqlite-vfs v0.1.1
+107          └── sqlite-wasm-rs v0.5.5    99          └── sqlite-wasm-rs v0.5.5
+108              └── rusqlite v0.40.2    100              └── rusqlite v0.40.2
+109                  └── uac-api v0.1.0  101                  └── uac-api v0.2.0
+110    ├ hashbrown v0.17.1               102    ├ hashbrown v0.17.1
+111      └── hashlink v0.12.2            103      └── hashlink v0.12.2
+112          └── rusqlite v0.40.2        104          └── rusqlite v0.40.2
+113              └── uac-api v0.1.0      105              └── uac-api v0.2.0
+114                                      106 
+115 warning[duplicate]: found 2 duplica  107 warning[duplicate]: found 2 duplica
+... te entries for crate 'r-efi'         ... te entries for crate 'r-efi'
+116    ┌─ /Users/master/Documents/Codex  108    ┌─ /Users/master/Documents/Codex
+... /work/uac-spike/Cargo.lock:96:1      ... /work/uac-spike/Cargo.lock:96:1
+
+docs/evidence/check.log --- 5/18 --- Text
+123      └── getrandom v0.3.4            115      └── getrandom v0.3.4
+124          └── rand_core v0.9.5        116          └── rand_core v0.9.5
+125              ├── rand v0.9.5         117              ├── rand v0.9.5
+126              │   ├── uac-api v0.1.0  118              │   ├── uac-api v0.2.0
+127              │   └── webauthn-rs-co  119              │   └── webauthn-rs-co
+... re v0.5.5                            ... re v0.5.5
+128              │       └── webauthn-r  120              │       └── webauthn-r
+... s v0.5.5                             ... s v0.5.5
+129              │           └── uac-ap  121              │           └── uac-ap
+... i v0.1.0 (*)                         ... i v0.2.0 (*)
+130              └── rand_chacha v0.9.0  122              └── rand_chacha v0.9.0
+131                  ├── rand v0.9.5 (*  123                  ├── rand v0.9.5 (*
+... )                                    ... )
+132                  └── webauthn-rs-co  124                  └── webauthn-rs-co
+... re v0.5.5 (*)                        ... re v0.5.5 (*)
+133    ├ r-efi v6.0.0                    125    ├ r-efi v6.0.0
+134      └── getrandom v0.4.3            126      └── getrandom v0.4.3
+135          └── uuid v1.26.1            127          └── uuid v1.26.1
+136              ├── uac-api v0.1.0      128              ├── uac-api v0.2.0
+137              ├── webauthn-attestati  129              ├── webauthn-attestati
+... on-ca v0.5.5                         ... on-ca v0.5.5
+138              │   └── webauthn-rs-co  130              │   └── webauthn-rs-co
+... re v0.5.5                            ... re v0.5.5
+139              │       └── webauthn-r  131              │       └── webauthn-r
+... s v0.5.5                             ... s v0.5.5
+140              │           └── uac-ap  132              │           └── uac-ap
+... i v0.1.0 (*)                         ... i v0.2.0 (*)
+141              ├── webauthn-rs v0.5.5  133              ├── webauthn-rs v0.5.5
+...  (*)                                 ...  (*)
+142              └── webauthn-rs-core v  134              └── webauthn-rs-core v
+... 0.5.5 (*)                            ... 0.5.5 (*)
+143                                      135 
+...                                      136 warning[license-not-encountered]: l
+...                                      ... icense was not encountered
+...                                      137   ┌─ /Users/master/Documents/Codex/
+...                                      ... work/uac-spike/deny.toml:5:64
+...                                      138   │
+...                                      139 5 │ allow = ["MIT", "Apache-2.0", "
+...                                      ... BSD-3-Clause", "BSD-2-Clause", "ISC
+...                                      ... ", "Unicode-3.0", "MPL-2.0", "OpenS
+...                                      ... SL", "Zlib"]
+...                                      140   │                                
+...                                      ...                                 ━━━
+...                                      ...  unmatched license allowance
+...                                      141 
+...                                      142 warning[license-not-encountered]: l
+...                                      ... icense was not encountered
+...                                      143   ┌─ /Users/master/Documents/Codex/
+...                                      ... work/uac-spike/deny.toml:5:97
+...                                      144   │
+...                                      145 5 │ allow = ["MIT", "Apache-2.0", "
+...                                      ... BSD-3-Clause", "BSD-2-Clause", "ISC
+...                                      ... ", "Unicode-3.0", "MPL-2.0", "OpenS
+...                                      ... SL", "Zlib"]
+...                                      146   │                                
+...                                      ...                                    
+...                                      ...                               ━━━━━
+...                                      ... ━━ unmatched license allowance
+...                                      147 
+144 warning[duplicate]: found 2 duplica  148 warning[duplicate]: found 2 duplica
+... te entries for crate 'syn'           ... te entries for crate 'syn'
+145     ┌─ /Users/master/Documents/Code  149     ┌─ /Users/master/Documents/Code
+... x/work/uac-spike/Cargo.lock:125:1    ... x/work/uac-spike/Cargo.lock:125:1
+146     │                                150     │  
+
+docs/evidence/check.log --- 6/18 --- Text
+154       │       ├── der-parser v9.0.0  158       │       ├── der-parser v9.0.0
+155       │       │   ├── webauthn-rs-c  159       │       │   ├── webauthn-rs-c
+... ore v0.5.5                           ... ore v0.5.5
+156       │       │   │   └── webauthn-  160       │       │   │   └── webauthn-
+... rs v0.5.5                            ... rs v0.5.5
+157       │       │   │       └── uac-a  161       │       │   │       └── uac-a
+... pi v0.1.0                            ... pi v0.2.0
+158       │       │   └── x509-parser v  162       │       │   └── x509-parser v
+... 0.16.0                               ... 0.16.0
+159       │       │       └── webauthn-  163       │       │       └── webauthn-
+... rs-core v0.5.5 (*)                   ... rs-core v0.5.5 (*)
+160       │       ├── oid-registry v0.7  164       │       ├── oid-registry v0.7
+... .1                                   ... .1
+
+docs/evidence/check.log --- 7/18 --- Text
+165       ├── curve25519-dalek-derive v  169       ├── curve25519-dalek-derive v
+... 0.1.1                                ... 0.1.1
+166       │   └── curve25519-dalek v4.1  170       │   └── curve25519-dalek v4.1
+... .3                                   ... .3
+167       │       └── ed25519-dalek v2.  171       │       └── ed25519-dalek v2.
+... 2.0                                  ... 2.0
+168       │           ├── uac-api v0.1.  172       │           ├── uac-api v0.2.
+... 0 (*)                                ... 0 (*)
+169       │           └── uac-verifier   173       │           └── uac-verifier 
+... v0.1.0                               ... v0.2.0
+170       │               └── uac-api v  174       │               └── uac-api v
+... 0.1.0 (*)                            ... 0.2.0 (*)
+171       ├── openssl-macros v0.1.1      175       ├── openssl-macros v0.1.1
+172       │   └── openssl v0.10.81       176       │   └── openssl v0.10.81
+173       │       ├── webauthn-attestat  177       │       ├── webauthn-attestat
+... ion-ca v0.5.5                        ... ion-ca v0.5.5
+
+docs/evidence/check.log --- 8/18 --- Text
+185       │   │   │   └── webauthn-rs-c  189       │   │   │   └── webauthn-rs-c
+... ore v0.5.5 (*)                       ... ore v0.5.5 (*)
+186       │   │   ├── serde_urlencoded   190       │   │   ├── serde_urlencoded 
+... v0.7.1                               ... v0.7.1
+187       │   │   │   └── axum v0.8.9    191       │   │   │   └── axum v0.8.9
+188       │   │   │       └── uac-api v  192       │   │   │       └── uac-api v
+... 0.1.0 (*)                            ... 0.2.0 (*)
+189       │   │   ├── uac-api v0.1.0 (*  193       │   │   ├── uac-api v0.2.0 (*
+... )                                    ... )
+190       │   │   ├── uac-verifier v0.1  194       │   │   ├── uac-verifier v0.2
+... .0 (*)                               ... .0 (*)
+191       │   │   ├── url v2.5.8         195       │   │   ├── url v2.5.8
+192       │   │   │   ├── webauthn-rs v  196       │   │   │   ├── webauthn-rs v
+... 0.5.5 (*)                            ... 0.5.5 (*)
+193       │   │   │   ├── webauthn-rs-c  197       │   │   │   ├── webauthn-rs-c
+... ore v0.5.5 (*)                       ... ore v0.5.5 (*)
+
+docs/evidence/check.log --- 9/18 --- Text
+221               └── ppv-lite86 v0.2.2  225               └── ppv-lite86 v0.2.2
+... 1                                    ... 1
+222                   └── rand_chacha v  226                   └── rand_chacha v
+... 0.9.0                                ... 0.9.0
+223                       ├── rand v0.9  227                       ├── rand v0.9
+... .5                                   ... .5
+224                       │   ├── uac-a  228                       │   ├── uac-a
+... pi v0.1.0 (*)                        ... pi v0.2.0 (*)
+225                       │   └── webau  229                       │   └── webau
+... thn-rs-core v0.5.5 (*)               ... thn-rs-core v0.5.5 (*)
+226                       └── webauthn-  230                       └── webauthn-
+... rs-core v0.5.5 (*)                   ... rs-core v0.5.5 (*)
+227     ├ syn v3.0.8                     231     ├ syn v3.0.8
+
+docs/evidence/check.log --- 10/18 --- Text
+230       │   │   ├── der-parser v9.0.0  234       │   │   ├── der-parser v9.0.0
+231       │   │   │   ├── webauthn-rs-c  235       │   │   │   ├── webauthn-rs-c
+... ore v0.5.5                           ... ore v0.5.5
+232       │   │   │   │   └── webauthn-  236       │   │   │   │   └── webauthn-
+... rs v0.5.5                            ... rs v0.5.5
+233       │   │   │   │       └── uac-a  237       │   │   │   │       └── uac-a
+... pi v0.1.0                            ... pi v0.2.0
+234       │   │   │   └── x509-parser v  238       │   │   │   └── x509-parser v
+... 0.16.0                               ... 0.16.0
+235       │   │   │       └── webauthn-  239       │   │   │       └── webauthn-
+... rs-core v0.5.5 (*)                   ... rs-core v0.5.5 (*)
+236       │   │   ├── oid-registry v0.7  240       │   │   ├── oid-registry v0.7
+... .1                                   ... .1
+
+docs/evidence/check.log --- 11/18 --- Text
+287       │       └── rsqlite-vfs v0.1.  291       │       └── rsqlite-vfs v0.1.
+... 1                                    ... 1
+288       │           └── sqlite-wasm-r  292       │           └── sqlite-wasm-r
+... s v0.5.5                             ... s v0.5.5
+289       │               └── rusqlite   293       │               └── rusqlite 
+... v0.40.2                              ... v0.40.2
+290       │                   └── uac-a  294       │                   └── uac-a
+... pi v0.1.0 (*)                        ... pi v0.2.0 (*)
+291       ├── tokio-macros v2.7.2        295       ├── tokio-macros v2.7.2
+292       │   └── tokio v1.53.2          296       │   └── tokio v1.53.2
+293       │       ├── axum v0.8.9        297       │       ├── axum v0.8.9
+294       │       │   └── uac-api v0.1.  298       │       │   └── uac-api v0.2.
+... 0 (*)                                ... 0 (*)
+295       │       ├── hyper v1.12.0      299       │       ├── hyper v1.12.0
+296       │       │   ├── axum v0.8.9 (  300       │       │   ├── axum v0.8.9 (
+... *)                                   ... *)
+297       │       │   └── hyper-util v0  301       │       │   └── hyper-util v0
+... .1.21                                ... .1.21
+298       │       │       └── axum v0.8  302       │       │       └── axum v0.8
+... .9 (*)                               ... .9 (*)
+299       │       ├── hyper-util v0.1.2  303       │       ├── hyper-util v0.1.2
+... 1 (*)                                ... 1 (*)
+300       │       ├── tower v0.5.3       304       │       ├── tower v0.5.3
+301       │       │   └── axum v0.8.9 (  305       │       │   └── axum v0.8.9 (
+... *)                                   ... *)
+302       │       └── uac-api v0.1.0 (*  306       │       └── uac-api v0.2.0 (*
+... )                                    ... )
+303       ├── wasm-bindgen-macro-suppor  307       ├── wasm-bindgen-macro-suppor
+... t v0.2.129                           ... t v0.2.129
+304       │   └── wasm-bindgen-macro v0  308       │   └── wasm-bindgen-macro v0
+... .2.129                               ... .2.129
+305       │       └── wasm-bindgen v0.2  309       │       └── wasm-bindgen v0.2
+... .129                                 ... .129
+
+docs/evidence/check.log --- 12/18 --- Text
+324               ├── der-parser v9.0.0  328               ├── der-parser v9.0.0
+325               │   ├── webauthn-rs-c  329               │   ├── webauthn-rs-c
+... ore v0.5.5                           ... ore v0.5.5
+326               │   │   └── webauthn-  330               │   │   └── webauthn-
+... rs v0.5.5                            ... rs v0.5.5
+327               │   │       └── uac-a  331               │   │       └── uac-a
+... pi v0.1.0                            ... pi v0.2.0
+328               │   └── x509-parser v  332               │   └── x509-parser v
+... 0.16.0                               ... 0.16.0
+329               │       └── webauthn-  333               │       └── webauthn-
+... rs-core v0.5.5 (*)                   ... rs-core v0.5.5 (*)
+330               ├── oid-registry v0.7  334               ├── oid-registry v0.7
+... .1                                   ... .1
+
+docs/evidence/check.log --- 13/18 --- Text
+339       │       │   │       └── idna   343       │       │   │       └── idna 
+... v1.1.0                               ... v1.1.0
+340       │       │   │           └── u  344       │       │   │           └── u
+... rl v2.5.8                            ... rl v2.5.8
+341       │       │   │               ├  345       │       │   │               ├
+... ── webauthn-rs v0.5.5                ... ── webauthn-rs v0.5.5
+342       │       │   │               │  346       │       │   │               │
+...    └── uac-api v0.1.0                ...    └── uac-api v0.2.0
+343       │       │   │               ├  347       │       │   │               ├
+... ── webauthn-rs-core v0.5.5           ... ── webauthn-rs-core v0.5.5
+344       │       │   │               │  348       │       │   │               │
+...    └── webauthn-rs v0.5.5 (*)        ...    └── webauthn-rs v0.5.5 (*)
+345       │       │   │               └  349       │       │   │               └
+... ── webauthn-rs-proto v0.5.5          ... ── webauthn-rs-proto v0.5.5
+
+docs/evidence/check.log --- 14/18 --- Text
+384       │   ├── der-parser v9.0.0      388       │   ├── der-parser v9.0.0
+385       │   │   ├── webauthn-rs-core   389       │   │   ├── webauthn-rs-core 
+... v0.5.5                               ... v0.5.5
+386       │   │   │   └── webauthn-rs v  390       │   │   │   └── webauthn-rs v
+... 0.5.5                                ... 0.5.5
+387       │   │   │       └── uac-api v  391       │   │   │       └── uac-api v
+... 0.1.0                                ... 0.2.0
+388       │   │   └── x509-parser v0.16  392       │   │   └── x509-parser v0.16
+... .0                                   ... .0
+389       │   │       └── webauthn-rs-c  393       │   │       └── webauthn-rs-c
+... ore v0.5.5 (*)                       ... ore v0.5.5 (*)
+390       │   ├── oid-registry v0.7.1    394       │   ├── oid-registry v0.7.1
+
+docs/evidence/check.log --- 15/18 --- Text
+396       └── rsqlite-vfs v0.1.1         400       └── rsqlite-vfs v0.1.1
+397           └── sqlite-wasm-rs v0.5.5  401           └── sqlite-wasm-rs v0.5.5
+398               └── rusqlite v0.40.2   402               └── rusqlite v0.40.2
+399                   └── uac-api v0.1.  403                   └── uac-api v0.2.
+... 0                                    ... 0
+400                                      404 
+401 warning[duplicate]: found 2 duplica  405 warning[duplicate]: found 2 duplica
+... te entries for crate 'thiserror-imp  ... te entries for crate 'thiserror-imp
+... l'                                   ... l'
+402     ┌─ /Users/master/Documents/Code  406     ┌─ /Users/master/Documents/Code
+... x/work/uac-spike/Cargo.lock:132:1    ... x/work/uac-spike/Cargo.lock:132:1
+
+docs/evidence/check.log --- 16/18 --- Text
+411           │   ├── der-parser v9.0.0  415           │   ├── der-parser v9.0.0
+412           │   │   ├── webauthn-rs-c  416           │   │   ├── webauthn-rs-c
+... ore v0.5.5                           ... ore v0.5.5
+413           │   │   │   └── webauthn-  417           │   │   │   └── webauthn-
+... rs v0.5.5                            ... rs v0.5.5
+414           │   │   │       └── uac-a  418           │   │   │       └── uac-a
+... pi v0.1.0                            ... pi v0.2.0
+415           │   │   └── x509-parser v  419           │   │   └── x509-parser v
+... 0.16.0                               ... 0.16.0
+416           │   │       └── webauthn-  420           │   │       └── webauthn-
+... rs-core v0.5.5 (*)                   ... rs-core v0.5.5 (*)
+417           │   ├── oid-registry v0.7  421           │   ├── oid-registry v0.7
+... .1                                   ... .1
+
+docs/evidence/check.log --- 17/18 --- Text
+424           └── rsqlite-vfs v0.1.1     428           └── rsqlite-vfs v0.1.1
+425               └── sqlite-wasm-rs v0  429               └── sqlite-wasm-rs v0
+... .5.5                                 ... .5.5
+426                   └── rusqlite v0.4  430                   └── rusqlite v0.4
+... 0.2                                  ... 0.2
+427                       └── uac-api v  431                       └── uac-api v
+... 0.1.0                                ... 0.2.0
+428                                      432 
+429 advisories ok, bans ok, licenses ok  433 advisories ok, bans ok, licenses ok
+... , sources ok                         ... , sources ok
+430 cargo audit --no-fetch --no-yanked   434 cargo audit --no-fetch --no-yanked
+
+docs/evidence/check.log --- 18/18 --- Text
+433 bun audit                            437 bun audit
+434 bun audit v1.4.2 (744846f84)         438 bun audit v1.4.2 (744846f84)
+435                                      439 
+436 No vulnerabilities found (checked 2  440 No vulnerabilities found (checked 2
+... 2 packages) [269.00ms]               ... 2 packages) [318.00ms]
+437 bun run build                        441 bun run build
+438 $ bun build apps/web/src/main.ts --  442 $ bun build apps/web/src/main.ts --
+... outdir apps/web/dist --target brows  ... outdir apps/web/dist --target brows
+... er                                   ... er
+439 Bundled 1 module in 5ms              443 Bundled 1 module in 3ms
+440                                      444 
+441   main.js  6.68 KB  (entry point)    445   main.js  6.76 KB  (entry point)
+442                                      446 
+443 cargo build --locked --offline       447 cargo build --locked --offline
+444     Finished `dev` profile [unoptim  448     Finished `dev` profile [unoptim
+... ized + debuginfo] target(s) in 0.10  ... ized + debuginfo] target(s) in 0.12
+... s                                    ... s
+
+docs/evidence/commands.jsonl --- JSON
+20 20 {"name": "check", "command": ["just", "_check"], "exit_code": 0, "elapsed_seconds": 2.236, "time_utc": "2026-10-11T22:34:16.375173+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/check.log", "timeout_cleanup_pids": []}
+21 21 {"name": "review-current", "command": ["grepgod", "review", "--cached"], "exit_code": 0, "elapsed_seconds": 0.779, "time_utc": "2026-10-11T22:36:03.334611+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/review-current.log", "timeout_cleanup_pids": []}
+22 22 {"name": "e2e", "command": ["bun", "scripts/e2e.mjs"], "exit_code": 0, "elapsed_seconds": 4.024, "time_utc": "2026-10-11T22:36:05.405450+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/e2e.log", "timeout_cleanup_pids": []}
+   23 {"name": "check", "command": ["just", "_check"], "exit_code": 0, "elapsed_seconds": 2.87, "time_utc": "2026-10-11T22:55:41.429671+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/check.log", "timeout_cleanup_pids": []}
+   24 {"name": "e2e", "command": ["bun", "scripts/e2e.mjs"], "exit_code": 0, "elapsed_seconds": 4.167, "time_utc": "2026-10-11T22:55:54.193482+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/e2e.log", "timeout_cleanup_pids": []}
+   25 {"name": "e2e", "command": ["bun", "scripts/e2e.mjs"], "exit_code": 0, "elapsed_seconds": 3.684, "time_utc": "2026-10-11T22:56:44.165440+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/e2e.log", "timeout_cleanup_pids": []}
+   26 {"name": "heavenkey-semgrep", "command": ["semgrep", "scan", "--config", "p/security-audit", "--metrics", "off", "--json", "--output", "docs/evidence/heavenkey-semgrep.json", "apps/api/src/main.rs", "apps/web/src/main.ts", "crates/verifier/src/lib.rs", "scripts/e2e.mjs"], "exit_code": 0, "elapsed_seconds": 1.261, "time_utc": "2026-10-11T22:57:23.437575+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/heavenkey-semgrep.log", "timeout_cleanup_pids": []}
+
+docs/evidence/e2e.json --- 1/6 --- JSON
+  2   "completed": true,                   2   "completed": true,
+  3   "mode": "virtual CTAP2 authentica    3   "mode": "virtual CTAP2 authentica
+  . tors; real navigator.credentials +     . tors; real navigator.credentials + 
+  . Rust verification",                    . Rust verification",
+  4   "hardware": "deferred by user",      4   "hardware": "deferred by user",
+  5   "total": 35,                         5   "total": 41,
+  6   "passed": 35,                        6   "passed": 41,
+  7   "failed": 0,                         7   "failed": 0,
+  8   "cases": [                           8   "cases": [
+  .                                        9     {
+  .                                       10       "name": "first guest enrollme
+  .                                       .. nt does not claim ownership",
+  .                                       11       "pass": true,
+  .                                       12       "elapsed_ms": 74
+  .                                       13     },
+  9     {                                 14     {
+ 10       "name": "browser owner passke   15       "name": "reserved owner name 
+ .. y registration",                      .. requires bootstrap",
+ 11       "pass": true,                   16       "pass": true,
+ 12       "elapsed_ms": 84                17       "elapsed_ms": 2
+ 13     },                                18     },
+ ..                                       19     {
+ ..                                       20       "name": "invalid bootstrap ca
+ ..                                       .. nnot claim ownership",
+ ..                                       21       "pass": true,
+ ..                                       22       "elapsed_ms": 1
+ ..                                       23     },
+ 14     {                                 24     {
+ 15       "name": "browser guest passke   25       "name": "browser owner passke
+ .. y registration",                      .. y registration with operator bootst
+ ..                                       .. rap",
+ 16       "pass": true,                   26       "pass": true,
+ 17       "elapsed_ms": 63                27       "elapsed_ms": 49
+ 18     },                                28     },
+ ..                                       29     {
+ ..                                       30       "name": "pending competing en
+ ..                                       .. rollment cannot create another owne
+ ..                                       .. r",
+ ..                                       31       "pass": true,
+ ..                                       32       "elapsed_ms": 2
+ ..                                       33     },
+ ..                                       34     {
+ ..                                       35       "name": "consumed bootstrap c
+ ..                                       .. annot start another owner enrollmen
+ ..                                       .. t",
+ ..                                       36       "pass": true,
+ ..                                       37       "elapsed_ms": 1
+ ..                                       38     },
+ ..                                       39     {
+ ..                                       40       "name": "bootstrap file remai
+ ..                                       .. ns operator-only",
+ ..                                       41       "pass": true,
+ ..                                       42       "elapsed_ms": 0
+ ..                                       43     },
+ 19     {                                 44     {
+ 20       "name": "browser foreign hold   45       "name": "browser foreign hold
+ .. er registration",                     .. er registration",
+ 21       "pass": true,                   46       "pass": true,
+ 22       "elapsed_ms": 59                47       "elapsed_ms": 67
+ 23     },                                48     },
+ 24     {                                 49     {
+ 25       "name": "browser owner authen   50       "name": "browser owner authen
+ .. tication",                            .. tication",
+ 26       "pass": true,                   51       "pass": true,
+ 27       "elapsed_ms": 55                52       "elapsed_ms": 56
+ 28     },                                53     },
+ 29     {                                 54     {
+ 30       "name": "browser guest authen   55       "name": "browser guest authen
+ .. tication",                            .. tication",
+
+docs/evidence/e2e.json --- 2/6 --- JSON
+ 34     {                                 59     {
+ 35       "name": "owner grant issuance   60       "name": "owner grant issuance
+ ..  through UI",                         ..  through UI",
+ 36       "pass": true,                   61       "pass": true,
+ 37       "elapsed_ms": 22                62       "elapsed_ms": 21
+ 38     },                                63     },
+ 39     {                                 64     {
+ 40       "name": "guest grant invocati   65       "name": "guest grant invocati
+ .. on through UI",                       .. on through UI",
+ 41       "pass": true,                   66       "pass": true,
+ 42       "elapsed_ms": 149               67       "elapsed_ms": 139
+ 43     },                                68     },
+ 44     {                                 69     {
+ 45       "name": "copied token without   70       "name": "copied token without
+ ..  session cannot issue grants",        ..  session cannot issue grants",
+
+docs/evidence/e2e.json --- 3/6 --- JSON
+ 79     {                                104     {
+ 80       "name": "bound invocation can  105       "name": "bound invocation can
+ .. not become login",                   ... not become login",
+ 81       "pass": true,                  106       "pass": true,
+ 82       "elapsed_ms": 30               107       "elapsed_ms": 31
+ 83     },                               108     },
+ 84     {                                109     {
+ 85       "name": "valid signature with  110       "name": "valid signature with
+ ..  wrong origin",                      ...  wrong origin",
+ 86       "pass": true,                  111       "pass": true,
+ 87       "elapsed_ms": 32               112       "elapsed_ms": 31
+ 88     },                               113     },
+ 89     {                                114     {
+ 90       "name": "valid signature with  115       "name": "valid signature with
+ ..  wrong challenge",                   ...  wrong challenge",
+ 91       "pass": true,                  116       "pass": true,
+ 92       "elapsed_ms": 33               117       "elapsed_ms": 30
+ 93     },                               118     },
+ 94     {                                119     {
+ 95       "name": "valid signature with  120       "name": "valid signature with
+ ..  wrong RP hash",                     ...  wrong RP hash",
+ 96       "pass": true,                  121       "pass": true,
+ 97       "elapsed_ms": 32               122       "elapsed_ms": 30
+ 98     },                               123     },
+ 99     {                                124     {
+100       "name": "valid signature with  125       "name": "valid signature with
+... out user verification",              ... out user verification",
+101       "pass": true,                  126       "pass": true,
+102       "elapsed_ms": 30               127       "elapsed_ms": 33
+103     },                               128     },
+104     {                                129     {
+105       "name": "valid signature with  130       "name": "valid signature with
+...  rolled-back counter",               ...  rolled-back counter",
+106       "pass": true,                  131       "pass": true,
+107       "elapsed_ms": 31               132       "elapsed_ms": 32
+108     },                               133     },
+109     {                                134     {
+110       "name": "tampered authenticat  135       "name": "tampered authenticat
+... or signature rejected",              ... or signature rejected",
+
+docs/evidence/e2e.json --- 4/6 --- JSON
+114     {                                139     {
+115       "name": "valid fresh assertio  140       "name": "valid fresh assertio
+... n accepted",                         ... n accepted",
+116       "pass": true,                  141       "pass": true,
+117       "elapsed_ms": 31               142       "elapsed_ms": 33
+118     },                               143     },
+119     {                                144     {
+120       "name": "assertion replay rej  145       "name": "assertion replay rej
+... ected",                              ... ected",
+121       "pass": true,                  146       "pass": true,
+122       "elapsed_ms": 1                147       "elapsed_ms": 2
+123     },                               148     },
+124     {                                149     {
+125       "name": "parallel duplicate i  150       "name": "parallel duplicate i
+... nvocation executes once",            ... nvocation executes once",
+126       "pass": true,                  151       "pass": true,
+127       "elapsed_ms": 31               152       "elapsed_ms": 33
+128     },                               153     },
+129     {                                154     {
+130       "name": "guest cannot revoke"  155       "name": "guest cannot revoke"
+... ,                                    ... ,
+
+docs/evidence/e2e.json --- 5/6 --- JSON
+144     {                                169     {
+145       "name": "revoked grant cannot  170       "name": "revoked grant cannot
+...  start new invocation",              ...  start new invocation",
+146       "pass": true,                  171       "pass": true,
+147       "elapsed_ms": 1                172       "elapsed_ms": 2
+148     },                               173     },
+149     {                                174     {
+150       "name": "duplicate name regis  175       "name": "duplicate name regis
+... tration rejected",                   ... tration rejected",
+
+docs/evidence/e2e.json --- 6/6 --- JSON
+159     {                                184     {
+160       "name": "expired grant denied  185       "name": "expired grant denied
+... ",                                   ... ",
+161       "pass": true,                  186       "pass": true,
+162       "elapsed_ms": 1206             187       "elapsed_ms": 1217
+163     },                               188     },
+...                                      189     {
+...                                      190       "name": "bootstrap stays cons
+...                                      ... umed after server restart",
+...                                      191       "pass": true,
+...                                      192       "elapsed_ms": 8
+...                                      193     },
+164     {                                194     {
+165       "name": "enrolled credentials  195       "name": "enrolled credentials
+...  authenticate after server restart"  ...  authenticate after server restart"
+... ,                                    ... ,
+166       "pass": true,                  196       "pass": true,
+167       "elapsed_ms": 107              197       "elapsed_ms": 119
+168     },                               198     },
+169     {                                199     {
+170       "name": "revocation survives   200       "name": "revocation survives 
+... server restart",                     ... server restart",
+171       "pass": true,                  201       "pass": true,
+172       "elapsed_ms": 3                202       "elapsed_ms": 2
+173     },                               203     },
+174     {                                204     {
+175       "name": "replay rejected afte  205       "name": "replay rejected afte
+... r server restart",                   ... r server restart",
+176       "pass": true,                  206       "pass": true,
+177       "elapsed_ms": 2                207       "elapsed_ms": 1
+178     },                               208     },
+179     {                                209     {
+180       "name": "mobile width has no   210       "name": "mobile width has no 
+... horizontal overflow",                ... horizontal overflow",
+181       "pass": true,                  211       "pass": true,
+182       "elapsed_ms": 0                212       "elapsed_ms": 0
+183     }                                213     }
+184   ],                                 214   ],
+185   "elapsed_seconds": 3.9             215   "elapsed_seconds": 3.5
+186 }                                    216 }
+
+docs/evidence/e2e.log --- 1/2 --- Text
+ 1 PASS browser owner passkey registrat   1 PASS first guest enrollment does not
+ . ion                                    .  claim ownership
+ .                                        2 PASS reserved owner name requires bo
+ .                                        . otstrap
+ .                                        3 PASS invalid bootstrap cannot claim 
+ .                                        . ownership
+ .                                        4 PASS browser owner passkey registrat
+ .                                        . ion with operator bootstrap
+ 2 PASS browser guest passkey registrat   5 PASS pending competing enrollment ca
+ . ion                                    . nnot create another owner
+ .                                        6 PASS consumed bootstrap cannot start
+ .                                        .  another owner enrollment
+ .                                        7 PASS bootstrap file remains operator
+ .                                        . -only
+ 3 PASS browser foreign holder registra   8 PASS browser foreign holder registra
+ . tion                                   . tion
+ 4 PASS browser owner authentication      9 PASS browser owner authentication
+ 5 PASS browser guest authentication     10 PASS browser guest authentication
+
+docs/evidence/e2e.log --- 2/2 --- Text
+29 PASS duplicate name registration rej  34 PASS duplicate name registration rej
+.. ected                                 .. ected
+30 PASS HTTP origin CSRF guard           35 PASS HTTP origin CSRF guard
+31 PASS expired grant denied             36 PASS expired grant denied
+..                                       37 PASS bootstrap stays consumed after 
+..                                       .. server restart
+32 PASS enrolled credentials authentica  38 PASS enrolled credentials authentica
+.. te after server restart               .. te after server restart
+33 PASS revocation survives server rest  39 PASS revocation survives server rest
+.. art                                   .. art
+34 PASS replay rejected after server re  40 PASS replay rejected after server re
+.. start                                 .. start
+35 PASS mobile width has no horizontal   41 PASS mobile width has no horizontal 
+.. overflow                              .. overflow
+36 {"total":35,"passed":35,"failed":0,"  42 {"total":41,"passed":41,"failed":0,"
+.. elapsed_seconds":3.9}                 .. elapsed_seconds":3.5}
+
+package.json --- JSON
+1 {                                      1 {
+2   "name": "uac-spike",                 2   "name": "heavenkey",
+3   "private": true,                     3   "private": true,
+4   "workspaces": ["apps/web"],          4   "workspaces": ["apps/web"],
+5   "scripts": { "build": "bun build ap  5   "scripts": { "build": "bun build ap
+. ps/web/src/main.ts --outdir apps/web/  . ps/web/src/main.ts --outdir apps/web/
+. dist --target browser" },              . dist --target browser" },
+
+scripts/e2e.mjs --- 1/5 --- JavaScript
+  1 import { chromium } from "playwright-core";
+  2 import { spawn } from "node:child_process";
+  3 import { createHash, createPrivateKey, randomBytes, sign } from "node:crypto";
+  4 import { mkdtemp, writeFile, mkdir, rm, stat, readFile } from "node:fs/promises";
+  5 import { join, resolve } from "node:path";
+  6 import { tmpdir } from "node:os";
+  7 import assert from "node:assert/strict";
+
+scripts/e2e.mjs --- 2/5 --- JavaScript
+ 10  10 const evidence = join(root, "docs/evidence");
+ 11  11 await mkdir(evidence, { recursive: true });
+ 12  12 const data = await mkdtemp(join(tmpdir(), "uac-sim-"));
+ ..  13 let bootstrapToken;
+ 13  14 const port = 18241;
+ 14  15 const origin = `http://localhost:${port}`;
+ 15  16 let server, browser;
+
+scripts/e2e.mjs --- 3/5 --- JavaScript
+ 73  74   const r=await Promise.race([response,a.page.waitForFunction(()=>document.querySelector("#status").dataset.error==="true").then(async()=>{throw new Error(await a.page.locator("#status").innerText());})]);assert.equal(r.status(),200);
+ 74  75   return r.json();
+ 75  76 }
+ ..  77 async function enrollment(a,token) {
+ ..  78   const start=await post(a,"/api/register/start",{name:a.name,bootstrap_token:token});
+ ..  79   assert.equal(start.status,200,JSON.stringify(start.body));
+ ..  80   const credential=await a.page.evaluate(async options=>{
+ ..  81     const dec=s=>Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
+ ..  82     options.publicKey.challenge=dec(options.publicKey.challenge);
+ ..  83     options.publicKey.user.id=dec(options.publicKey.user.id);
+ ..  84     return (await navigator.credentials.create(options)).toJSON();
+ ..  85   },start.body.options);
+ ..  86   return {request_id:start.body.request_id,credential};
+ ..  87 }
+ 76  88 async function assertion(a,invocation=null) {
+ 77  89   const start=await post(a,"/api/auth/start",{name:a.name,invocation});
+ 78  90   assert.equal(start.status,200,JSON.stringify(start.body));
+
+scripts/e2e.mjs --- 4/5 --- JavaScript
+103 }                                    115 }
+104 try {                                116 try {
+105   await startServer();               117   await startServer();
+...                                      118   bootstrapToken=(await readFile(jo
+...                                      ... in(data,"owner-bootstrap.txt"),"utf
+...                                      ... 8")).trim();
+106   browser=await chromium.launch({ex  119   browser=await chromium.launch({ex
+... ecutablePath:"/Applications/Google   ... ecutablePath:process.env.CHROME_PAT
+... Chrome.app/Contents/MacOS/Google Ch  ... H || (process.platform==="darwin" ?
+... rome",headless:true,args:["--disabl  ...  "/Applications/Google Chrome.app/C
+... e-background-networking"],timeout:2  ... ontents/MacOS/Google Chrome" : "/us
+... 0000});                              ... r/bin/google-chrome"),headless:true
+...                                      ... ,args:["--disable-background-networ
+...                                      ... king"],timeout:20000});
+107   const owner=await actor("owner"),  120   const owner=await actor("owner"),
+... guest=await actor("guest"),foreign=  ... guest=await actor("guest"),foreign=
+... await actor("foreign");              ... await actor("foreign");
+108   let ownerSession,guestSession,gra  121   let ownerSession,guestSession,gra
+... nt;                                  ... nt;
+...                                      122   await test("first guest enrollmen
+...                                      ... t does not claim ownership",async()
+...                                      ... =>assert.equal((await registration(
+...                                      ... guest)).owner,false));
+...                                      123   await test("reserved owner name r
+...                                      ... equires bootstrap",async()=>assert.
+...                                      ... equal((await post(owner,"/api/regis
+...                                      ... ter/start",{name:"owner"})).status,
+...                                      ... 403));
+...                                      124   await test("invalid bootstrap can
+...                                      ... not claim ownership",async()=>asser
+...                                      ... t.equal((await post(owner,"/api/reg
+...                                      ... ister/start",{name:"owner",bootstra
+...                                      ... p_token:randomBytes(32).toString("b
+...                                      ... ase64url")})).status,403));
+...                                      125   const contender=await actor("cont
+...                                      ... ender");
+...                                      126   const competingEnrollment=await e
+...                                      ... nrollment(contender,bootstrapToken)
+...                                      ... ;
+...                                      127   await owner.page.locator("#bootst
+...                                      ... rap").fill(bootstrapToken);
+109   await test("browser owner passkey  128   await test("browser owner passkey
+...  registration",async()=>assert.equa  ...  registration with operator bootstr
+... l((await registration(owner)).owner  ... ap",async()=>{assert.equal((await r
+... ,true));                             ... egistration(owner)).owner,true);ass
+...                                      ... ert.equal(await owner.page.locator(
+...                                      ... "#bootstrap").inputValue(),"");});
+...                                      129   await test("pending competing enr
+...                                      ... ollment cannot create another owner
+...                                      ... ",async()=>assert.equal((await post
+...                                      ... (contender,"/api/register/finish",c
+...                                      ... ompetingEnrollment)).status,403));
+110   await test("browser guest passkey  130   await test("consumed bootstrap ca
+...  registration",async()=>assert.equa  ... nnot start another owner enrollment
+... l((await registration(guest)).owner  ... ",async()=>assert.equal((await post
+... ,false));                            ... (contender,"/api/register/start",{n
+...                                      ... ame:"contender",bootstrap_token:boo
+...                                      ... tstrapToken})).status,403));
+...                                      131   await test("bootstrap file remain
+...                                      ... s operator-only",async()=>assert.eq
+...                                      ... ual((await stat(join(data,"owner-bo
+...                                      ... otstrap.txt"))).mode & 0o077,0));
+111   await test("browser foreign holde  132   await test("browser foreign holde
+... r registration",async()=>assert.equ  ... r registration",async()=>assert.equ
+... al((await registration(foreign)).ow  ... al((await registration(foreign)).ow
+... ner,false));                         ... ner,false));
+112   await test("browser owner authent  133   await test("browser owner authent
+... ication",async()=>{ownerSession=awa  ... ication",async()=>{ownerSession=awa
+... it login(owner);assert.ok(ownerSess  ... it login(owner);assert.ok(ownerSess
+... ion);});                             ... ion);});
+113   await test("browser guest authent  134   await test("browser guest authent
+... ication",async()=>{guestSession=awa  ... ication",async()=>{guestSession=awa
+... it login(guest);assert.ok(guestSess  ... it login(guest);assert.ok(guestSess
+... ion);});                             ... ion);});
+
+scripts/e2e.mjs --- 5/5 --- JavaScript
+153 174   await test("HTTP origin CSRF guard",async()=>{const r=await fetch(`${origin}/api/auth/start`,{method:"POST",headers:{"Content-Type":"application/json",Origin:"https://attacker.invalid"},body:JSON.stringify({name:"guest",invocation:null})});assert.equal(r.status,403);});
+154 175   await test("expired grant denied",async()=>{const r=await post(owner,"/api/grants",{guest_name:"guest",ttl_seconds:1},ownerSession);assert.equal(r.status,200);await new Promise(r=>setTimeout(r,1200));assert.equal((await post(guest,"/api/auth/start",{name:"guest",invocation:invoke(r.body)})).status,403);});
+155 176   await stopServer();await startServer();
+... 177   await test("bootstrap stays consumed after server restart",async()=>assert.equal((await post(contender,"/api/register/start",{name:"contender",bootstrap_token:bootstrapToken})).status,403));
+156 178   await test("enrolled credentials authenticate after server restart",async()=>{await guest.page.reload();await guest.page.locator("#name").fill("guest");guestSession=await login(guest);assert.ok(guestSession);});
+157 179   await test("revocation survives server restart",async()=>assert.equal((await post(guest,"/api/auth/start",{name:"guest",invocation:invoke(grant)})).status,403));
+158 180   await test("replay rejected after server restart",async()=>assert.equal((await post(guest,"/api/auth/finish",accepted)).status,403));
+
+scripts/run.py --- Python
+11 name, seconds, *command = sys.argv[1  11 name, seconds, *command = sys.argv[1
+.. :]                                    .. :]
+12 if command and command[0] == '--':    12 if command and command[0] == '--':
+13     command = command[1:]             13     command = command[1:]
+14 deadline = datetime.fromisoformat(js  14 timeout = min(float(seconds), 7200)
+.. on.loads((root/'docs/evidence/budget  .. 
+.. .json').read_text())['deadline_utc']  .. 
+.. )                                     .. 
+..                                       15 if deadline_value := os.environ.get(
+..                                       .. 'HEAVENKEY_DEADLINE_UTC'):
+15 remaining = (deadline - datetime.now  16     deadline = datetime.fromisoforma
+.. (timezone.utc)).total_seconds()       .. t(deadline_value)
+16 timeout = min(float(seconds), 7200)   17     timeout = min(timeout, (deadline
+.. if name == 'manual-dev' else min(flo  ..  - datetime.now(timezone.utc)).total
+.. at(seconds), remaining)               .. _seconds())
+17 if timeout <= 0:                      18 if timeout <= 0:
+18     raise SystemExit('eight-hour spi  19     raise SystemExit('foreground com
+.. ke deadline exceeded')                .. mand deadline exceeded')
+19 env = dict(os.environ, CARGO_BUILD_J  20 env = dict(os.environ, CARGO_BUILD_J
+.. OBS='4', CARGO_TERM_COLOR='never', R  .. OBS='4', CARGO_TERM_COLOR='never', R
+.. USTC_WRAPPER='', CARGO_TARGET_DIR=st  .. USTC_WRAPPER='', CARGO_TARGET_DIR=st
+.. r(root/'target'))                     .. r(root/'target'))
+20 start = time.monotonic()              21 start = time.monotonic()
+21 logfile = root/'docs/evidence'/f'{na  22 logfile = root/'docs/evidence'/f'{na
+.. me}.log'                              .. me}.log'
+
+
+=== semgrep diff-aware ===
+
+=== changed files ===
+.github/workflows/ci.yml
+.gitignore
+AGENTS.md
+CHANGELOG.md
+CONTRIBUTING.md
+Cargo.lock
+Cargo.toml
+LICENSE
+NOTICE.md
+README.md
+SECURITY.md
+apps/api/src/main.rs
+apps/web/index.html
+apps/web/package.json
+apps/web/src/main.ts
+bun.lock
+docs/DEVELOPMENT.md
+docs/REVIEW.md
+docs/ROADMAP.md
+docs/SPEC.md
+docs/assets/README.md
+docs/assets/heavenkey-hero.png
+docs/assets/social-preview.jpg
+docs/evidence/acceptance.json
+docs/evidence/browser-mobile.png
+docs/evidence/browser-revoked.png
+docs/evidence/browser-success.png
+docs/evidence/check.log
+docs/evidence/ci-e2e.log
+docs/evidence/commands.jsonl
+docs/evidence/e2e.json
+docs/evidence/e2e.log
+docs/evidence/heavenkey-copy-check.json
+docs/evidence/heavenkey-review.log
+docs/evidence/heavenkey-security-review.log
+docs/evidence/heavenkey-semgrep.json
+docs/evidence/heavenkey-semgrep.log
+docs/evidence/local-ci.log
+package.json
+scripts/ci.sh
+scripts/e2e.mjs
+scripts/run.py

@@ -1,0 +1,42 @@
+PASS first guest enrollment does not claim ownership
+PASS reserved owner name requires bootstrap
+PASS invalid bootstrap cannot claim ownership
+PASS browser owner passkey registration with operator bootstrap
+PASS pending competing enrollment cannot create another owner
+PASS consumed bootstrap cannot start another owner enrollment
+PASS bootstrap file remains operator-only
+PASS browser foreign holder registration
+PASS browser owner authentication
+PASS browser guest authentication
+PASS owner grant issuance through UI
+PASS guest grant invocation through UI
+PASS copied token without session cannot issue grants
+PASS guest cannot issue grants
+PASS foreign holder denied before ceremony
+PASS write escalation denied
+PASS foreign resource denied
+PASS modified signed grant denied
+PASS bound invocation arguments cannot change
+PASS bound invocation cannot become login
+PASS valid signature with wrong origin
+PASS valid signature with wrong challenge
+PASS valid signature with wrong RP hash
+PASS valid signature without user verification
+PASS valid signature with rolled-back counter
+PASS tampered authenticator signature rejected
+PASS valid fresh assertion accepted
+PASS assertion replay rejected
+PASS parallel duplicate invocation executes once
+PASS guest cannot revoke
+PASS owner revocation committed
+PASS revoked grant rejects already started ceremony
+PASS revoked grant cannot start new invocation
+PASS duplicate name registration rejected
+PASS HTTP origin CSRF guard
+PASS expired grant denied
+PASS bootstrap stays consumed after server restart
+PASS enrolled credentials authenticate after server restart
+PASS revocation survives server restart
+PASS replay rejected after server restart
+PASS mobile width has no horizontal overflow
+{"total":41,"passed":41,"failed":0,"elapsed_seconds":3.5}

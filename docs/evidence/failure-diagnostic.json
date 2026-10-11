@@ -1,0 +1,14 @@
+[
+  {
+    "actor": "owner",
+    "status": "Bereit für die erste Einschreibung."
+  },
+  {
+    "actor": "guest",
+    "status": "Bereit für die erste Einschreibung."
+  },
+  {
+    "actor": "foreign",
+    "status": "Bereit für die erste Einschreibung."
+  }
+]

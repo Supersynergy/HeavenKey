@@ -1,0 +1,216 @@
+{
+  "completed": true,
+  "mode": "virtual CTAP2 authenticators; real navigator.credentials + Rust verification",
+  "hardware": "deferred by user",
+  "total": 41,
+  "passed": 41,
+  "failed": 0,
+  "cases": [
+    {
+      "name": "first guest enrollment does not claim ownership",
+      "pass": true,
+      "elapsed_ms": 77
+    },
+    {
+      "name": "reserved owner name requires bootstrap",
+      "pass": true,
+      "elapsed_ms": 2
+    },
+    {
+      "name": "invalid bootstrap cannot claim ownership",
+      "pass": true,
+      "elapsed_ms": 1
+    },
+    {
+      "name": "browser owner passkey registration with operator bootstrap",
+      "pass": true,
+      "elapsed_ms": 50
+    },
+    {
+      "name": "pending competing enrollment cannot create another owner",
+      "pass": true,
+      "elapsed_ms": 1
+    },
+    {
+      "name": "consumed bootstrap cannot start another owner enrollment",
+      "pass": true,
+      "elapsed_ms": 1
+    },
+    {
+      "name": "bootstrap file remains operator-only",
+      "pass": true,
+      "elapsed_ms": 0
+    },
+    {
+      "name": "browser foreign holder registration",
+      "pass": true,
+      "elapsed_ms": 64
+    },
+    {
+      "name": "browser owner authentication",
+      "pass": true,
+      "elapsed_ms": 49
+    },
+    {
+      "name": "browser guest authentication",
+      "pass": true,
+      "elapsed_ms": 50
+    },
+    {
+      "name": "owner grant issuance through UI",
+      "pass": true,
+      "elapsed_ms": 22
+    },
+    {
+      "name": "guest grant invocation through UI",
+      "pass": true,
+      "elapsed_ms": 139
+    },
+    {
+      "name": "copied token without session cannot issue grants",
+      "pass": true,
+      "elapsed_ms": 2
+    },
+    {
+      "name": "guest cannot issue grants",
+      "pass": true,
+      "elapsed_ms": 1
+    },
+    {
+      "name": "foreign holder denied before ceremony",
+      "pass": true,
+      "elapsed_ms": 2
+    },
+    {
+      "name": "write escalation denied",
+      "pass": true,
+      "elapsed_ms": 2
+    },
+    {
+      "name": "foreign resource denied",
+      "pass": true,
+      "elapsed_ms": 1
+    },
+    {
+      "name": "modified signed grant denied",
+      "pass": true,
+      "elapsed_ms": 2
+    },
+    {
+      "name": "bound invocation arguments cannot change",
+      "pass": true,
+      "elapsed_ms": 32
+    },
+    {
+      "name": "bound invocation cannot become login",
+      "pass": true,
+      "elapsed_ms": 29
+    },
+    {
+      "name": "valid signature with wrong origin",
+      "pass": true,
+      "elapsed_ms": 30
+    },
+    {
+      "name": "valid signature with wrong challenge",
+      "pass": true,
+      "elapsed_ms": 29
+    },
+    {
+      "name": "valid signature with wrong RP hash",
+      "pass": true,
+      "elapsed_ms": 29
+    },
+    {
+      "name": "valid signature without user verification",
+      "pass": true,
+      "elapsed_ms": 28
+    },
+    {
+      "name": "valid signature with rolled-back counter",
+      "pass": true,
+      "elapsed_ms": 29
+    },
+    {
+      "name": "tampered authenticator signature rejected",
+      "pass": true,
+      "elapsed_ms": 27
+    },
+    {
+      "name": "valid fresh assertion accepted",
+      "pass": true,
+      "elapsed_ms": 28
+    },
+    {
+      "name": "assertion replay rejected",
+      "pass": true,
+      "elapsed_ms": 1
+    },
+    {
+      "name": "parallel duplicate invocation executes once",
+      "pass": true,
+      "elapsed_ms": 30
+    },
+    {
+      "name": "guest cannot revoke",
+      "pass": true,
+      "elapsed_ms": 1
+    },
+    {
+      "name": "owner revocation committed",
+      "pass": true,
+      "elapsed_ms": 2
+    },
+    {
+      "name": "revoked grant rejects already started ceremony",
+      "pass": true,
+      "elapsed_ms": 2
+    },
+    {
+      "name": "revoked grant cannot start new invocation",
+      "pass": true,
+      "elapsed_ms": 1
+    },
+    {
+      "name": "duplicate name registration rejected",
+      "pass": true,
+      "elapsed_ms": 1
+    },
+    {
+      "name": "HTTP origin CSRF guard",
+      "pass": true,
+      "elapsed_ms": 0
+    },
+    {
+      "name": "expired grant denied",
+      "pass": true,
+      "elapsed_ms": 1207
+    },
+    {
+      "name": "bootstrap stays consumed after server restart",
+      "pass": true,
+      "elapsed_ms": 3
+    },
+    {
+      "name": "enrolled credentials authenticate after server restart",
+      "pass": true,
+      "elapsed_ms": 118
+    },
+    {
+      "name": "revocation survives server restart",
+      "pass": true,
+      "elapsed_ms": 2
+    },
+    {
+      "name": "replay rejected after server restart",
+      "pass": true,
+      "elapsed_ms": 1
+    },
+    {
+      "name": "mobile width has no horizontal overflow",
+      "pass": true,
+      "elapsed_ms": 0
+    }
+  ],
+  "elapsed_seconds": 3.5
+}

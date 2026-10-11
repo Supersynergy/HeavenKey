@@ -1,0 +1,6 @@
+{
+  "before_detached_child_survived": true,
+  "after_detached_child_running": false,
+  "guard_exit": 124,
+  "passed": true
+}

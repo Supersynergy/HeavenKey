@@ -1,0 +1,166 @@
+[
+  {
+    "file": "README.md",
+    "stats": {
+      "words": 593,
+      "emdash_per_1k": 3.4,
+      "bold-leadin_per_1k": 3.4,
+      "tricolon_per_1k": 8.4,
+      "sentences": 35,
+      "sent_median": 10,
+      "sent_stdev": 8.7
+    },
+    "findings": []
+  },
+  {
+    "file": "CHANGELOG.md",
+    "stats": {
+      "words": 113,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 0.0,
+      "sentences": 12,
+      "sent_median": 9.0,
+      "sent_stdev": 2.7
+    },
+    "findings": [
+      {
+        "rule": "FLAT-RHYTHM",
+        "line": 1,
+        "col": 1,
+        "text": "Satzlängen-Streuung 2.7 (Ziel > 5)",
+        "hint": "Gleichmäßiger Rhythmus. Zwei kurze Sätze einbauen."
+      }
+    ]
+  },
+  {
+    "file": "NOTICE.md",
+    "stats": {
+      "words": 142,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 7.0,
+      "sentences": 16,
+      "sent_median": 7.5,
+      "sent_stdev": 2.6
+    },
+    "findings": [
+      {
+        "rule": "FLAT-RHYTHM",
+        "line": 1,
+        "col": 1,
+        "text": "Satzlängen-Streuung 2.6 (Ziel > 5)",
+        "hint": "Gleichmäßiger Rhythmus. Zwei kurze Sätze einbauen."
+      }
+    ]
+  },
+  {
+    "file": "CONTRIBUTING.md",
+    "stats": {
+      "words": 143,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 7.0,
+      "sentences": 13,
+      "sent_median": 10,
+      "sent_stdev": 4.9
+    },
+    "findings": [
+      {
+        "rule": "FLAT-RHYTHM",
+        "line": 1,
+        "col": 1,
+        "text": "Satzlängen-Streuung 4.9 (Ziel > 5)",
+        "hint": "Gleichmäßiger Rhythmus. Zwei kurze Sätze einbauen."
+      }
+    ]
+  },
+  {
+    "file": "SECURITY.md",
+    "stats": {
+      "words": 125,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 8.0,
+      "sentences": 11,
+      "sent_median": 11,
+      "sent_stdev": 3.4
+    },
+    "findings": [
+      {
+        "rule": "FLAT-RHYTHM",
+        "line": 1,
+        "col": 1,
+        "text": "Satzlängen-Streuung 3.4 (Ziel > 5)",
+        "hint": "Gleichmäßiger Rhythmus. Zwei kurze Sätze einbauen."
+      }
+    ]
+  },
+  {
+    "file": "docs/ROADMAP.md",
+    "stats": {
+      "words": 192,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 10.4
+    },
+    "findings": [
+      {
+        "rule": "TRICOLON",
+        "line": 8,
+        "col": 114,
+        "text": "2x = 10.4/1000 Wörter (Grenze 10.0, 1 zu viel)",
+        "hint": "Dreier-Rhythmus überdosiert. Auf zwei oder vier ändern."
+      }
+    ]
+  },
+  {
+    "file": "docs/DEVELOPMENT.md",
+    "stats": {
+      "words": 260,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 11.5,
+      "sentences": 18,
+      "sent_median": 9.0,
+      "sent_stdev": 3.8
+    },
+    "findings": [
+      {
+        "rule": "FLAT-RHYTHM",
+        "line": 1,
+        "col": 1,
+        "text": "Satzlängen-Streuung 3.8 (Ziel > 5)",
+        "hint": "Gleichmäßiger Rhythmus. Zwei kurze Sätze einbauen."
+      },
+      {
+        "rule": "TRICOLON",
+        "line": 3,
+        "col": 150,
+        "text": "3x = 11.5/1000 Wörter (Grenze 10.0, 1 zu viel)",
+        "hint": "Dreier-Rhythmus überdosiert. Auf zwei oder vier ändern."
+      }
+    ]
+  },
+  {
+    "file": "docs/assets/README.md",
+    "stats": {
+      "words": 112,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 8.9,
+      "sentences": 8,
+      "sent_median": 12.0,
+      "sent_stdev": 3.1
+    },
+    "findings": [
+      {
+        "rule": "FLAT-RHYTHM",
+        "line": 1,
+        "col": 1,
+        "text": "Satzlängen-Streuung 3.1 (Ziel > 5)",
+        "hint": "Gleichmäßiger Rhythmus. Zwei kurze Sätze einbauen."
+      }
+    ]
+  }
+]

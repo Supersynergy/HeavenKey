@@ -1,0 +1,7 @@
+/target/
+/node_modules/
+/apps/web/dist/
+/data/
+/.grepgod/
+.env
+.env.*

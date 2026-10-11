@@ -1,0 +1,15 @@
+== repo-release gate :: /Users/master/Documents/Codex/work/uac-spike ==
+  ✓ README.md present
+  ✓ README has a visual above-the-fold
+  ✓ social-preview 292236 bytes (<=1MB)
+  ! social-preview not 1280x640 (got: 1672 941 )
+  ✓ social-preview has provenance
+  ! social-preview UPLOAD is GitHub web-UI only (Settings > Social preview) — confirm manually
+  ✓ LICENSE present
+  ✓ CHANGELOG.md present
+  ✓ gitleaks: no secrets
+  ✓ .env safe / absent
+  ✓ quick-start section present (verify from fresh clone: git clone <url> /tmp/x && cd /tmp/x && <cmd>)
+  ✓ CI badge backed by .github/workflows
+== 10 pass · 2 warn · 0 fail ==
+RELEASE-GRADE ✓

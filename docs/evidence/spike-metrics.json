@@ -1,0 +1,15 @@
+{
+  "start_utc": "2026-10-11T21:56:55Z",
+  "snapshot_utc": "2026-10-11T22:37:43.178497+00:00",
+  "recorded_wall_seconds": 2448.2,
+  "budget_seconds": 28800,
+  "within_budget": true,
+  "e2e_passed": 35,
+  "e2e_completed": true,
+  "core_tests": 24,
+  "commands_logged": 22,
+  "hardware": "deferred by user",
+  "provider_tokens": null,
+  "billing": null,
+  "active_human_hours": null
+}

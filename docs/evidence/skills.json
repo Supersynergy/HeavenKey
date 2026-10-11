@@ -1,0 +1,52 @@
+[
+  {
+    "name": "metacode",
+    "path": "/Users/master/superskills/skills/metacode/SKILL.md",
+    "sha256": "949ad8d1d2a5094d7b15aca4f46960f4227d34bdbff8ab532ec2bd566045ac6f"
+  },
+  {
+    "name": "agent-efficiency-orchestrator",
+    "path": "/Users/master/superskills/skills/agent-efficiency-orchestrator/SKILL.md",
+    "sha256": "76b9f2cf1d2b5aecbbcffea920673780934cdb84461ff2b38bb70045b67d6d01"
+  },
+  {
+    "name": "best-defaults",
+    "path": "/Users/master/superskills/skills/best-defaults/SKILL.md",
+    "sha256": "def0541cc1ab34e3eef0723a03a039afbaaf71943aa9f9e2879298a40a2096c8"
+  },
+  {
+    "name": "ponytail",
+    "path": "/Users/master/superskills/skills/ponytail/SKILL.md",
+    "sha256": "1316a2f3f95741d2300b116fe0c2d81ce4a9568656ed0a62643f54aaf09957f2"
+  },
+  {
+    "name": "speedtuning",
+    "path": "/Users/master/superskills/skills/speedtuning/SKILL.md",
+    "sha256": "0dc62161d7bbb64783c3af6b91de8a26ee0075bee80ab34678acf627294d2dec"
+  },
+  {
+    "name": "security-review",
+    "path": "/Users/master/.claude/cts/security-review/SKILL.md",
+    "sha256": "9fa6a0e79cc554abd106b39e32e68368cd175f8e6d238fe58ef6d8d3afa82069"
+  },
+  {
+    "name": "rust-patterns",
+    "path": "/Users/master/.claude/cts/rust-patterns/SKILL.md",
+    "sha256": "89005b75c013fe0c009b9cfb1e989eb0532e6f1cddf0c50fd1e98a2608b16287"
+  },
+  {
+    "name": "rust-testing",
+    "path": "/Users/master/.claude/cts/rust-testing/SKILL.md",
+    "sha256": "2431217890865240842685178304de48b2f1c86e135a3f2121da90161e63ede1"
+  },
+  {
+    "name": "coding-standards",
+    "path": "/Users/master/.claude/cts/coding-standards/SKILL.md",
+    "sha256": "e5b2811a92cedd3033f4dc486a581b210498f3e3d27030dee17769615901d71c"
+  },
+  {
+    "name": "verification-loop",
+    "path": "/Users/master/superskills/skills/verification-loop/SKILL.md",
+    "sha256": "e1c376b0ca50c6ba281b658c82fa855589a1de4dcb20d308e4669d52d6f97570"
+  }
+]

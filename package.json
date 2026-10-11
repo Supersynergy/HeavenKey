@@ -1,0 +1,7 @@
+{
+  "name": "heavenkey",
+  "private": true,
+  "workspaces": ["apps/web"],
+  "scripts": { "build": "bun build apps/web/src/main.ts --outdir apps/web/dist --target browser" },
+  "devDependencies": { "playwright-core": "1.62.1", "typescript": "7.0.2" }
+}

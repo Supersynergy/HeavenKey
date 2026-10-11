@@ -1,0 +1,37 @@
+{
+  "integrated_hashes": {
+    "Cargo.toml": "f6e85c1c966d154d14cfdf29e374a277cc94c79860d3b0c01738affe71f3257e",
+    "Cargo.lock": "90db5cdab9d13aa72fd674497a78f3d378d08b228812c40a482bd2fc33719b69",
+    "bun.lock": "4a462f2eb48e638adadadc6c21f928b35f4a5069385f8bf4fff80b0003c14f58",
+    "apps/api/src/main.rs": "bf1f38975120a0ed35ce2835fe91f09937d380638c5e7e6aa78380e4126dc385",
+    "apps/web/index.html": "071ef8e167caec3c6cb60f7ceb3dd997e2462a6194c83bb5fd8096db2a4a7366",
+    "apps/web/src/main.ts": "d23341b6069e84deaf4d76d9b52c233c1d4601adece56f038a12a00eb24d0365",
+    "apps/web/src/style.css": "956e8464c484e2b7e3321aace8ea59fbf3c9a639112c8917a9a1b24a7d67a05e",
+    "crates/verifier/src/lib.rs": "65f708e43607a6afa3dd18d10cb2c0260d9eafe490abcaf91e31d7da9ad8257c",
+    "scripts/e2e.mjs": "132dca4ca3fdbfb042213d2e279d92b66945263735d1487fcba4910f91870531",
+    "scripts/run.py": "9eaf042db912c3d0c4e7150866e15b4dc05ee9d4cc9c00a686ae9f631866546e"
+  },
+  "check_exit": 0,
+  "e2e_exit": 0,
+  "e2e_completed": true,
+  "e2e_cases": 35,
+  "e2e_passed": 35,
+  "timeout_test": {
+    "before_detached_child_survived": true,
+    "after_detached_child_running": false,
+    "guard_exit": 124,
+    "passed": true
+  },
+  "review_exit": 0,
+  "semgrep_findings": 0,
+  "gitleaks_source_findings": {
+    "apps": 0,
+    "crates": 0,
+    "scripts": 0
+  },
+  "missing_links": [],
+  "hardware": "deferred by user",
+  "recorded_elapsed_seconds": 2448.2,
+  "max_seconds": 28800,
+  "lab_ports_closed": true
+}

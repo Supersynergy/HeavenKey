@@ -1,0 +1,54 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.09s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running unittests src/main.rs (target/debug/build/uac-api/8e6fbbb62fdc6637/out/uac_api-8e6fbbb62fdc6637)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/build/uac-verifier/856d922b63cb822e/out/uac_verifier-856d922b63cb822e)
+
+running 24 tests
+test tests::accepts_valid_attenuated_chain ... ok
+test tests::rejects_broken_parent_binding ... ok
+test tests::rejects_delegation_when_parent_forbids_it ... ok
+test tests::offline_verifier_cannot_know_remote_revocation ... ok
+test tests::rejects_descendant_of_revoked_parent ... ok
+test tests::rejects_delegation_budget_expansion ... ok
+test tests::rejects_changed_request_arguments ... ok
+test tests::rejects_different_resource ... ok
+test tests::rejects_expired_grant_at_boundary ... ok
+test tests::rejects_empty_and_excessive_chains ... ok
+test tests::rejects_clock_rollback_within_process ... ok
+test tests::rejects_child_with_earlier_validity ... ok
+test tests::rejects_oversized_and_unknown_fields_before_verification ... ok
+test tests::rejects_old_invocation_at_boundary ... ok
+test tests::rejects_future_grant ... ok
+test tests::rejects_untrusted_root ... ok
+test tests::rejects_signed_rights_escalation ... ok
+test tests::rejects_unknown_challenge ... ok
+test tests::rejects_child_outliving_parent ... ok
+test tests::rejects_tampered_signature ... ok
+test tests::rejects_replayed_invocation ... ok
+test tests::rejects_request_action_outside_context ... ok
+test tests::rejects_wrong_intermediate_issuer ... ok
+test tests::requires_holder_proof_even_with_valid_chain ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests uac_verifier
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+bun audit v1.4.2 (744846f84)
+
+No vulnerabilities found (checked 22 packages) [254.00ms]
+$ bun build apps/web/src/main.ts --outdir apps/web/dist --target browser
+Bundled 1 module in 2ms
+
+  main.js  6.76 KB  (entry point)
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
+{"name": "ci-e2e", "command": ["bun", "scripts/e2e.mjs"], "exit_code": 0, "elapsed_seconds": 3.63, "time_utc": "2026-10-11T22:57:26.690818+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/ci-e2e.log", "timeout_cleanup_pids": []}

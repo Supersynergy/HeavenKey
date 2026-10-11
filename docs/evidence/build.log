@@ -1,0 +1,21 @@
+bun run build
+$ bun build apps/web/src/main.ts --outdir apps/web/dist --target browser
+Bundled 1 module in 90ms
+
+  main.js  6.50 KB  (entry point)
+
+cargo build --locked --offline
+    Blocking waiting for file lock on build directory
+   Compiling stable_deref_trait v1.2.1
+   Compiling libc v0.2.190
+   Compiling zerofrom v0.1.8
+   Compiling serde_core v1.0.228
+   Compiling pin-project-lite v0.2.17
+   Compiling yoke v0.8.3
+   Compiling memchr v2.8.3
+   Compiling zerovec v0.11.8
+   Compiling smallvec v1.16.3
+   Compiling litemap v0.8.3
+   Compiling writeable v0.6.4
+   Compiling zerotrie v0.2.5
+error: recipe `build` was terminated on line 3 by signal 15

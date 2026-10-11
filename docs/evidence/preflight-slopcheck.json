@@ -1,0 +1,37 @@
+[
+  {
+    "file": "/Users/master/Documents/Codex/reports/uac-audit-rust-nightly-2026-10-11/PREFLIGHT.md",
+    "stats": {
+      "words": 1859,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 4.8,
+      "tricolon_per_1k": 8.1,
+      "sentences": 106,
+      "sent_median": 10.0,
+      "sent_stdev": 4.6
+    },
+    "findings": [
+      {
+        "rule": "FLAT-RHYTHM",
+        "line": 1,
+        "col": 1,
+        "text": "Satzlängen-Streuung 4.6 (Ziel > 5)",
+        "hint": "Gleichmäßiger Rhythmus. Zwei kurze Sätze einbauen."
+      },
+      {
+        "rule": "EMPTY-ADV",
+        "line": 53,
+        "col": 36,
+        "text": "Just",
+        "hint": "Streichen, wenn es keine echte Betonung oder Unsicherheit trägt."
+      },
+      {
+        "rule": "COLON-REVEAL",
+        "line": 65,
+        "col": 1,
+        "text": "Der erste Spike muss die schwierige Schnittstelle testen: Der Passkey ",
+        "hint": "Doppelpunkt-Enthüllung. Als normalen Satz schreiben."
+      }
+    ]
+  }
+]
