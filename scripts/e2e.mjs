@@ -5,11 +5,14 @@ import { mkdtemp, writeFile, mkdir, rm, stat, readFile } from "node:fs/promises"
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import assert from "node:assert/strict";
+import { Database } from "bun:sqlite";
 
 const root = resolve(".");
 const evidence = join(root, "docs/evidence");
 await mkdir(evidence, { recursive: true });
 const data = await mkdtemp(join(tmpdir(), "uac-sim-"));
+let serverData = data;
+let legacyData;
 let bootstrapToken;
 const port = 18241;
 const origin = `http://localhost:${port}`;
@@ -24,7 +27,7 @@ async function test(name, action) {
   catch (e) { cases.push({ name, pass: false, error: e.message }); throw e; }
 }
 async function startServer() {
-  server = spawn(join(root,"target/debug/uac-api"), [], { cwd:root, env:{ ...process.env,UAC_PORT:String(port),UAC_DATA:data }, stdio:["ignore","pipe","pipe"] });
+  server = spawn(join(root,"target/debug/uac-api"), [], { cwd:root, env:{ ...process.env,UAC_PORT:String(port),UAC_DATA:serverData }, stdio:["ignore","pipe","pipe"] });
   let output = "";
   let spawnError;
   server.on("error", error => { spawnError=error; });
@@ -56,11 +59,27 @@ async function actor(name) {
   const errors=[];page.on("pageerror",e=>errors.push(e.message));
   const cdp=await context.newCDPSession(page);
   await cdp.send("WebAuthn.enable");
-  const {authenticatorId}=await cdp.send("WebAuthn.addVirtualAuthenticator",{ options:{ protocol:"ctap2",ctap2Version:"ctap2_1",transport:"internal",hasResidentKey:true,hasUserVerification:true,isUserVerified:true,automaticPresenceSimulation:true } });
+  const {authenticatorId}=await cdp.send("WebAuthn.addVirtualAuthenticator",{ options:authenticatorOptions });
   await page.goto(origin);
   await page.waitForFunction(()=>document.documentElement.dataset.ready==="true",null,{timeout:10000});
   await page.locator("#name").fill(name);
-  const a={name,context,page,cdp,authenticatorId,errors};actors.push(a);return a;
+  const a={name,context,page,cdp,authenticatorId,errors,deviceName:"original",devices:new Map()};actors.push(a);return a;
+}
+const authenticatorOptions={protocol:"ctap2",ctap2Version:"ctap2_1",transport:"internal",hasResidentKey:true,hasUserVerification:true,isUserVerified:true,automaticPresenceSimulation:true};
+async function selectDevice(a,name) {
+  if(a.deviceName===name) return;
+  const {credentials}=await a.cdp.send("WebAuthn.getCredentials",{authenticatorId:a.authenticatorId});
+  a.devices.set(a.deviceName,credentials);
+  await a.cdp.send("WebAuthn.removeVirtualAuthenticator",{authenticatorId:a.authenticatorId});
+  const {authenticatorId}=await a.cdp.send("WebAuthn.addVirtualAuthenticator",{options:authenticatorOptions});
+  a.authenticatorId=authenticatorId;a.deviceName=name;
+  for(const credential of a.devices.get(name) || []) await a.cdp.send("WebAuthn.addCredential",{authenticatorId,credential:{...credential,rpId:new URL(origin).hostname}});
+}
+async function get(a,path,session) {
+  return a.page.evaluate(async ({path,session})=>{
+    const r=await fetch(path,{headers:session?{Authorization:`Bearer ${session}`}:{}});
+    return {status:r.status,body:await r.json()};
+  },{path,session});
 }
 async function post(actor,path,body,session) {
   return actor.page.evaluate(async ({path,body,session})=>{
@@ -85,25 +104,38 @@ async function registration(a) {
 async function enrollment(a,token) {
   const start=await post(a,"/api/register/start",{name:a.name,bootstrap_token:token});
   assert.equal(start.status,200,JSON.stringify(start.body));
-  const credential=await a.page.evaluate(async options=>{
+  const credential=await creation(a,start.body.options);
+  return {request_id:start.body.request_id,credential};
+}
+async function creation(a,options) {
+  return a.page.evaluate(async options=>{
     const dec=s=>Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
     options.publicKey.challenge=dec(options.publicKey.challenge);
     options.publicKey.user.id=dec(options.publicKey.user.id);
+    for(const c of options.publicKey.excludeCredentials || []) c.id=dec(c.id);
     return (await navigator.credentials.create(options)).toJSON();
-  },start.body.options);
-  return {request_id:start.body.request_id,credential};
+  },options);
+}
+async function additionalEnrollment(a,session,label,device) {
+  const start=await post(a,"/api/credentials/start",{label},session);
+  assert.equal(start.status,200,JSON.stringify(start.body));
+  await selectDevice(a,device);
+  return {request_id:start.body.request_id,credential:await creation(a,start.body.options)};
 }
 async function assertion(a,invocation=null) {
   const start=await post(a,"/api/auth/start",{name:a.name,invocation});
   assert.equal(start.status,200,JSON.stringify(start.body));
-  const credential=await a.page.evaluate(async (options)=>{
+  const credential=await authentication(a,start.body.options);
+  return {request_id:start.body.request_id,credential,invocation};
+}
+async function authentication(a,options) {
+  return a.page.evaluate(async (options)=>{
     const dec=s=>Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
     options.publicKey.challenge=dec(options.publicKey.challenge);
     for(const c of options.publicKey.allowCredentials) c.id=dec(c.id);
     const credential=await navigator.credentials.get(options);
     return credential.toJSON();
-  },start.body.options);
-  return {request_id:start.body.request_id,credential,invocation};
+  },options);
 }
 function invoke(grant) { return {grant:grant.grant,resource:"urn:uac:lab:document",action:"Read",arguments:{document:"overview"}}; }
 async function resign(a,payload,change) {
@@ -192,6 +224,168 @@ try {
   const viewport={width:390,height:844};await guest.page.setViewportSize(viewport);
   await test("mobile width has no horizontal overflow",async()=>assert.ok(await guest.page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)));
   await guest.page.screenshot({path:join(evidence,"browser-mobile.png"),fullPage:true});
+  await guest.page.setViewportSize({width:1280,height:900});
+  ownerSession=await login(owner);
+  const foreignSession=await login(foreign);
+  let initialId,secondId,secondGrant,otherGuestSession,mutationSession;
+  await test("credential list is scoped and exposes only public metadata",async()=>{
+    const r=await get(guest,"/api/credentials",guestSession);assert.equal(r.status,200);assert.equal(r.body.credentials.length,1);
+    const c=r.body.credentials[0];initialId=c.id;assert.equal(r.body.current_credential_id,initialId);assert.equal(c.active,true);
+    assert.deepEqual(Object.keys(c).sort(),["active","created","id","label"]);assert.ok(Number.isInteger(c.created));
+    const f=await get(foreign,"/api/credentials",foreignSession);assert.equal(f.status,200);assert.equal(f.body.credentials.length,1);assert.notEqual(f.body.credentials[0].id,initialId);
+  });
+  await test("credential listing and enrollment require a session",async()=>{
+    assert.equal((await get(guest,"/api/credentials")).status,401);
+    assert.equal((await post(guest,"/api/credentials/start",{label:"Spare key"})).status,401);
+  });
+  await test("last active passkey cannot be revoked through UI or API",async()=>{
+    await guest.page.locator("#refresh").click();
+    assert.equal(await guest.page.locator(".credential button").isDisabled(),true);
+    assert.equal((await post(guest,"/api/credentials/revoke",{id:initialId},guestSession)).status,409);
+    assert.equal((await get(guest,"/api/credentials",guestSession)).body.credentials[0].active,true);
+  });
+  await test("credential labels enforce nonempty 48-character bound",async()=>{
+    for(const label of [" ","x".repeat(49)]) assert.equal((await post(guest,"/api/credentials/start",{label},guestSession)).status,400);
+  });
+  await test("credential enrollment cannot finish in another account session",async()=>{
+    const p=await additionalEnrollment(guest,guestSession,"Foreign binding test","foreign-binding");
+    assert.equal((await post(foreign,"/api/credentials/finish",p,foreignSession)).status,403);
+    assert.equal((await get(guest,"/api/credentials",guestSession)).body.credentials.length,1);
+    await selectDevice(guest,"original");
+  });
+  await test("credential enrollment is bound to the initiating same-account session",async()=>{
+    const auth=await post(guest,"/api/auth/finish",await assertion(guest));assert.equal(auth.status,200);otherGuestSession=auth.body.session;
+    const p=await additionalEnrollment(guest,guestSession,"Session binding test","session-binding");
+    assert.equal((await post(guest,"/api/credentials/finish",p,otherGuestSession)).status,403);
+    assert.equal((await get(guest,"/api/credentials",guestSession)).body.credentials.length,1);
+    await selectDevice(guest,"original");
+  });
+  await test("browser enrolls second passkey on a separate device in the same account",async()=>{
+    const grantResponse=await post(owner,"/api/grants",{guest_name:"guest",ttl_seconds:300},ownerSession);assert.equal(grantResponse.status,200);secondGrant=grantResponse.body;
+    await guest.page.route("**/api/credentials/start",async route=>{await selectDevice(guest,"secondary");await route.continue();},{times:1});
+    await guest.page.locator("#credential-label").fill("Ersatzschlüssel");
+    const fresh=guest.page.waitForResponse(r=>r.url().endsWith("/api/auth/finish"));
+    const finish=guest.page.waitForResponse(r=>r.url().endsWith("/api/credentials/finish"));
+    await guest.page.locator("#credential-add").click();
+    const r=await finish;assert.equal(r.status(),200);const value=await r.json();secondId=value.id;assert.notEqual(secondId,initialId);assert.equal(value.label,"Ersatzschlüssel");
+    guestSession=(await (await fresh).json()).session;
+    await guest.page.waitForFunction(()=>document.querySelector("#status").textContent.includes("hinzugefügt"));
+    const listed=await get(guest,"/api/credentials",guestSession);assert.equal(listed.body.credentials.length,2);assert.equal(listed.body.current_credential_id,initialId);
+    assert.equal(await guest.page.locator('.credential[data-active="true"]').count(),2);assert.equal(await guest.page.locator("#credential-label").inputValue(),"");
+  });
+  await test("second device authenticates after the original device is removed",async()=>{
+    assert.equal(guest.deviceName,"secondary");guestSession=await login(guest);
+    const r=await get(guest,"/api/credentials",guestSession);assert.equal(r.body.current_credential_id,secondId);
+  });
+  await test("second passkey invokes an existing same-account grant through the browser",async()=>{
+    await guest.page.locator("#refresh").click();
+    const response=guest.page.waitForResponse(r=>r.url().endsWith("/api/auth/finish"));
+    await guest.page.locator(`.grant[data-id="${secondGrant.id}"] button`).click();assert.equal((await response).status(),200);
+    await guest.page.waitForFunction(()=>document.querySelector("#result").textContent.includes('"authorized": true'));
+    await guest.page.waitForFunction(()=>!document.querySelector("#credential-add").disabled);
+    await guest.page.screenshot({path:join(evidence,"browser-credentials.png"),fullPage:true});
+  });
+  await test("other account cannot revoke a passkey it does not own",async()=>assert.equal((await post(foreign,"/api/credentials/revoke",{id:initialId},foreignSession)).status,404));
+  await selectDevice(guest,"original");
+  const pendingKeyAuth=await assertion(guest);
+  const pendingKeyInvocation=await assertion(guest,invoke(secondGrant));
+  const pendingKeyEnrollment=await additionalEnrollment(guest,guestSession,"Pending spare","pending-spare");
+  await selectDevice(guest,"secondary");
+  await test("browser passkey revocation forces reauthentication and disables mutations",async()=>{
+    await guest.page.locator(`.credential[data-id="${initialId}"] button`).click();
+    assert.equal(await guest.page.locator("#credential-revoke-dialog").evaluate(d=>d.open),true);
+    const fresh=guest.page.waitForResponse(r=>r.url().endsWith("/api/auth/finish"));
+    const revoke=guest.page.waitForResponse(r=>r.url().endsWith("/api/credentials/revoke"));
+    await guest.page.locator("#credential-revoke-confirm").click();
+    const r=await revoke;assert.equal(r.status(),200);const value=await r.json();assert.equal(value.revoked,true);assert.equal(value.reauthentication_required,true);
+    mutationSession=(await (await fresh).json()).session;
+    await guest.page.waitForFunction(()=>document.querySelector("#identity").textContent.includes("Erneute Anmeldung"));
+    assert.equal(await guest.page.locator("#refresh").isDisabled(),true);assert.equal(await guest.page.locator("#credential-add").isDisabled(),true);
+    assert.equal(await guest.page.locator("#credential-revoke-dialog").evaluate(d=>d.open),false);
+  });
+  await test("passkey revocation invalidates every session for the account",async()=>{
+    for(const s of [guestSession,otherGuestSession,mutationSession]) assert.equal((await get(guest,"/api/credentials",s)).status,401);
+    assert.equal((await get(foreign,"/api/credentials",foreignSession)).status,200);
+  });
+  await test("passkey revocation invalidates pending login and invocation ceremonies",async()=>{
+    assert.equal((await post(guest,"/api/auth/finish",pendingKeyAuth)).status,403);
+    assert.equal((await post(guest,"/api/auth/finish",pendingKeyInvocation)).status,403);
+  });
+  guestSession=await login(guest);
+  await test("last surviving passkey remains protected after another key is revoked",async()=>{
+    assert.equal((await post(guest,"/api/credentials/revoke",{id:secondId},guestSession)).status,409);
+    const list=await get(guest,"/api/credentials",guestSession);assert.equal(list.body.credentials.filter(c=>c.active).length,1);
+  });
+  await test("passkey revocation invalidates pending enrollment despite fresh surviving session",async()=>assert.equal((await post(guest,"/api/credentials/finish",pendingKeyEnrollment,guestSession)).status,403));
+  await test("revoked passkey is excluded from fresh authentication options",async()=>{
+    const r=await post(guest,"/api/auth/start",{name:"guest",invocation:null});assert.equal(r.status,200);
+    const ids=r.body.options.publicKey.allowCredentials.map(c=>c.id);assert.ok(ids.includes(secondId));assert.ok(!ids.includes(initialId));
+  });
+  await test("genuine fresh assertion by revoked device is rejected",async()=>{
+    const r=await post(guest,"/api/auth/start",{name:"guest",invocation:null});assert.equal(r.status,200);
+    await selectDevice(guest,"original");
+    r.body.options.publicKey.allowCredentials=[{type:"public-key",id:initialId}];
+    const credential=await authentication(guest,r.body.options);
+    assert.equal(credential.rawId,initialId);
+    assert.equal((await post(guest,"/api/auth/finish",{request_id:r.body.request_id,credential,invocation:null})).status,401);
+    await selectDevice(guest,"secondary");
+  });
+  await test("surviving passkey retains same-account grant invocation after revocation",async()=>{
+    const r=await post(guest,"/api/auth/finish",await assertion(guest,invoke(secondGrant)));assert.equal(r.status,200);assert.equal(r.body.authorized,true);
+    const list=await get(guest,"/api/credentials",guestSession);assert.equal(list.body.credentials.find(c=>c.id===initialId).active,false);assert.equal(list.body.credentials.find(c=>c.id===secondId).active,true);
+    await guest.page.locator("#refresh").click();
+    await guest.page.waitForFunction(()=>document.querySelector('#credentials [data-active="false"]'));
+    await guest.page.screenshot({path:join(evidence,"browser-passkey-revoked.png"),fullPage:true});
+  });
+  await test("seven active passkeys enroll across distinct virtual devices",async()=>{
+    for(let n=2;n<=7;n++) {
+      const p=await additionalEnrollment(guest,guestSession,`Spare device ${n}`,`cap-${n}`);
+      assert.equal((await post(guest,"/api/credentials/finish",p,guestSession)).status,200);
+    }
+    const r=await get(guest,"/api/credentials",guestSession);assert.equal(r.body.credentials.filter(c=>c.active).length,7);
+  });
+  const pendingAtCap=await additionalEnrollment(guest,guestSession,"Pending capacity","cap-pending");
+  await test("credential cap is rechecked when an in-flight enrollment finishes",async()=>{
+    const last=await additionalEnrollment(guest,guestSession,"Eighth device","cap-final");assert.equal((await post(guest,"/api/credentials/finish",last,guestSession)).status,200);
+    assert.equal((await post(guest,"/api/credentials/finish",pendingAtCap,guestSession)).status,409);
+    assert.equal((await get(guest,"/api/credentials",guestSession)).body.credentials.filter(c=>c.active).length,8);
+  });
+  await selectDevice(guest,"secondary");
+  await test("credential cap rejects new enrollment and disables the add control",async()=>{
+    assert.equal((await post(guest,"/api/credentials/start",{label:"Ninth device"},guestSession)).status,409);
+    await guest.page.locator("#refresh").click();await guest.page.waitForFunction(()=>document.querySelectorAll('.credential[data-active="true"]').length===8);
+    assert.equal(await guest.page.locator("#credential-add").isDisabled(),true);
+  });
+  for(const width of [320,375,414,768]) await test(`credential workbench fits ${width}px and keeps buttons on one line`,async()=>{
+    await guest.page.setViewportSize({width,height:900});
+    assert.ok(await guest.page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
+    assert.ok(await guest.page.locator("button").evaluateAll(buttons=>buttons.filter(b=>b.getClientRects().length).every(b=>{
+      const range=document.createRange();range.selectNodeContents(b);return range.getClientRects().length<=1;
+    })));
+  });
+  await guest.page.setViewportSize({width:375,height:900});
+  await guest.page.screenshot({path:join(evidence,"browser-credentials-mobile.png"),fullPage:true});
+  await stopServer();await startServer();
+  await test("multiple passkeys and inactive original survive server restart",async()=>{
+    guestSession=await login(guest);const r=await get(guest,"/api/credentials",guestSession);assert.equal(r.status,200);
+    assert.equal(r.body.credentials.filter(c=>c.active).length,8);assert.equal(r.body.credentials.find(c=>c.id===initialId).active,false);assert.equal(r.body.current_credential_id,secondId);
+    assert.equal((await post(guest,"/api/auth/finish",await assertion(guest,invoke(secondGrant)))).status,200);
+  });
+  const currentDb=new Database(join(data,"uac.sqlite"),{readonly:true});
+  const legacyUser=currentDb.query("SELECT id,name,owner,credential_id,passkey,counter FROM users WHERE name='foreign'").get();currentDb.close();
+  legacyData=await mkdtemp(join(tmpdir(),"uac-legacy-"));
+  const legacyDb=new Database(join(legacyData,"uac.sqlite"));
+  legacyDb.exec("CREATE TABLE users(id TEXT PRIMARY KEY,name TEXT UNIQUE NOT NULL,owner INTEGER NOT NULL,credential_id TEXT UNIQUE NOT NULL,passkey TEXT NOT NULL,counter INTEGER NOT NULL DEFAULT 0)");
+  legacyDb.query("INSERT INTO users VALUES(?1,?2,?3,?4,?5,?6)").run(legacyUser.id,legacyUser.name,legacyUser.owner,legacyUser.credential_id,legacyUser.passkey,legacyUser.counter);legacyDb.close();
+  await stopServer();serverData=legacyData;await startServer();
+  await test("legacy single-passkey database migrates and authenticates with the same key",async()=>{
+    const migratedSession=await login(foreign);const r=await get(foreign,"/api/credentials",migratedSession);assert.equal(r.status,200);assert.equal(r.body.credentials.length,1);
+    assert.equal(r.body.credentials[0].id,legacyUser.credential_id);assert.equal(r.body.credentials[0].active,true);assert.equal(r.body.credentials[0].label,"Initial passkey");
+  });
+  await stopServer();await startServer();
+  await test("legacy credential migration is idempotent across a second restart",async()=>{
+    const migratedSession=await login(foreign);const r=await get(foreign,"/api/credentials",migratedSession);assert.equal(r.body.credentials.length,1);assert.equal(r.body.current_credential_id,legacyUser.credential_id);
+  });
 } catch(e) {
   fatalError=e.message;
   console.error(e.stack);process.exitCode=1;
@@ -207,5 +401,6 @@ finally {
   const report={completed:!fatalError,fatal_error:fatalError,mode:"virtual CTAP2 authenticators; real navigator.credentials + Rust verification",hardware:"deferred by user",total:cases.length,passed:cases.filter(x=>x.pass).length,failed:cases.filter(x=>!x.pass).length,cases,elapsed_seconds:Math.round((performance.now()-started)/100)/10};
   await writeFile(join(evidence,"e2e.json"),JSON.stringify(report,null,2)+"\n");
   await rm(data,{recursive:true,force:true});
+  if(legacyData) await rm(legacyData,{recursive:true,force:true});
   console.log(JSON.stringify({total:report.total,passed:report.passed,failed:report.failed,elapsed_seconds:report.elapsed_seconds}));
 }

@@ -1,14 +1,22 @@
 [
   {
     "actor": "owner",
-    "status": "Bereit für die erste Einschreibung."
+    "status": "Passkey geprüft. Sitzung ist aktiv.",
+    "errors": []
   },
   {
     "actor": "guest",
-    "status": "Bereit für die erste Einschreibung."
+    "status": "Passkey geprüft. Sitzung ist aktiv.",
+    "errors": []
   },
   {
     "actor": "foreign",
-    "status": "Bereit für die erste Einschreibung."
+    "status": "Passkey geprüft. Sitzung ist aktiv.",
+    "errors": []
+  },
+  {
+    "actor": "contender",
+    "status": "Bereit für die erste Einschreibung.",
+    "errors": []
   }
 ]

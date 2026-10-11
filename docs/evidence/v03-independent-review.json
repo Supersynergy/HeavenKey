@@ -1,0 +1,150 @@
+{
+  "schema": "heavenkey-independent-source-review-v2",
+  "observed_at_utc": "2026-10-11T23:24:26.132875+00:00",
+  "review_status": "pass_no_blocking_findings_on_recorded_source",
+  "overall_task_status": "independent_source_review_and_integrated_local_oracles_green",
+  "reviewer_scope": "Independent donor/security lane; no code edits, git writes, real hardware, account or credential imports",
+  "checks": [
+    {
+      "name": "Stable account grant alias",
+      "source": "apps/api/src/main.rs:199",
+      "result": "pass",
+      "evidence": "User subject hashes the immutable legacy initial credential ID. Authentication verifies an active same-user key; grant bytes and verifier wire format are unchanged."
+    },
+    {
+      "name": "Active-key and counter recheck",
+      "source": "apps/api/src/main.rs:534",
+      "result": "pass",
+      "evidence": "Verified result selects matching current active credential; stored per-key counter is reloaded, update requires active=1, and revoked grants are rechecked before operation commit."
+    },
+    {
+      "name": "Enrollment session and purpose binding",
+      "source": "apps/api/src/main.rs:667",
+      "result": "pass",
+      "evidence": "Separate registration/enrollment/authentication maps; enrollment requires initiating user, exact session token and authorizing credential, then rechecks active key and consumes state."
+    },
+    {
+      "name": "Last-key and capacity concurrency",
+      "source": "apps/api/src/main.rs:628",
+      "result": "pass",
+      "evidence": "One Inner mutex serializes checks and mutation. Capacity8 checked at start and finish; revocation counts active keys and updates target in one SQLite transaction before purging account sessions and pending auth/enrollment."
+    },
+    {
+      "name": "Expiry and replay paths",
+      "source": "apps/api/src/main.rs:189",
+      "result": "pass_by_source",
+      "evidence": "All session-bound endpoints call session_user/prune; auth start/finish prune directly. Ceremonies120s/sessions300s. Matching authorized finish consumes state; failed wrong-session finish cannot repurpose state."
+    },
+    {
+      "name": "Migration tombstones",
+      "source": "apps/api/src/main.rs:900",
+      "result": "pass",
+      "evidence": "Transactional INSERT OR IGNORE migration preserves inactive original credential rows, counters and labels; no grant or operation rewrite. File-backed Rust test checks reopen and repeated migration."
+    },
+    {
+      "name": "UI account identity and mutation confirmation",
+      "source": "apps/web/src/main.ts:83",
+      "result": "pass",
+      "evidence": "freshSession authenticates stored sessionName, not editable account field. inFlight gates mutations. Credential rendering uses textContent; successful revocation clears session and forces surviving-key login."
+    },
+    {
+      "name": "Published SDK bridge, pin and notices",
+      "source": "apps/web/src/main.ts:1",
+      "result": "pass",
+      "evidence": "Pinned browser14.0.0, lock SHA512 matches verified npm tarball. options.publicKey is passed to adapter; returned JSON goes to existing Rust verifier. Build emits reviewed package MIT notice."
+    },
+    {
+      "name": "Static application network surface",
+      "source": "apps/web/dist/main.js:444",
+      "result": "pass",
+      "evidence": "Compiled bundle has one application fetch(path). No library fetch/XHR/WebSocket/sendBeacon found. API paths are local same-origin constants; no CDN or new service. This does not inspect platform passkey-provider sync."
+    },
+    {
+      "name": "Adversarial E2E acceptance design",
+      "source": "scripts/e2e.mjs:230",
+      "result": "pass",
+      "evidence": "Tests use real navigator credentials and Rust verification; include wrong-account and wrong-session enrollment, original-key rejection despite forged allow-list, surviving-key old-grant invocation, all-session and pending-ceremony invalidation, cap at finish, and restart/migration."
+    }
+  ],
+  "blocking_findings": [],
+  "nonblocking_limits": [
+    "No production clock-resilience claim: existing wall-clock now() fallback/clock-jump behavior is unchanged. Ceremony/session TTL paths were inspected; no 120 s/300 s elapsed-time test run by reviewer.",
+    "8 active credentials per account is the configured bound; revoked metadata is retained as a tombstone.",
+    "The grant audience alias denotes account authority, not a physical device. Credential revocation leaves same-account grants intact; withdraw grants separately.",
+    "Attestation subjects/source were parsed and tarball integrity checked; provenance signatures/certificates were not cryptographically verified.",
+    "No hardware, biometrics, platform sync or recovery acceptance.",
+    "Canceled-ceremony cleanup and retry are source-reviewed via perform/catch/finally and SDK error propagation; current69-case browser report contains no dedicated cancellation case."
+  ],
+  "oracle_evidence_read": {
+    "path": "docs/evidence/e2e.json",
+    "sha256": "e1524bcb4de2ef8443c07b731bde98ba0e866a7d11bdccef91265922d442ce8f",
+    "completed": true,
+    "total": 69,
+    "passed": 69,
+    "failed": 0,
+    "elapsed_seconds": 72.4,
+    "reviewer_executed_this_run": false,
+    "root_just_check_result": "Exit0;29 Rust tests(24core+5API), TypeScript,Clippy,fmt,dependency checks and build; root reports6.67s",
+    "rust_test_log": "docs/evidence/local-ci-v03.log",
+    "rust_test_log_sha256": "730cb020cb6d3f3eb0a5ffa22c7e1456f6793dbc51085e66f98b62ef6cc5cc79",
+    "root_e2e_wall_seconds_reported": 8.928,
+    "missing_binary_probe": "Intentional negative harness regression: expects spawn failure and incomplete report; source inspected, not mistaken for a successful server launch"
+  },
+  "invalidation_rule": "Any changed reviewed source hash requires affected-path review; any relevant source/build change invalidates affected oracle evidence.",
+  "final_hash_comparison": {
+    "at_utc": "2026-10-11T23:30:20.025949+00:00",
+    "compared_files": 12,
+    "all_match": true,
+    "changes": []
+  },
+  "reviewed_files": [
+    {
+      "path": "apps/api/src/main.rs",
+      "sha256": "3b397a7e89fe70b59b541db55c663504c37cdb6b94c414da4d4686ea71e85c99"
+    },
+    {
+      "path": "apps/web/src/main.ts",
+      "sha256": "004977a5143e03527cbb578afeb69b5652bfac4665271c78cacea0e41b7057c0"
+    },
+    {
+      "path": "apps/web/index.html",
+      "sha256": "00bba8bb1d070465b580da2efffcadd270eee5084fb88993a16d67c96447f7bc"
+    },
+    {
+      "path": "scripts/e2e.mjs",
+      "sha256": "8856305a15a717c763812324cc390e8586fa015a762d9ab8c7ed8958bbb46fda"
+    },
+    {
+      "path": "scripts/build_web.py",
+      "sha256": "40bd5a832ac629498d41a3f7f4064dc1f7eff6418ed25ebe299e57714de8617c"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "f8a5fd678a7fe5332bfbbe45c8bf1d3f28d8387820d6dc93567ce3a3ad6a7a07"
+    },
+    {
+      "path": "apps/web/package.json",
+      "sha256": "cea72fff2b3540328787884ef1746e39ae10d9a5d7672c87d50198309fa83dff"
+    },
+    {
+      "path": "package.json",
+      "sha256": "f3af43dfdec333284d630ab1654d2afb6d12b8785ba024f6db489f8e63c780e4"
+    },
+    {
+      "path": "bun.lock",
+      "sha256": "c0badf34048730e4a43c2bc61b0a5f3325b4bff3e1efa8ea4411fdba438cb02f"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "b3d1fdaef0e8f420e686fad3fa45c7825faf8d496bda6a2045f186840462d8d8"
+    },
+    {
+      "path": "docs/licenses/simplewebauthn-browser-MIT.txt",
+      "sha256": "bd9e3f45696472076c7160c7f66e54b2d62d38bc2646c812d19be83ee4400c63"
+    },
+    {
+      "path": "apps/web/dist/main.js",
+      "sha256": "a3b71b11dae5d1e6d25ec060b2bc8b5c1b62dcf6d13e820f6697150b28cc4069"
+    }
+  ]
+}

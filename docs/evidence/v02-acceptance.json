@@ -1,0 +1,165 @@
+{
+  "project": "HeavenKey",
+  "version": "0.2.0",
+  "check_exit": 0,
+  "local_ci_exit": 0,
+  "rust_core_tests": 24,
+  "e2e_completed": true,
+  "e2e_cases": 41,
+  "e2e_passed": 41,
+  "e2e_failed": 0,
+  "semgrep_findings": 0,
+  "semgrep_errors": 0,
+  "gitleaks_staged_findings": 0,
+  "timeout_test": {
+    "guard_exit": 124,
+    "detached_child_running": false,
+    "passed": true
+  },
+  "review": "current source and denial paths manually inspected; grepgod diff and security-audit scan, not independent pentest",
+  "hardware": "deferred by user",
+  "github_ci": "blocked before any step by account payment/spending-limit annotation",
+  "visibility": "private",
+  "github_ci_url": "https://github.com/Supersynergy/HeavenKey/actions/runs/38183062109",
+  "missing_binary_regression": {
+    "exit_code": 1,
+    "elapsed_seconds": 0.22,
+    "completed": false,
+    "fatal_error": "server spawn failed: ENOENT: no such file or directory, posix_spawn '/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-startup-probe-9jcmuco1/target/debug/uac-api'",
+    "passed": true
+  },
+  "fresh_clone": {
+    "passed": true,
+    "commit": "29a9bacd55548722f62eeb84787eb4dbfde9ca41",
+    "steps": [
+      {
+        "command": [
+          "gh",
+          "repo",
+          "clone",
+          "Supersynergy/HeavenKey",
+          "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-verified-clone-i9w98l56/HeavenKey",
+          "--",
+          "--quiet"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1.67
+      },
+      {
+        "command": [
+          "aidev",
+          "doctor",
+          "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-verified-clone-i9w98l56/HeavenKey"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.12
+      },
+      {
+        "command": [
+          "bun",
+          "install",
+          "--frozen-lockfile",
+          "--ignore-scripts"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.02
+      },
+      {
+        "command": [
+          "cargo",
+          "fetch",
+          "--locked"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.12
+      },
+      {
+        "command": [
+          "just",
+          "build"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 13.85
+      },
+      {
+        "command": [
+          "just",
+          "e2e"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 3.92
+      }
+    ],
+    "target": "fresh clone-local target directory; existing registry cache",
+    "e2e_passed": 41,
+    "e2e_completed": true,
+    "hardware": "virtual CTAP2 only",
+    "elapsed_seconds": 19.7
+  },
+  "integrated_files": [
+    {
+      "path": "Cargo.toml",
+      "sha256": "ca0f197e4d3fbee20963bbcddea9accf299d0ceed91f8c9a62a7912ebe9426fe"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "3f857274037661a43161536f8974e0c5da5bfa79c9c72550454a3ffd26e08f39"
+    },
+    {
+      "path": "bun.lock",
+      "sha256": "7284d7fc94d98b418a96a10e5a57e7d023220c95264fb4516c55c51d2ea26706"
+    },
+    {
+      "path": "apps/api/src/main.rs",
+      "sha256": "baf115009f009140453c79802e8f499ee9148cb6c7c848b1ea9f2d192e076403"
+    },
+    {
+      "path": "apps/web/index.html",
+      "sha256": "7c9cb683bc24c093d8600f15ab501fa8e440e015f881f72f84ff8168faa81517"
+    },
+    {
+      "path": "apps/web/src/main.ts",
+      "sha256": "9beebd9c2c7a0800f6bb81b26c9c22d480de806ec95a8d042fac95d08a77594c"
+    },
+    {
+      "path": "apps/web/src/style.css",
+      "sha256": "956e8464c484e2b7e3321aace8ea59fbf3c9a639112c8917a9a1b24a7d67a05e"
+    },
+    {
+      "path": "crates/verifier/src/lib.rs",
+      "sha256": "65f708e43607a6afa3dd18d10cb2c0260d9eafe490abcaf91e31d7da9ad8257c"
+    },
+    {
+      "path": "scripts/e2e.mjs",
+      "sha256": "74febdd06a530f079d925af3d11860cb6ffb3746c4d789f5a91e64891510ea82"
+    },
+    {
+      "path": "scripts/run.py",
+      "sha256": "4174867b676d4f08787d79a4a32e883792586f8a2e7c200c2155363e220bb506"
+    },
+    {
+      "path": "scripts/ci.sh",
+      "sha256": "f4fcde2e0ba15133037987f8017b6dcb9e7fdf8cc280dc46a82f8cd1c026777b"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "6ba7c2450c5d8c0a5bb300b6caa467a9f690baee692be763775c67fc7333db2e"
+    },
+    {
+      "path": "README.md",
+      "sha256": "4183104dfce29bd47340740f73b3ee15ceb60b12daffcd03012bdf2480411421"
+    },
+    {
+      "path": "docs/assets/heavenkey-hero.png",
+      "sha256": "9ebbb4f1e85a093187f6b04b92c562da822a12bd5406964de18ffd6d3a7ea587"
+    },
+    {
+      "path": "justfile",
+      "sha256": "a319345e94e3f2bfe15008d85234bb31ef9dfffc1a3f682e9cb25f2b254cb320"
+    },
+    {
+      "path": "scripts/startup_probe.py",
+      "sha256": "e30e08c6b41160389cac9aa504c26a1b219ef8a7ec845021266bc787ce577256"
+    }
+  ]
+}

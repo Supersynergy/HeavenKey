@@ -1,0 +1,141 @@
+<div align="center" dir="auto">
+<h1 dir="auto">HeavenKey</h1>
+<p dir="auto"><strong>Zugang beginnt mit Zustimmung.</strong></p>
+<p dir="auto">Passkeys und begrenzte Zugangsrechte für Entwickler, die Autorisierung bis zur Ausführung prüfen wollen. Rust verifiziert Identität und Rechte; TypeScript führt durch Einschreibung und Zugriff.</p>
+<p dir="auto"><a href="https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml"><img src="https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg" alt="CI" style="max-width: 100%;"></a><br>
+<a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/a35c82c5e03fc622360c28d5e7b75f245fca4416835f737a57ef609d5c4890a5/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f7374617475732d72657365617263685f707265766965772d633561333661"><img src="https://camo.githubusercontent.com/a35c82c5e03fc622360c28d5e7b75f245fca4416835f737a57ef609d5c4890a5/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f7374617475732d72657365617263685f707265766965772d633561333661" alt="Status" data-canonical-src="https://img.shields.io/badge/status-research_preview-c5a36a" style="max-width: 100%;"></a><br>
+<a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/ffe0ab7e56cb97395b54ef29f4a267dcfeada1a68aa1c66ff28535c00fd20aa5/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f527573742d65646974696f6e5f323032342d323032373232"><img src="https://camo.githubusercontent.com/ffe0ab7e56cb97395b54ef29f4a267dcfeada1a68aa1c66ff28535c00fd20aa5/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f527573742d65646974696f6e5f323032342d323032373232" alt="Rust" data-canonical-src="https://img.shields.io/badge/Rust-edition_2024-202722" style="max-width: 100%;"></a><br>
+<a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/2581bff6cfeb0bade3b70a920c15f150f824f2cd61db71564dd3aaec76bf9532/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f547970655363726970742d372e302e322d323435633435"><img src="https://camo.githubusercontent.com/2581bff6cfeb0bade3b70a920c15f150f824f2cd61db71564dd3aaec76bf9532/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f547970655363726970742d372e302e322d323435633435" alt="TypeScript" data-canonical-src="https://img.shields.io/badge/TypeScript-7.0.2-245c45" style="max-width: 100%;"></a></p>
+<p align="center" dir="auto">
+  <a target="_blank" rel="noopener noreferrer" href="docs/assets/heavenkey-hero-square.png"><img src="docs/assets/heavenkey-hero-square.png" alt="HeavenKey: ein schwebender Schlüssel vor dem Himmelstor" width="560" style="max-width: 100%;"></a>
+</p>
+<p dir="auto"><a href="#quick-start">Quick start</a> · <a href="#architektur">Architektur</a> · <a href="#nachweise">Nachweise</a> · <a href="docs/ROADMAP.md">Roadmap</a></p>
+</div>
+<h2 dir="auto">Was heute funktioniert</h2>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>Funktion</th>
+<th>Verhalten</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kontrollierte Einrichtung</td>
+<td>Ein lokaler Einrichtungscode und eine erfolgreiche Passkey-Einschreibung vergeben einmalig die Eigentümerrolle. Ein früher Gast erhält diese Rolle nicht.</td>
+</tr>
+<tr>
+<td>Passkey-Anmeldung</td>
+<td>Rust prüft Origin, RP, Challenge, Signatur und User Verification über <code class="notranslate">webauthn-rs</code>.</td>
+</tr>
+<tr>
+<td>Begrenzter Zugang</td>
+<td>Signiertes Leserecht für eine Testressource mit einer Gültigkeit von 1–3.600 Sekunden.</td>
+</tr>
+<tr>
+<td>Gebundener Aufruf</td>
+<td>Ein frischer Passkey-Nachweis bestätigt die genaue Operation einschließlich ihrer Argumente.</td>
+</tr>
+<tr>
+<td>Mehrere Passkeys</td>
+<td>Bis zu acht aktive Schlüssel pro Konto. Die Verwaltung verlangt eine frische Anmeldung; Widerruf ist bestätigt und der letzte Schlüssel geschützt.</td>
+</tr>
+<tr>
+<td>Widerruf und Neustart</td>
+<td>Der Server prüft Widerruf vor der Ausführung; Credentials und Widerrufe bleiben in SQLite. Offene Dialoge und Sitzungen werden beim Neustart ungültig.</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p dir="auto"><strong>Stand: Forschungsprototyp 0.3.</strong> Tests verwenden virtuelle CTAP2-Geräte im echten Chrome-Browser und den echten Rust-Verifier. Touch ID und weitere Geräte werden später live geprüft. Das Grant-Format ist experimentell; UCAN-Interoperabilität, Wallets und physische Geräte sind noch offen.</p>
+<h2 dir="auto">Quick start</h2>
+<p dir="auto">Voraussetzungen: Rustup, Bun <strong>1.4.2</strong>, <code class="notranslate">just</code>, Python 3 und Google Chrome. Rustup lädt die festgelegte Nightly-Version. Die Simulation ist auf macOS geprüft; Linux-Pfade und Ubuntu-CI sind vorbereitet, aber noch nicht ausgeführt. Das private Repository setzt GitHub-Zugriff voraus.</p>
+<div class="highlight highlight-source-shell" dir="auto"><pre class="notranslate">git clone https://github.com/Supersynergy/HeavenKey.git
+<span class="pl-c1">cd</span> HeavenKey
+bun install --frozen-lockfile --ignore-scripts
+cargo fetch --locked
+just build
+just e2e</pre></div>
+<p dir="auto">Der Quick Start wurde für 0.2 aus einem frischen Clone mit leerem Build-Verzeichnis ausgeführt. Die aktuelle lokale Abnahme von 0.3 umfasst <strong>69 Browser-Fälle und 29 Rust-Tests</strong>; Details stehen im <a href="docs/V03-RESULT.md">Ausbaubericht</a>.</p>
+<p dir="auto">Der Test startet einen isolierten Browser und einen lokalen Server und beendet beide danach. Er verwendet kein persönliches Browserprofil. Testdaten und virtuelle Schlüssel werden gelöscht. Ein anderer Chrome-Pfad lässt sich mit <code class="notranslate">CHROME_PATH=/pfad/zu/chrome just e2e</code> angeben.</p>
+<p dir="auto">Für <code class="notranslate">just check</code> werden außerdem <code class="notranslate">cargo-nextest</code> <strong>0.9.146</strong>, <code class="notranslate">cargo-deny</code> <strong>0.20.2</strong> und <code class="notranslate">cargo-audit</code> <strong>0.22.2</strong> benötigt. Die vollständige Prüfung umfasst Formatierung, TypeScript, Clippy, Rust-Tests, Lizenz-/Quellenregeln, Advisories und Build. CI führt den portablen Source- und Browser-Testablauf aus; er enthält keine Deployment-Schritte.</p>
+<p dir="auto">Der erste GitHub-CI-Job wurde vor Ausführung eines Schritts durch eine Zahlungs-/Ausgabenlimit-Sperre des Accounts abgewiesen. Der identische portable Prüfablauf hat lokal bestanden: <strong>69 Browser-Fälle und 29 Rust-Tests</strong>. Die <a href="docs/VERIFICATION.md">CI-Diagnose</a> hält diese Grenze fest.</p>
+<h2 dir="auto">Späterer Live-Test</h2>
+<div class="highlight highlight-source-shell" dir="auto"><pre class="notranslate">just dev</pre></div>
+<p dir="auto">Öffne <code class="notranslate">http://localhost:18240</code>. Der Server erzeugt <code class="notranslate">data/owner-bootstrap.txt</code> mit einem zufälligen Einrichtungscode, unter Unix nur für den Betreiber lesbar. Lies ihn in einem zweiten Terminal mit <code class="notranslate">cat data/owner-bootstrap.txt</code> und trage ihn bei der Eigentümer-Einschreibung ein. Gäste lassen das Feld leer. Nach erfolgreicher Eigentümer-Einschreibung kann der Code keine weitere Eigentümerrolle vergeben.</p>
+<p dir="auto">Der Server läuft im Vordergrund und endet spätestens nach zwei Stunden. Daten bleiben lokal unter <code class="notranslate">data/</code> und sind von Git ausgeschlossen. Verwende für den späteren Test ein frisches Datenverzeichnis: Alte Eigentümer aus dem ursprünglichen Spike bleiben erhalten und werden dadurch nicht nachträglich als vertrauenswürdig provisioniert bestätigt.</p>
+<h2 dir="auto">Architektur</h2>
+<section class="js-render-needs-enrichment render-needs-enrichment position-relative" data-identity="27496f51-aec9-437f-b3ce-bb134d752aa1" data-host="https://viewscreen.githubusercontent.com" data-src="https://viewscreen.githubusercontent.com/markdown/mermaid?docs_host=https%3A%2F%2Fdocs.github.com" data-type="mermaid" aria-label="mermaid rendered output container">
+  <div class="js-render-enrichment-target" data-json="{&quot;data&quot;:&quot;sequenceDiagram\n    actor Betreiber\n    participant B as TypeScript / WebAuthn\n    participant A as Rust / Axum\n    participant V as Rust-Verifier\n    participant D as SQLite\n    Betreiber-&gt;&gt;B: Einrichtungscode + Passkey-Einschreibung\n    B-&gt;&gt;A: Einschreibung abschließen\n    A-&gt;&gt;D: Einmalige Eigentümerrolle speichern\n    Betreiber-&gt;&gt;A: Leserecht für registrierten Gast\n    A-&gt;&gt;B: Signierter Grant mit Ablauf\n    B-&gt;&gt;A: Konkreten Aufruf beginnen\n    A-&gt;&gt;B: Frische WebAuthn-Challenge\n    B-&gt;&gt;A: Signierter Passkey-Nachweis\n    A-&gt;&gt;V: Identität, Scope, Ablauf, Bindung und Widerruf prüfen\n    V--&gt;&gt;A: Erlauben oder abweisen\n    A-&gt;&gt;D: Einmalige Testoperation atomar speichern\n&quot;}" data-plain="sequenceDiagram
+    actor Betreiber
+    participant B as TypeScript / WebAuthn
+    participant A as Rust / Axum
+    participant V as Rust-Verifier
+    participant D as SQLite
+    Betreiber-&gt;&gt;B: Einrichtungscode + Passkey-Einschreibung
+    B-&gt;&gt;A: Einschreibung abschließen
+    A-&gt;&gt;D: Einmalige Eigentümerrolle speichern
+    Betreiber-&gt;&gt;A: Leserecht für registrierten Gast
+    A-&gt;&gt;B: Signierter Grant mit Ablauf
+    B-&gt;&gt;A: Konkreten Aufruf beginnen
+    A-&gt;&gt;B: Frische WebAuthn-Challenge
+    B-&gt;&gt;A: Signierter Passkey-Nachweis
+    A-&gt;&gt;V: Identität, Scope, Ablauf, Bindung und Widerruf prüfen
+    V--&gt;&gt;A: Erlauben oder abweisen
+    A-&gt;&gt;D: Einmalige Testoperation atomar speichern
+" dir="auto">
+    <div class="render-plaintext-hidden" dir="auto">
+      <pre lang="mermaid" aria-label="Raw mermaid code" class="notranslate">sequenceDiagram
+    actor Betreiber
+    participant B as TypeScript / WebAuthn
+    participant A as Rust / Axum
+    participant V as Rust-Verifier
+    participant D as SQLite
+    Betreiber-&gt;&gt;B: Einrichtungscode + Passkey-Einschreibung
+    B-&gt;&gt;A: Einschreibung abschließen
+    A-&gt;&gt;D: Einmalige Eigentümerrolle speichern
+    Betreiber-&gt;&gt;A: Leserecht für registrierten Gast
+    A-&gt;&gt;B: Signierter Grant mit Ablauf
+    B-&gt;&gt;A: Konkreten Aufruf beginnen
+    A-&gt;&gt;B: Frische WebAuthn-Challenge
+    B-&gt;&gt;A: Signierter Passkey-Nachweis
+    A-&gt;&gt;V: Identität, Scope, Ablauf, Bindung und Widerruf prüfen
+    V--&gt;&gt;A: Erlauben oder abweisen
+    A-&gt;&gt;D: Einmalige Testoperation atomar speichern
+</pre>
+    </div>
+  </div>
+  <span class="js-render-enrichment-loader d-flex flex-justify-center flex-items-center width-full" style="min-height:100px" role="presentation">
+    <span data-view-component="true">
+  <svg style="box-sizing: content-box; color: var(--color-icon-primary);" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" data-view-component="true" class="octospinner mx-auto tmp-mx-auto anim-rotate">
+    <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-opacity="0.25" stroke-width="2" vector-effect="non-scaling-stroke" fill="none"></circle>
+    <path d="M15 8a7.002 7.002 0 00-7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
+</svg>    <span class="sr-only">Loading</span>
+</span>
+  </span>
+</section>
+
+<pre lang="text" class="notranslate"><code class="notranslate">apps/api/          Rust-API, WebAuthn und persistente Zustände
+apps/web/          TypeScript-Oberfläche ohne UI-Framework
+crates/verifier/   Signaturen und Berechtigungsregeln
+scripts/          Browser-Simulation und begrenzte Ausführung
+docs/             Vertrag, Roadmap, Reviews und Nachweise
+</code></pre>
+<p dir="auto">Der Passkey beweist die Identität; der separate Grant begrenzt die erlaubte Aktion. Das API verwendet einen Prozess und lokales SQLite. Die zugrunde liegende Testoperation liest ein künstliches Dokument.</p>
+<h2 dir="auto">Nachweise</h2>
+<p dir="auto">Die <a href="docs/evidence/e2e.json">Browser-Ergebnisse</a> zeigen jeden ausgeführten Fall: fremde Empfänger, manipulierte Rechte, falsche Origin/RP/Challenge, fehlende User Verification, Signaturfehler, Counter-Rücksprung, Replay, parallele Duplikate, Ablauf, Widerruf und Neustart. Der Ausbau prüft zusätzlich Gast-vor-Eigentümer, falsche Einrichtungscodes und konkurrierende Eigentümer-Einschreibungen.</p>
+<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="docs/evidence/browser-success.png"><img src="docs/evidence/browser-success.png" alt="HeavenKey — erfolgreicher Zugriff in der geprüften Oberfläche" style="max-width: 100%;"></a></p>
+<ul dir="auto">
+<li><a href="docs/V03-RESULT.md">Ausbau 0.3 und aktuelle Nachweise</a></li>
+<li><a href="docs/DONORS.md">Enpass-Prinzipien und konkrete Code-Donoren</a></li>
+<li><a href="docs/SPEC.md">Verhaltensvertrag</a></li>
+<li><a href="docs/ROADMAP.md">Roadmap und Gesamtschätzung</a></li>
+<li><a href="docs/REVIEW.md">Aktueller Source-Review</a></li>
+<li><a href="docs/SPIKE-RESULT.md">Spike-Ergebnis</a></li>
+<li><a href="docs/DEVELOPMENT.md">Metacode, Efficiency Orchestrator und zehn ausgewählte Skills</a></li>
+<li><a href="CHANGELOG.md">Änderungen</a></li>
+</ul>
+<p dir="auto">Offen sind reale Hardware, Recovery, Mandanten, Schlüsselrotation, verteilte Ausführung, sichere Offline-Zeit und ein interoperables Protokoll. Ein getrenntes Offline-Ziel kennt einen neuen entfernten Widerruf erst nach Empfang entsprechender Information.</p>
+<p dir="auto">Bestehende Zugänge gehören in diesem Profil zum Konto. Ein widerrufener Passkey kann sich nicht mehr anmelden; ein anderer aktiver Schlüssel desselben Kontos kann den Zugang weiter verwenden. Zum Entziehen des Zugangs wird der Grant widerrufen.</p>
+<h2 dir="auto">Mitwirken, Sicherheit und Rechte</h2>
+<p dir="auto">Änderungen brauchen überprüfbares Verhalten und passende Prüfungen: <a href="CONTRIBUTING.md">CONTRIBUTING.md</a>. Sicherheitsprobleme werden privat gemeldet: <a href="SECURITY.md">SECURITY.md</a>.</p>
+<p dir="auto">HeavenKey ist ein privates Supersynergy-Projekt mit vorbehaltenen Rechten. Eine Open-Source-Lizenz wurde nicht vergeben. Abhängigkeiten behalten ihre Lizenzen; Hinweise stehen in <a href="NOTICE.md">NOTICE.md</a> und der <a href="docs/assets/README.md">Bildherkunft</a>.</p>

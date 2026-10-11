@@ -11,7 +11,9 @@ Passkeys und begrenzte Zugangsrechte für Entwickler, die Autorisierung bis zur 
 ![Rust](https://img.shields.io/badge/Rust-edition_2024-202722)
 ![TypeScript](https://img.shields.io/badge/TypeScript-7.0.2-245c45)
 
-![HeavenKey — ein Schlüssel vor einem leuchtenden Tor über den Wolken](docs/assets/heavenkey-hero.png)
+<p align="center">
+  <img src="docs/assets/heavenkey-hero-square.png" alt="HeavenKey: ein schwebender Schlüssel vor dem Himmelstor" width="560">
+</p>
 
 [Quick start](#quick-start) · [Architektur](#architektur) · [Nachweise](#nachweise) · [Roadmap](docs/ROADMAP.md)
 
@@ -25,9 +27,10 @@ Passkeys und begrenzte Zugangsrechte für Entwickler, die Autorisierung bis zur 
 | Passkey-Anmeldung | Rust prüft Origin, RP, Challenge, Signatur und User Verification über `webauthn-rs`. |
 | Begrenzter Zugang | Signiertes Leserecht für eine Testressource mit einer Gültigkeit von 1–3.600 Sekunden. |
 | Gebundener Aufruf | Ein frischer Passkey-Nachweis bestätigt die genaue Operation einschließlich ihrer Argumente. |
+| Mehrere Passkeys | Bis zu acht aktive Schlüssel pro Konto. Die Verwaltung verlangt eine frische Anmeldung; Widerruf ist bestätigt und der letzte Schlüssel geschützt. |
 | Widerruf und Neustart | Der Server prüft Widerruf vor der Ausführung; Credentials und Widerrufe bleiben in SQLite. Offene Dialoge und Sitzungen werden beim Neustart ungültig. |
 
-**Stand: Forschungsprototyp 0.2.** Tests verwenden virtuelle CTAP2-Geräte im echten Chrome-Browser und den echten Rust-Verifier. Touch ID und weitere Geräte werden später live geprüft. Das Grant-Format ist experimentell; UCAN-Interoperabilität, Wallets und physische Geräte sind noch offen.
+**Stand: Forschungsprototyp 0.3.** Tests verwenden virtuelle CTAP2-Geräte im echten Chrome-Browser und den echten Rust-Verifier. Touch ID und weitere Geräte werden später live geprüft. Das Grant-Format ist experimentell; UCAN-Interoperabilität, Wallets und physische Geräte sind noch offen.
 
 ## Quick start
 
@@ -42,13 +45,13 @@ just build
 just e2e
 ```
 
-Dieser Quick Start wurde mit einem frischen Clone und leerem Build-Verzeichnis auf macOS ausgeführt: **41/41 Browser-Fälle bestanden**.
+Der Quick Start wurde für 0.2 aus einem frischen Clone mit leerem Build-Verzeichnis ausgeführt. Die aktuelle lokale Abnahme von 0.3 umfasst **69 Browser-Fälle und 29 Rust-Tests**; Details stehen im [Ausbaubericht](docs/V03-RESULT.md).
 
 Der Test startet einen isolierten Browser und einen lokalen Server und beendet beide danach. Er verwendet kein persönliches Browserprofil. Testdaten und virtuelle Schlüssel werden gelöscht. Ein anderer Chrome-Pfad lässt sich mit `CHROME_PATH=/pfad/zu/chrome just e2e` angeben.
 
 Für `just check` werden außerdem `cargo-nextest` **0.9.146**, `cargo-deny` **0.20.2** und `cargo-audit` **0.22.2** benötigt. Die vollständige Prüfung umfasst Formatierung, TypeScript, Clippy, Rust-Tests, Lizenz-/Quellenregeln, Advisories und Build. CI führt den portablen Source- und Browser-Testablauf aus; er enthält keine Deployment-Schritte.
 
-Der erste GitHub-CI-Job wurde vor Ausführung eines Schritts durch eine Zahlungs-/Ausgabenlimit-Sperre des Accounts abgewiesen. Der identische portable Prüfablauf hat lokal bestanden: **41 Browser-Fälle und 24 Rust-Tests**. Die [CI-Diagnose](docs/VERIFICATION.md) hält diese Grenze fest.
+Der erste GitHub-CI-Job wurde vor Ausführung eines Schritts durch eine Zahlungs-/Ausgabenlimit-Sperre des Accounts abgewiesen. Der identische portable Prüfablauf hat lokal bestanden: **69 Browser-Fälle und 29 Rust-Tests**. Die [CI-Diagnose](docs/VERIFICATION.md) hält diese Grenze fest.
 
 ## Späterer Live-Test
 
@@ -98,6 +101,8 @@ Die [Browser-Ergebnisse](docs/evidence/e2e.json) zeigen jeden ausgeführten Fall
 
 ![HeavenKey — erfolgreicher Zugriff in der geprüften Oberfläche](docs/evidence/browser-success.png)
 
+- [Ausbau 0.3 und aktuelle Nachweise](docs/V03-RESULT.md)
+- [Enpass-Prinzipien und konkrete Code-Donoren](docs/DONORS.md)
 - [Verhaltensvertrag](docs/SPEC.md)
 - [Roadmap und Gesamtschätzung](docs/ROADMAP.md)
 - [Aktueller Source-Review](docs/REVIEW.md)
@@ -105,7 +110,9 @@ Die [Browser-Ergebnisse](docs/evidence/e2e.json) zeigen jeden ausgeführten Fall
 - [Metacode, Efficiency Orchestrator und zehn ausgewählte Skills](docs/DEVELOPMENT.md)
 - [Änderungen](CHANGELOG.md)
 
-Offen sind reale Hardware, mehrere Credentials, Recovery, Mandanten, Schlüsselrotation, verteilte Ausführung, sichere Offline-Zeit und ein interoperables Protokoll. Ein getrenntes Offline-Ziel kennt einen neuen entfernten Widerruf erst nach Empfang entsprechender Information.
+Offen sind reale Hardware, Recovery, Mandanten, Schlüsselrotation, verteilte Ausführung, sichere Offline-Zeit und ein interoperables Protokoll. Ein getrenntes Offline-Ziel kennt einen neuen entfernten Widerruf erst nach Empfang entsprechender Information.
+
+Bestehende Zugänge gehören in diesem Profil zum Konto. Ein widerrufener Passkey kann sich nicht mehr anmelden; ein anderer aktiver Schlüssel desselben Kontos kann den Zugang weiter verwenden. Zum Entziehen des Zugangs wird der Grant widerrufen.
 
 ## Mitwirken, Sicherheit und Rechte
 

@@ -1,0 +1,238 @@
+{
+  "schema": "heavenkey-donor-review-v1",
+  "observed_at_utc": "2026-10-11T23:19:50.874297+00:00",
+  "base_commit": "dfab650043eb678b183d17a3ca2976aa29c2320c",
+  "research_scope": "local Rust relying-party lab; no hardware, real credentials, production deployment or new backend",
+  "metacode": {
+    "primary_skill": "/Users/master/superskills/skills/metacode/SKILL.md",
+    "local_queries": [
+      "password manager passkey webauthn Rust vault encryption",
+      "Bitwarden KeePassXC Stronghold SimpleWebAuthn OpenBao vaultwarden Enpass",
+      "web authentication",
+      "identity",
+      "secret management"
+    ],
+    "candidate_specific_hits": 0,
+    "result": "general Rust sources/registries; official candidate verification required",
+    "live_registry_query": "metacode live npm @simplewebauthn/browser"
+  },
+  "verification_method": [
+    "gh api projected repository metadata, exact commit manifests and license files",
+    "npm view exact package metadata",
+    "superscrape tier1 npm attestation and tarball fetch; no package source executed"
+  ],
+  "repositories": [
+    {
+      "id": "webauthn-rs",
+      "repo": "kanidm/webauthn-rs",
+      "sha": "be696b79800bd1953df78e87d0215571733cc26f",
+      "pushed_at": "2026-10-08T04:55:18Z",
+      "archived": false,
+      "license_boundary": "MPL-2.0",
+      "decision": "existing_dependency",
+      "source": "https://github.com/kanidm/webauthn-rs/tree/be696b79800bd1953df78e87d0215571733cc26f",
+      "api": "https://api.github.com/repos/kanidm/webauthn-rs"
+    },
+    {
+      "id": "simplewebauthn",
+      "repo": "MasterKale/SimpleWebAuthn",
+      "sha": "787ca8209e39bc5f868a6a42f6b98a1bc1c06206",
+      "pushed_at": "2026-10-11T16:59:45Z",
+      "archived": false,
+      "license_boundary": "MIT",
+      "decision": "browser_dependency_selected",
+      "source": "https://github.com/MasterKale/SimpleWebAuthn/tree/787ca8209e39bc5f868a6a42f6b98a1bc1c06206",
+      "api": "https://api.github.com/repos/MasterKale/SimpleWebAuthn"
+    },
+    {
+      "id": "bitwarden-sdk-sm",
+      "repo": "bitwarden/sdk-sm",
+      "sha": "03a4220327bfdb00b8aec3179c81f9e62f1fcde1",
+      "pushed_at": "2026-10-11T22:20:50Z",
+      "archived": false,
+      "license_boundary": "LicenseRef-Bitwarden-SDK",
+      "decision": "reference_only",
+      "source": "https://github.com/bitwarden/sdk-sm/tree/03a4220327bfdb00b8aec3179c81f9e62f1fcde1",
+      "api": "https://api.github.com/repos/bitwarden/sdk-sm"
+    },
+    {
+      "id": "bitwarden-sdk-internal",
+      "repo": "bitwarden/sdk-internal",
+      "sha": "7d5b1010297d6f2352b55c3d2ff27352e37433cd",
+      "pushed_at": "2026-10-11T22:29:18Z",
+      "archived": false,
+      "license_boundary": "GPL-3.0-only OR LicenseRef-Bitwarden-SDK; bitwarden_license is SDK-only",
+      "decision": "reference_only",
+      "source": "https://github.com/bitwarden/sdk-internal/tree/7d5b1010297d6f2352b55c3d2ff27352e37433cd",
+      "api": "https://api.github.com/repos/bitwarden/sdk-internal"
+    },
+    {
+      "id": "bitwarden-passkey-rs",
+      "repo": "bitwarden/passkey-rs",
+      "sha": "043279e92e2eb5f509bf87eb7fa50987fd377e32",
+      "pushed_at": "2026-10-02T14:33:48Z",
+      "archived": false,
+      "license_boundary": "MIT OR Apache-2.0",
+      "decision": "reference_only_client_authenticator",
+      "source": "https://github.com/bitwarden/passkey-rs/tree/043279e92e2eb5f509bf87eb7fa50987fd377e32",
+      "api": "https://api.github.com/repos/bitwarden/passkey-rs"
+    },
+    {
+      "id": "keepassxc",
+      "repo": "keepassxreboot/keepassxc",
+      "sha": "9e0f57a4a4c6c629fa6d0a593acb7d089b1d95cd",
+      "pushed_at": "2026-10-10T12:23:33Z",
+      "archived": false,
+      "license_boundary": "mixed; BrowserPasskeys.cpp GPL-3.0-or-later",
+      "decision": "ux_reference_only",
+      "source": "https://github.com/keepassxreboot/keepassxc/tree/9e0f57a4a4c6c629fa6d0a593acb7d089b1d95cd",
+      "api": "https://api.github.com/repos/keepassxreboot/keepassxc"
+    },
+    {
+      "id": "stronghold",
+      "repo": "iotaledger/stronghold.rs",
+      "sha": "ab6ff0de98095001ed2eb75111ee034a584678b8",
+      "pushed_at": "2025-04-23T15:22:21Z",
+      "archived": false,
+      "license_boundary": "Apache-2.0",
+      "decision": "not_selected_maintenance_and_scope",
+      "source": "https://github.com/iotaledger/stronghold.rs/tree/ab6ff0de98095001ed2eb75111ee034a584678b8",
+      "api": "https://api.github.com/repos/iotaledger/stronghold.rs"
+    },
+    {
+      "id": "vaultwarden",
+      "repo": "dani-garcia/vaultwarden",
+      "sha": "64895524e481492130061b95aa4433118f6b1c59",
+      "pushed_at": "2026-10-10T17:58:41Z",
+      "archived": false,
+      "license_boundary": "AGPL-3.0",
+      "decision": "not_selected_backend_scope",
+      "source": "https://github.com/dani-garcia/vaultwarden/tree/64895524e481492130061b95aa4433118f6b1c59",
+      "api": "https://api.github.com/repos/dani-garcia/vaultwarden"
+    },
+    {
+      "id": "openbao",
+      "repo": "openbao/openbao",
+      "sha": "24fdfe68ce51b256600606ec7a0790309121f5f6",
+      "pushed_at": "2026-10-10T17:46:24Z",
+      "archived": false,
+      "license_boundary": "MPL-2.0",
+      "decision": "not_selected_service_scope",
+      "source": "https://github.com/openbao/openbao/tree/24fdfe68ce51b256600606ec7a0790309121f5f6",
+      "api": "https://api.github.com/repos/openbao/openbao"
+    },
+    {
+      "id": "sqlcipher",
+      "repo": "sqlcipher/sqlcipher",
+      "sha": "c4b275a47932888216bade83aff2bbc73df0ff85",
+      "pushed_at": "2026-10-09T00:11:05Z",
+      "archived": false,
+      "license_boundary": "BSD-3-Clause community edition",
+      "decision": "future_storage_only",
+      "source": "https://github.com/sqlcipher/sqlcipher/tree/c4b275a47932888216bade83aff2bbc73df0ff85",
+      "api": "https://api.github.com/repos/sqlcipher/sqlcipher"
+    }
+  ],
+  "enpass": {
+    "decision": "proprietary_product_design_reference_only",
+    "copied_source": false,
+    "principles": [
+      "local encryption and local-first data",
+      "user-controlled optional encrypted sync",
+      "storage provider does not receive plaintext vault"
+    ],
+    "sources": [
+      "https://www.enpass.io/security/",
+      "https://dl.enpass.io/docs/whitepaper/enpass-security-whitepaper.pdf",
+      "https://discussion.enpass.io/topic/210-open-source/"
+    ],
+    "license_evidence_caveat": "Official closed-source statement dates to 2016; no product-code reuse license established by this review",
+    "heavenkey_gap": "Plain SQLite and local issuer key; encrypted vault/sync/zero-knowledge storage are not implemented"
+  },
+  "consumed_webauthn": {
+    "package": "webauthn-rs",
+    "version": "0.5.5",
+    "license": "MPL-2.0",
+    "source_commit_from_cached_crate": "d2c10d53ca5ef033d37ee6462e936e9eb72ad98c",
+    "cargo_lock_checksum": "6c548915e0e92ee946bbf2aecf01ea21bef53d974b0793cc6732ba81a03fc422",
+    "docs": "https://docs.rs/webauthn-rs/0.5.5/webauthn_rs/",
+    "new_dependency": false
+  },
+  "consumed_browser": {
+    "package": "@simplewebauthn/browser",
+    "version": "14.0.0",
+    "decision": "selected_by_root_for_integrated_browser_adapter",
+    "license": "MIT",
+    "license_source": "https://github.com/MasterKale/SimpleWebAuthn/blob/83f87addc67b652ff5b84e681669451648216ef6/packages/browser/LICENSE.md",
+    "dependencies": {},
+    "engines_declared": null,
+    "docs_node_requirement": "Node 22 or higher",
+    "observed_host_node": "26.10.0",
+    "observed_host_bun": "1.4.2",
+    "published_git_head": "83f87addc67b652ff5b84e681669451648216ef6",
+    "registry": "https://registry.npmjs.org/@simplewebauthn/browser/14.0.0",
+    "tarball": "https://registry.npmjs.org/@simplewebauthn/browser/-/browser-14.0.0.tgz",
+    "dist_integrity": "sha512-1odWVqeEBTl7lJ9zMKLEsmTlnyrDO5iRcTvfMKKk1WThUnp/i8JJdffdj2icP+tty159s4PgwE3BiMoEW9NFow==",
+    "dist_shasum": "4b65e1d1c9d4dbe37b15a97897d797fe6b1b8d68",
+    "downloaded_size_bytes": 42879,
+    "downloaded_sha512_matches_registry": true,
+    "published_license_file_header": "MIT License",
+    "provenance": {
+      "url": "https://registry.npmjs.org/-/npm/v1/attestations/@simplewebauthn%2fbrowser@14.0.0",
+      "advertised_predicate_type": "https://slsa.dev/provenance/v1",
+      "parsed_subject_sha512_matches_tarball": true,
+      "parsed_repository": "https://github.com/MasterKale/SimpleWebAuthn",
+      "parsed_workflow": ".github/workflows/publishBrowser.yml",
+      "parsed_git_commit_matches_registry": true,
+      "cryptographically_verified_signatures_and_certificates": false
+    },
+    "api_adapter": {
+      "registration": "startRegistration({optionsJSON:options.publicKey})",
+      "authentication": "startAuthentication({optionsJSON:options.publicKey})",
+      "return": "JSON sent unchanged to existing Rust verifier",
+      "server_package_added": false,
+      "package_network_calls_required": false,
+      "platform_provider_sync": "Not inspected; WebAuthn invokes the selected platform/authenticator provider"
+    },
+    "integration_acceptance": "Root just check Exit0/29 Rust tests and just e2e69/69; independent comparison confirms all12 reviewed source/generated hashes unchanged",
+    "rollback": "Remove browser package and restore old adapter from base commit; rerun the same checks",
+    "source": "https://simplewebauthn.dev/docs/packages/browser"
+  },
+  "authority_contract": {
+    "grant_subject": "Legacy original credential ID remains stable account alias; grant bytes are preserved",
+    "invocation": "Any active key of same account can use account grants",
+    "credential_revocation": "Disables that key, invalidates account sessions/pending auth/enrollments; leaves account grants intact",
+    "withdraw_account_authority": "Revoke grant separately",
+    "required_oracle_cases": [
+      "removed original cannot authenticate/invoke",
+      "surviving key invokes old grant",
+      "foreign account denied",
+      "last active key protected",
+      "same-session enrollment required",
+      "single-use challenges",
+      "per-key counter reloaded/updated",
+      "revocation and original tombstone survive restart",
+      "old grant bytes survive migration"
+    ]
+  },
+  "review": {
+    "phase": "final independent source and caller review",
+    "blocking_findings": [],
+    "executed_tests_by_this_lane": false,
+    "limits": "Virtual CTAP2/local runtime; actual hardware/provider sync/recovery and clock-jump behavior deferred; no cryptographic verification of npm provenance signatures",
+    "artifact": "docs/evidence/v03-independent-review.json",
+    "final_source_hashes_match": true,
+    "reviewed_files": [
+      {
+        "path": "apps/api/src/main.rs",
+        "sha256": "3b397a7e89fe70b59b541db55c663504c37cdb6b94c414da4d4686ea71e85c99"
+      }
+    ]
+  },
+  "acceleration": {
+    "measured": false,
+    "benefit": "reuses existing verifier and published browser adapter; fewer owned serialization routines",
+    "time_token_financial_or_multiplier_claim": null
+  },
+  "legal_limit": "Recorded license text and boundaries, not a legal clearance of future copied code or distributions"
+}

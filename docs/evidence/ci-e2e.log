@@ -39,4 +39,32 @@ PASS enrolled credentials authenticate after server restart
 PASS revocation survives server restart
 PASS replay rejected after server restart
 PASS mobile width has no horizontal overflow
-{"total":41,"passed":41,"failed":0,"elapsed_seconds":3.6}
+PASS credential list is scoped and exposes only public metadata
+PASS credential listing and enrollment require a session
+PASS last active passkey cannot be revoked through UI or API
+PASS credential labels enforce nonempty 48-character bound
+PASS credential enrollment cannot finish in another account session
+PASS credential enrollment is bound to the initiating same-account session
+PASS browser enrolls second passkey on a separate device in the same account
+PASS second device authenticates after the original device is removed
+PASS second passkey invokes an existing same-account grant through the browser
+PASS other account cannot revoke a passkey it does not own
+PASS browser passkey revocation forces reauthentication and disables mutations
+PASS passkey revocation invalidates every session for the account
+PASS passkey revocation invalidates pending login and invocation ceremonies
+PASS last surviving passkey remains protected after another key is revoked
+PASS passkey revocation invalidates pending enrollment despite fresh surviving session
+PASS revoked passkey is excluded from fresh authentication options
+PASS genuine fresh assertion by revoked device is rejected
+PASS surviving passkey retains same-account grant invocation after revocation
+PASS seven active passkeys enroll across distinct virtual devices
+PASS credential cap is rechecked when an in-flight enrollment finishes
+PASS credential cap rejects new enrollment and disables the add control
+PASS credential workbench fits 320px and keeps buttons on one line
+PASS credential workbench fits 375px and keeps buttons on one line
+PASS credential workbench fits 414px and keeps buttons on one line
+PASS credential workbench fits 768px and keeps buttons on one line
+PASS multiple passkeys and inactive original survive server restart
+PASS legacy single-passkey database migrates and authenticates with the same key
+PASS legacy credential migration is idempotent across a second restart
+{"total":69,"passed":69,"failed":0,"elapsed_seconds":72.4}

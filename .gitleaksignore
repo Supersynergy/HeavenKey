@@ -1,0 +1,3 @@
+# Exact historic PNG checksum false positives; proof in docs/evidence/v03-secret-scan-diagnosis.json
+29a9bacd55548722f62eeb84787eb4dbfde9ca41:docs/evidence/acceptance.json:generic-api-key:18
+57a2dec548e233a3c15a3a0780c66e1e965ed1a6:docs/evidence/acceptance.json:generic-api-key:18

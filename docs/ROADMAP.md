@@ -6,7 +6,7 @@ These are bounded development slices, not promises of universal compatibility.
 | --- | --- | --- | --- |
 | 0.1 | Passkey and grant simulation | 35 browser cases, 24 Rust tests | Completed; hardware deferred |
 | 0.2 | Operator bootstrap and GitHub foundation | Guest-first and wrong-token denial, one owner under competing ceremonies, restart and source checks | Completed locally; hosted CI account gate open |
-| 0.3 | Multiple credentials and device lifecycle | Add a second credential, use both, remove one without losing the last, persist revocation | Next |
+| 0.3 | Multiple credentials and device lifecycle | Add/use keys, revoke with last-key protection, persist state, migrate legacy data | Integrated simulation; gates in V03-RESULT.md |
 | 0.4 | Delegation wire profile | Versioned profile, interoperable vectors, bounded chains, transitive revocation | Planned |
 | Pilot | Tenants, audit, HTTPS, recovery | Tenant denial matrix, recovery rehearsal, rotation, external review | Planned |
 | Hardware | Touch ID, phone, security key | Operator-confirmed enrollment, cancel/error and recovery tests | Deferred by user |

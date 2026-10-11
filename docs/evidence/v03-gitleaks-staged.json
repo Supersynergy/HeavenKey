@@ -1,0 +1,42 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 18,
+  "EndLine": 18,
+  "StartColumn": 21,
+  "EndColumn": 119,
+  "Match": "simplewebauthn-browser-MIT.txt\": \"REDACTED\"",
+  "Secret": "REDACTED",
+  "File": "docs/evidence/v03-independent-review.json",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 3.7840211,
+  "Author": "",
+  "Email": "",
+  "Date": "0001-01-01T00:00:00Z",
+  "Message": "",
+  "Tags": [],
+  "Fingerprint": "docs/evidence/v03-independent-review.json:generic-api-key:18"
+ },
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 220,
+  "EndLine": 220,
+  "StartColumn": 7,
+  "EndColumn": 85,
+  "Match": "api_sha256\": \"REDACTED\"",
+  "Secret": "REDACTED",
+  "File": "docs/evidence/donors-v03.json",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 3.7925875,
+  "Author": "",
+  "Email": "",
+  "Date": "0001-01-01T00:00:00Z",
+  "Message": "",
+  "Tags": [],
+  "Fingerprint": "docs/evidence/donors-v03.json:generic-api-key:220"
+ }
+]

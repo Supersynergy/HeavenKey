@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0: Credential lifecycle preview
+
+- Quadratisches HeavenKey-Titelbild mit mittiger README-Platzierung.
+- Bis zu acht aktive Passkeys pro Konto, mit ausdrücklichem Widerruf und Schutz des letzten Schlüssels.
+- Bestehende Grants bleiben über einen stabilen Konto-Alias mit Ersatzschlüsseln verwendbar. Entfernte Schlüssel können sich nicht mehr anmelden.
+- Sitzungs- und Zweckbindung beim Hinzufügen; Widerruf beendet Kontositzungen und offene Vorgänge.
+- Idempotente Legacy-Migration erhält Sperren und alte Grant-Bytes.
+- MIT-Adapter SimpleWebAuthn 14.0.0 ersetzt die eigene Browser-Konvertierung; Lizenz im Bundle erhalten.
+- 69 Browser-Fälle und 29 Rust-Tests bestanden; unabhängiger Quellreview ohne offene Blocker.
+
 ## 0.2.0: Research preview
 
 - HeavenKey als eigenständiges Projekt im GitHub-Account Supersynergy vorbereitet.

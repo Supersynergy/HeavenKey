@@ -1,0 +1,13 @@
+=== semgrep (OWASP + lang-auto) ===
+
+=== gitleaks (secrets) ===
+1:31AM INF 3 commits scanned.
+1:31AM INF scanned ~1076776 bytes (1.08 MB) in 1.95s
+1:31AM WRN leaks found: 2
+
+=== osv-scanner (deps CVE) ===
+Starting filesystem walk for root: /
+Scanned /Users/master/Documents/Codex/work/uac-spike/Cargo.lock file and found 187 packages
+End status: 0 dirs visited, 1 inodes visited, 1 Extract calls, 6.758833ms elapsed, 6.759ms wall time
+
+No issues found
