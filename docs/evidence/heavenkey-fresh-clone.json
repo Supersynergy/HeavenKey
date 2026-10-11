@@ -1,6 +1,6 @@
 {
-  "passed": false,
-  "error": "fresh clone step failed: just",
+  "passed": true,
+  "commit": "29a9bacd55548722f62eeb84787eb4dbfde9ca41",
   "steps": [
     {
       "command": [
@@ -8,21 +8,21 @@
         "repo",
         "clone",
         "Supersynergy/HeavenKey",
-        "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-clone-6yxn684q/HeavenKey",
+        "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-verified-clone-i9w98l56/HeavenKey",
         "--",
         "--quiet"
       ],
       "exit_code": 0,
-      "elapsed_seconds": 1.61
+      "elapsed_seconds": 1.67
     },
     {
       "command": [
         "aidev",
         "doctor",
-        "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-clone-6yxn684q/HeavenKey"
+        "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-verified-clone-i9w98l56/HeavenKey"
       ],
       "exit_code": 0,
-      "elapsed_seconds": 0.11
+      "elapsed_seconds": 0.12
     },
     {
       "command": [
@@ -41,7 +41,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "elapsed_seconds": 0.46
+      "elapsed_seconds": 0.12
     },
     {
       "command": [
@@ -49,16 +49,20 @@
         "build"
       ],
       "exit_code": 0,
-      "elapsed_seconds": 2.44
+      "elapsed_seconds": 13.85
     },
     {
       "command": [
         "just",
         "e2e"
       ],
-      "exit_code": 241,
-      "elapsed_seconds": 162.5
+      "exit_code": 0,
+      "elapsed_seconds": 3.92
     }
   ],
-  "elapsed_seconds": 167.14
+  "target": "fresh clone-local target directory; existing registry cache",
+  "e2e_passed": 41,
+  "e2e_completed": true,
+  "hardware": "virtual CTAP2 only",
+  "elapsed_seconds": 19.7
 }

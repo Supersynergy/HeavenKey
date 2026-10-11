@@ -42,6 +42,8 @@ just build
 just e2e
 ```
 
+Dieser Quick Start wurde mit einem frischen Clone und leerem Build-Verzeichnis auf macOS ausgeführt: **41/41 Browser-Fälle bestanden**.
+
 Der Test startet einen isolierten Browser und einen lokalen Server und beendet beide danach. Er verwendet kein persönliches Browserprofil. Testdaten und virtuelle Schlüssel werden gelöscht. Ein anderer Chrome-Pfad lässt sich mit `CHROME_PATH=/pfad/zu/chrome just e2e` angeben.
 
 Für `just check` werden außerdem `cargo-nextest` **0.9.146**, `cargo-deny` **0.20.2** und `cargo-audit` **0.22.2** benötigt. Die vollständige Prüfung umfasst Formatierung, TypeScript, Clippy, Rust-Tests, Lizenz-/Quellenregeln, Advisories und Build. CI führt den portablen Source- und Browser-Testablauf aus; er enthält keine Deployment-Schritte.

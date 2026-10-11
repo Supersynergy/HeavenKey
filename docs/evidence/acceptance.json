@@ -14,7 +14,7 @@
     "scripts/run.py": "4174867b676d4f08787d79a4a32e883792586f8a2e7c200c2155363e220bb506",
     "scripts/ci.sh": "f4fcde2e0ba15133037987f8017b6dcb9e7fdf8cc280dc46a82f8cd1c026777b",
     ".github/workflows/ci.yml": "6ba7c2450c5d8c0a5bb300b6caa467a9f690baee692be763775c67fc7333db2e",
-    "README.md": "033df89925c248d3eb29a807f84b93394cd527460cda1d7f4246aed7cd9cd121",
+    "README.md": "4183104dfce29bd47340740f73b3ee15ceb60b12daffcd03012bdf2480411421",
     "docs/assets/heavenkey-hero.png": "9ebbb4f1e85a093187f6b04b92c562da822a12bd5406964de18ffd6d3a7ea587",
     "justfile": "a319345e94e3f2bfe15008d85234bb31ef9dfffc1a3f682e9cb25f2b254cb320",
     "scripts/startup_probe.py": "e30e08c6b41160389cac9aa504c26a1b219ef8a7ec845021266bc787ce577256"
@@ -38,12 +38,80 @@
   "hardware": "deferred by user",
   "github_ci": "blocked before any step by account payment/spending-limit annotation",
   "visibility": "private",
-  "github_ci_url": "https://github.com/Supersynergy/HeavenKey/actions/runs/38182622278",
+  "github_ci_url": "https://github.com/Supersynergy/HeavenKey/actions/runs/38183062109",
   "missing_binary_regression": {
     "exit_code": 1,
     "elapsed_seconds": 0.22,
     "completed": false,
     "fatal_error": "server spawn failed: ENOENT: no such file or directory, posix_spawn '/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-startup-probe-9jcmuco1/target/debug/uac-api'",
     "passed": true
+  },
+  "fresh_clone": {
+    "passed": true,
+    "commit": "29a9bacd55548722f62eeb84787eb4dbfde9ca41",
+    "steps": [
+      {
+        "command": [
+          "gh",
+          "repo",
+          "clone",
+          "Supersynergy/HeavenKey",
+          "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-verified-clone-i9w98l56/HeavenKey",
+          "--",
+          "--quiet"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1.67
+      },
+      {
+        "command": [
+          "aidev",
+          "doctor",
+          "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-verified-clone-i9w98l56/HeavenKey"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.12
+      },
+      {
+        "command": [
+          "bun",
+          "install",
+          "--frozen-lockfile",
+          "--ignore-scripts"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.02
+      },
+      {
+        "command": [
+          "cargo",
+          "fetch",
+          "--locked"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.12
+      },
+      {
+        "command": [
+          "just",
+          "build"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 13.85
+      },
+      {
+        "command": [
+          "just",
+          "e2e"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 3.92
+      }
+    ],
+    "target": "fresh clone-local target directory; existing registry cache",
+    "e2e_passed": 41,
+    "e2e_completed": true,
+    "hardware": "virtual CTAP2 only",
+    "elapsed_seconds": 19.7
   }
 }
