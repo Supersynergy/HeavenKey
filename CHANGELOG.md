@@ -7,7 +7,8 @@
 - Frühe Gäste, falsche Codes und konkurrierende Einschreibungen erhalten keine Eigentümerrolle.
 - README mit generiertem Titelbild und dokumentierten Sicherheitsgrenzen ergänzt. Die Architektur ist als Diagramm enthalten; die Roadmap benennt die nächsten Abnahmen.
 - CI-Ablauf und konfigurierbaren Chrome-Pfad ergänzt.
-- Prüfungen bleiben zeitlich begrenzt; die abgelaufene Spike-Deadline verhindert spätere Entwicklung nicht mehr.
+- Prüfungen bleiben zeitlich begrenzt; die ursprüngliche Spike-Frist blockiert spätere Entwicklungsphasen nicht.
+- Build und Browser-Test verwenden dasselbe lokale Zielverzeichnis. Eine fehlende Server-Binärdatei führt zu einem schnellen Fehler mit beendetem Testlauf; die Regression wird bei der Prüfung ausgeführt.
 
 ## 0.1.0: UAC simulation spike
 

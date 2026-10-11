@@ -31,7 +31,7 @@ Passkeys und begrenzte Zugangsrechte für Entwickler, die Autorisierung bis zur 
 
 ## Quick start
 
-Voraussetzungen: Rustup, Bun **1.4.2**, `just`, Python 3 und Google Chrome. Rustup lädt die festgelegte Nightly-Version. Die Simulation unterstützt macOS und Linux; Windows wurde nicht geprüft. Das private Repository setzt GitHub-Zugriff voraus.
+Voraussetzungen: Rustup, Bun **1.4.2**, `just`, Python 3 und Google Chrome. Rustup lädt die festgelegte Nightly-Version. Die Simulation ist auf macOS geprüft; Linux-Pfade und Ubuntu-CI sind vorbereitet, aber noch nicht ausgeführt. Das private Repository setzt GitHub-Zugriff voraus.
 
 ```sh
 git clone https://github.com/Supersynergy/HeavenKey.git
@@ -45,6 +45,8 @@ just e2e
 Der Test startet einen isolierten Browser und einen lokalen Server und beendet beide danach. Er verwendet kein persönliches Browserprofil. Testdaten und virtuelle Schlüssel werden gelöscht. Ein anderer Chrome-Pfad lässt sich mit `CHROME_PATH=/pfad/zu/chrome just e2e` angeben.
 
 Für `just check` werden außerdem `cargo-nextest` **0.9.146**, `cargo-deny` **0.20.2** und `cargo-audit` **0.22.2** benötigt. Die vollständige Prüfung umfasst Formatierung, TypeScript, Clippy, Rust-Tests, Lizenz-/Quellenregeln, Advisories und Build. CI führt den portablen Source- und Browser-Testablauf aus; er enthält keine Deployment-Schritte.
+
+Der erste GitHub-CI-Job wurde vor Ausführung eines Schritts durch eine Zahlungs-/Ausgabenlimit-Sperre des Accounts abgewiesen. Der identische portable Prüfablauf hat lokal bestanden: **41 Browser-Fälle und 24 Rust-Tests**. Die [CI-Diagnose](docs/VERIFICATION.md) hält diese Grenze fest.
 
 ## Späterer Live-Test
 

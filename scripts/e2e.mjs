@@ -26,9 +26,12 @@ async function test(name, action) {
 async function startServer() {
   server = spawn(join(root,"target/debug/uac-api"), [], { cwd:root, env:{ ...process.env,UAC_PORT:String(port),UAC_DATA:data }, stdio:["ignore","pipe","pipe"] });
   let output = "";
+  let spawnError;
+  server.on("error", error => { spawnError=error; });
   server.stdout.on("data", d => output += d); server.stderr.on("data", d => output += d);
   const end = Date.now()+15000;
   while (Date.now()<end) {
+    if (spawnError) throw new Error(`server spawn failed: ${spawnError.message}`);
     if (server.exitCode !== null) throw new Error(`server exited: ${output}`);
     try { if ((await fetch(`${origin}/health`,{ signal:AbortSignal.timeout(1000) })).ok) return; } catch {}
     await new Promise(r => setTimeout(r,100));
@@ -36,11 +39,16 @@ async function startServer() {
   throw new Error(`server startup timeout: ${output}`);
 }
 async function stopServer() {
-  if (!server || server.exitCode !== null) return;
+  if (!server || !server.pid || server.exitCode !== null) return;
   server.kill("SIGINT");
   const end=Date.now()+5000;
   while(server.exitCode===null && Date.now()<end) await new Promise(r=>setTimeout(r,50));
-  if(server.exitCode===null) { server.kill("SIGKILL"); await new Promise(r=>server.once("exit",r)); }
+  if(server.exitCode===null) {
+    server.kill("SIGKILL");
+    const killedEnd=Date.now()+5000;
+    while(server.exitCode===null && Date.now()<killedEnd) await new Promise(r=>setTimeout(r,50));
+    if(server.exitCode===null) throw new Error("server shutdown timeout");
+  }
 }
 async function actor(name) {
   const context=await browser.newContext();

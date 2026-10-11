@@ -9,7 +9,7 @@
     {
       "name": "first guest enrollment does not claim ownership",
       "pass": true,
-      "elapsed_ms": 77
+      "elapsed_ms": 73
     },
     {
       "name": "reserved owner name requires bootstrap",
@@ -24,12 +24,12 @@
     {
       "name": "browser owner passkey registration with operator bootstrap",
       "pass": true,
-      "elapsed_ms": 50
+      "elapsed_ms": 53
     },
     {
       "name": "pending competing enrollment cannot create another owner",
       "pass": true,
-      "elapsed_ms": 1
+      "elapsed_ms": 2
     },
     {
       "name": "consumed bootstrap cannot start another owner enrollment",
@@ -44,17 +44,17 @@
     {
       "name": "browser foreign holder registration",
       "pass": true,
-      "elapsed_ms": 64
+      "elapsed_ms": 65
     },
     {
       "name": "browser owner authentication",
       "pass": true,
-      "elapsed_ms": 49
+      "elapsed_ms": 55
     },
     {
       "name": "browser guest authentication",
       "pass": true,
-      "elapsed_ms": 50
+      "elapsed_ms": 49
     },
     {
       "name": "owner grant issuance through UI",
@@ -64,7 +64,7 @@
     {
       "name": "guest grant invocation through UI",
       "pass": true,
-      "elapsed_ms": 139
+      "elapsed_ms": 140
     },
     {
       "name": "copied token without session cannot issue grants",
@@ -99,57 +99,57 @@
     {
       "name": "bound invocation arguments cannot change",
       "pass": true,
-      "elapsed_ms": 32
+      "elapsed_ms": 35
     },
     {
       "name": "bound invocation cannot become login",
       "pass": true,
-      "elapsed_ms": 29
+      "elapsed_ms": 32
     },
     {
       "name": "valid signature with wrong origin",
       "pass": true,
-      "elapsed_ms": 30
+      "elapsed_ms": 31
     },
     {
       "name": "valid signature with wrong challenge",
       "pass": true,
-      "elapsed_ms": 29
+      "elapsed_ms": 32
     },
     {
       "name": "valid signature with wrong RP hash",
       "pass": true,
-      "elapsed_ms": 29
+      "elapsed_ms": 32
     },
     {
       "name": "valid signature without user verification",
       "pass": true,
-      "elapsed_ms": 28
+      "elapsed_ms": 31
     },
     {
       "name": "valid signature with rolled-back counter",
       "pass": true,
-      "elapsed_ms": 29
+      "elapsed_ms": 31
     },
     {
       "name": "tampered authenticator signature rejected",
       "pass": true,
-      "elapsed_ms": 27
+      "elapsed_ms": 32
     },
     {
       "name": "valid fresh assertion accepted",
       "pass": true,
-      "elapsed_ms": 28
+      "elapsed_ms": 33
     },
     {
       "name": "assertion replay rejected",
       "pass": true,
-      "elapsed_ms": 1
+      "elapsed_ms": 2
     },
     {
       "name": "parallel duplicate invocation executes once",
       "pass": true,
-      "elapsed_ms": 30
+      "elapsed_ms": 32
     },
     {
       "name": "guest cannot revoke",
@@ -184,17 +184,17 @@
     {
       "name": "expired grant denied",
       "pass": true,
-      "elapsed_ms": 1207
+      "elapsed_ms": 1206
     },
     {
       "name": "bootstrap stays consumed after server restart",
       "pass": true,
-      "elapsed_ms": 3
+      "elapsed_ms": 5
     },
     {
       "name": "enrolled credentials authenticate after server restart",
       "pass": true,
-      "elapsed_ms": 118
+      "elapsed_ms": 112
     },
     {
       "name": "revocation survives server restart",
@@ -204,13 +204,13 @@
     {
       "name": "replay rejected after server restart",
       "pass": true,
-      "elapsed_ms": 1
+      "elapsed_ms": 2
     },
     {
       "name": "mobile width has no horizontal overflow",
       "pass": true,
-      "elapsed_ms": 0
+      "elapsed_ms": 1
     }
   ],
-  "elapsed_seconds": 3.5
+  "elapsed_seconds": 3.6
 }

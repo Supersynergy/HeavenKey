@@ -1,0 +1,64 @@
+{
+  "passed": false,
+  "error": "fresh clone step failed: just",
+  "steps": [
+    {
+      "command": [
+        "gh",
+        "repo",
+        "clone",
+        "Supersynergy/HeavenKey",
+        "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-clone-6yxn684q/HeavenKey",
+        "--",
+        "--quiet"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.61
+    },
+    {
+      "command": [
+        "aidev",
+        "doctor",
+        "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-clone-6yxn684q/HeavenKey"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.11
+    },
+    {
+      "command": [
+        "bun",
+        "install",
+        "--frozen-lockfile",
+        "--ignore-scripts"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.02
+    },
+    {
+      "command": [
+        "cargo",
+        "fetch",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.46
+    },
+    {
+      "command": [
+        "just",
+        "build"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.44
+    },
+    {
+      "command": [
+        "just",
+        "e2e"
+      ],
+      "exit_code": 241,
+      "elapsed_seconds": 162.5
+    }
+  ],
+  "elapsed_seconds": 167.14
+}

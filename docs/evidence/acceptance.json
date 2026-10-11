@@ -10,12 +10,14 @@
     "apps/web/src/main.ts": "9beebd9c2c7a0800f6bb81b26c9c22d480de806ec95a8d042fac95d08a77594c",
     "apps/web/src/style.css": "956e8464c484e2b7e3321aace8ea59fbf3c9a639112c8917a9a1b24a7d67a05e",
     "crates/verifier/src/lib.rs": "65f708e43607a6afa3dd18d10cb2c0260d9eafe490abcaf91e31d7da9ad8257c",
-    "scripts/e2e.mjs": "c097eaa79d30665ad5434ea63ffe0b6ec6618bff2ad12e4557278e87c383a7ef",
+    "scripts/e2e.mjs": "74febdd06a530f079d925af3d11860cb6ffb3746c4d789f5a91e64891510ea82",
     "scripts/run.py": "4174867b676d4f08787d79a4a32e883792586f8a2e7c200c2155363e220bb506",
-    "scripts/ci.sh": "41fe725867c54ab805c42de080e912a74727634cdc64c5f9345462bfaf8b474d",
+    "scripts/ci.sh": "f4fcde2e0ba15133037987f8017b6dcb9e7fdf8cc280dc46a82f8cd1c026777b",
     ".github/workflows/ci.yml": "6ba7c2450c5d8c0a5bb300b6caa467a9f690baee692be763775c67fc7333db2e",
-    "README.md": "1ce16594cd6e98d0b890aa8189f43c90645cfa12ad81153ad689e1e1d64e935b",
-    "docs/assets/heavenkey-hero.png": "9ebbb4f1e85a093187f6b04b92c562da822a12bd5406964de18ffd6d3a7ea587"
+    "README.md": "033df89925c248d3eb29a807f84b93394cd527460cda1d7f4246aed7cd9cd121",
+    "docs/assets/heavenkey-hero.png": "9ebbb4f1e85a093187f6b04b92c562da822a12bd5406964de18ffd6d3a7ea587",
+    "justfile": "a319345e94e3f2bfe15008d85234bb31ef9dfffc1a3f682e9cb25f2b254cb320",
+    "scripts/startup_probe.py": "e30e08c6b41160389cac9aa504c26a1b219ef8a7ec845021266bc787ce577256"
   },
   "check_exit": 0,
   "local_ci_exit": 0,
@@ -34,6 +36,14 @@
   },
   "review": "current source and denial paths manually inspected; grepgod diff and security-audit scan, not independent pentest",
   "hardware": "deferred by user",
-  "github_ci": "pending first push",
-  "visibility": "private"
+  "github_ci": "blocked before any step by account payment/spending-limit annotation",
+  "visibility": "private",
+  "github_ci_url": "https://github.com/Supersynergy/HeavenKey/actions/runs/38182622278",
+  "missing_binary_regression": {
+    "exit_code": 1,
+    "elapsed_seconds": 0.22,
+    "completed": false,
+    "fatal_error": "server spawn failed: ENOENT: no such file or directory, posix_spawn '/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-startup-probe-9jcmuco1/target/debug/uac-api'",
+    "passed": true
+  }
 }

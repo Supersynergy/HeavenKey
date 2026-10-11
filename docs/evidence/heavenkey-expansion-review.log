@@ -1,0 +1,380 @@
+=== structural diff (HEAD) ===
+README.md --- 1/2 --- Text
+31                                       31 
+32 ## Quick start                        32 ## Quick start
+33                                       33 
+34 Voraussetzungen: Rustup, Bun **1.4.2  34 Voraussetzungen: Rustup, Bun **1.4.2
+.. **, `just`, Python 3 und Google Chro  .. **, `just`, Python 3 und Google Chro
+.. me. Rustup lädt die festgelegte Nigh  .. me. Rustup lädt die festgelegte Nigh
+.. tly-Version. Die Simulation unterstü  .. tly-Version. Die Simulation ist auf 
+.. tzt macOS und Linux; Windows wurde n  .. macOS geprüft; Linux-Pfade und Ubunt
+.. icht geprüft. Das private Repository  .. u-CI sind vorbereitet, aber noch nic
+..  setzt GitHub-Zugriff voraus.         .. ht ausgeführt. Das private Repositor
+..                                       .. y setzt GitHub-Zugriff voraus.
+35                                       35 
+36 ```sh                                 36 ```sh
+37 git clone https://github.com/Supersy  37 git clone https://github.com/Supersy
+.. nergy/HeavenKey.git                   .. nergy/HeavenKey.git
+
+README.md --- 2/2 --- Text
+46 46 
+47 47 Für `just check` werden außerdem `cargo-nextest` **0.9.146**, `cargo-deny` **0.20.2** und `cargo-audit` **0.22.2** benötigt. Die vollständige Prüfung umfasst Formatierung, TypeScript, Clippy, Rust-Tests, Lizenz-/Quellenregeln, Advisories und Build. CI führt den portablen Source- und Browser-Testablauf aus; er enthält keine Deployment-Schritte.
+48 48 
+.. 49 Der erste GitHub-CI-Job wurde vor Ausführung eines Schritts durch eine Zahlungs-/Ausgabenlimit-Sperre des Accounts abgewiesen. Der identische portable Prüfablauf hat lokal bestanden: **41 Browser-Fälle und 24 Rust-Tests**. Die [CI-Diagnose](docs/VERIFICATION.md) hält diese Grenze fest.
+.. 50 
+49 51 ## Späterer Live-Test
+50 52 
+51 53 ```sh
+
+docs/evidence/browser-mobile.png --- Binary
+Binary file modified (old: 106.2 KiB, new: 106.3 KiB).
+
+docs/evidence/browser-revoked.png --- Binary
+Binary file modified (old: 113.9 KiB, new: 113.9 KiB).
+
+docs/evidence/browser-success.png --- Binary
+Binary file modified (old: 125.1 KiB, new: 125.3 KiB).
+
+docs/evidence/build.log --- Text
+ 1 bun run build                         1 bun run build
+ 2 $ bun build apps/web/src/main.ts --o  2 $ bun build apps/web/src/main.ts --o
+ . utdir apps/web/dist --target browser  . utdir apps/web/dist --target browser
+ 3 Bundled 1 module in 90ms              3 Bundled 1 module in 3ms
+ 4                                       4 
+ 5   main.js  6.50 KB  (entry point)     5   main.js  6.76 KB  (entry point)
+ 6                                       6 
+ 7 cargo build --locked --offline        7 cargo build --locked --offline
+ 8     Blocking waiting for file lock o  8     Finished `dev` profile [unoptimi
+ . n build directory                     . zed + debuginfo] target(s) in 0.13s
+ 9    Compiling stable_deref_trait v1.2    
+ . .1                                    . 
+10    Compiling libc v0.2.190              
+11    Compiling zerofrom v0.1.8            
+12    Compiling serde_core v1.0.228        
+13    Compiling pin-project-lite v0.2.1    
+.. 7                                     . 
+14    Compiling yoke v0.8.3                
+15    Compiling memchr v2.8.3              
+16    Compiling zerovec v0.11.8            
+17    Compiling smallvec v1.16.3           
+18    Compiling litemap v0.8.3             
+19    Compiling writeable v0.6.4           
+20    Compiling zerotrie v0.2.5            
+21 error: recipe `build` was terminated    
+..  on line 3 by signal 15               . 
+
+docs/evidence/commands.jsonl --- JSON
+27 27 {"name": "ci-e2e", "command": ["bun", "scripts/e2e.mjs"], "exit_code": 0, "elapsed_seconds": 3.63, "time_utc": "2026-10-11T22:57:26.690818+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/ci-e2e.log", "timeout_cleanup_pids": []}
+28 28 {"name": "local-ci", "command": ["bash", "scripts/ci.sh"], "exit_code": 0, "elapsed_seconds": 4.555, "time_utc": "2026-10-11T22:57:26.731013+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/local-ci.log", "timeout_cleanup_pids": []}
+29 29 {"name": "heavenkey-timeout", "command": ["python3", "scripts/timeout_probe.py"], "exit_code": 124, "elapsed_seconds": 1.02, "time_utc": "2026-10-11T22:58:34.099440+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/heavenkey-timeout.log", "timeout_cleanup_pids": [53664, 53665]}
+   30 {"name": "fresh-clone", "command": ["python3", "-"], "exit_code": 1, "elapsed_seconds": 167.184, "time_utc": "2026-10-11T23:04:31.186895+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/fresh-clone.log", "timeout_cleanup_pids": []}
+   31 {"name": "build", "command": ["just", "_build"], "exit_code": 0, "elapsed_seconds": 0.183, "time_utc": "2026-10-11T23:04:31.592143+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/build.log", "timeout_cleanup_pids": []}
+   32 {"name": "e2e", "command": ["bun", "scripts/e2e.mjs"], "exit_code": 0, "elapsed_seconds": 4.264, "time_utc": "2026-10-11T23:04:35.888006+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/e2e.log", "timeout_cleanup_pids": []}
+   33 {"name": "heavenkey-semgrep", "command": ["semgrep", "scan", "--config", "p/security-audit", "--metrics", "off", "--json", "--output", "docs/evidence/heavenkey-semgrep.json", "apps/api/src/main.rs", "apps/web/src/main.ts", "crates/verifier/src/lib.rs", "scripts/e2e.mjs"], "exit_code": 0, "elapsed_seconds": 1.262, "time_utc": "2026-10-11T23:05:14.802243+00:00", "log": "/Users/master/Documents/Codex/work/uac-spike/docs/evidence/heavenkey-semgrep.log", "timeout_cleanup_pids": []}
+
+docs/evidence/e2e.json --- 1/8 --- JSON
+  9     {                                  9     {
+ 10       "name": "first guest enrollme   10       "name": "first guest enrollme
+ .. nt does not claim ownership",         .. nt does not claim ownership",
+ 11       "pass": true,                   11       "pass": true,
+ 12       "elapsed_ms": 77                12       "elapsed_ms": 78
+ 13     },                                13     },
+ 14     {                                 14     {
+ 15       "name": "reserved owner name    15       "name": "reserved owner name 
+ .. requires bootstrap",                  .. requires bootstrap",
+
+docs/evidence/e2e.json --- 2/8 --- JSON
+ 24     {                                 24     {
+ 25       "name": "browser owner passke   25       "name": "browser owner passke
+ .. y registration with operator bootst   .. y registration with operator bootst
+ .. rap",                                 .. rap",
+ 26       "pass": true,                   26       "pass": true,
+ 27       "elapsed_ms": 50                27       "elapsed_ms": 52
+ 28     },                                28     },
+ 29     {                                 29     {
+ 30       "name": "pending competing en   30       "name": "pending competing en
+ .. rollment cannot create another owne   .. rollment cannot create another owne
+ .. r",                                   .. r",
+
+docs/evidence/e2e.json --- 3/8 --- JSON
+ 44     {                                 44     {
+ 45       "name": "browser foreign hold   45       "name": "browser foreign hold
+ .. er registration",                     .. er registration",
+ 46       "pass": true,                   46       "pass": true,
+ 47       "elapsed_ms": 64                47       "elapsed_ms": 61
+ 48     },                                48     },
+ 49     {                                 49     {
+ 50       "name": "browser owner authen   50       "name": "browser owner authen
+ .. tication",                            .. tication",
+ 51       "pass": true,                   51       "pass": true,
+ 52       "elapsed_ms": 49                52       "elapsed_ms": 54
+ 53     },                                53     },
+ 54     {                                 54     {
+ 55       "name": "browser guest authen   55       "name": "browser guest authen
+ .. tication",                            .. tication",
+
+docs/evidence/e2e.json --- 4/8 --- JSON
+ 64     {                                 64     {
+ 65       "name": "guest grant invocati   65       "name": "guest grant invocati
+ .. on through UI",                       .. on through UI",
+ 66       "pass": true,                   66       "pass": true,
+ 67       "elapsed_ms": 139               67       "elapsed_ms": 150
+ 68     },                                68     },
+ 69     {                                 69     {
+ 70       "name": "copied token without   70       "name": "copied token without
+ ..  session cannot issue grants",        ..  session cannot issue grants",
+
+docs/evidence/e2e.json --- 5/8 --- JSON
+ 89     {                                 89     {
+ 90       "name": "foreign resource den   90       "name": "foreign resource den
+ .. ied",                                 .. ied",
+ 91       "pass": true,                   91       "pass": true,
+ 92       "elapsed_ms": 1                 92       "elapsed_ms": 2
+ 93     },                                93     },
+ 94     {                                 94     {
+ 95       "name": "modified signed gran   95       "name": "modified signed gran
+ .. t denied",                            .. t denied",
+ 96       "pass": true,                   96       "pass": true,
+ 97       "elapsed_ms": 2                 97       "elapsed_ms": 1
+ 98     },                                98     },
+ 99     {                                 99     {
+100       "name": "bound invocation arg  100       "name": "bound invocation arg
+... uments cannot change",               ... uments cannot change",
+101       "pass": true,                  101       "pass": true,
+102       "elapsed_ms": 32               102       "elapsed_ms": 31
+103     },                               103     },
+104     {                                104     {
+105       "name": "bound invocation can  105       "name": "bound invocation can
+... not become login",                   ... not become login",
+106       "pass": true,                  106       "pass": true,
+107       "elapsed_ms": 29               107       "elapsed_ms": 30
+108     },                               108     },
+109     {                                109     {
+110       "name": "valid signature with  110       "name": "valid signature with
+...  wrong origin",                      ...  wrong origin",
+111       "pass": true,                  111       "pass": true,
+112       "elapsed_ms": 30               112       "elapsed_ms": 31
+113     },                               113     },
+114     {                                114     {
+115       "name": "valid signature with  115       "name": "valid signature with
+...  wrong challenge",                   ...  wrong challenge",
+116       "pass": true,                  116       "pass": true,
+117       "elapsed_ms": 29               117       "elapsed_ms": 30
+118     },                               118     },
+119     {                                119     {
+120       "name": "valid signature with  120       "name": "valid signature with
+...  wrong RP hash",                     ...  wrong RP hash",
+121       "pass": true,                  121       "pass": true,
+122       "elapsed_ms": 29               122       "elapsed_ms": 30
+123     },                               123     },
+124     {                                124     {
+125       "name": "valid signature with  125       "name": "valid signature with
+... out user verification",              ... out user verification",
+126       "pass": true,                  126       "pass": true,
+127       "elapsed_ms": 28               127       "elapsed_ms": 29
+128     },                               128     },
+129     {                                129     {
+130       "name": "valid signature with  130       "name": "valid signature with
+...  rolled-back counter",               ...  rolled-back counter",
+131       "pass": true,                  131       "pass": true,
+132       "elapsed_ms": 29               132       "elapsed_ms": 30
+133     },                               133     },
+134     {                                134     {
+135       "name": "tampered authenticat  135       "name": "tampered authenticat
+... or signature rejected",              ... or signature rejected",
+136       "pass": true,                  136       "pass": true,
+137       "elapsed_ms": 27               137       "elapsed_ms": 30
+138     },                               138     },
+139     {                                139     {
+140       "name": "valid fresh assertio  140       "name": "valid fresh assertio
+... n accepted",                         ... n accepted",
+141       "pass": true,                  141       "pass": true,
+142       "elapsed_ms": 28               142       "elapsed_ms": 30
+143     },                               143     },
+144     {                                144     {
+145       "name": "assertion replay rej  145       "name": "assertion replay rej
+... ected",                              ... ected",
+146       "pass": true,                  146       "pass": true,
+147       "elapsed_ms": 1                147       "elapsed_ms": 2
+148     },                               148     },
+149     {                                149     {
+150       "name": "parallel duplicate i  150       "name": "parallel duplicate i
+... nvocation executes once",            ... nvocation executes once",
+151       "pass": true,                  151       "pass": true,
+152       "elapsed_ms": 30               152       "elapsed_ms": 31
+153     },                               153     },
+154     {                                154     {
+155       "name": "guest cannot revoke"  155       "name": "guest cannot revoke"
+... ,                                    ... ,
+
+docs/evidence/e2e.json --- 6/8 --- JSON
+169     {                                169     {
+170       "name": "revoked grant cannot  170       "name": "revoked grant cannot
+...  start new invocation",              ...  start new invocation",
+171       "pass": true,                  171       "pass": true,
+172       "elapsed_ms": 1                172       "elapsed_ms": 2
+173     },                               173     },
+174     {                                174     {
+175       "name": "duplicate name regis  175       "name": "duplicate name regis
+... tration rejected",                   ... tration rejected",
+
+docs/evidence/e2e.json --- 7/8 --- JSON
+184     {                                184     {
+185       "name": "expired grant denied  185       "name": "expired grant denied
+... ",                                   ... ",
+186       "pass": true,                  186       "pass": true,
+187       "elapsed_ms": 1207             187       "elapsed_ms": 1213
+188     },                               188     },
+189     {                                189     {
+190       "name": "bootstrap stays cons  190       "name": "bootstrap stays cons
+... umed after server restart",          ... umed after server restart",
+191       "pass": true,                  191       "pass": true,
+192       "elapsed_ms": 3                192       "elapsed_ms": 5
+193     },                               193     },
+194     {                                194     {
+195       "name": "enrolled credentials  195       "name": "enrolled credentials
+...  authenticate after server restart"  ...  authenticate after server restart"
+... ,                                    ... ,
+196       "pass": true,                  196       "pass": true,
+197       "elapsed_ms": 118              197       "elapsed_ms": 124
+198     },                               198     },
+199     {                                199     {
+200       "name": "revocation survives   200       "name": "revocation survives 
+... server restart",                     ... server restart",
+
+docs/evidence/e2e.json --- 8/8 --- JSON
+212       "elapsed_ms": 0                212       "elapsed_ms": 0
+213     }                                213     }
+214   ],                                 214   ],
+215   "elapsed_seconds": 3.5             215   "elapsed_seconds": 4.1
+216 }                                    216 }
+
+docs/evidence/e2e.log --- Text
+39 PASS revocation survives server rest  39 PASS revocation survives server rest
+.. art                                   .. art
+40 PASS replay rejected after server re  40 PASS replay rejected after server re
+.. start                                 .. start
+41 PASS mobile width has no horizontal   41 PASS mobile width has no horizontal 
+.. overflow                              .. overflow
+42 {"total":41,"passed":41,"failed":0,"  42 {"total":41,"passed":41,"failed":0,"
+.. elapsed_seconds":3.5}                 .. elapsed_seconds":4.1}
+
+docs/evidence/heavenkey-semgrep.json --- JSON
+1 {"version":"1.176.0","results":[],"er  1 {"version":"1.176.0","results":[],"er
+. rors":[],"paths":{"scanned":["apps/ap  . rors":[],"paths":{"scanned":["apps/ap
+. i/src/main.rs","apps/web/src/main.ts"  . i/src/main.rs","apps/web/src/main.ts"
+. ,"crates/verifier/src/lib.rs","script  . ,"crates/verifier/src/lib.rs","script
+. s/e2e.mjs"]},"time":{"rules":[],"rule  . s/e2e.mjs"]},"time":{"rules":[],"rule
+. s_parse_time":0.03074479103088379,"pr  . s_parse_time":0.02982497215270996,"pr
+. ofiling_times":{"config_time":0.21760  . ofiling_times":{"config_time":0.25097
+. 39218902588,"core_time":0.20879888534  . 32246398926,"core_time":0.20051622390
+. 545898,"ignores_time":0.0001621246337  . 74707,"ignores_time":0.00012898445129
+. 890625,"total_time":0.434128999710083  . 39453,"total_time":0.4587020874023437
+. },"parsing_time":{"total_time":0.0,"p  . 5},"parsing_time":{"total_time":0.0,"
+. er_file_time":{"mean":0.0,"std_dev":0  . per_file_time":{"mean":0.0,"std_dev":
+. .0},"very_slow_stats":{"time_ratio":0  . 0.0},"very_slow_stats":{"time_ratio":
+. .0,"count_ratio":0.0},"very_slow_file  . 0.0,"count_ratio":0.0},"very_slow_fil
+. s":[]},"scanning_time":{"total_time":  . es":[]},"scanning_time":{"total_time"
+. 0.08647918701171875,"per_file_time":{  . :0.08844780921936035,"per_file_time":
+. "mean":0.014413197835286459,"std_dev"  . {"mean":0.014741301536560059,"std_dev
+. :0.0003916060916758902},"very_slow_st  . ":0.00037245080535797115},"very_slow_
+. ats":{"time_ratio":0.0,"count_ratio":  . stats":{"time_ratio":0.0,"count_ratio
+. 0.0},"very_slow_files":[]},"matching_  . ":0.0},"very_slow_files":[]},"matchin
+. time":{"total_time":0.0,"per_file_and  . g_time":{"total_time":0.0,"per_file_a
+. _rule_time":{"mean":0.0,"std_dev":0.0  . nd_rule_time":{"mean":0.0,"std_dev":0
+. },"very_slow_stats":{"time_ratio":0.0  . .0},"very_slow_stats":{"time_ratio":0
+. ,"count_ratio":0.0},"very_slow_rules_  . .0,"count_ratio":0.0},"very_slow_rule
+. on_files":[]},"tainting_time":{"total  . s_on_files":[]},"tainting_time":{"tot
+. _time":0.0,"per_def_and_rule_time":{"  . al_time":0.0,"per_def_and_rule_time":
+. mean":0.0,"std_dev":0.0},"very_slow_s  . {"mean":0.0,"std_dev":0.0},"very_slow
+. tats":{"time_ratio":0.0,"count_ratio"  . _stats":{"time_ratio":0.0,"count_rati
+. :0.0},"very_slow_rules_on_defs":[]},"  . o":0.0},"very_slow_rules_on_defs":[]}
+. fixpoint_timeouts":[],"prefiltering":  . ,"fixpoint_timeouts":[],"prefiltering
+. {"project_level_time":0.0,"file_level  . ":{"project_level_time":0.0,"file_lev
+. _time":0.0,"rules_with_project_prefil  . el_time":0.0,"rules_with_project_pref
+. ters_ratio":0.0,"rules_with_file_pref  . ilters_ratio":0.0,"rules_with_file_pr
+. ilters_ratio":0.9583333333333334,"rul  . efilters_ratio":0.9583333333333334,"r
+. es_selected_ratio":0.2083333333333333  . ules_selected_ratio":0.20833333333333
+. 4,"rules_matched_ratio":0.20833333333  . 334,"rules_matched_ratio":0.208333333
+. 333334},"targets":[],"total_bytes":0,  . 33333334},"targets":[],"total_bytes":
+. "max_memory_bytes":349492224},"engine  . 0,"max_memory_bytes":327452032},"engi
+. _requested":"OSS","skipped_rules":[],  . ne_requested":"OSS","skipped_rules":[
+. "profiling_results":[]}                . ],"profiling_results":[]}
+
+justfile --- Text
+1  1 build:
+.  2     python3 scripts/run.py build 900 -- just _build
+.  3 
+.  4 _build:
+2  5     bun run build
+3  6     cargo build --locked --offline
+4  7 
+
+scripts/e2e.mjs --- JavaScript
+26 async function startServer() {        26 async function startServer() {
+27   server = spawn(join(root,"target/d  27   server = spawn(join(root,"target/d
+.. ebug/uac-api"), [], { cwd:root, env:  .. ebug/uac-api"), [], { cwd:root, env:
+.. { ...process.env,UAC_PORT:String(por  .. { ...process.env,UAC_PORT:String(por
+.. t),UAC_DATA:data }, stdio:["ignore",  .. t),UAC_DATA:data }, stdio:["ignore",
+.. "pipe","pipe"] });                    .. "pipe","pipe"] });
+28   let output = "";                    28   let output = "";
+..                                       29   let spawnError;
+..                                       30   server.on("error", error => { spaw
+..                                       .. nError=error; });
+29   server.stdout.on("data", d => outp  31   server.stdout.on("data", d => outp
+.. ut += d); server.stderr.on("data", d  .. ut += d); server.stderr.on("data", d
+..  => output += d);                     ..  => output += d);
+30   const end = Date.now()+15000;       32   const end = Date.now()+15000;
+31   while (Date.now()<end) {            33   while (Date.now()<end) {
+..                                       34     if (spawnError) throw new Error(
+..                                       .. `server spawn failed: ${spawnError.m
+..                                       .. essage}`);
+32     if (server.exitCode !== null) th  35     if (server.exitCode !== null) th
+.. row new Error(`server exited: ${outp  .. row new Error(`server exited: ${outp
+.. ut}`);                                .. ut}`);
+33     try { if ((await fetch(`${origin  36     try { if ((await fetch(`${origin
+.. }/health`,{ signal:AbortSignal.timeo  .. }/health`,{ signal:AbortSignal.timeo
+.. ut(1000) })).ok) return; } catch {}   .. ut(1000) })).ok) return; } catch {}
+34     await new Promise(r => setTimeou  37     await new Promise(r => setTimeou
+.. t(r,100));                            .. t(r,100));
+35   }                                   38   }
+36   throw new Error(`server startup ti  39   throw new Error(`server startup ti
+.. meout: ${output}`);                   .. meout: ${output}`);
+37 }                                     40 }
+38 async function stopServer() {         41 async function stopServer() {
+39   if (!server || server.exitCode !==  42   if (!server || !server.pid || serv
+..  null) return;                        .. er.exitCode !== null) return;
+40   server.kill("SIGINT");              43   server.kill("SIGINT");
+41   const end=Date.now()+5000;          44   const end=Date.now()+5000;
+42   while(server.exitCode===null && Da  45   while(server.exitCode===null && Da
+.. te.now()<end) await new Promise(r=>s  .. te.now()<end) await new Promise(r=>s
+.. etTimeout(r,50));                     .. etTimeout(r,50));
+43   if(server.exitCode===null) { serve  46   if(server.exitCode===null) {
+.. r.kill("SIGKILL"); await new Promise  .. 
+.. (r=>server.once("exit",r)); }         .. 
+..                                       47     server.kill("SIGKILL");
+..                                       48     const killedEnd=Date.now()+5000;
+..                                       49     while(server.exitCode===null && 
+..                                       .. Date.now()<killedEnd) await new Prom
+..                                       .. ise(r=>setTimeout(r,50));
+..                                       50     if(server.exitCode===null) throw
+..                                       ..  new Error("server shutdown timeout"
+..                                       .. );
+..                                       51   }
+44 }                                     52 }
+
+
+=== semgrep diff-aware ===
+
+=== changed files ===
+README.md
+docs/evidence/browser-mobile.png
+docs/evidence/browser-revoked.png
+docs/evidence/browser-success.png
+docs/evidence/build.log
+docs/evidence/commands.jsonl
+docs/evidence/e2e.json
+docs/evidence/e2e.log
+docs/evidence/heavenkey-semgrep.json
+justfile
+scripts/e2e.mjs

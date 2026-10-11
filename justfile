@@ -1,4 +1,7 @@
 build:
+    python3 scripts/run.py build 900 -- just _build
+
+_build:
     bun run build
     cargo build --locked --offline
 
@@ -13,6 +16,7 @@ _check:
     cargo deny --offline check
     cargo audit --no-fetch --no-yanked
     bun audit
+    python3 scripts/startup_probe.py
     bun run build
     cargo build --locked --offline
 

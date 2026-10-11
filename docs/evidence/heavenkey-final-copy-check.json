@@ -1,0 +1,64 @@
+[
+  {
+    "file": "README.md",
+    "stats": {
+      "words": 640,
+      "emdash_per_1k": 3.1,
+      "bold-leadin_per_1k": 3.1,
+      "tricolon_per_1k": 7.8,
+      "sentences": 38,
+      "sent_median": 10.5,
+      "sent_stdev": 8.5
+    },
+    "findings": []
+  },
+  {
+    "file": "docs/VERIFICATION.md",
+    "stats": {
+      "words": 298,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 6.7,
+      "sentences": 14,
+      "sent_median": 12.5,
+      "sent_stdev": 5.4
+    },
+    "findings": [
+      {
+        "rule": "EMPTY-ADV",
+        "line": 7,
+        "col": 3,
+        "text": "just",
+        "hint": "Streichen, wenn es keine echte Betonung oder Unsicherheit trägt."
+      },
+      {
+        "rule": "EMPTY-ADV",
+        "line": 8,
+        "col": 3,
+        "text": "just",
+        "hint": "Streichen, wenn es keine echte Betonung oder Unsicherheit trägt."
+      }
+    ]
+  },
+  {
+    "file": "CHANGELOG.md",
+    "stats": {
+      "words": 139,
+      "emdash_per_1k": 0.0,
+      "bold-leadin_per_1k": 0.0,
+      "tricolon_per_1k": 0.0,
+      "sentences": 14,
+      "sent_median": 9.0,
+      "sent_stdev": 3.4
+    },
+    "findings": [
+      {
+        "rule": "FLAT-RHYTHM",
+        "line": 1,
+        "col": 1,
+        "text": "Satzlängen-Streuung 3.4 (Ziel > 5)",
+        "hint": "Gleichmäßiger Rhythmus. Zwei kurze Sätze einbauen."
+      }
+    ]
+  }
+]
