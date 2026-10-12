@@ -7,7 +7,8 @@
 | `apps/api/` | Rust-API mit Passkey-Verwaltung und SQLite-Zustand |
 | `apps/web/` | TypeScript-Oberfläche und WebAuthn-Dialoge |
 | `apps/extension/` | Erweiterung zum Öffnen des lokalen Dienstes, ohne Webseitenberechtigungen |
-| `crates/verifier/` | Signierte Zugänge und Prüfung der Delegationsketten |
+| `apps/gate/` | `uac-gate`: Offline-Durchsetzung vorgelegter Delegationsketten (siehe [GATE.md](GATE.md)) |
+| `crates/verifier/` | Signierte Zugänge und Prüfung der Delegationsketten; enthält das CLI `hkv` |
 | `scripts/` | Build, Browsertests und CI |
 | `docs/vectors/` | Testvektoren zum Delegationsformat |
 

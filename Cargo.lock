@@ -1349,6 +1349,7 @@ version = "1.53.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e95f91fcc7a621e8b030f6aa23c71fe9838ae2fb4d8118b75602a328f5144044"
 dependencies = [
+ "bytes",
  "libc",
  "mio",
  "pin-project-lite",
@@ -1457,6 +1458,16 @@ dependencies = [
 [[package]]
 name = "uac-gate"
 version = "0.6.0"
+dependencies = [
+ "axum",
+ "base64 0.22.1",
+ "ed25519-dalek",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokio",
+ "uac-verifier",
+]
 
 [[package]]
 name = "uac-keystore"

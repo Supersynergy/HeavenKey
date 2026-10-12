@@ -1501,6 +1501,27 @@ async fn delegations(State(app): State<App>, headers: HeaderMap) -> ApiResult<Js
     ))
 }
 
+async fn issuer_info(State(app): State<App>) -> ApiResult<Json<Value>> {
+    let inner = app.inner.lock().map_err(internal)?;
+    let mut stmt = inner
+        .db
+        .prepare("SELECT id FROM delegations WHERE revoked=1 ORDER BY rowid")
+        .map_err(internal)?;
+    let rows = stmt
+        .query_map([], |r| r.get::<_, String>(0))
+        .map_err(internal)?;
+    let mut revoked = Vec::new();
+    for row in rows {
+        revoked.push(row.map_err(internal)?);
+    }
+    Ok(Json(json!({
+        "profile": delegation::PROFILE,
+        "issuer": URL_SAFE_NO_PAD.encode(inner.issuer.verifying_key().to_bytes()),
+        "revoked": revoked,
+        "time": now(),
+    })))
+}
+
 async fn index() -> Html<&'static str> {
     Html(include_str!("../../web/index.html"))
 }
@@ -1651,6 +1672,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/delegations", get(delegations).post(create_delegation))
         .route("/api/delegations/delegate", post(delegate_delegation))
         .route("/api/delegations/revoke", post(revoke_delegation))
+        .route("/api/issuer", get(issuer_info))
         .layer(DefaultBodyLimit::max(32 * 1024))
         .layer(middleware::from_fn_with_state(app.clone(), origin_guard))
         .with_state(app);
@@ -2958,5 +2980,39 @@ mod tests {
             )
             .expect("simulate metadata authority substitution");
         assert!(inner.delegation_chain(id).is_err());
+    }
+
+    #[tokio::test]
+    async fn issuer_info_reports_public_snapshot_and_direct_revocations() {
+        let (app, tokens) = delegation_app();
+        let expected_issuer =
+            URL_SAFE_NO_PAD.encode(SigningKey::from_bytes(&[7; 32]).verifying_key().to_bytes());
+        let Json(info) = issuer_info(State(app.clone())).await.expect("issuer info");
+        assert_eq!(info["profile"], delegation::PROFILE);
+        assert_eq!(info["issuer"], expected_issuer);
+        assert_eq!(info["revoked"], json!([]));
+        assert!(info["time"].as_u64().expect("unix seconds") <= now());
+        let Json(root) = root_delegation(&app, &tokens["owner"], "guest", 300, 2)
+            .await
+            .expect("root");
+        let root_id = root["id"].as_str().expect("root id");
+        let Json(child) = child_delegation(&app, &tokens["guest"], root_id, "second", 200, 1)
+            .await
+            .expect("child");
+        let child_id = child["id"].as_str().expect("child id");
+        let Json(info) = issuer_info(State(app.clone())).await.expect("issuer info");
+        assert_eq!(info["revoked"], json!([]));
+        let Json(_) = approved_delegation_revoke(&app, &tokens["guest"], child_id)
+            .await
+            .expect("delegator revokes own child");
+        let Json(info) = issuer_info(State(app.clone())).await.expect("issuer info");
+        assert_eq!(info["revoked"], json!([child_id]));
+        let Json(_) = approved_delegation_revoke(&app, &tokens["owner"], root_id)
+            .await
+            .expect("owner revokes root");
+        let Json(info) = issuer_info(State(app.clone())).await.expect("issuer info");
+        let revoked = info["revoked"].as_array().expect("revoked list");
+        assert_eq!(revoked.len(), 2);
+        assert!(revoked.contains(&json!(root_id)) && revoked.contains(&json!(child_id)));
     }
 }

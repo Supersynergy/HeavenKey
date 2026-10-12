@@ -24,6 +24,6 @@ Produktcode aus diesen Anwendungen wird nicht eingebunden. HeavenKey besitzt der
 
 ## Delegationsformat
 
-Das eigene HeavenKey-Profil übernimmt begrenzte Weitergabe und die Bindung an Vorgänger als Prinzipien. Der Dienst signiert alle Kettenglieder. Kontokennungen sind keine DIDs; eine UCAN-Implementierung wird nicht eingebunden. Das [Format](DELEGATION-CONTRACT.md) definiert die signierten Daten und die Kettenregeln.
+Das eigene HeavenKey-Profil übernimmt begrenzte Weitergabe und die Bindung an Vorgänger als Prinzipien. Der Dienst signiert alle Kettenglieder. Kontokennungen sind keine DIDs; eine UCAN-Implementierung wird nicht eingebunden. Das [Format](DELEGATION-CONTRACT.md) definiert die signierten Daten und die Kettenregeln. `uac-gate` und `hkv` prüfen dieses Format ohne neue externe Bibliotheken: Der Abruf des Issuer-Schnappschusses läuft über einen kleinen HTTP-Client auf `tokio::net::TcpStream`, die Argumentverarbeitung von `hkv` ist handgeschrieben.
 
 Die [Lizenz- und Paketbelege](evidence/donors-v03.json) und [Quellen zum Delegationsprofil](evidence/v05-donor-research.json) enthalten die detaillierten Versions- und Herkunftsdaten.
