@@ -1,23 +1,46 @@
-# GitHub-CI
+# GitHub-CI ohne gehostete Runner
 
-Der Workflow `.github/workflows/ci.yml` prüft Pushes, Pull Requests und manuell gestartete Läufe auf Ubuntu 24.04.
+HeavenKey verwendet eigene einmalige Runner in lokalen Ubuntu-24.04-ARM64-Containern. Der [Routing-Test](https://github.com/Supersynergy/HeavenKey/actions/runs/38227057526) besteht auf GitHub, obwohl gehostete Jobs desselben privaten Repositories wegen einer Zahlungs-/Budget-Bedingung abgewiesen werden. GitHub dokumentiert [eigene Runner als kostenlos](https://docs.github.com/en/actions/concepts/runners/self-hosted-runners). Die lokale Maschine trägt Rechenzeit und Speicherbedarf.
 
-## Prüfungen
+Der Workflow verwendet weder GitHub-Cache noch Artefakt-Uploads. Build-Caches und Testnachweise liegen lokal unter `.ci-runner/`. Zahlungsdaten, Ausgabenlimits und die private Repository-Sichtbarkeit werden nicht geändert.
 
-Der Job installiert die festgelegten Rust- und Bun-Versionen, lädt Abhängigkeiten aus den Lockfiles und startet `scripts/ci.sh`. Der Ablauf prüft Formatierung, TypeScript, Delegationsreferenz, Clippy, Rust-Tests, Lizenz- und Abhängigkeitsregeln, Sicherheitsadvisories, Build und Browsertests.
+## Ausführen
 
-cargo-deny 0.20.2 und cargo-audit 0.22.2 werden aus den offiziellen Linux-Archiven geladen. SHA256-Prüfungen sichern die verwendeten Dateien vor dem Auspacken. Die Advisory-Datenbanken werden online initialisiert und aktualisiert.
+Nach Commit und Push startet `just github-ci` einen bereits wartenden Lauf für genau diesen Commit. Falls keiner wartet, startet der Befehl den Workflow für den veröffentlichten Branch. Der Runner läuft im Vordergrund und verarbeitet höchstens einen Job. Danach werden Container, Runner-Registrierung und die temporäre Konfiguration entfernt.
 
-## Testartefakte
+Das ist kein dauerhaft installierter Hintergrunddienst. Ein wartender Workflow braucht den lokalen Startbefehl und eine verfügbare Docker-Engine. Ein unterbrochener Lauf hinterlegt `.ci-runner/session.json`; die nächste Ausführung verweigert neue Arbeit, bis die dort genannte eigene Registrierung und der Container geprüft wurden.
 
-Vor den Prüfungen entfernt der Workflow alte Laufberichte und Screenshots aus dem Checkout. Dadurch kann ein früher Fehler keine zuvor gespeicherten grünen Browserergebnisse als neuen Nachweis hochladen.
+## Grenzen und Zugriff
 
-Nach dem Lauf enthält `heavenkey-evidence` die frisch erzeugten CI-Logs, Browserberichte und Screenshots. Bei Browserfehlern kommen `failure-diagnostic.json` und `failure-*.png` hinzu. Artefakte bleiben sieben Tage verfügbar. Ein Fehler vor den Browsertests erzeugt keinen neuen Browserbericht.
+- Die Vorbereitung der lokalen Umgebung erhält 900 Sekunden. Der GitHub-Job erhält 25 Minuten; der lokale Runner wartet höchstens 30 Minuten auf ihn.
+- Jeder Container erhält höchstens vier CPU-Kerne, 6 GiB RAM und 512 Prozesse.
+- Der Runner verwendet Benutzer-ID 501 ohne Linux-Capabilities. Er erhält keinen Docker-Socket und kein persönliches Home-Verzeichnis.
+- GitHub-Zugriff erfolgt im Job mit `contents: read`; Checkout-Zugangsdaten werden nicht gespeichert. Das Registrierungspayload bleibt in einer lokalen Datei mit Modus 0600 und wird entfernt.
+- Die Runner-Labels enthalten den vollständigen freigegebenen Commit-SHA und die konkrete Lauf-ID. Fork-PRs sind ausgeschlossen; die CLI verweigert öffentliche Repositories, fehlende Adminrechte sowie uncommitteten oder unveröffentlichten Code. Bereits laufende Jobs werden erhalten.
 
-## Aktuelle Startblockade
+## Werkzeuge
 
-Die [GitHub-Läufe](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) wurden vor Runner-Zuweisung und vor dem ersten Schritt abgewiesen. GitHub meldet eine Zahlungs- oder Budget-Bedingung des Accounts; die Annotation unterscheidet die Ursache nicht.
+Die Basis ist eine auf SHA256 festgelegte Ubuntu-24.04-ARM64-Umgebung. Runner 2.338.0, Bun 1.4.2, cargo-deny 0.20.2 und cargo-audit 0.22.2 stammen aus offiziellen Release-Archiven. Vor der Verwendung werden alle vier SHA256-Digests geprüft. Der Browser stammt aus der im Bun-Lockfile festgelegten Playwright-Core-Version. Rust verwendet weiterhin `nightly-2026-10-11` mit rustfmt und Clippy.
 
-Prüfe [GitHub Billing](https://github.com/settings/billing). Sobald die Sperre aufgehoben ist, starte den Workflow unter **Actions → HeavenKey CI → Run workflow** erneut. Weitere Hinweise stehen in [GitHubs Fehlerdiagnose](https://docs.github.com/en/actions/how-tos/troubleshoot-workflows#reviewing-billing-errors).
+Ein Image-Schlüssel bindet Basis, Vorbereitungsskripte und Bun-Manifeste. Rustup, Cargo und Build-Ausgaben werden ausschließlich im lokalen Repository-Cache aufbewahrt. Jeder Lauf führt alle Prüfungen erneut aus.
 
-`scripts/ci.sh` ist in einem lokalen Ubuntu-24.04-amd64-Container mit Rosetta bestanden: 45 Rust-Tests, 75 Referenzprüfungen und 138 Browserfälle. Der Browsertest benötigte 108,6 Sekunden bei unverändertem Zeitlimit von 180 Sekunden. Die GitHub-Ausführung und physische Passkeys bleiben offene Prüfziele; siehe [Prüfstatus](VERIFICATION.md).
+## Prüfliste
+
+| Schritt | Inhalt | Grenze |
+| --- | --- | --- |
+| Source | 16 CI-/Runner-Regressionen, Formatierung, TypeScript, Delegationsreferenz, Clippy, Rust-Tests und Startup-Probe | 900 Sekunden |
+| Sicherheit | Lizenz-/Quellenregeln, aktuelle Rust-Advisories und Bun-Audit | 180 Sekunden |
+| Build | Web-Bundle und Rust-API | 300 Sekunden |
+| Browser | Vollständiger Ablauf mit virtuellen CTAP2-Authentikatoren in Chromium | 300 Sekunden |
+
+Chrome/Chromium erhält zum Start 60 Sekunden. Der gemessene macOS-Lauf benötigte 201,8 Sekunden; ein vorheriger Versuch war bei 121 bestandenen Fällen nach dem alten 180-Sekunden-Limit abgebrochen worden. Alle 138 Fälle und ihre Ablehnungsprüfungen bleiben enthalten.
+
+`just check` verwendet dieselben Source-, Sicherheits- und Build-Kommandos mit vorhandenen Rust-Advisory-Datenbanken. `just ci` führt die lokale vollständige Prüfliste einschließlich aktueller Advisories und Browserfällen aus; seine Grenze beträgt 1200 Sekunden.
+
+## Nachweise
+
+Vor dem Lauf entfernt `scripts/ci.sh prepare` alte CI-Logs, Befehlsledger, Browserberichte und Screenshots. Historische Abnahmen bleiben erhalten. Der letzte Schritt kopiert ausschließlich die frischen Laufdateien nach `.ci-runner/evidence-<run-id>/` und erzeugt ein SHA256-Manifest.
+
+Der Starter verlangt den tatsächlichen grünen GitHub-Abschluss. Zusätzlich prüft er Commit, Lauf-ID, Dateihashes, mindestens 45 bestandene Rust-Tests, 75 Referenzprüfungen und einen abgeschlossenen Browserbericht mit mindestens 138 bestandenen Fällen ohne Fehler. Fehlende, veränderte oder fremde Nachweise führen zum Fehler.
+
+Die bisherige lokale Abnahme ist in [ci-hardening.json](evidence/ci-hardening.json) dokumentiert. Der vollständige kostenlose GitHub-Lauf ist ein eigener Nachweis; sein Ergebnis und seine Logs werden lokal unter `.ci-runner/` gespeichert. Physische Passkeys bleiben ein separates Prüfziel.

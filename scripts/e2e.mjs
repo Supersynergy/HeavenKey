@@ -204,7 +204,7 @@ try {
   await startServer();
   bootstrapToken=(await readFile(join(data,"owner-bootstrap.txt"),"utf8")).trim();
   const { chromium } = await import("playwright-core");
-  browser=await chromium.launch({executablePath:process.env.CHROME_PATH || (process.platform==="darwin" ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" : "/usr/bin/google-chrome"),headless:true,args:["--disable-background-networking"],timeout:20000});
+  browser=await chromium.launch({executablePath:process.env.CHROME_PATH || (process.platform==="darwin" ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" : "/usr/bin/google-chrome"),headless:true,args:["--disable-background-networking"],timeout:60000});
   const [owner,guest,foreign]=await Promise.all(["owner","guest","foreign"].map(actor));
   let ownerSession,guestSession,grant;
   await test("first guest enrollment does not claim ownership",async()=>assert.equal((await registration(guest)).owner,false));

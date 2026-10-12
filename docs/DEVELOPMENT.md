@@ -19,6 +19,8 @@ Die Rust-Version ist festgelegt. Nutze `rust-toolchain.toml`. Bun benötigt Vers
 | `just build` | Weboberfläche bündeln und Rust-API bauen |
 | `just dev` | Lokale Oberfläche auf `http://localhost:18240` starten |
 | `just check` | Source- und Abhängigkeitschecks ausführen; anschließend bauen |
+| `just ci` | Vollständige CI mit aktuellen Advisories und frischen Browserartefakten ausführen |
+| `just github-ci` | Genau einen veröffentlichten Commit auf einem kostenlosen eigenen GitHub-Runner prüfen |
 | `just e2e` | Vollständigen Ablauf mit virtuellen Passkeys in Chrome testen |
 | `bun scripts/delegation-reference.mjs` | Delegationsformat gegen öffentliche Testvektoren prüfen |
 
@@ -31,7 +33,6 @@ Fällt die Prozessliste erst beim Aufräumen aus, meldet der Wrapper `cleanup_er
 Für `just check` sind zusätzlich diese Versionen erforderlich:
 
 ```sh
-cargo install --locked --version 0.9.146 cargo-nextest
 cargo install --locked --version 0.20.2 cargo-deny
 cargo install --locked --version 0.22.2 cargo-audit
 ```
@@ -46,6 +47,8 @@ just e2e
 ```
 
 Lokale Checks verwenden anschließend die vorhandenen Rust-Advisory-Datenbanken. Aktualisiere sie regelmäßig mit den beiden Online-Befehlen. Bun prüft seine Abhängigkeiten online.
+
+`just check` und GitHub verwenden dieselbe Prüfliste in `scripts/ci.sh`. Rust-Tests laufen in beiden Umgebungen mit `cargo test --locked --offline`. `just ci` aktualisiert zusätzlich die Advisories, entfernt alte CI-Artefakte und führt die Browserprüfung aus. Die einzelnen CI-Stufen heißen `source`, `security`, `build` und `e2e`.
 
 ## Konfiguration
 
@@ -62,3 +65,5 @@ Führe `just check` und `just e2e` aus. Sicherheitsrelevante Änderungen müssen
 Nutze ausschließlich synthetische Testdaten. Einrichtungscodes, Sitzungen, Signierschlüssel, echte Passkeys und lokale Datenbanken gehören nicht ins Repository. Protokolländerungen benötigen eine Versionsentscheidung und passende Testvektoren. Die [Aktionsfreigaben](STEPUP-CONTRACT.md) und das [Delegationsformat](DELEGATION-CONTRACT.md) definieren die Schnittstellen.
 
 Der [CI-Ablauf](CI-REPAIR.md) führt Source-, Sicherheits- und Browserprüfungen aus. Der [Prüfstatus](VERIFICATION.md) trennt lokale Simulation, Ubuntu-CI und Hardwaretests.
+
+`just github-ci` benötigt Docker und ein für dieses private Repository authentifiziertes `gh` mit Adminrechten. Der Befehl erstellt eine lokale Runner-Umgebung, verarbeitet einen Job im Vordergrund und räumt die Registrierung auf. Die Grenzen, lokalen Nachweise und der Start nach einer Unterbrechung stehen im [CI-Ablauf](CI-REPAIR.md). Er installiert keinen Hintergrunddienst.
