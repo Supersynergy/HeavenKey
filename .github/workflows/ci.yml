@@ -23,6 +23,11 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+      - name: Initialize fresh CI evidence
+        run: |
+          rm -f docs/evidence/e2e.json docs/evidence/ci.log docs/evidence/ci-e2e.log \
+            docs/evidence/browser-*.png docs/evidence/failure-*.png \
+            docs/evidence/failure-diagnostic.json
       - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
         with:
           toolchain: nightly-2026-10-11
@@ -30,6 +35,26 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: 1.4.2
+      - name: Pinned Rust security tools
+        timeout-minutes: 5
+        run: |
+          tools_dir="$RUNNER_TEMP/heavenkey-tools"
+          mkdir -p "$tools_dir"
+          curl --fail --silent --show-error --location --retry 2 --max-time 60 \
+            https://github.com/EmbarkStudios/cargo-deny/releases/download/0.20.2/cargo-deny-0.20.2-x86_64-unknown-linux-musl.tar.gz \
+            -o "$tools_dir/deny.tar.gz"
+          curl --fail --silent --show-error --location --retry 2 --max-time 60 \
+            https://github.com/rustsec/rustsec/releases/download/cargo-audit/v0.22.2/cargo-audit-x86_64-unknown-linux-musl-v0.22.2.tgz \
+            -o "$tools_dir/audit.tar.gz"
+          printf '9f12ed4c49936e09b48bf862b595cde2fe64fcbd9d74dfacac6131ca824c8d5f  %s\n' "$tools_dir/deny.tar.gz" | sha256sum --check
+          printf '7fb9497f8594b389e5fce5ef9b92db08432996895b2e0c5a0167a69ed445c428  %s\n' "$tools_dir/audit.tar.gz" | sha256sum --check
+          tar -xzf "$tools_dir/deny.tar.gz" -C "$tools_dir"
+          tar -xzf "$tools_dir/audit.tar.gz" -C "$tools_dir"
+          install -m 755 "$tools_dir/cargo-deny-0.20.2-x86_64-unknown-linux-musl/cargo-deny" "$tools_dir/cargo-deny"
+          install -m 755 "$tools_dir/cargo-audit-x86_64-unknown-linux-musl-v0.22.2/cargo-audit" "$tools_dir/cargo-audit"
+          echo "$tools_dir" >> "$GITHUB_PATH"
+          "$tools_dir/cargo-deny" --version
+          "$tools_dir/cargo-audit" --version
       - name: Locked dependencies
         run: |
           bun install --frozen-lockfile --ignore-scripts
@@ -46,4 +71,6 @@ jobs:
             docs/evidence/ci.log
             docs/evidence/ci-e2e.log
             docs/evidence/browser-*.png
+            docs/evidence/failure-diagnostic.json
+            docs/evidence/failure-*.png
           retention-days: 7

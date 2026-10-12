@@ -1,0 +1,305 @@
+{
+  "schema": "heavenkey-ci-portability-review-v1",
+  "observed_at_utc": "2026-10-12T01:56:20.479676+00:00",
+  "status": "source_and_local_oracles_verified_hosted_execution_unverified",
+  "repo": "/Users/master/Documents/Codex/work/uac-spike",
+  "activity": "Read-only source/caller/failure-path review. Root edited CI during the audit; reviewer re-read those corrections. Only this external report was written. Public official metadata and archive bytes fetched; no binary installed or run, no Git write, cloud job, Docker, runner or billing change.",
+  "initial_review_source_sha256": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "6ba7c2450c5d8c0a5bb300b6caa467a9f690baee692be763775c67fc7333db2e"
+    },
+    {
+      "path": "scripts/ci.sh",
+      "sha256": "1bf7759f5dad54083028888744d4f42ba92bd3f5f648907d36a9c23342533681"
+    }
+  ],
+  "current_source_sha256": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "c4ecc9233d3187ef5ff7b79f4e23a36ee071ab48d1498d04ca5ea013772f173e"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "6683ed170c808951535d743b7e01f5ae08f8f2a18fee30c7d944412cd568763f"
+    },
+    {
+      "path": "scripts/ci.sh",
+      "sha256": "b385f8e7b59e4736261375f7b639de3a76fe53e82fd63f3849a6311611859635"
+    },
+    {
+      "path": "scripts/run.py",
+      "sha256": "4174867b676d4f08787d79a4a32e883792586f8a2e7c200c2155363e220bb506"
+    },
+    {
+      "path": "scripts/startup_probe.py",
+      "sha256": "e30e08c6b41160389cac9aa504c26a1b219ef8a7ec845021266bc787ce577256"
+    },
+    {
+      "path": "scripts/e2e.mjs",
+      "sha256": "28ec8bb6d4f4b11650cd43ae8d480c54322f20365eee4237a449cc850862c7fd"
+    },
+    {
+      "path": "scripts/build_web.py",
+      "sha256": "40bd5a832ac629498d41a3f7f4064dc1f7eff6418ed25ebe299e57714de8617c"
+    },
+    {
+      "path": "scripts/delegation-reference.mjs",
+      "sha256": "926e525bd3572714ec5823c211a238c869a86e8ff2d39b18e7bc52f10ae64e67"
+    },
+    {
+      "path": "deny.toml",
+      "sha256": "2865d09fdba40cfa89babced557ce561ff9f7163423f9ef888e280663cad3d40"
+    },
+    {
+      "path": "justfile",
+      "sha256": "d96eb2400a1537c4e017aa1f984bc4bfeab4a6c6321ce978726e717e3874ba92"
+    }
+  ],
+  "findings": [
+    {
+      "id": "CI-EVIDENCE-FRESHNESS",
+      "priority": "P2",
+      "status": "corrected_in_current_source",
+      "initial_ref": {
+        "path": ".github/workflows/ci.yml",
+        "line": 40
+      },
+      "trigger": "Any setup, dependency, formatting or clippy failure before fresh E2E: always-upload included tracked prior e2e.json, browser screenshots and ci-e2e.log. Artifact could contain local green evidence for a failed current job.",
+      "proof": "git ls-files confirmed those upload paths are tracked; ci.sh uses set -e and E2E is last.",
+      "smallest_correction": "Clear only those runtime evidence paths immediately after checkout; retain committed historical evidence in Git.",
+      "current_ref": {
+        "path": ".github/workflows/ci.yml",
+        "line": 26
+      }
+    },
+    {
+      "id": "CI-GATE-PARITY",
+      "priority": "P2",
+      "status": "corrected_in_current_source",
+      "initial_ref": {
+        "path": "scripts/ci.sh",
+        "line": 8
+      },
+      "trigger": "A RustSec vulnerability, prohibited dependency license or unapproved registry/git source can fail public just check while original CI never performs the Rust deny/audit gates.",
+      "proof": "Original ci.sh omitted cargo deny and cargo audit; justfile17-18 requires them.",
+      "smallest_correction": "Provision pinned existing dev tools and run cargo deny --locked check plus cargo audit --no-yanked; use online initialization on a fresh hosted cache.",
+      "current_ref": {
+        "path": "scripts/ci.sh",
+        "line": 8
+      }
+    },
+    {
+      "id": "CI-FAILURE-DIAGNOSTICS",
+      "priority": "P2",
+      "status": "corrected_in_current_source",
+      "initial_ref": {
+        "path": ".github/workflows/ci.yml",
+        "line": 44
+      },
+      "trigger": "A browser assertion fails: E2E creates failure-diagnostic.json and failure-<actor>.png, but the original upload globs exclude both.",
+      "proof": "scripts/e2e.mjs697-700 writes those names.",
+      "smallest_correction": "Include the two failure paths in the upload and initial freshness cleanup.",
+      "current_ref": {
+        "path": ".github/workflows/ci.yml",
+        "line": 74
+      }
+    }
+  ],
+  "remaining_blocking_source_findings": [],
+  "existing_policy_and_data": {
+    "policy": "deny.toml: advisories version2, explicit permissive license allowlist, private-workspace license exemption, duplicate versions warn, unknown registries/git deny. No new exception or policy is required.",
+    "dependency_data": "Cargo.lock and registry package source/license data supplied by cargo fetch --locked; Bun frozen workspace lock remains unchanged.",
+    "advisories": "Both use current https://github.com/RustSec/advisory-db, but deny defaults to $CARGO_HOME/advisory-dbs with URL-hashed subdirectory; audit defaults to ~/.cargo/advisory-db. Fresh runner cannot assume either local cache exists.",
+    "normal_online_mode": "cargo deny --locked check and cargo audit --no-yanked initialize/refresh their own databases. Existing --offline / --no-fetch flags require explicit prior database population; do not weaken checks with --stale or ignores.",
+    "exact_offline_alternative": "cargo deny fetch db can populate deny data first; audit needs its own fresh database initialization before --no-fetch. Using each online checker once is the smaller current CI path.",
+    "source_install_fallback": [
+      "cargo install --locked --version 0.20.2 cargo-deny",
+      "cargo install --locked --version 0.22.2 cargo-audit"
+    ],
+    "current_choice": "Root uses official pinned prebuilt x86_64 musl archives with hardcoded SHA256 checks, explicit expected member paths, executable install and version print; no third-party installer action or runtime dependency added."
+  },
+  "verified_portability": {
+    "actions": [
+      {
+        "repo": "actions/checkout",
+        "sha": "11d5960a326750d5838078e36cf38b85af677262",
+        "official_api": "https://api.github.com/repos/actions/checkout/commits/11d5960a326750d5838078e36cf38b85af677262",
+        "resolved_exactly": true,
+        "http_status": 200
+      },
+      {
+        "repo": "dtolnay/rust-toolchain",
+        "sha": "e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+        "official_api": "https://api.github.com/repos/dtolnay/rust-toolchain/commits/e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+        "resolved_exactly": true,
+        "http_status": 200
+      },
+      {
+        "repo": "oven-sh/setup-bun",
+        "sha": "0c5077e51419868618aeaa5fe8019c62421857d6",
+        "official_api": "https://api.github.com/repos/oven-sh/setup-bun/commits/0c5077e51419868618aeaa5fe8019c62421857d6",
+        "resolved_exactly": true,
+        "http_status": 200
+      },
+      {
+        "repo": "actions/upload-artifact",
+        "sha": "ea165f8d65b6e75b540449e92b4886f43607fa02",
+        "official_api": "https://api.github.com/repos/actions/upload-artifact/commits/ea165f8d65b6e75b540449e92b4886f43607fa02",
+        "resolved_exactly": true,
+        "http_status": 200
+      }
+    ],
+    "rust": {
+      "toolchain": "nightly-2026-10-11",
+      "target": "x86_64-unknown-linux-gnu",
+      "rust_rustfmt_clippy_available": true,
+      "manifest": "https://static.rust-lang.org/dist/2026-10-11/channel-rust-nightly.toml",
+      "manifest_sha256": "b14ac4f9ad835f082cdffd0dc4797c202ae70094a09fa0a6a8100a56e2e17ed3"
+    },
+    "bun": {
+      "version": "1.4.2",
+      "linux_x64_assets_exist": true,
+      "primary_api": "https://api.github.com/repos/oven-sh/bun/releases/tags/bun-v1.4.2"
+    },
+    "runner_image": {
+      "label": "ubuntu-24.04",
+      "official_inventory": "https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md",
+      "image_version": "20261004.327.1",
+      "chrome_listed": "154.0.8037.97",
+      "python_listed": "3.12.3",
+      "openssl_dev_available": true,
+      "actual_hosted_image_or_chrome_path_executed": false
+    },
+    "prebuilt_tools": [
+      {
+        "tool": "cargo-deny",
+        "version": "0.20.2",
+        "url": "https://github.com/EmbarkStudios/cargo-deny/releases/download/0.20.2/cargo-deny-0.20.2-x86_64-unknown-linux-musl.tar.gz",
+        "sha256": "9f12ed4c49936e09b48bf862b595cde2fe64fcbd9d74dfacac6131ca824c8d5f",
+        "downloaded_bytes": 4936832,
+        "member": "cargo-deny-0.20.2-x86_64-unknown-linux-musl/cargo-deny",
+        "license": "MIT OR Apache-2.0",
+        "crate_checksum": "e528dfcbe739af7ce37a77d3d6df1b29dd6887b1c701d888820c0f16b864f737",
+        "actual_download_sha256_matched": true,
+        "archive_member_verified": true,
+        "elf64_x86_64_header_verified": true,
+        "installed_or_executed": false,
+        "signature_or_attestation_verified": false,
+        "msrv": "1.88"
+      },
+      {
+        "tool": "cargo-audit",
+        "version": "0.22.2",
+        "url": "https://github.com/rustsec/rustsec/releases/download/cargo-audit/v0.22.2/cargo-audit-x86_64-unknown-linux-musl-v0.22.2.tgz",
+        "sha256": "7fb9497f8594b389e5fce5ef9b92db08432996895b2e0c5a0167a69ed445c428",
+        "downloaded_bytes": 6648968,
+        "member": "cargo-audit-x86_64-unknown-linux-musl-v0.22.2/cargo-audit",
+        "license": "Apache-2.0 OR MIT",
+        "crate_checksum": "700c2b240f7fd330c24b675fe429f73a5b676531fcc6300400b2b67f155ba12a",
+        "actual_download_sha256_matched": true,
+        "archive_member_verified": true,
+        "elf64_x86_64_header_verified": true,
+        "installed_or_executed": false,
+        "signature_or_attestation_verified": false,
+        "msrv": "1.88"
+      }
+    ],
+    "script_paths": "CI run.py resets cwd/target dir to repository, platform launch chooses /usr/bin/google-chrome on Linux, startup negative probe intentionally uses temporary cwd/missing binary. No macOS-only call exists in the actual CI path.",
+    "timeouts": "Job20 minutes; overall ci.sh wrapper900 seconds; E2E180 seconds; startup probe10 seconds; server startup15 seconds, fetch1 second; browser launch20 seconds; tool-download step5 minutes. Source limits exist; cold hosted elapsed time unmeasured.",
+    "failure_evidence_boundary": "Hard timeout, runner termination or cleanup exceptions can prevent E2E report completion. Fresh initialization avoids uploading an old green result; newly generated CI logs remain the fallback. This audit did not inject those failures."
+  },
+  "primary_sources": [
+    "https://raw.githubusercontent.com/actions/upload-artifact/ea165f8d65b6e75b540449e92b4886f43607fa02/README.md",
+    "https://raw.githubusercontent.com/dtolnay/rust-toolchain/e2a55d2ffb04f378e9626c28d38b36d230d1e12f/action.yml",
+    "https://raw.githubusercontent.com/oven-sh/setup-bun/0c5077e51419868618aeaa5fe8019c62421857d6/action.yml",
+    "https://embarkstudios.github.io/cargo-deny/checks/advisories/cfg.html",
+    "https://crates.io/api/v1/crates/cargo-deny",
+    "https://crates.io/api/v1/crates/cargo-audit",
+    "https://github.com/EmbarkStudios/cargo-deny/tree/bca0dde53651ee946720e4540b5ce2610bec8f06",
+    "https://github.com/RustSec/rustsec/tree/281452c35cf0870969042374110f099a411bc185/cargo-audit"
+  ],
+  "proof_limits": [
+    "No hosted CI executed by reviewer; source/docs/archive proof is not Linux execution proof",
+    "Billing/runner admission condition supplied by parent, not independently diagnosed here",
+    "No current cold setup/build budget measurement",
+    "No virtual authenticator or physical hardware test executed in this audit",
+    "Current CI uses cargo test instead of nextest: equivalent Rust test targets are expected, but no hosted count or output claim; nextest provisioning is unnecessary for these missing security gates",
+    "Relevant later CI/script edits invalidate affected source conclusions"
+  ],
+  "final_diff_verdict": "Root current workflow/script diff fixes all3 reported defects. Current source hashes still match the review; no remaining blocking source finding. This is not a hosted Linux signoff.",
+  "root_local_oracles": {
+    "executor": "Root/controller; reviewer inspected artifacts and compared tested file hashes, did not execute CI/test commands",
+    "platform": "macOS",
+    "tested_files_sha256": [
+      {
+        "path": ".github/workflows/ci.yml",
+        "sha256": "6683ed170c808951535d743b7e01f5ae08f8f2a18fee30c7d944412cd568763f"
+      },
+      {
+        "path": "scripts/ci.sh",
+        "sha256": "b385f8e7b59e4736261375f7b639de3a76fe53e82fd63f3849a6311611859635"
+      }
+    ],
+    "fresh_evidence_failure_probe": {
+      "name": "early failure cannot upload stale E2E/screenshots",
+      "passed": true,
+      "removed": 6,
+      "preserved": "acceptance.json"
+    },
+    "ci_script": {
+      "name": "ci-script",
+      "exit_code": 0,
+      "elapsed_seconds": 17.74
+    },
+    "public_check": {
+      "name": "public-check",
+      "exit_code": 0,
+      "elapsed_seconds": 1.83
+    },
+    "rust_passed": 45,
+    "reference_passed": 75,
+    "e2e": {
+      "completed": true,
+      "passed": 138,
+      "failed": 0,
+      "elapsed_seconds": 12.1,
+      "mode": "virtual CTAP2 authenticators; real navigator.credentials + Rust verification",
+      "hardware": "deferred by user"
+    },
+    "syntax": "Root reports actionlint and bash syntax green; reviewer source review, no additional execution",
+    "shared_warm_artifacts": [
+      "target"
+    ],
+    "locked_install": true,
+    "initial_harness_failure": "External harness only linked root node_modules and missed workspace dependencies; corrected to a real frozen install. Source unchanged. Failure log preserved outside repository.",
+    "cold_hosted_performance_measured": false,
+    "hosted_ubuntu": "not executed; account-gated"
+  },
+  "local_evidence_sha256": [
+    {
+      "path": "/Users/master/Documents/Codex/reports/heavenkey-ci-repair-local.json",
+      "sha256": "20d82b98e71673744abcb123528b3c4fdaa58b931bbabd246a0102397b0e6bfd"
+    },
+    {
+      "path": "/Users/master/Documents/Codex/reports/heavenkey-ci-repair-e2e.json",
+      "sha256": "1db98d633e707dd515d18175587018747f52d023a3e9c60ebf6995c34de5f027"
+    },
+    {
+      "path": "/Users/master/Documents/Codex/reports/heavenkey-ci-repair-check.log",
+      "sha256": "63498934a7cab13bc938dca8f8bfe28eebf5e8a2ee5bf50240b4eb704dc0e72a"
+    },
+    {
+      "path": "/Users/master/Documents/Codex/reports/heavenkey-ci-repair-public-check.log",
+      "sha256": "ee3160eb14036607f7e8c3c8c33dba92558b0480da887cea0772c09c59db4f04"
+    },
+    {
+      "path": "/Users/master/Documents/Codex/reports/heavenkey-ci-repair-ci.log",
+      "sha256": "22d4ec1179000508a1b13b63eeee5f08b3baa9da02ca45c9a82c42ec928044a5"
+    },
+    {
+      "path": "/Users/master/Documents/Codex/reports/heavenkey-ci-repair-ci-script.log",
+      "sha256": "19849bef3b5caf0cb0ce047625020da671967b2f6cb828615cc8a3a1c24e7a54"
+    }
+  ]
+}

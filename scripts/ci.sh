@@ -5,6 +5,8 @@ bun run node_modules/typescript/bin/tsc --noEmit
 bun scripts/delegation-reference.mjs
 cargo clippy --locked --offline --all-targets -- -D warnings
 cargo test --locked --offline
+cargo deny --locked check
+cargo audit --no-yanked
 bun audit
 python3 scripts/startup_probe.py
 bun run build

@@ -1,0 +1,45 @@
+{
+  "platform": "macOS",
+  "hosted_ubuntu": "not executed; account-gated",
+  "checks": [
+    {
+      "name": "early failure cannot upload stale E2E/screenshots",
+      "passed": true,
+      "removed": 6,
+      "preserved": "acceptance.json"
+    },
+    {
+      "name": "ci-script",
+      "exit_code": 0,
+      "elapsed_seconds": 17.74
+    },
+    {
+      "name": "public-check",
+      "exit_code": 0,
+      "elapsed_seconds": 1.83
+    }
+  ],
+  "e2e": {
+    "completed": true,
+    "total": 138,
+    "passed": 138,
+    "failed": 0,
+    "hardware": "deferred by user"
+  },
+  "shared_warm_artifacts": [
+    "target"
+  ],
+  "locked_install": true,
+  "temporary_checkout_removed": true,
+  "harness_initial_failure": "External harness only linked root node_modules and missed workspace dependencies; corrected to a real frozen install. Source unchanged. Failure log preserved outside repository.",
+  "tested_files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "6683ed170c808951535d743b7e01f5ae08f8f2a18fee30c7d944412cd568763f"
+    },
+    {
+      "path": "scripts/ci.sh",
+      "sha256": "b385f8e7b59e4736261375f7b639de3a76fe53e82fd63f3849a6311611859635"
+    }
+  ]
+}

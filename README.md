@@ -56,7 +56,7 @@ Der Test startet einen isolierten Browser und einen lokalen Server und beendet b
 
 Für `just check` werden außerdem `cargo-nextest` **0.9.146**, `cargo-deny` **0.20.2** und `cargo-audit` **0.22.2** benötigt. Die vollständige Prüfung umfasst Formatierung, TypeScript, Clippy, Rust-Tests, Lizenz-/Quellenregeln, Advisories und Build. CI führt den portablen Source- und Browser-Testablauf aus; er enthält keine Deployment-Schritte.
 
-GitHub-CI wurde zuletzt vor Ausführung eines Schritts durch eine Zahlungs-/Ausgabenlimit-Sperre des Accounts abgewiesen. Die [CI-Diagnose](docs/VERIFICATION.md) trennt lokale Abnahme von der noch offenen Ubuntu-Ausführung.
+GitHub-CI wurde vor Ausführung eines Schritts durch eine Zahlungs-/Ausgabenlimit-Sperre des Accounts abgewiesen. Der [CI-Fix und seine Prüfbelege](docs/CI-REPAIR.md) ergänzen frische Artefakte sowie Rust-Sicherheitsprüfungen und trennen lokale Abnahme von der noch offenen Ubuntu-Ausführung.
 
 ## Späterer Live-Test
 
