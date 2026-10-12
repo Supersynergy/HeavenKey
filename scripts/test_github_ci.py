@@ -85,6 +85,21 @@ class RunnerGateTests(unittest.TestCase):
                 github_ci.run_ci("unused")
             api.assert_not_called()
 
+    def test_workflow_in_progress_with_queued_job_is_reused(self):
+        run = {"id": 7, "path": ".github/workflows/ci.yml", "status": "in_progress"}
+        with patch.object(
+            github_ci, "api", return_value={"jobs": [{"status": "queued"}]}
+        ):
+            self.assertIs(github_ci.select_queued_run([run]), run)
+
+    def test_running_job_is_preserved(self):
+        run = {"id": 7, "path": ".github/workflows/ci.yml", "status": "in_progress"}
+        with patch.object(
+            github_ci, "api", return_value={"jobs": [{"status": "in_progress"}]}
+        ):
+            with self.assertRaisesRegex(RuntimeError, "already running"):
+                github_ci.select_queued_run([run])
+
     def test_public_repository_never_registers_a_runner(self):
         values = [
             subprocess.CompletedProcess([], 0, text, "")

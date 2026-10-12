@@ -16,7 +16,7 @@ Das ist kein dauerhaft installierter Hintergrunddienst. Ein wartender Workflow b
 - Jeder Container erhält höchstens vier CPU-Kerne, 6 GiB RAM und 512 Prozesse.
 - Der Runner verwendet Benutzer-ID 501 ohne Linux-Capabilities. Er erhält keinen Docker-Socket und kein persönliches Home-Verzeichnis.
 - GitHub-Zugriff erfolgt im Job mit `contents: read`; Checkout-Zugangsdaten werden nicht gespeichert. Das Registrierungspayload bleibt in einer lokalen Datei mit Modus 0600 und wird entfernt.
-- Die Runner-Labels enthalten den vollständigen freigegebenen Commit-SHA. Fork-PRs sind ausgeschlossen; die CLI verweigert öffentliche Repositories, fehlende Adminrechte sowie uncommitteten oder unveröffentlichten Code.
+- Die Runner-Labels enthalten den vollständigen freigegebenen Commit-SHA und die konkrete Lauf-ID. Fork-PRs sind ausgeschlossen; die CLI verweigert öffentliche Repositories, fehlende Adminrechte sowie uncommitteten oder unveröffentlichten Code. Bereits laufende Jobs werden erhalten.
 
 ## Werkzeuge
 
@@ -28,7 +28,7 @@ Ein Image-Schlüssel bindet Basis, Vorbereitungsskripte und Bun-Manifeste. Rustu
 
 | Schritt | Inhalt | Grenze |
 | --- | --- | --- |
-| Source | 14 CI-/Runner-Regressionen, Formatierung, TypeScript, Delegationsreferenz, Clippy, Rust-Tests und Startup-Probe | 900 Sekunden |
+| Source | 16 CI-/Runner-Regressionen, Formatierung, TypeScript, Delegationsreferenz, Clippy, Rust-Tests und Startup-Probe | 900 Sekunden |
 | Sicherheit | Lizenz-/Quellenregeln, aktuelle Rust-Advisories und Bun-Audit | 180 Sekunden |
 | Build | Web-Bundle und Rust-API | 300 Sekunden |
 | Browser | Vollständiger Ablauf mit virtuellen CTAP2-Authentikatoren in Chromium | 300 Sekunden |

@@ -16,7 +16,7 @@ concurrency:
 jobs:
   verify:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, Linux, ARM64, 'heavenkey-ci-${{ github.event.pull_request.head.sha || github.sha }}']
+    runs-on: [self-hosted, Linux, ARM64, 'heavenkey-ci-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_id }}']
     timeout-minutes: 25
     env:
       CARGO_BUILD_JOBS: 4

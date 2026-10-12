@@ -243,6 +243,18 @@ def check_image_access(image):
     )
 
 
+def select_queued_run(runs):
+    for run in runs:
+        if run["path"] != ".github/workflows/ci.yml" or run["status"] == "completed":
+            continue
+        jobs = api(f"repos/{REPO}/actions/runs/{run['id']}/jobs")["jobs"]
+        if any(job["status"] == "queued" for job in jobs):
+            return run
+        if any(job["status"] == "in_progress" for job in jobs):
+            raise RuntimeError("An approved CI job is already running; preserve it")
+    return None
+
+
 def run_ci(image):
     if command(["git", "status", "--porcelain", "--untracked-files=no"]).stdout:
         raise RuntimeError(
@@ -259,28 +271,19 @@ def run_ci(image):
         raise RuntimeError("Commit is not published")
     check_image_access(image)
     runs = api(f"repos/{REPO}/actions/runs?head_sha={sha}&per_page=20")["workflow_runs"]
-    matches = [
-        r
-        for r in runs
-        if r["path"] == ".github/workflows/ci.yml" and r["status"] == "queued"
-    ]
-    if not matches:
+    run = select_queued_run(runs)
+    if run is None:
         command(["gh", "workflow", "run", "ci.yml", "-R", REPO, "--ref", branch])
         for _ in range(10):
             time.sleep(2)
             runs = api(f"repos/{REPO}/actions/runs?head_sha={sha}&per_page=20")[
                 "workflow_runs"
             ]
-            matches = [
-                r
-                for r in runs
-                if r["path"] == ".github/workflows/ci.yml" and r["status"] == "queued"
-            ]
-            if matches:
+            run = select_queued_run(runs)
+            if run is not None:
                 break
-    if not matches:
+    if run is None:
         raise RuntimeError("No queued CI run for the approved commit")
-    run = matches[0]
     name = "heavenkey-ci-" + uuid.uuid4().hex[:12]
     evidence = STATE / f"evidence-{run['id']}"
     evidence.mkdir(exist_ok=True)
@@ -300,7 +303,12 @@ def run_ci(image):
             data={
                 "name": name,
                 "runner_group_id": 1,
-                "labels": ["self-hosted", "Linux", "ARM64", "heavenkey-ci-" + sha],
+                "labels": [
+                    "self-hosted",
+                    "Linux",
+                    "ARM64",
+                    f"heavenkey-ci-{sha}-{run['id']}",
+                ],
                 "work_folder": "_work",
             },
         )
