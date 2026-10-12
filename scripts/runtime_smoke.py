@@ -1,6 +1,7 @@
 """Exercise a portable binary from a directory containing no source or assets."""
 
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -29,7 +30,8 @@ def main():
         data_path = str(data)
         if args.windows_paths:
             data_path = "Z:" + data_path.replace("/", "\\")
-        env.update(UAC_DATA=data_path, UAC_PORT="18244")
+        # Synthetic store key for the ephemeral smoke data dir.
+        env.update(UAC_DATA=data_path, UAC_PORT="18244", UAC_STORE_KEY="0a" * 32)
         for arguments, expected in (
             (["--version"], 0),
             (["--help"], 0),
@@ -102,8 +104,26 @@ def main():
                         assert (
                             "challenge" in json.load(response)["options"]["publicKey"]
                         )
+                    probe = subprocess.run(
+                        [
+                            *command,
+                            "--store-query",
+                            json.dumps(
+                                {
+                                    "sql": "SELECT value FROM meta WHERE key='issuer_key'"
+                                }
+                            ),
+                        ],
+                        cwd=root,
+                        env=env,
+                        capture_output=True,
+                        text=True,
+                        timeout=45,
+                    )
+                    assert probe.returncode == 0, probe.stderr
+                    issuer_blob = json.loads(probe.stdout)[0][0]["blob_base64"]
                     current = hashlib.sha256(
-                        (data / "issuer.key").read_bytes()
+                        base64.b64decode(issuer_blob)
                     ).hexdigest()
                     if fingerprint is not None:
                         assert current == fingerprint, (

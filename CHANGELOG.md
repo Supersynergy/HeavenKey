@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Encrypted local storage: `uac.sqlite` is a SQLCipher database keyed by `UAC_STORE_KEY` or a `store.key` file outside the data directory; plaintext databases migrate automatically on first start and a wrong key refuses to release any data.
+- The issuer signing key moved from `data/issuer.key` into the database meta table; conflicting custody fails closed.
+- New `--store-query '{"sql":..,"params":[..]}'` maintenance command for local operators.
+
 ## 0.6.0 preview
 
 - Desktop packages for Windows x64, macOS ARM64/Intel and Linux ARM64/x64, with browser assets embedded in the executable.

@@ -60,7 +60,7 @@ Die Oberfläche startest du mit `cargo run --locked --offline -p uac-api -- --op
 
 **Version 0.6 ist eine lokale Vorschau.** Desktop-Pakete enthalten die Weboberfläche und ihre nativen Bibliotheken. Windows wird zusätzlich über Wine geprüft; das ersetzt keine Abnahme von Windows Hello oder physischen Passkeys. Firefox-Erweiterungen sind vorerst temporär installierbar. Der kostenlose GitHub-Runner läuft lokal; gehostete kostenpflichtige Runner werden nicht verwendet. Nachweise und offene Grenzen stehen unter [Verifikation](docs/VERIFICATION.md).
 
-Die Demo arbeitet mit einem Testdokument. Der Dienst signiert Zugänge und prüft sie online. Recovery, Mandanten, verschlüsselter Speicher, externe Integrationen und Offline-Nutzung sind geplant. Das Delegationsprofil ist ein eigenes Format; UCAN-/DID-Kompatibilität ist noch offen.
+Die Demo arbeitet mit einem Testdokument. Der Dienst signiert Zugänge und prüft sie online. Die lokale Datenbank ist seit 0.7 verschlüsselt. Recovery, Mandanten, externe Integrationen und Offline-Nutzung sind geplant. Das Delegationsprofil ist ein eigenes Format; UCAN-/DID-Kompatibilität ist noch offen.
 
 ## Aufbau
 

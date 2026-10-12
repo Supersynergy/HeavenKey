@@ -1,6 +1,6 @@
 # HeavenKey 0.6 starten
 
-Die Pakete enthalten den Server, die Weboberfläche und Lizenzhinweise. Du brauchst einen aktuellen Browser mit WebAuthn, aber kein Rust, Bun, Python oder Docker. HeavenKey ist eine lokale Vorschau mit einem Demo-Dokument. Die Datenbank ist unverschlüsselt; physische Passkeys sind noch nicht abgenommen.
+Die Pakete enthalten den Server, die Weboberfläche und Lizenzhinweise. Du brauchst einen aktuellen Browser mit WebAuthn, aber kein Rust, Bun, Python oder Docker. HeavenKey ist eine lokale Vorschau mit einem Demo-Dokument. Die Datenbank ist verschlüsselt (Schlüsselverwahrung siehe unten); physische Passkeys sind noch nicht abgenommen.
 
 ## Paket wählen
 
@@ -26,7 +26,7 @@ Der Server zeigt den Speicherort und den Pfad zur Datei `owner-bootstrap.txt` an
 | macOS | `~/Library/Application Support/HeavenKey` |
 | Linux | `$XDG_DATA_HOME/HeavenKey` oder `~/.local/share/HeavenKey` |
 
-Bewahre den gesamten Datenordner zusammen auf. Ein Update des entpackten Programms behält diesen Ordner. Mehrere Instanzen mit demselben Port können nicht gleichzeitig starten. Die Meldung „address already in use“ verlangt, die laufende Instanz zu beenden oder einen anderen Port zu wählen. Bestehende Entwicklerdaten unter `data/` verwendest du ausdrücklich mit `--data-dir data`; sie werden nicht automatisch verschoben.
+Bewahre den gesamten Datenordner **zusammen mit dem Speicherschlüssel** auf: entweder `UAC_STORE_KEY` oder die Schlüsseldatei außerhalb des Datenordners (Linux `~/.config/heavenkey/store.key`, macOS `~/Library/Application Support/heavenkey/store.key`, Windows `%LOCALAPPDATA%\heavenkey\store.key`). Ohne ihn sind die Daten nicht lesbar. Ein Update des entpackten Programms behält diesen Ordner. Mehrere Instanzen mit demselben Port können nicht gleichzeitig starten. Die Meldung „address already in use“ verlangt, die laufende Instanz zu beenden oder einen anderen Port zu wählen. Bestehende Entwicklerdaten unter `data/` verwendest du ausdrücklich mit `--data-dir data`; sie werden nicht automatisch verschoben.
 
 Optional: `HeavenKey.exe --port 18245 --data-dir "C:\Users\Name\HeavenKey-Test"` beziehungsweise `./heavenkey --port 18245 --data-dir /eigener/pfad`. Der Standardordner liegt im Benutzerprofil; verwende keinen gemeinsam beschreibbaren Ordner. Unix-Ordner erhalten Modus 0700, Schlüsseldateien 0600. Windows nutzt die geerbten Zugriffsrechte des Benutzerprofils. Der Port in der Browser-Erweiterung muss mit dem Server übereinstimmen.
 

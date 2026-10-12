@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createHash, createPrivateKey, randomBytes, sign } from "node:crypto";
 import { mkdtemp, writeFile, mkdir, rm, stat, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -17,6 +17,16 @@ let bootstrapToken;
 const port = 18241;
 const origin = `http://localhost:${port}`;
 let server, browser;
+// Synthetic store key for the ephemeral e2e data dir (never a real credential).
+const storeKey = "e2e".padEnd(64, "0").replace(/[^0-9a-f]/g, "e");
+function storeQuery(sql, params = []) {
+  const binary = resolve(process.env.HEAVENKEY_BINARY || join(root,"target/debug/uac-api"));
+  const prefix = JSON.parse(process.env.HEAVENKEY_BINARY_PREFIX_JSON || "[]");
+  const queryPath = process.env.HEAVENKEY_WINDOWS_PATHS === "1" ? `Z:${serverData.replaceAll("/", "\\")}` : serverData;
+  const r = spawnSync(prefix[0] || binary, [...prefix.slice(1), ...(prefix.length ? [binary] : []), "--store-query", JSON.stringify({ sql, params })], { cwd:process.env.HEAVENKEY_SERVER_CWD || root, env:{ ...process.env,UAC_DATA:queryPath,UAC_STORE_KEY:storeKey }, encoding:"utf8" });
+  if (r.status !== 0) throw new Error(`store query failed: ${r.stderr || r.stdout}`);
+  return JSON.parse(r.stdout);
+}
 const cases = [];
 const actors = [];
 let fatalError;
@@ -33,7 +43,7 @@ async function startServer() {
   try { await stat(binary); }
   catch (error) { throw new Error(`server spawn failed: ${error.message}`); }
   const serverPath = process.env.HEAVENKEY_WINDOWS_PATHS === "1" ? `Z:${serverData.replaceAll("/", "\\")}` : serverData;
-  server = spawn(prefix[0] || binary, prefix.length ? [...prefix.slice(1),binary] : [], { cwd:process.env.HEAVENKEY_SERVER_CWD || root, env:{ ...process.env,UAC_PORT:String(port),UAC_DATA:serverPath }, stdio:["ignore","pipe","pipe"] });
+  server = spawn(prefix[0] || binary, prefix.length ? [...prefix.slice(1),binary] : [], { cwd:process.env.HEAVENKEY_SERVER_CWD || root, env:{ ...process.env,UAC_PORT:String(port),UAC_DATA:serverPath,UAC_STORE_KEY:storeKey }, stdio:["ignore","pipe","pipe"] });
   let output = "";
   let spawnError;
   server.on("error", error => { spawnError=error; });
@@ -636,15 +646,14 @@ try {
     for(let n=0;n<2;n++) {const r=await approvedPost(guest,"/api/delegations/revoke",{id:branchChild.id},guestSession);assert.equal(r.status,200);assert.equal(r.body.revoked,true);}
     assert.equal((await post(secondguest,"/api/auth/start",{name:"secondguest",delegation_invocation:delegatedInvocation(branchChild)})).status,403);
   });
-  const fixtureDb=new Database(join(data,"uac.sqlite"));
   await test("stored tokens are reverified for unknown profile and bad signature",async()=>{
-    const saved=fixtureDb.query("SELECT token FROM delegations WHERE id=?1").get(delegationLeaf.id).token;
-    try {for(const mutation of [token=>{token.body.profile="unrecognized";},token=>{token.signature[0]^=1;}]) {const token=JSON.parse(saved);mutation(token);fixtureDb.query("UPDATE delegations SET token=?1 WHERE id=?2").run(JSON.stringify(token),delegationLeaf.id);assert.equal((await post(thirdguest,"/api/auth/start",{name:"thirdguest",delegation_invocation:delegatedInvocation(delegationLeaf)})).status,403);}}
-    finally {fixtureDb.query("UPDATE delegations SET token=?1 WHERE id=?2").run(saved,delegationLeaf.id);}
+    const saved=storeQuery("SELECT token FROM delegations WHERE id=?1",[delegationLeaf.id])[0][0];
+    try {for(const mutation of [token=>{token.body.profile="unrecognized";},token=>{token.signature[0]^=1;}]) {const token=JSON.parse(saved);mutation(token);storeQuery("UPDATE delegations SET token=?1 WHERE id=?2",[JSON.stringify(token),delegationLeaf.id]);assert.equal((await post(thirdguest,"/api/auth/start",{name:"thirdguest",delegation_invocation:delegatedInvocation(delegationLeaf)})).status,403);}}
+    finally {storeQuery("UPDATE delegations SET token=?1 WHERE id=?2",[saved,delegationLeaf.id]);}
   });
   await test("stored parent pointer cannot silently replace a signed parent",async()=>{
-    try {fixtureDb.query("UPDATE delegations SET parent_id=?1 WHERE id=?2").run(branch.id,delegationChild.id);assert.equal((await post(secondguest,"/api/auth/start",{name:"secondguest",delegation_invocation:delegatedInvocation(delegationChild)})).status,403);}
-    finally {fixtureDb.query("UPDATE delegations SET parent_id=?1 WHERE id=?2").run(delegationRoot.id,delegationChild.id);}
+    try {storeQuery("UPDATE delegations SET parent_id=?1 WHERE id=?2",[branch.id,delegationChild.id]);assert.equal((await post(secondguest,"/api/auth/start",{name:"secondguest",delegation_invocation:delegatedInvocation(delegationChild)})).status,403);}
+    finally {storeQuery("UPDATE delegations SET parent_id=?1 WHERE id=?2",[delegationRoot.id,delegationChild.id]);}
   });
   await test("five-link delegation depth succeeds and a sixth link is refused",async()=>{
     const root=await approvedPost(owner,"/api/delegations",{guest_name:"guest",ttl_seconds:300,remaining_delegations:4},ownerSession);assert.equal(root.status,200);let parent=root.body;checkAPIChain(parent,trustedIssuer);
@@ -672,9 +681,9 @@ try {
     await thirdguest.page.locator("#refresh").click();await thirdguest.page.waitForFunction(()=>document.querySelector("#delegations").textContent.includes("Vorfahre widerrufen"));await thirdguest.page.screenshot({path:join(evidence,"browser-delegation-revoked.png"),fullPage:true});
   });
   await test("signature-preserving ancestor skipping cannot bypass revocation",async()=>{
-    try {fixtureDb.query("UPDATE delegations SET parent_id=NULL WHERE id=?1").run(delegationChild.id);assert.equal((await post(thirdguest,"/api/auth/start",{name:"thirdguest",delegation_invocation:delegatedInvocation(delegationLeaf)})).status,403);assert.throws(()=>referenceVerifyChain(delegationLeaf.chain.slice(1),{issuer:trustedIssuer,audience:delegationLeaf.grant.body.audience,resource:delegationLeaf.grant.body.resource,action:"Read",now:Math.floor(Date.now()/1000)}));}
-    finally {fixtureDb.query("UPDATE delegations SET parent_id=?1 WHERE id=?2").run(delegationRoot.id,delegationChild.id);}
-  });fixtureDb.close();
+    try {storeQuery("UPDATE delegations SET parent_id=NULL WHERE id=?1",[delegationChild.id]);assert.equal((await post(thirdguest,"/api/auth/start",{name:"thirdguest",delegation_invocation:delegatedInvocation(delegationLeaf)})).status,403);assert.throws(()=>referenceVerifyChain(delegationLeaf.chain.slice(1),{issuer:trustedIssuer,audience:delegationLeaf.grant.body.audience,resource:delegationLeaf.grant.body.resource,action:"Read",now:Math.floor(Date.now()/1000)}));}
+    finally {storeQuery("UPDATE delegations SET parent_id=?1 WHERE id=?2",[delegationRoot.id,delegationChild.id]);}
+  });
   const restartDelegationApproval=await approval(owner,ownerSession,{kind:"delegation_create",guest_name:"foreign",ttl_seconds:100,remaining_delegations:0});
   await stopServer();await startServer();
   await test("ancestor tombstones and descendant denial survive restart",async()=>{
@@ -685,8 +694,8 @@ try {
   await thirdguest.page.setViewportSize({width:375,height:900});
   await test("delegation workbench fits a mobile viewport",async()=>assert.ok(await thirdguest.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)));
   await thirdguest.page.screenshot({path:join(evidence,"browser-delegation-mobile.png"),fullPage:true});
-  const currentDb=new Database(join(data,"uac.sqlite"),{readonly:true});
-  const legacyUser=currentDb.query("SELECT id,name,owner,credential_id,passkey,counter FROM users WHERE name='foreign'").get();currentDb.close();
+  const legacyRow=storeQuery("SELECT id,name,owner,credential_id,passkey,counter FROM users WHERE name=?1",["foreign"])[0];
+  const legacyUser={id:legacyRow[0],name:legacyRow[1],owner:legacyRow[2],credential_id:legacyRow[3],passkey:legacyRow[4],counter:legacyRow[5]};
   legacyData=await mkdtemp(join(tmpdir(),"uac-legacy-"));
   const legacyDb=new Database(join(legacyData,"uac.sqlite"));
   legacyDb.exec("CREATE TABLE users(id TEXT PRIMARY KEY,name TEXT UNIQUE NOT NULL,owner INTEGER NOT NULL,credential_id TEXT UNIQUE NOT NULL,passkey TEXT NOT NULL,counter INTEGER NOT NULL DEFAULT 0)");

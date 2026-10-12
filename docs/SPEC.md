@@ -10,7 +10,7 @@ All four sensitive writes require a fresh, user-verified passkey approval: crede
 
 The browser displays action and target before requesting confirmation, retains tokens only in memory and permits cancel/retry. Server challenge binding does not provide a trusted authenticator display of transaction data; a compromised browser remains outside this proof.
 
-A server-side, single-use WebAuthn challenge is paired with the exact invocation. SQLite stores credentials, revocations and accepted operations. Challenges stay server-side and expire; process restart invalidates outstanding challenges.
+A server-side, single-use WebAuthn challenge is paired with the exact invocation. SQLite stores credentials, revocations and accepted operations; the database is a SQLCipher store keyed by UAC_STORE_KEY or a mode-0600 store.key file outside the data directory, plaintext stores are migrated on open, and a wrong key refuses to release data. The issuer Ed25519 key lives in the store's meta table, not as a data-dir file. Challenges stay server-side and expire; process restart invalidates outstanding challenges.
 
 Tests cover owner and guest enrollment, grants, guest invocation, changed action/resource/arguments, wrong origin/RP/challenge/signature/user-verification, replay, foreign holder, expiry, revocation and restart. Action-approval tests cover all four session-only write denials, exact parameters/session/account/kind binding, duplicate execution and passkey abort/retry. Approval expiry is tested with monotonic unit data, without waiting60seconds or adding a runtime test-clock override. Physical passkeys remain unverified.
 
