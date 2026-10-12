@@ -1,27 +1,33 @@
-# HeavenKey 0.2 verification
+# HeavenKey 0.4 verification
 
-The integrated Rust + TypeScript source passes the local full gate and portable CI script. Browser tests use virtual CTAP2 authenticators with real browser APIs and Rust verification. No physical authenticator was used.
+The integrated Rust and TypeScript source passes the complete local check recipe and the browser oracle. Tests use virtual CTAP2 authenticators with native browser WebAuthn APIs and the real Rust verifier. No physical device or biometric was used.
 
 | Check | Executed result |
 | --- | --- |
-| just check | Exit 0; 24 Rust-core tests, TypeScript, Clippy, build, dependency/source/license checks |
-| just e2e | 41 passed, 0 failed; owner bootstrap, invocation, rejection cases, revocation and restart |
-| bash scripts/ci.sh | Exit 0 on local macOS; same portable commands configured for CI |
-| Semgrep security-audit | Four source files, 0 findings, 0 errors |
-| Gitleaks staged snapshot | About 1 MB of staged text, 0 findings |
-| Timeout regression | Guard exit 124, detached child no longer running |
-| Missing server binary | Explicit failure in under a second, completed=false, no indefinite cleanup wait |
-| Fresh GitHub clone | Empty clone-local target, locked install/fetch, build and 41/41 browser cases; about 19.7 seconds on this macOS host |
-| GitHub content | README and hero Git blob hashes match the pushed source |
+| Full local recipe | `scripts/run.py stepup-check 900 -- ats-verify --json -- just _check`: exit0, ATS green; the recipe behind `just check` |
+| Rust tests | 36/36:24 verifier tests and12 API tests |
+| Browser oracle | `just e2e`:96/96, including all69 prior cases and27 added approval cases |
+| Valid session without approval | All four sensitive writes denied with403 |
+| Native browser cancellation | In-progress assertion aborted through the SDK, then retried successfully without a new login |
+| Approval expiry | Monotonic Instant expiry unit test; no elapsed60s hardware or browser test |
+| Source and dependency checks | TypeScript, fmt, Clippy, cargo-deny/audit, Bun audit, build and missing-binary regression green |
+| Aislop changed-source scan | Exit0;0 errors,3 nonblocking style warnings,0 AI-slop indicators |
+| Independent source review | 17 checks,14 source/manifest/bundle hashes compared,0 blocking findings |
+| Semgrep security audit | 8 own source files,0 findings,0 errors |
+| Staged secret scan | Exit0,0 findings; historical exceptions remain limited to2 exact image-checksum fingerprints |
+
+The complete check log is evidence/stepup-check-full.log; the compact ATS result is evidence/stepup-check.log. Browser case names and execution results are in evidence/e2e.json. The controller compared case names against source41f05eb:69 preserved,0 removed. The original red baseline and the separate independent source review remain explicit artifacts.
+
+Source scans, independent final hash review, fresh-clone verification and exact GitHub content checks are recorded in the final acceptance JSON after publication. Until those records are updated, local oracle success alone is not a publication claim.
 
 ## Hosted CI boundary
 
-The [first GitHub run](https://github.com/Supersynergy/HeavenKey/actions/runs/38183062109) failed before starting any workflow step. GitHub's annotation states: “The job was not started because recent account payments have failed or your spending limit needs to be increased.” The annotation cannot distinguish those two account conditions.
+The prior [GitHub run](https://github.com/Supersynergy/HeavenKey/actions/runs/38185048027) failed before starting any workflow step. GitHub reports a failed-payment or spending-limit condition; its annotation does not distinguish those two causes. The current push's run is inspected separately after publication.
 
-This is an account gate, not executed Linux test evidence. No billing, payment method, spending limit or self-hosted runner was changed. Once the account gate is resolved, the configured workflow can be dispatched again. The local passing script does not prove the Ubuntu runner environment.
+This is an account gate, not executed Linux test evidence. Billing, payments, limits and runners remain under the operator's control. Passing checks on macOS do not prove the Ubuntu environment.
 
-## Review and remaining gates
+## Remaining proof boundaries
 
-The current enrollment, permission and failure paths were inspected and the explicit denial matrix was executed. Automated scans and this source review are not an independent penetration test. Hardware, production provisioning, recovery, key rotation, tenant boundaries, distributed concurrency and interoperability remain open in ROADMAP.md.
+Action approvals are enforced at the API access point and bind the exact data to a server-side WebAuthn challenge. They do not provide trusted transaction text on the authenticator or protection from a compromised browser displaying different data.
 
-The acceptance JSON contains integrated source hashes; the original spike acceptance is separately archived. The successful fresh-clone run tested source commit 29a9bacd55548722f62eeb84787eb4dbfde9ca41. Its full step list is in evidence/heavenkey-fresh-clone.json. The first failed clone run is retained with its build-path and startup-cleanup diagnosis.
+Source review and automated scans do not replace an external penetration test. Real devices, recovery, encrypted state, tenants, rotation, distributed concurrency and protocol interoperability remain separate roadmap gates. Versions0.1–0.3 retain their historical reports and evidence; acceptance-v03.json preserves the previous acceptance snapshot.

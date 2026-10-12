@@ -1,0 +1,462 @@
+cargo fmt --check
+bun run node_modules/typescript/bin/tsc --noEmit
+cargo clippy --locked --offline --all-targets -- -D warnings
+    Checking uac-verifier v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/crates/verifier)
+    Checking uac-api v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/apps/api)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 19.04s
+cargo nextest run --locked --offline
+   Compiling uac-verifier v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/crates/verifier)
+   Compiling uac-api v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/apps/api)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 22.45s
+────────────
+ Nextest run ID eefd8caa-5e74-4b99-b738-be276ea0887e with nextest profile: default
+    Starting 36 tests across 2 binaries
+        PASS [   0.085s] ( 1/36) uac-api::bin/uac-api tests::management_schema_rejects_ambiguous_or_extra_fields
+        PASS [   0.100s] ( 2/36) uac-api::bin/uac-api tests::duplicate_approved_mutations_commit_once
+        PASS [   0.102s] ( 3/36) uac-api::bin/uac-api tests::monotonic_expiry_and_signer_state_are_checked_at_consumption
+        PASS [   0.104s] ( 4/36) uac-api::bin/uac-api tests::invalid_parameters_and_wrong_sessions_burn_supplied_approvals
+        PASS [   0.121s] ( 5/36) uac-api::bin/uac-api tests::every_operation_parameter_is_exact_and_mismatches_consume_approval
+        PASS [   0.147s] ( 6/36) uac-api::bin/uac-api tests::revoke_is_account_scoped_invalidates_sessions_and_preserves_last_key
+        PASS [   0.153s] ( 7/36) uac-api::bin/uac-api tests::existing_grant_keeps_initial_subject_after_original_key_revocation
+        PASS [   0.184s] ( 8/36) uac-verifier tests::rejects_broken_parent_binding
+        PASS [   0.179s] ( 9/36) uac-verifier tests::offline_verifier_cannot_know_remote_revocation
+        PASS [   0.188s] (10/36) uac-api::bin/uac-api tests::active_key_rechecks_and_zero_key_authentication_fail_closed
+        PASS [   0.109s] (11/36) uac-verifier tests::rejects_child_outliving_parent
+        PASS [   0.231s] (12/36) uac-verifier tests::rejects_changed_request_arguments
+        PASS [   0.235s] (13/36) uac-api::bin/uac-api tests::credential_cap_counts_active_keys_and_rejects_retired_duplicates
+        PASS [   0.235s] (14/36) uac-api::bin/uac-api tests::bearer_sessions_cannot_perform_any_management_mutation
+        PASS [   0.236s] (15/36) uac-api::bin/uac-api tests::legacy_migration_survives_restart_without_resurrecting_revoked_keys
+        PASS [   0.145s] (16/36) uac-verifier tests::rejects_child_with_earlier_validity
+        PASS [   0.244s] (17/36) uac-verifier tests::accepts_valid_attenuated_chain
+        PASS [   0.100s] (18/36) uac-verifier tests::rejects_descendant_of_revoked_parent
+        PASS [   0.127s] (19/36) uac-verifier tests::rejects_delegation_when_parent_forbids_it
+        PASS [   0.149s] (20/36) uac-verifier tests::rejects_clock_rollback_within_process
+        PASS [   0.090s] (21/36) uac-verifier tests::rejects_different_resource
+        PASS [   0.262s] (22/36) uac-api::bin/uac-api tests::management_checks_authority_and_bounds_outstanding_approvals
+        PASS [   0.084s] (23/36) uac-verifier tests::rejects_empty_and_excessive_chains
+        PASS [   0.211s] (24/36) uac-verifier tests::rejects_delegation_budget_expansion
+        PASS [   0.123s] (25/36) uac-verifier tests::rejects_future_grant
+        PASS [   0.122s] (26/36) uac-verifier tests::rejects_oversized_and_unknown_fields_before_verification
+        PASS [   0.159s] (27/36) uac-verifier tests::rejects_old_invocation_at_boundary
+        PASS [   0.192s] (28/36) uac-verifier tests::rejects_expired_grant_at_boundary
+        PASS [   0.154s] (29/36) uac-verifier tests::rejects_untrusted_root
+        PASS [   0.164s] (30/36) uac-verifier tests::rejects_request_action_outside_context
+        PASS [   0.163s] (31/36) uac-verifier tests::rejects_signed_rights_escalation
+        PASS [   0.164s] (32/36) uac-verifier tests::requires_holder_proof_even_with_valid_chain
+        PASS [   0.208s] (33/36) uac-verifier tests::rejects_replayed_invocation
+        PASS [   0.237s] (34/36) uac-verifier tests::rejects_tampered_signature
+        PASS [   0.226s] (35/36) uac-verifier tests::rejects_wrong_intermediate_issuer
+        PASS [   0.237s] (36/36) uac-verifier tests::rejects_unknown_challenge
+────────────
+     Summary [   0.514s] 36 tests run: 36 passed, 0 skipped
+cargo deny --offline check
+warning[duplicate]: found 2 duplicate entries for crate 'base64'
+  ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:8:1
+  │
+8 │ ╭ base64 0.21.7 registry+https://github.com/rust-lang/crates.io-index
+9 │ │ base64 0.22.1 registry+https://github.com/rust-lang/crates.io-index
+  │ ╰───────────────────────────────────────────────────────────────────┘ lock entries
+  │
+  ├ base64 v0.21.7
+    ├── base64urlsafedata v0.5.5
+    │   ├── webauthn-attestation-ca v0.5.5
+    │   │   └── webauthn-rs-core v0.5.5
+    │   │       └── webauthn-rs v0.5.5
+    │   │           └── uac-api v0.4.0
+    │   ├── webauthn-rs v0.5.5 (*)
+    │   ├── webauthn-rs-core v0.5.5 (*)
+    │   └── webauthn-rs-proto v0.5.5
+    │       └── webauthn-rs-core v0.5.5 (*)
+    ├── webauthn-rs-core v0.5.5 (*)
+    └── webauthn-rs-proto v0.5.5 (*)
+  ├ base64 v0.22.1
+    └── uac-api v0.4.0
+
+warning[duplicate]: found 2 duplicate entries for crate 'getrandom'
+   ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:42:1
+   │
+42 │ ╭ getrandom 0.3.4 registry+https://github.com/rust-lang/crates.io-index
+43 │ │ getrandom 0.4.3 registry+https://github.com/rust-lang/crates.io-index
+   │ ╰─────────────────────────────────────────────────────────────────────┘ lock entries
+   │
+   ├ getrandom v0.3.4
+     └── rand_core v0.9.5
+         ├── rand v0.9.5
+         │   ├── uac-api v0.4.0
+         │   └── webauthn-rs-core v0.5.5
+         │       └── webauthn-rs v0.5.5
+         │           └── uac-api v0.4.0 (*)
+         └── rand_chacha v0.9.0
+             ├── rand v0.9.5 (*)
+             └── webauthn-rs-core v0.5.5 (*)
+   ├ getrandom v0.4.3
+     └── uuid v1.26.1
+         ├── uac-api v0.4.0
+         ├── webauthn-attestation-ca v0.5.5
+         │   └── webauthn-rs-core v0.5.5
+         │       └── webauthn-rs v0.5.5
+         │           └── uac-api v0.4.0 (*)
+         ├── webauthn-rs v0.5.5 (*)
+         └── webauthn-rs-core v0.5.5 (*)
+
+warning[duplicate]: found 2 duplicate entries for crate 'hashbrown'
+   ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:45:1
+   │
+45 │ ╭ hashbrown 0.16.1 registry+https://github.com/rust-lang/crates.io-index
+46 │ │ hashbrown 0.17.1 registry+https://github.com/rust-lang/crates.io-index
+   │ ╰──────────────────────────────────────────────────────────────────────┘ lock entries
+   │
+   ├ hashbrown v0.16.1
+     └── rsqlite-vfs v0.1.1
+         └── sqlite-wasm-rs v0.5.5
+             └── rusqlite v0.40.2
+                 └── uac-api v0.4.0
+   ├ hashbrown v0.17.1
+     └── hashlink v0.12.2
+         └── rusqlite v0.40.2
+             └── uac-api v0.4.0
+
+warning[duplicate]: found 2 duplicate entries for crate 'r-efi'
+   ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:96:1
+   │
+96 │ ╭ r-efi 5.3.0 registry+https://github.com/rust-lang/crates.io-index
+97 │ │ r-efi 6.0.0 registry+https://github.com/rust-lang/crates.io-index
+   │ ╰─────────────────────────────────────────────────────────────────┘ lock entries
+   │
+   ├ r-efi v5.3.0
+     └── getrandom v0.3.4
+         └── rand_core v0.9.5
+             ├── rand v0.9.5
+             │   ├── uac-api v0.4.0
+             │   └── webauthn-rs-core v0.5.5
+             │       └── webauthn-rs v0.5.5
+             │           └── uac-api v0.4.0 (*)
+             └── rand_chacha v0.9.0
+                 ├── rand v0.9.5 (*)
+                 └── webauthn-rs-core v0.5.5 (*)
+   ├ r-efi v6.0.0
+     └── getrandom v0.4.3
+         └── uuid v1.26.1
+             ├── uac-api v0.4.0
+             ├── webauthn-attestation-ca v0.5.5
+             │   └── webauthn-rs-core v0.5.5
+             │       └── webauthn-rs v0.5.5
+             │           └── uac-api v0.4.0 (*)
+             ├── webauthn-rs v0.5.5 (*)
+             └── webauthn-rs-core v0.5.5 (*)
+
+warning[duplicate]: found 2 duplicate entries for crate 'syn'
+    ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:125:1
+    │
+125 │ ╭ syn 2.0.119 registry+https://github.com/rust-lang/crates.io-index
+126 │ │ syn 3.0.8 registry+https://github.com/rust-lang/crates.io-index
+    │ ╰───────────────────────────────────────────────────────────────┘ lock entries
+    │
+    ├ syn v2.0.119
+      ├── asn1-rs-derive v0.5.1
+      │   └── asn1-rs v0.6.2
+      │       ├── der-parser v9.0.0
+      │       │   ├── webauthn-rs-core v0.5.5
+      │       │   │   └── webauthn-rs v0.5.5
+      │       │   │       └── uac-api v0.4.0
+      │       │   └── x509-parser v0.16.0
+      │       │       └── webauthn-rs-core v0.5.5 (*)
+      │       ├── oid-registry v0.7.1
+      │       │   └── x509-parser v0.16.0 (*)
+      │       └── x509-parser v0.16.0 (*)
+      ├── asn1-rs-impl v0.2.0
+      │   └── asn1-rs v0.6.2 (*)
+      ├── curve25519-dalek-derive v0.1.1
+      │   └── curve25519-dalek v4.1.3
+      │       └── ed25519-dalek v2.2.0
+      │           ├── uac-api v0.4.0 (*)
+      │           └── uac-verifier v0.4.0
+      │               └── uac-api v0.4.0 (*)
+      ├── openssl-macros v0.1.1
+      │   └── openssl v0.10.81
+      │       ├── webauthn-attestation-ca v0.5.5
+      │       │   └── webauthn-rs-core v0.5.5 (*)
+      │       └── webauthn-rs-core v0.5.5 (*)
+      ├── serde_derive v1.0.228
+      │   ├── serde v1.0.228
+      │   │   ├── base64urlsafedata v0.5.5
+      │   │   │   ├── webauthn-attestation-ca v0.5.5 (*)
+      │   │   │   ├── webauthn-rs v0.5.5 (*)
+      │   │   │   ├── webauthn-rs-core v0.5.5 (*)
+      │   │   │   └── webauthn-rs-proto v0.5.5
+      │   │   │       └── webauthn-rs-core v0.5.5 (*)
+      │   │   ├── serde_cbor_2 v0.13.0
+      │   │   │   └── webauthn-rs-core v0.5.5 (*)
+      │   │   ├── serde_urlencoded v0.7.1
+      │   │   │   └── axum v0.8.9
+      │   │   │       └── uac-api v0.4.0 (*)
+      │   │   ├── uac-api v0.4.0 (*)
+      │   │   ├── uac-verifier v0.4.0 (*)
+      │   │   ├── url v2.5.8
+      │   │   │   ├── webauthn-rs v0.5.5 (*)
+      │   │   │   ├── webauthn-rs-core v0.5.5 (*)
+      │   │   │   └── webauthn-rs-proto v0.5.5 (*)
+      │   │   ├── webauthn-attestation-ca v0.5.5 (*)
+      │   │   ├── webauthn-rs v0.5.5 (*)
+      │   │   ├── webauthn-rs-core v0.5.5 (*)
+      │   │   └── webauthn-rs-proto v0.5.5 (*)
+      │   └── url v2.5.8 (*)
+      ├── synstructure v0.13.2
+      │   └── asn1-rs-derive v0.5.1 (*)
+      ├── thiserror-impl v1.0.69
+      │   └── thiserror v1.0.69
+      │       ├── asn1-rs v0.6.2 (*)
+      │       ├── webauthn-rs-core v0.5.5 (*)
+      │       └── x509-parser v0.16.0 (*)
+      ├── tracing-attributes v0.1.31
+      │   └── tracing v0.1.44
+      │       ├── axum v0.8.9 (*)
+      │       ├── axum-core v0.5.6
+      │       │   └── axum v0.8.9 (*)
+      │       ├── tower v0.5.3
+      │       │   └── axum v0.8.9 (*)
+      │       ├── webauthn-attestation-ca v0.5.5 (*)
+      │       ├── webauthn-rs v0.5.5 (*)
+      │       └── webauthn-rs-core v0.5.5 (*)
+      └── zerocopy-derive v0.8.62
+          └── zerocopy v0.8.62
+              ├── half v2.7.1
+              │   └── serde_cbor_2 v0.13.0 (*)
+              └── ppv-lite86 v0.2.21
+                  └── rand_chacha v0.9.0
+                      ├── rand v0.9.5
+                      │   ├── uac-api v0.4.0 (*)
+                      │   └── webauthn-rs-core v0.5.5 (*)
+                      └── webauthn-rs-core v0.5.5 (*)
+    ├ syn v3.0.8
+      ├── displaydoc v0.2.7
+      │   ├── asn1-rs v0.6.2
+      │   │   ├── der-parser v9.0.0
+      │   │   │   ├── webauthn-rs-core v0.5.5
+      │   │   │   │   └── webauthn-rs v0.5.5
+      │   │   │   │       └── uac-api v0.4.0
+      │   │   │   └── x509-parser v0.16.0
+      │   │   │       └── webauthn-rs-core v0.5.5 (*)
+      │   │   ├── oid-registry v0.7.1
+      │   │   │   └── x509-parser v0.16.0 (*)
+      │   │   └── x509-parser v0.16.0 (*)
+      │   ├── der-parser v9.0.0 (*)
+      │   ├── icu_collections v2.3.0
+      │   │   ├── icu_normalizer v2.3.0
+      │   │   │   └── idna_adapter v1.2.2
+      │   │   │       └── idna v1.1.0
+      │   │   │           └── url v2.5.8
+      │   │   │               ├── webauthn-rs v0.5.5 (*)
+      │   │   │               ├── webauthn-rs-core v0.5.5 (*)
+      │   │   │               └── webauthn-rs-proto v0.5.5
+      │   │   │                   └── webauthn-rs-core v0.5.5 (*)
+      │   │   └── icu_properties v2.3.0
+      │   │       └── idna_adapter v1.2.2 (*)
+      │   ├── icu_locale_core v2.3.0
+      │   │   ├── icu_properties v2.3.0 (*)
+      │   │   └── icu_provider v2.3.1
+      │   │       ├── icu_normalizer v2.3.0 (*)
+      │   │       └── icu_properties v2.3.0 (*)
+      │   ├── icu_properties v2.3.0 (*)
+      │   ├── icu_provider v2.3.1 (*)
+      │   ├── tinystr v0.8.4
+      │   │   └── icu_locale_core v2.3.0 (*)
+      │   └── zerotrie v0.2.5
+      │       ├── icu_properties v2.3.0 (*)
+      │       └── icu_provider v2.3.1 (*)
+      ├── synstructure v0.14.0
+      │   ├── yoke-derive v0.8.4
+      │   │   └── yoke v0.8.3
+      │   │       ├── icu_collections v2.3.0 (*)
+      │   │       ├── icu_provider v2.3.1 (*)
+      │   │       ├── zerotrie v0.2.5 (*)
+      │   │       └── zerovec v0.11.8
+      │   │           ├── icu_collections v2.3.0 (*)
+      │   │           ├── icu_locale_core v2.3.0 (*)
+      │   │           ├── icu_normalizer v2.3.0 (*)
+      │   │           ├── icu_properties v2.3.0 (*)
+      │   │           ├── icu_provider v2.3.1 (*)
+      │   │           ├── potential_utf v0.1.6
+      │   │           │   └── icu_collections v2.3.0 (*)
+      │   │           └── tinystr v0.8.4 (*)
+      │   └── zerofrom-derive v0.1.8
+      │       └── zerofrom v0.1.8
+      │           ├── icu_collections v2.3.0 (*)
+      │           ├── icu_provider v2.3.1 (*)
+      │           ├── yoke v0.8.3 (*)
+      │           ├── zerotrie v0.2.5 (*)
+      │           └── zerovec v0.11.8 (*)
+      ├── thiserror-impl v2.0.21
+      │   └── thiserror v2.0.21
+      │       └── rsqlite-vfs v0.1.1
+      │           └── sqlite-wasm-rs v0.5.5
+      │               └── rusqlite v0.40.2
+      │                   └── uac-api v0.4.0 (*)
+      ├── tokio-macros v2.7.2
+      │   └── tokio v1.53.2
+      │       ├── axum v0.8.9
+      │       │   └── uac-api v0.4.0 (*)
+      │       ├── hyper v1.12.0
+      │       │   ├── axum v0.8.9 (*)
+      │       │   └── hyper-util v0.1.21
+      │       │       └── axum v0.8.9 (*)
+      │       ├── hyper-util v0.1.21 (*)
+      │       ├── tower v0.5.3
+      │       │   └── axum v0.8.9 (*)
+      │       └── uac-api v0.4.0 (*)
+      ├── wasm-bindgen-macro-support v0.2.129
+      │   └── wasm-bindgen-macro v0.2.129
+      │       └── wasm-bindgen v0.2.129
+      │           ├── js-sys v0.3.106
+      │           │   └── sqlite-wasm-rs v0.5.5 (*)
+      │           └── sqlite-wasm-rs v0.5.5 (*)
+      ├── yoke-derive v0.8.4 (*)
+      ├── zerofrom-derive v0.1.8 (*)
+      └── zerovec-derive v0.11.6
+          └── zerovec v0.11.8 (*)
+
+warning[duplicate]: found 2 duplicate entries for crate 'synstructure'
+    ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:128:1
+    │
+128 │ ╭ synstructure 0.13.2 registry+https://github.com/rust-lang/crates.io-index
+129 │ │ synstructure 0.14.0 registry+https://github.com/rust-lang/crates.io-index
+    │ ╰─────────────────────────────────────────────────────────────────────────┘ lock entries
+    │
+    ├ synstructure v0.13.2
+      └── asn1-rs-derive v0.5.1
+          └── asn1-rs v0.6.2
+              ├── der-parser v9.0.0
+              │   ├── webauthn-rs-core v0.5.5
+              │   │   └── webauthn-rs v0.5.5
+              │   │       └── uac-api v0.4.0
+              │   └── x509-parser v0.16.0
+              │       └── webauthn-rs-core v0.5.5 (*)
+              ├── oid-registry v0.7.1
+              │   └── x509-parser v0.16.0 (*)
+              └── x509-parser v0.16.0 (*)
+    ├ synstructure v0.14.0
+      ├── yoke-derive v0.8.4
+      │   └── yoke v0.8.3
+      │       ├── icu_collections v2.3.0
+      │       │   ├── icu_normalizer v2.3.0
+      │       │   │   └── idna_adapter v1.2.2
+      │       │   │       └── idna v1.1.0
+      │       │   │           └── url v2.5.8
+      │       │   │               ├── webauthn-rs v0.5.5
+      │       │   │               │   └── uac-api v0.4.0
+      │       │   │               ├── webauthn-rs-core v0.5.5
+      │       │   │               │   └── webauthn-rs v0.5.5 (*)
+      │       │   │               └── webauthn-rs-proto v0.5.5
+      │       │   │                   └── webauthn-rs-core v0.5.5 (*)
+      │       │   └── icu_properties v2.3.0
+      │       │       └── idna_adapter v1.2.2 (*)
+      │       ├── icu_provider v2.3.1
+      │       │   ├── icu_normalizer v2.3.0 (*)
+      │       │   └── icu_properties v2.3.0 (*)
+      │       ├── zerotrie v0.2.5
+      │       │   ├── icu_properties v2.3.0 (*)
+      │       │   └── icu_provider v2.3.1 (*)
+      │       └── zerovec v0.11.8
+      │           ├── icu_collections v2.3.0 (*)
+      │           ├── icu_locale_core v2.3.0
+      │           │   ├── icu_properties v2.3.0 (*)
+      │           │   └── icu_provider v2.3.1 (*)
+      │           ├── icu_normalizer v2.3.0 (*)
+      │           ├── icu_properties v2.3.0 (*)
+      │           ├── icu_provider v2.3.1 (*)
+      │           ├── potential_utf v0.1.6
+      │           │   └── icu_collections v2.3.0 (*)
+      │           └── tinystr v0.8.4
+      │               └── icu_locale_core v2.3.0 (*)
+      └── zerofrom-derive v0.1.8
+          └── zerofrom v0.1.8
+              ├── icu_collections v2.3.0 (*)
+              ├── icu_provider v2.3.1 (*)
+              ├── yoke v0.8.3 (*)
+              ├── zerotrie v0.2.5 (*)
+              └── zerovec v0.11.8 (*)
+
+warning[duplicate]: found 2 duplicate entries for crate 'thiserror'
+    ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:130:1
+    │
+130 │ ╭ thiserror 1.0.69 registry+https://github.com/rust-lang/crates.io-index
+131 │ │ thiserror 2.0.21 registry+https://github.com/rust-lang/crates.io-index
+    │ ╰──────────────────────────────────────────────────────────────────────┘ lock entries
+    │
+    ├ thiserror v1.0.69
+      ├── asn1-rs v0.6.2
+      │   ├── der-parser v9.0.0
+      │   │   ├── webauthn-rs-core v0.5.5
+      │   │   │   └── webauthn-rs v0.5.5
+      │   │   │       └── uac-api v0.4.0
+      │   │   └── x509-parser v0.16.0
+      │   │       └── webauthn-rs-core v0.5.5 (*)
+      │   ├── oid-registry v0.7.1
+      │   │   └── x509-parser v0.16.0 (*)
+      │   └── x509-parser v0.16.0 (*)
+      ├── webauthn-rs-core v0.5.5 (*)
+      └── x509-parser v0.16.0 (*)
+    ├ thiserror v2.0.21
+      └── rsqlite-vfs v0.1.1
+          └── sqlite-wasm-rs v0.5.5
+              └── rusqlite v0.40.2
+                  └── uac-api v0.4.0
+
+warning[duplicate]: found 2 duplicate entries for crate 'thiserror-impl'
+    ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:132:1
+    │
+132 │ ╭ thiserror-impl 1.0.69 registry+https://github.com/rust-lang/crates.io-index
+133 │ │ thiserror-impl 2.0.21 registry+https://github.com/rust-lang/crates.io-index
+    │ ╰───────────────────────────────────────────────────────────────────────────┘ lock entries
+    │
+    ├ thiserror-impl v1.0.69
+      └── thiserror v1.0.69
+          ├── asn1-rs v0.6.2
+          │   ├── der-parser v9.0.0
+          │   │   ├── webauthn-rs-core v0.5.5
+          │   │   │   └── webauthn-rs v0.5.5
+          │   │   │       └── uac-api v0.4.0
+          │   │   └── x509-parser v0.16.0
+          │   │       └── webauthn-rs-core v0.5.5 (*)
+          │   ├── oid-registry v0.7.1
+          │   │   └── x509-parser v0.16.0 (*)
+          │   └── x509-parser v0.16.0 (*)
+          ├── webauthn-rs-core v0.5.5 (*)
+          └── x509-parser v0.16.0 (*)
+    ├ thiserror-impl v2.0.21
+      └── thiserror v2.0.21
+          └── rsqlite-vfs v0.1.1
+              └── sqlite-wasm-rs v0.5.5
+                  └── rusqlite v0.40.2
+                      └── uac-api v0.4.0
+
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Users/master/Documents/Codex/work/uac-spike/deny.toml:5:64
+  │
+5 │ allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "Unicode-3.0", "MPL-2.0", "OpenSSL", "Zlib"]
+  │                                                                ━━━ unmatched license allowance
+
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Users/master/Documents/Codex/work/uac-spike/deny.toml:5:97
+  │
+5 │ allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "Unicode-3.0", "MPL-2.0", "OpenSSL", "Zlib"]
+  │                                                                                                 ━━━━━━━ unmatched license allowance
+
+advisories ok, bans ok, licenses ok, sources ok
+cargo audit --no-fetch --no-yanked
+      Loaded 1296 security advisories (from /Users/master/.cargo/advisory-db)
+    Scanning Cargo.lock for vulnerabilities (187 crate dependencies)
+bun audit
+bun audit v1.4.2 (744846f84)
+
+No vulnerabilities found (checked 23 packages) [351.00ms]
+python3 scripts/startup_probe.py
+{"exit_code": 1, "elapsed_seconds": 5.53, "completed": false, "fatal_error": "server spawn failed: ENOENT: no such file or directory, posix_spawn '/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-startup-probe-wlon51_u/target/debug/uac-api'", "passed": true}
+bun run build
+$ python3 scripts/build_web.py
+Bundled 21 modules in 52ms
+
+  main.js  32.1 KB  (entry point)
+
+cargo build --locked --offline
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.60s

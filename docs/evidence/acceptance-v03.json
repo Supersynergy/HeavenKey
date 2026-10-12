@@ -1,0 +1,196 @@
+{
+  "project": "HeavenKey",
+  "version": "0.3.0",
+  "integrated_files": [
+    {
+      "path": "Cargo.toml",
+      "sha256": "f8a5fd678a7fe5332bfbbe45c8bf1d3f28d8387820d6dc93567ce3a3ad6a7a07"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "b3d1fdaef0e8f420e686fad3fa45c7825faf8d496bda6a2045f186840462d8d8"
+    },
+    {
+      "path": "bun.lock",
+      "sha256": "c0badf34048730e4a43c2bc61b0a5f3325b4bff3e1efa8ea4411fdba438cb02f"
+    },
+    {
+      "path": "package.json",
+      "sha256": "f3af43dfdec333284d630ab1654d2afb6d12b8785ba024f6db489f8e63c780e4"
+    },
+    {
+      "path": "apps/web/package.json",
+      "sha256": "cea72fff2b3540328787884ef1746e39ae10d9a5d7672c87d50198309fa83dff"
+    },
+    {
+      "path": "apps/api/src/main.rs",
+      "sha256": "3b397a7e89fe70b59b541db55c663504c37cdb6b94c414da4d4686ea71e85c99"
+    },
+    {
+      "path": "crates/verifier/src/lib.rs",
+      "sha256": "65f708e43607a6afa3dd18d10cb2c0260d9eafe490abcaf91e31d7da9ad8257c"
+    },
+    {
+      "path": "apps/web/index.html",
+      "sha256": "00bba8bb1d070465b580da2efffcadd270eee5084fb88993a16d67c96447f7bc"
+    },
+    {
+      "path": "apps/web/src/main.ts",
+      "sha256": "004977a5143e03527cbb578afeb69b5652bfac4665271c78cacea0e41b7057c0"
+    },
+    {
+      "path": "apps/web/src/style.css",
+      "sha256": "3b9f5e3cf27616b50b76748dcb802505b7c0d5f0dceda005ae8688dc8ef71717"
+    },
+    {
+      "path": "scripts/e2e.mjs",
+      "sha256": "8856305a15a717c763812324cc390e8586fa015a762d9ab8c7ed8958bbb46fda"
+    },
+    {
+      "path": "scripts/run.py",
+      "sha256": "4174867b676d4f08787d79a4a32e883792586f8a2e7c200c2155363e220bb506"
+    },
+    {
+      "path": "scripts/startup_probe.py",
+      "sha256": "e30e08c6b41160389cac9aa504c26a1b219ef8a7ec845021266bc787ce577256"
+    },
+    {
+      "path": "scripts/build_web.py",
+      "sha256": "40bd5a832ac629498d41a3f7f4064dc1f7eff6418ed25ebe299e57714de8617c"
+    },
+    {
+      "path": "scripts/readme_preview.mjs",
+      "sha256": "98954771bc3b1b983835d1850dd18768e872cd8fbd3359868db89df125a302c5"
+    },
+    {
+      "path": "scripts/ci.sh",
+      "sha256": "f4fcde2e0ba15133037987f8017b6dcb9e7fdf8cc280dc46a82f8cd1c026777b"
+    },
+    {
+      "path": "justfile",
+      "sha256": "a319345e94e3f2bfe15008d85234bb31ef9dfffc1a3f682e9cb25f2b254cb320"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "6ba7c2450c5d8c0a5bb300b6caa467a9f690baee692be763775c67fc7333db2e"
+    },
+    {
+      "path": "docs/licenses/simplewebauthn-browser-MIT.txt",
+      "sha256": "bd9e3f45696472076c7160c7f66e54b2d62d38bc2646c812d19be83ee4400c63"
+    },
+    {
+      "path": "README.md",
+      "sha256": "c569a2144f51f9b86d97b7e39e1a386a541576de4c5819fcbee9d69f188ce2c5"
+    },
+    {
+      "path": "docs/assets/heavenkey-hero-square.png",
+      "sha256": "d90b4c752b010610bf9cb8f2bd0005930eef6a9a62558ca28083a23887e3dd5b"
+    }
+  ],
+  "check_exit": 0,
+  "rust_tests": {
+    "core": 24,
+    "api": 5,
+    "total": 29
+  },
+  "e2e": {
+    "completed": true,
+    "total": 69,
+    "passed": 69,
+    "failed": 0
+  },
+  "portable_ci_local_exit": 0,
+  "independent_review": {
+    "status": "independent_source_review_and_integrated_local_oracles_green",
+    "blocking_findings": []
+  },
+  "semgrep": {
+    "scanned": 8,
+    "findings": 0,
+    "errors": 0
+  },
+  "gitleaks_history_findings": 0,
+  "exact_historic_checksum_exceptions": 2,
+  "image": {
+    "pixels": [
+      1254,
+      1254
+    ],
+    "centered_preview": true
+  },
+  "hardware": "virtual CTAP2 only; real devices deferred",
+  "linux": "not executed; last hosted CI blocked by account condition",
+  "fresh_clone_v03": {
+    "passed": true,
+    "commit": "ea36f36fb5857e7ba1701c2cda113b4f7c21da83",
+    "steps": [
+      {
+        "command": [
+          "gh",
+          "repo",
+          "clone",
+          "Supersynergy/HeavenKey",
+          "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v03-clone-1bfst5hv/HeavenKey",
+          "--",
+          "--quiet"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 1.79
+      },
+      {
+        "command": [
+          "aidev",
+          "doctor",
+          "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v03-clone-1bfst5hv/HeavenKey"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.12
+      },
+      {
+        "command": [
+          "bun",
+          "install",
+          "--frozen-lockfile",
+          "--ignore-scripts"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.02
+      },
+      {
+        "command": [
+          "cargo",
+          "fetch",
+          "--locked"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.44
+      },
+      {
+        "command": [
+          "just",
+          "build"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 14.23
+      },
+      {
+        "command": [
+          "just",
+          "e2e"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 6.0
+      }
+    ],
+    "e2e_passed": 69,
+    "target": "initially empty clone-local target; registry cache warm",
+    "elapsed_seconds": 22.61,
+    "clone_path": "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v03-clone-1bfst5hv/HeavenKey"
+  },
+  "saving_claim": "none; no comparable baseline or billing measurement",
+  "github_ci": {
+    "status": "account_gate_before_any_step",
+    "run_url": "https://github.com/Supersynergy/HeavenKey/actions/runs/38185048027",
+    "annotation": "Recent account payments failed OR spending limit must be increased; exact cause unknown"
+  }
+}

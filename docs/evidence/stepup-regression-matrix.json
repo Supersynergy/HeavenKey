@@ -1,0 +1,39 @@
+{
+  "baseline_commit": "41f05ebc82ddf095f2ca75c02f8c2f52fc220fe1",
+  "old_cases": 69,
+  "retained": 69,
+  "removed": [],
+  "added": [
+    "actual browser passkey assertion abort leaves the action recoverable",
+    "approval binds credential label and mismatch burns the approval",
+    "approval binds credential target and mismatch burns the approval",
+    "approval binds grant TTL and mismatch burns the approval",
+    "approval binds grant recipient and mismatch burns the approval",
+    "approval binds grant target and mismatch burns the approval",
+    "approval cannot be used for a different action kind",
+    "approval is bound to its other account",
+    "approval is bound to its same-account session",
+    "browser action confirmation can be cancelled without starting a ceremony",
+    "browser retry after a real assertion abort succeeds without a new login",
+    "credential revocation invalidates approvals and pending management ceremonies",
+    "enrollment accepts an approving active key distinct from the session key",
+    "management approval cannot elevate a guest to owner",
+    "management approval requires a valid authenticator signature",
+    "management assertion binds exact parameters and consumes a changed finish",
+    "management assertion cannot finish in another account",
+    "management assertion is bound to the initiating same-account session",
+    "management ceremonies require a session and its exact account",
+    "management rejects mixed purposes and unknown operation fields",
+    "parallel duplicate approval mutates exactly once",
+    "server restart discards outstanding action approvals",
+    "single-use approval rejects replay after a successful grant mutation",
+    "valid bearer alone cannot authorize credential add",
+    "valid bearer alone cannot authorize credential revoke",
+    "valid bearer alone cannot authorize grant create",
+    "valid bearer alone cannot authorize grant revoke"
+  ],
+  "current_report": {
+    "path": "docs/evidence/e2e.json",
+    "sha256": "f9907e4fd984b6fb3e8b04ff15c37fa084624617171e1446a84eb9122b5f65c4"
+  }
+}

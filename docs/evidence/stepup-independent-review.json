@@ -1,0 +1,285 @@
+{
+  "schema": "heavenkey-stepup-independent-review-v1",
+  "reviewed_at_utc": "2026-10-12T00:07:01.152218+00:00",
+  "status": "green_independent_review_and_current_integrated_oracles",
+  "input_sha256": [
+    {
+      "path": "docs/STEPUP-CONTRACT.md",
+      "sha256": "a98054155aa6081e33bfcb0d99fc9a2d890c60cb23fab0d7e0b1f603d63b6bae"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "c4ecc9233d3187ef5ff7b79f4e23a36ee071ab48d1498d04ca5ea013772f173e"
+    },
+    {
+      "path": "docs/evidence/stepup-baseline.json",
+      "sha256": "c8f11bc94296ef62bb05aeeebcb3ec3383ac284f00c7e6c792fb5298b00da144"
+    },
+    {
+      "path": "docs/V04-RESULT.md",
+      "sha256": "73543fe2219a05e7eca1802671ade338cbf7dd9507e6533ff19a01333185ed2e"
+    }
+  ],
+  "baseline": {
+    "source_commit": "41f05ebc82ddf095f2ca75c02f8c2f52fc220fe1",
+    "mode": "synthetic virtual CTAP2",
+    "observed_bearer_only_successes": {
+      "grant_create_status": 200,
+      "additional_credential_finish_status": 200,
+      "original_credential_revoke_status": 200
+    },
+    "grant_revoke_success_observed_in_baseline": false,
+    "regression_red": true
+  },
+  "primary_sources": [
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Passkey_Security_Cheat_Sheet.html#credential-management",
+      "supports": "Recent reauthentication for adding/removing passkeys; protected account mappings and server revocation"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Transaction_Authorization_Cheat_Sheet.html",
+      "supports": "Separate authentication/authorization; server-side operation binding, execution gate, limited lifetime and unique operation authorization"
+    },
+    {
+      "url": "https://www.w3.org/TR/webauthn-3/#sctn-verifying-assertion",
+      "supports": "Challenge/origin/RP/user verification/signature verification; application must define business-operation binding"
+    }
+  ],
+  "priority": {
+    "conclusion": "Address reproduced bearer-only sensitive-write gap before expanding delegation",
+    "type": "Project inference from baseline, bounded reuse and primary security controls",
+    "named_best_defaults_external_endorsement": false,
+    "new_dependencies_or_services_required": false,
+    "measured_savings_or_multiplier": null
+  },
+  "skill": "/Users/master/.claude/cts/security-review/SKILL.md",
+  "source_sha256": [
+    {
+      "path": "apps/api/src/main.rs",
+      "sha256": "7e0d005eab9f24264cafb2cdc4b6d046cb2f82230bb856714f8fe863bd6b8519"
+    },
+    {
+      "path": "apps/web/src/main.ts",
+      "sha256": "fe8c3d6888960de8ce63a58812ef440ee45faea0dbbd04cf8f0c26ac411135e2"
+    },
+    {
+      "path": "apps/web/index.html",
+      "sha256": "f30ba4f8cabb365949474437119b694e4f63288985fad60d9ef74b2068d74b6f"
+    },
+    {
+      "path": "apps/web/src/style.css",
+      "sha256": "057035419ac2c7d8e4af533456a3f373d98ec7732656c25be53e3235772c0157"
+    },
+    {
+      "path": "scripts/e2e.mjs",
+      "sha256": "632086a18a5f65ca8965b30db0a00fc0b1f7ee4e07cb7a6784430afb6b21f37f"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "5e6cc11d991660dc71d3385943fd60b726d695c644cb3d05d41fe8f45d8b3fb9"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "7c87d9edb49eaabccff4528b799cb1f730d25b8b23b763f74693b719223a7d57"
+    },
+    {
+      "path": "apps/api/Cargo.toml",
+      "sha256": "7ff42fe9313057b271927a1cf48c0fedec0b247b4449c559f5b10a5090116247"
+    },
+    {
+      "path": "apps/web/package.json",
+      "sha256": "e43ce5ea28af95d3d4c856a6263477f2cd4bab714b9912008f2f7c286f986c27"
+    },
+    {
+      "path": "package.json",
+      "sha256": "f3af43dfdec333284d630ab1654d2afb6d12b8785ba024f6db489f8e63c780e4"
+    },
+    {
+      "path": "bun.lock",
+      "sha256": "bad9b2e6010f1147d6e4b17f28a812dd1e02a709222125a0a632b662a9e5ae1c"
+    },
+    {
+      "path": "scripts/build_web.py",
+      "sha256": "40bd5a832ac629498d41a3f7f4064dc1f7eff6418ed25ebe299e57714de8617c"
+    },
+    {
+      "path": "docs/licenses/simplewebauthn-browser-MIT.txt",
+      "sha256": "bd9e3f45696472076c7160c7f66e54b2d62d38bc2646c812d19be83ee4400c63"
+    },
+    {
+      "path": "apps/web/dist/main.js",
+      "sha256": "a28a9f7eeaec041629922ec0362912e6234b3a0c43f17012badcc75b3800ac95"
+    }
+  ],
+  "checks": [
+    {
+      "name": "Strict operation schema",
+      "result": "pass",
+      "source": "apps/api/src/main.rs:141",
+      "evidence": "Tagged enum, deny_unknown_fields, strict variants/field types; no client-supplied approval state"
+    },
+    {
+      "name": "Purpose separation",
+      "result": "pass",
+      "source": "apps/api/src/main.rs:560",
+      "evidence": "Mixed management/invocation rejected; finish compares presence and exact operation; valid management emits no session or mutation"
+    },
+    {
+      "name": "Session and account binding",
+      "result": "pass",
+      "source": "apps/api/src/main.rs:581",
+      "evidence": "Start requires valid bearer session with matching account name; finish rechecks exact token and account before approval"
+    },
+    {
+      "name": "Role at approval and mutation",
+      "result": "pass",
+      "source": "apps/api/src/main.rs:337",
+      "evidence": "Owner role checked at management start/finish and grant mutation; ordinary guests cannot approve owner writes"
+    },
+    {
+      "name": "Verified active signing key",
+      "result": "pass",
+      "source": "apps/api/src/main.rs:671",
+      "evidence": "Existing library verifies assertion; user_verified is required; current matching active key/counter reloaded and transactionally updated"
+    },
+    {
+      "name": "Exact mutation binding",
+      "result": "pass",
+      "source": "apps/api/src/main.rs:363",
+      "evidence": "Every mutation requires account/session/operation equality and active approving key; raw label, recipient, TTL, target and kind cannot be substituted"
+    },
+    {
+      "name": "All four sensitive write gates",
+      "result": "pass",
+      "source": "apps/api/src/main.rs:772",
+      "evidence": "credential_start, credential_revoke, create_grant and revoke_grant require server-owned approval; bearer-only tests assert403 and unchanged state"
+    },
+    {
+      "name": "Failed attempts and replay",
+      "result": "pass",
+      "source": "apps/api/src/main.rs:359",
+      "evidence": "Approval removed before parsed handler validations; malformed JSON is not a parsed consumption attempt; same ID cannot be retried after success or mismatch"
+    },
+    {
+      "name": "Monotonic lifetime and cap",
+      "result": "pass",
+      "source": "apps/api/src/main.rs:233",
+      "evidence": "Instant expiry60s pruned and checked at consumption; cap128 checked at management start and finish; unit test sets expired Instant without runtime clock backdoor"
+    },
+    {
+      "name": "Parallel replay and write serialization",
+      "result": "pass",
+      "source": "apps/api/src/main.rs:1872",
+      "evidence": "One Inner mutex spans approval removal/check/write; unit and browser parallel duplicate cases commit once"
+    },
+    {
+      "name": "Enrollment continuation",
+      "result": "pass",
+      "source": "apps/api/src/main.rs:803",
+      "evidence": "Add consumes approval at start and stores its actual signing key; finish rechecks same session/user and active approver, including approver distinct from original session key"
+    },
+    {
+      "name": "Credential revocation and migration",
+      "result": "pass",
+      "source": "apps/api/src/main.rs:875",
+      "evidence": "Transaction protects last key; commit then clears all account sessions, auth/enrollment/approvals;8-key limits, global uniqueness, legacy alias and tombstones retained"
+    },
+    {
+      "name": "Restart invalidation",
+      "result": "pass",
+      "source": "scripts/e2e.mjs:242",
+      "evidence": "Memory-only approval map starts empty; actual restart test rejects pre-restart approval even after valid fresh session login"
+    },
+    {
+      "name": "UI confirmation and parameter snapshot",
+      "result": "pass",
+      "source": "apps/web/src/main.ts:95",
+      "evidence": "Concrete action/target displayed before assertion; stored sessionName used; local operation snapshots inputs once; inFlight serializes actions"
+    },
+    {
+      "name": "Actual assertion abort and retry",
+      "result": "pass",
+      "source": "scripts/e2e.mjs:400",
+      "evidence": "Disable virtual presence, begin real navigator assertion, cancel via WebAuthnAbortService;0 finish/0 write/unchanged grants; retry succeeds using same session"
+    },
+    {
+      "name": "Token storage, rendering and network surface",
+      "result": "pass",
+      "source": "apps/web/src/main.ts:19",
+      "evidence": "Session/approval values remain closure/process memory; no persistent browser storage or token logging; target text uses textContent, application requests use existing local API paths"
+    },
+    {
+      "name": "Dependency and compiled access point",
+      "result": "pass",
+      "source": "scripts/build_web.py:6",
+      "evidence": "Existing package/verifier pins retained, no new runtime dependency; generated bundle retains full SimpleWebAuthn MIT notice"
+    }
+  ],
+  "blocking_findings": [],
+  "oracle": {
+    "reviewer_runs_tests": false,
+    "root_executed": true,
+    "check": {
+      "status": "green",
+      "exit_code": 0,
+      "rust_tests_passed": 36,
+      "core_tests": 24,
+      "api_tests": 12,
+      "ats_elapsed_ms": 67889,
+      "root_reported_wrapper_seconds": 68.778,
+      "coverage": "fmt,TS,Clippy,nextest,deny,audit,Bun audit,negative startup regression,build"
+    },
+    "e2e": {
+      "completed": true,
+      "passed": 96,
+      "total": 96,
+      "failed": 0,
+      "report_seconds": 32.7,
+      "root_reported_wrapper_seconds": 36.224,
+      "retained_old_cases": 69,
+      "added_cases": 27,
+      "removed_cases": []
+    },
+    "binding": "Exact final source SHA256s match root freeze and were rechecked after integrated build; current reports read independently"
+  },
+  "limits": [
+    "Local synthetic CTAP2 only; no hardware, biometrics, platform sync, recovery or production-deployment claim",
+    "Server-side operation binding does not establish trusted hardware display of business parameters",
+    "Existing wall-clock session and ceremony behavior is outside the new monotonic approval lifetime",
+    "No cryptographic primitives or new dependencies introduced by review lane"
+  ],
+  "invalidation_rule": "Final signoff applies only to recorded hashes; relevant later source changes require affected-path re-review and oracle rerun",
+  "final_capsule_match": {
+    "all_five_source_hashes_match": true,
+    "after_integrated_build": true
+  },
+  "evidence_sha256": [
+    {
+      "path": "docs/evidence/e2e.json",
+      "sha256": "f9907e4fd984b6fb3e8b04ff15c37fa084624617171e1446a84eb9122b5f65c4"
+    },
+    {
+      "path": "docs/evidence/stepup-check.log",
+      "sha256": "e53bb774f78350562b21ff17a0948b190d8ef703205663214afeb8bc2de1d6d1"
+    },
+    {
+      "path": "docs/evidence/stepup-aislop.log",
+      "sha256": "20316a36fba06faca5eeb6a2d66665cddfb8537e4cc807a7b6340cc65db66f26"
+    },
+    {
+      "path": "docs/evidence/stepup-check-full.log",
+      "sha256": "3460d4e43cf56fbc72a15fdb2c60567ffd6e6b70d22fa32a5c53c9728fce97c8"
+    }
+  ],
+  "nonblocking_scan": {
+    "errors": 0,
+    "style_warnings": 3,
+    "ai_slop_findings": 0,
+    "disposition": "Large API/E2E files and existing bounded health polling catch reviewed; no confirmed defect and no warning-only refactor",
+    "health_poll_bounds": {
+      "startup_seconds": 15,
+      "per_fetch_seconds": 1,
+      "retry_ms": 100
+    }
+  }
+}

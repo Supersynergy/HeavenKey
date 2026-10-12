@@ -1,14 +1,15 @@
-import { startRegistration, startAuthentication, type PublicKeyCredentialCreationOptionsJSON, type PublicKeyCredentialRequestOptionsJSON, type RegistrationResponseJSON } from "@simplewebauthn/browser";
+import { startRegistration, startAuthentication, WebAuthnAbortService, type PublicKeyCredentialCreationOptionsJSON, type PublicKeyCredentialRequestOptionsJSON, type RegistrationResponseJSON } from "@simplewebauthn/browser";
 
 type Grant = { id: string; guest: string; revoked: boolean; grant: { body: { expires_at: number; resource: string }; signature: number[] } };
 type Ceremony<T> = { request_id: string; options: { publicKey: T } };
 type Credential = { id: string; label: string; active: boolean; created: number };
+type Management = { kind: "credential_add"; label: string } | { kind: "credential_revoke"; id: string } | { kind: "grant_create"; guest_name: string; ttl_seconds: number } | { kind: "grant_revoke"; id: string };
 let session: string | undefined;
 let sessionName: string | undefined;
 let isOwner = false;
 let activeCredentialCount = 0;
-let credentialToRevoke: Credential | undefined;
 let inFlight = false;
+let confirmationOpen = false;
 const el = <T extends HTMLElement>(id: string): T => {
   const value = document.getElementById(id);
   if (!value) throw new Error(`Element fehlt: ${id}`);
@@ -28,13 +29,22 @@ async function api<T>(path: string, body?: unknown): Promise<T> {
       last_credential_required: "Der letzte aktive Passkey bleibt erhalten. Füge zuerst einen Ersatzschlüssel hinzu.",
       enrollment_session_changed: "Die Sitzung hat sich geändert. Starte die Einschreibung erneut.",
       ceremony_missing: "Dieser Vorgang ist abgelaufen oder bereits beendet. Starte ihn erneut.",
+      approval_required: "Bestätige diese Aktion zuerst mit deinem Passkey.",
+      approval_missing: "Die Bestätigung ist abgelaufen oder bereits verwendet. Bestätige die Aktion erneut.",
+      approval_mismatch: "Diese Bestätigung gehört zu einer anderen Aktion. Bestätige die Aktion erneut.",
+      management_changed: "Die Aktion hat sich geändert. Bestätige sie erneut.",
     };
     throw new Error(messages[value.error] || value.error || `HTTP ${response.status}`);
   }
   return value as T;
 }
 async function createCredential(start: Ceremony<PublicKeyCredentialCreationOptionsJSON>): Promise<RegistrationResponseJSON> {
-  return startRegistration({ optionsJSON: start.options.publicKey });
+  return passkeyRequest(() => startRegistration({ optionsJSON: start.options.publicKey }));
+}
+async function passkeyRequest<T>(request: () => Promise<T>): Promise<T> {
+  el<HTMLButtonElement>("operation-cancel").hidden = false;
+  try { return await request(); }
+  finally { el<HTMLButtonElement>("operation-cancel").hidden = true; }
 }
 async function register(): Promise<void> {
   const name = input("name");
@@ -46,7 +56,7 @@ async function register(): Promise<void> {
 }
 async function authenticate(invocation?: object, name = input("name")): Promise<Record<string, unknown>> {
   const start = await api<Ceremony<PublicKeyCredentialRequestOptionsJSON>>("/api/auth/start", { name, invocation: invocation || null });
-  const credential = await startAuthentication({ optionsJSON: start.options.publicKey });
+  const credential = await passkeyRequest(() => startAuthentication({ optionsJSON: start.options.publicKey }));
   return api("/api/auth/finish", { request_id: start.request_id, credential, invocation: invocation || null });
 }
 async function login(): Promise<void> {
@@ -62,7 +72,8 @@ function setSession(result: Record<string, unknown>): void {
   sessionControls();
 }
 function sessionControls(): void {
-  for (const id of ["register", "login", "credential-revoke-confirm", "credential-revoke-cancel"]) el<HTMLButtonElement>(id).disabled = inFlight;
+  for (const id of ["register", "login"]) el<HTMLButtonElement>(id).disabled = inFlight;
+  for (const id of ["management-confirm", "management-cancel"]) el<HTMLButtonElement>(id).disabled = inFlight && !confirmationOpen;
   el<HTMLButtonElement>("issue").disabled = inFlight || !session || !isOwner;
   el<HTMLButtonElement>("refresh").disabled = inFlight || !session;
   el<HTMLButtonElement>("credential-add").disabled = inFlight || !session || activeCredentialCount >= 8;
@@ -76,15 +87,32 @@ function clearSession(): void {
   el("identity").textContent = "Erneute Anmeldung erforderlich";
   el("grants").replaceChildren();
   el("result").textContent = "—";
-  el<HTMLDialogElement>("credential-revoke-dialog").close();
-  credentialToRevoke = undefined;
+  el<HTMLDialogElement>("management-dialog").close();
   const message = document.createElement("p"); message.className = "empty"; message.textContent = "Melde dich mit einem aktiven Passkey erneut an.";
   el("credentials").replaceChildren(message);
   sessionControls();
 }
-async function freshSession(): Promise<void> {
+async function approve(management: Management): Promise<string> {
   if (!session || !sessionName) throw new Error("Bitte zuerst mit einem aktiven Passkey anmelden.");
-  setSession(await authenticate(undefined, sessionName));
+  const dialog = el<HTMLDialogElement>("management-dialog");
+  const details: Record<Management["kind"], [string, string, string]> = {
+    credential_add: ["Passkey hinzufügen", "label" in management ? `Bezeichnung: ${management.label}` : "", "Der neue Schlüssel erhält die bestehenden Rechte dieses Kontos."],
+    credential_revoke: ["Passkey widerrufen", "id" in management ? `Schlüssel-ID: ${management.id}` : "", "Dieser Schlüssel kann sich danach nicht mehr anmelden. Alle Sitzungen dieses Kontos enden. Mindestens ein Schlüssel bleibt aktiv."],
+    grant_create: ["Zugang vergeben", "guest_name" in management ? `Empfänger: ${management.guest_name}\nGültigkeit: ${management.ttl_seconds} Sekunden` : "", "Du vergibst ein Leserecht für das Labordokument."],
+    grant_revoke: ["Zugang widerrufen", "id" in management ? `Zugangs-ID: ${management.id}` : "", "Dieser Zugang kann danach nicht mehr verwendet werden."],
+  };
+  const [title, target, help] = details[management.kind];
+  el("management-title").textContent = title; el("management-target").textContent = target; el("management-help").textContent = help;
+  dialog.returnValue = "";
+  const confirmation = new Promise<boolean>(resolve => dialog.addEventListener("close", () => resolve(dialog.returnValue === "confirm"), { once: true }));
+  confirmationOpen = true; sessionControls(); dialog.showModal(); el("management-cancel").focus();
+  const confirmed = await confirmation;
+  confirmationOpen = false; sessionControls();
+  if (!confirmed) throw new DOMException("Aktion abgebrochen. Du kannst sie erneut starten.", "AbortError");
+  const start = await api<Ceremony<PublicKeyCredentialRequestOptionsJSON>>("/api/auth/start", { name: sessionName, management });
+  const credential = await passkeyRequest(() => startAuthentication({ optionsJSON: start.options.publicKey }));
+  const result = await api<{ approval_id: string }>("/api/auth/finish", { request_id: start.request_id, credential, management });
+  return result.approval_id;
 }
 function status(text: string, error: boolean): void {
   el("status").textContent = text;
@@ -109,7 +137,7 @@ async function refresh(): Promise<void> {
     const actions = document.createElement("div"); actions.className = "buttons";
     const button = document.createElement("button"); button.textContent = isOwner ? "Widerrufen" : "Dokument lesen"; button.disabled = grant.revoked || (!isOwner && expired);
     button.addEventListener("click", () => void perform(button, async () => {
-      if (isOwner) { await api("/api/grants/revoke", { id: grant.id }); status("Widerruf am Ziel bestätigt.", false); }
+      if (isOwner) { const approval_id = await approve({ kind: "grant_revoke", id: grant.id }); await api("/api/grants/revoke", { id: grant.id, approval_id }); status("Widerruf am Ziel bestätigt.", false); }
       else { const value = await authenticate({ grant: grant.grant, resource: grant.grant.body.resource, action: "Read", arguments: { document: "overview" } }, sessionName); el("result").textContent = JSON.stringify(value, null, 2); status("Aufruf autorisiert und im Verifier bestätigt.", false); }
       await refresh();
     }));
@@ -133,12 +161,13 @@ async function refreshCredentials(): Promise<void> {
     const button = document.createElement("button"); button.className = "secondary"; button.textContent = "Passkey widerrufen";
     button.setAttribute("aria-label", `${credential.label} widerrufen`);
     button.disabled = !credential.active || activeCredentialCount <= 1;
-    button.addEventListener("click", () => {
-      credentialToRevoke = credential;
-      el("credential-revoke-name").textContent = credential.label;
-      el<HTMLDialogElement>("credential-revoke-dialog").showModal();
-      el<HTMLButtonElement>("credential-revoke-cancel").focus();
-    });
+    button.addEventListener("click", () => void perform(button, async () => {
+      const approval_id = await approve({ kind: "credential_revoke", id: credential.id });
+      await api("/api/credentials/revoke", { id: credential.id, approval_id });
+      clearSession();
+      status(`Passkey „${credential.label}“ widerrufen. Alle Sitzungen beendet. Melde dich mit einem verbleibenden Schlüssel erneut an.`, false);
+      el("login").focus();
+    }));
     actions.append(button);
     if (credential.active && activeCredentialCount <= 1) { const note = document.createElement("span"); note.className = "note"; note.textContent = "Letzter aktiver Schlüssel"; actions.append(note); }
     row.append(text, actions); area.append(row);
@@ -156,8 +185,8 @@ function validateLabel(): string {
 async function addCredential(): Promise<void> {
   const label = validateLabel();
   if (!label) { el("credential-label").focus(); throw new Error("Die Bezeichnung fehlt oder ist zu lang."); }
-  await freshSession();
-  const start = await api<Ceremony<PublicKeyCredentialCreationOptionsJSON>>("/api/credentials/start", { label });
+  const approval_id = await approve({ kind: "credential_add", label });
+  const start = await api<Ceremony<PublicKeyCredentialCreationOptionsJSON>>("/api/credentials/start", { label, approval_id });
   const credential = await createCredential(start);
   await api("/api/credentials/finish", { request_id: start.request_id, credential });
   el<HTMLInputElement>("credential-label").value = "";
@@ -168,14 +197,20 @@ async function perform(button: HTMLButtonElement, action: () => Promise<void>): 
   if (inFlight) return;
   inFlight = true; sessionControls(); button.disabled = true; button.setAttribute("aria-busy", "true");
   button.dataset.state = "loading";
-  try { await action(); button.dataset.state = "success"; } catch (error) { button.dataset.state = "error"; status(error instanceof Error ? error.message : String(error), true); }
+  try { await action(); button.dataset.state = "success"; } catch (error) {
+    const cancelled = error instanceof Error && (error.name === "AbortError" || "code" in error && error.code === "ERROR_CEREMONY_ABORTED");
+    button.dataset.state = cancelled ? "idle" : "error";
+    status(cancelled ? "Aktion abgebrochen. Du kannst sie erneut starten." : error instanceof Error ? error.message : String(error), !cancelled);
+  }
   finally { inFlight = false; button.removeAttribute("aria-busy"); if (button.isConnected) button.disabled = false; sessionControls(); }
 }
 for (const [id, action] of [["register", register], ["login", login], ["refresh", refresh]] as const) {
   const button = el<HTMLButtonElement>(id); button.addEventListener("click", () => void perform(button, action));
 }
 el<HTMLButtonElement>("issue").addEventListener("click", () => void perform(el("issue"), async () => {
-  await api("/api/grants", { guest_name: input("guest"), ttl_seconds: Number(input("ttl")) });
+  const management: Management = { kind: "grant_create", guest_name: input("guest"), ttl_seconds: Number(input("ttl")) };
+  const approval_id = await approve(management);
+  await api("/api/grants", { guest_name: management.guest_name, ttl_seconds: management.ttl_seconds, approval_id });
   status("Zugang an den Empfänger gebunden.", false); await refresh();
 }));
 el<HTMLFormElement>("credential-form").addEventListener("submit", event => {
@@ -185,17 +220,7 @@ el("credential-label").addEventListener("blur", validateLabel);
 el("credential-label").addEventListener("input", () => {
   if (el("credential-label").getAttribute("aria-invalid") === "true") validateLabel();
 });
-el("credential-revoke-cancel").addEventListener("click", () => el<HTMLDialogElement>("credential-revoke-dialog").close());
-el("credential-revoke-dialog").addEventListener("cancel", event => { if (inFlight) event.preventDefault(); });
-el("credential-revoke-confirm").addEventListener("click", () => void perform(el("credential-revoke-confirm"), async () => {
-  if (!credentialToRevoke) return;
-  const credential = credentialToRevoke;
-  await freshSession();
-  await api("/api/credentials/revoke", { id: credential.id });
-  el<HTMLDialogElement>("credential-revoke-dialog").close();
-  credentialToRevoke = undefined;
-  clearSession();
-  status(`Passkey „${credential.label}“ widerrufen. Alle Sitzungen beendet. Melde dich mit einem verbleibenden Schlüssel erneut an.`, false);
-  el("login").focus();
-}));
+el("management-cancel").addEventListener("click", () => el<HTMLDialogElement>("management-dialog").close("cancel"));
+el("management-confirm").addEventListener("click", () => el<HTMLDialogElement>("management-dialog").close("confirm"));
+el("operation-cancel").addEventListener("click", () => WebAuthnAbortService.cancelCeremony());
 document.documentElement.dataset.ready = "true";

@@ -27,10 +27,11 @@ Passkeys und begrenzte Zugangsrechte für Entwickler, die Autorisierung bis zur 
 | Passkey-Anmeldung | Rust prüft Origin, RP, Challenge, Signatur und User Verification über `webauthn-rs`. |
 | Begrenzter Zugang | Signiertes Leserecht für eine Testressource mit einer Gültigkeit von 1–3.600 Sekunden. |
 | Gebundener Aufruf | Ein frischer Passkey-Nachweis bestätigt die genaue Operation einschließlich ihrer Argumente. |
-| Mehrere Passkeys | Bis zu acht aktive Schlüssel pro Konto. Die Verwaltung verlangt eine frische Anmeldung; Widerruf ist bestätigt und der letzte Schlüssel geschützt. |
+| Bestätigte Änderungen | Passkeys und Zugänge ändern sich erst nach einer frischen, serverseitig geprüften Freigabe für genau diese Aktion. Die Freigabe gilt 60 Sekunden und einmal. |
+| Mehrere Passkeys | Bis zu acht aktive Schlüssel pro Konto. Hinzufügen und Widerruf sind an die konkrete Zustimmung gebunden; der letzte Schlüssel bleibt geschützt. |
 | Widerruf und Neustart | Der Server prüft Widerruf vor der Ausführung; Credentials und Widerrufe bleiben in SQLite. Offene Dialoge und Sitzungen werden beim Neustart ungültig. |
 
-**Stand: Forschungsprototyp 0.3.** Tests verwenden virtuelle CTAP2-Geräte im echten Chrome-Browser und den echten Rust-Verifier. Touch ID und weitere Geräte werden später live geprüft. Das Grant-Format ist experimentell; UCAN-Interoperabilität, Wallets und physische Geräte sind noch offen.
+**Stand: Forschungsprototyp 0.4.** Tests verwenden virtuelle CTAP2-Geräte im echten Chrome-Browser und den echten Rust-Verifier. Touch ID und weitere Geräte werden später live geprüft. Das Grant-Format ist experimentell; UCAN-Interoperabilität, Wallets und physische Geräte sind noch offen.
 
 ## Quick start
 
@@ -45,13 +46,13 @@ just build
 just e2e
 ```
 
-Der Quick Start für 0.3 wurde mit einem frischen GitHub-Clone und leerem Build-Verzeichnis ausgeführt: **69/69 Browser-Fälle bestanden**. Die vollständige lokale Abnahme umfasst außerdem **29 Rust-Tests**. Details stehen im [Ausbaubericht](docs/V03-RESULT.md).
+Die lokale Browser-Abnahme für 0.4 besteht **96/96 Fälle**: sämtliche 69 bisherigen Prüfungen und 27 neue Fälle für konkrete Zustimmung, Manipulation und Abbruch. Die Rust-Suite umfasst **36 Tests**. Der [Ausbaubericht](docs/V04-RESULT.md) hält Prüfabläufe und Grenzen fest.
 
 Der Test startet einen isolierten Browser und einen lokalen Server und beendet beide danach. Er verwendet kein persönliches Browserprofil. Testdaten und virtuelle Schlüssel werden gelöscht. Ein anderer Chrome-Pfad lässt sich mit `CHROME_PATH=/pfad/zu/chrome just e2e` angeben.
 
 Für `just check` werden außerdem `cargo-nextest` **0.9.146**, `cargo-deny` **0.20.2** und `cargo-audit` **0.22.2** benötigt. Die vollständige Prüfung umfasst Formatierung, TypeScript, Clippy, Rust-Tests, Lizenz-/Quellenregeln, Advisories und Build. CI führt den portablen Source- und Browser-Testablauf aus; er enthält keine Deployment-Schritte.
 
-Der erste GitHub-CI-Job wurde vor Ausführung eines Schritts durch eine Zahlungs-/Ausgabenlimit-Sperre des Accounts abgewiesen. Der identische portable Prüfablauf hat lokal bestanden: **69 Browser-Fälle und 29 Rust-Tests**. Die [CI-Diagnose](docs/VERIFICATION.md) hält diese Grenze fest.
+GitHub-CI wurde zuletzt vor Ausführung eines Schritts durch eine Zahlungs-/Ausgabenlimit-Sperre des Accounts abgewiesen. Die [CI-Diagnose](docs/VERIFICATION.md) trennt lokale Abnahme von der noch offenen Ubuntu-Ausführung.
 
 ## Späterer Live-Test
 
@@ -75,7 +76,10 @@ sequenceDiagram
     Betreiber->>B: Einrichtungscode + Passkey-Einschreibung
     B->>A: Einschreibung abschließen
     A->>D: Einmalige Eigentümerrolle speichern
-    Betreiber->>A: Leserecht für registrierten Gast
+    Betreiber->>B: Empfänger und Laufzeit bestätigen
+    B->>A: Frischer Passkey-Nachweis für genaue Änderung
+    A->>B: Einmalige Freigabe für 60 Sekunden
+    B->>A: Leserecht mit passender Freigabe erstellen
     A->>B: Signierter Grant mit Ablauf
     B->>A: Konkreten Aufruf beginnen
     A->>B: Frische WebAuthn-Challenge
@@ -97,11 +101,13 @@ Der Passkey beweist die Identität; der separate Grant begrenzt die erlaubte Akt
 
 ## Nachweise
 
-Die [Browser-Ergebnisse](docs/evidence/e2e.json) zeigen jeden ausgeführten Fall: fremde Empfänger, manipulierte Rechte, falsche Origin/RP/Challenge, fehlende User Verification, Signaturfehler, Counter-Rücksprung, Replay, parallele Duplikate, Ablauf, Widerruf und Neustart. Der Ausbau prüft zusätzlich Gast-vor-Eigentümer, falsche Einrichtungscodes und konkurrierende Eigentümer-Einschreibungen.
+Die [Browser-Ergebnisse](docs/evidence/e2e.json) zeigen jeden ausgeführten Fall: fremde Empfänger, manipulierte Rechte, falsche Origin/RP/Challenge, fehlende User Verification, Signaturfehler, Counter-Rücksprung, Replay, parallele Duplikate, Ablauf, Widerruf und Neustart. Der Ausbau prüft zusätzlich die Eigentümer-Einrichtung sowie einmalige Aktionsfreigaben und einen tatsächlich abgebrochenen Passkey-Dialog mit erfolgreichem Neuversuch.
 
 ![HeavenKey — erfolgreicher Zugriff in der geprüften Oberfläche](docs/evidence/browser-success.png)
 
-- [Ausbau 0.3 und aktuelle Nachweise](docs/V03-RESULT.md)
+- [Ausbau 0.4 und aktuelle Nachweise](docs/V04-RESULT.md)
+- [Vertrag und unabhängiger Review der Aktionsfreigaben](docs/STEPUP-REVIEW.md)
+- [Ausbau 0.3: Mehrere Schlüssel und quadratisches Titelbild](docs/V03-RESULT.md)
 - [Enpass-Prinzipien und konkrete Code-Donoren](docs/DONORS.md)
 - [Verhaltensvertrag](docs/SPEC.md)
 - [Roadmap und Gesamtschätzung](docs/ROADMAP.md)
@@ -113,6 +119,8 @@ Die [Browser-Ergebnisse](docs/evidence/e2e.json) zeigen jeden ausgeführten Fall
 Offen sind reale Hardware, Recovery, Mandanten, Schlüsselrotation, verteilte Ausführung, sichere Offline-Zeit und ein interoperables Protokoll. Ein getrenntes Offline-Ziel kennt einen neuen entfernten Widerruf erst nach Empfang entsprechender Information.
 
 Bestehende Zugänge gehören in diesem Profil zum Konto. Ein widerrufener Passkey kann sich nicht mehr anmelden; ein anderer aktiver Schlüssel desselben Kontos kann den Zugang weiter verwenden. Zum Entziehen des Zugangs wird der Grant widerrufen.
+
+Die Aktion ist serverseitig an die WebAuthn-Challenge gebunden. WebAuthn liefert hier keine vertrauenswürdige Anzeige der Transaktionsdaten auf dem Authentikator; ein kompromittierter Browser bleibt eine offene Vertrauensgrenze.
 
 ## Mitwirken, Sicherheit und Rechte
 

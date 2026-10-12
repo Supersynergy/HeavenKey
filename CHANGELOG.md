@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0: Action approval preview
+
+- Vier sensible API-Aktionen verlangen eine frische Passkey-Freigabe: Schlüssel hinzufügen/widerrufen und Zugang erstellen/widerrufen.
+- Freigabe bindet die genauen Parameter, Sitzung, Konto und aktiven Signierschlüssel; monotone Gültigkeit von 60 Sekunden und einmaliger Verbrauch.
+- Manipulierte Versuche verbrauchen die Freigabe. Neustart und Schlüsselwiderruf verwerfen offene Zustimmungen.
+- Oberfläche nennt Aktion und Ziel, erlaubt den Abbruch des Passkey-Dialogs und anschließend einen erneuten Versuch.
+- 96 Browser-Fälle bestanden; sämtliche 69 bisherigen Fälle erhalten. Die Rust-Suite umfasst 36 Tests.
+- Keine neuen externen Abhängigkeiten. Das Delegationsprofil folgt nach diesem nachgewiesenen Autorisierungsengpass.
+
 ## 0.3.0: Credential lifecycle preview
 
 - Quadratisches HeavenKey-Titelbild mit mittiger README-Platzierung.

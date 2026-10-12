@@ -1,0 +1,177 @@
+{
+  "schemaVersion": "1",
+  "cliVersion": "0.16.1",
+  "version": "0.16.1",
+  "score": 93,
+  "label": "Healthy",
+  "scoreable": true,
+  "coverage": {
+    "supportedFiles": 9,
+    "unsupportedFiles": 0,
+    "dominantUnsupported": null,
+    "scoreable": true
+  },
+  "engines": {
+    "format": {
+      "issues": 0,
+      "skipped": false,
+      "elapsed": 2715.1477919999998
+    },
+    "lint": {
+      "issues": 1,
+      "skipped": false,
+      "elapsed": 20447.103875
+    },
+    "code-quality": {
+      "issues": 2,
+      "skipped": false,
+      "elapsed": 2146.827292
+    },
+    "ai-slop": {
+      "issues": 0,
+      "skipped": false,
+      "elapsed": 1952.8651250000003
+    },
+    "security": {
+      "issues": 0,
+      "skipped": false,
+      "elapsed": 3278.2282909999994
+    }
+  },
+  "engineDefinitions": {
+    "format": {
+      "label": "Formatting",
+      "description": "Whitespace, indentation, line wrapping, and import ordering"
+    },
+    "lint": {
+      "label": "Linting",
+      "description": "Static analysis for likely bugs and bad patterns"
+    },
+    "code-quality": {
+      "label": "Code Quality",
+      "description": "Complexity limits, dead code detection, and duplication checks"
+    },
+    "ai-slop": {
+      "label": "AI Slop",
+      "description": "Narrative comments, dead patterns, unsafe type casts, TODO stubs, generic names"
+    },
+    "architecture": {
+      "label": "Architecture",
+      "description": "Project-specific import and layering rules"
+    },
+    "security": {
+      "label": "Security",
+      "description": "Secret leaks, risky APIs, and dependency vulnerabilities"
+    }
+  },
+  "diagnostics": [
+    {
+      "filePath": "scripts/e2e.mjs",
+      "engine": "lint",
+      "rule": "eslint/no-empty",
+      "severity": "warning",
+      "message": "Unexpected empty block statements",
+      "help": "Remove this block or add a comment inside it",
+      "line": 39,
+      "column": 106,
+      "category": "Lint",
+      "fixable": false,
+      "changeContext": "existing-file-context",
+      "assessment": {
+        "kind": "style-policy",
+        "confidence": "medium",
+        "label": "style/policy"
+      },
+      "scoreImpact": {
+        "tier": "style",
+        "multiplier": 0.5,
+        "cap": 8,
+        "rationale": "Empty blocks can be intentional placeholders but should be reviewed."
+      },
+      "forceFixable": false
+    },
+    {
+      "filePath": "apps/api/src/main.rs",
+      "engine": "code-quality",
+      "rule": "complexity/file-too-large",
+      "severity": "warning",
+      "message": "File too large (max: 1000)",
+      "help": "Consider splitting this file into smaller modules",
+      "line": 0,
+      "column": 0,
+      "category": "Complexity",
+      "fixable": false,
+      "detail": "2062 lines",
+      "changeContext": "unknown",
+      "assessment": {
+        "kind": "style-policy",
+        "confidence": "medium",
+        "label": "style/policy"
+      },
+      "scoreImpact": {
+        "tier": "style",
+        "multiplier": 0.5,
+        "cap": 8,
+        "rationale": "Large files are reviewability pressure, but size alone is not a confirmed defect."
+      },
+      "forceFixable": false
+    },
+    {
+      "filePath": "scripts/e2e.mjs",
+      "engine": "code-quality",
+      "rule": "complexity/file-too-large",
+      "severity": "warning",
+      "message": "File too large (max: 400)",
+      "help": "Consider splitting this file into smaller modules",
+      "line": 0,
+      "column": 0,
+      "category": "Complexity",
+      "fixable": false,
+      "detail": "548 lines",
+      "changeContext": "unknown",
+      "assessment": {
+        "kind": "style-policy",
+        "confidence": "medium",
+        "label": "style/policy"
+      },
+      "scoreImpact": {
+        "tier": "style",
+        "multiplier": 0.5,
+        "cap": 8,
+        "rationale": "Large files are reviewability pressure, but size alone is not a confirmed defect."
+      },
+      "forceFixable": false
+    }
+  ],
+  "findingAssessment": {
+    "rows": [
+      {
+        "kind": "style-policy",
+        "label": "style/policy",
+        "count": 3,
+        "errors": 0,
+        "warnings": 3,
+        "info": 0,
+        "fixable": 0
+      }
+    ],
+    "byKind": {
+      "confirmed-defect": 0,
+      "conservative-security": 0,
+      "style-policy": 3,
+      "ai-slop-indicator": 0
+    },
+    "byConfidence": {
+      "high": 0,
+      "medium": 3,
+      "low": 0
+    }
+  },
+  "summary": {
+    "errors": 0,
+    "warnings": 3,
+    "fixable": 0,
+    "files": 9,
+    "elapsed": "20.7s"
+  }
+}

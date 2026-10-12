@@ -34,6 +34,7 @@ PASS revoked grant cannot start new invocation
 PASS duplicate name registration rejected
 PASS HTTP origin CSRF guard
 PASS expired grant denied
+PASS server restart discards outstanding action approvals
 PASS bootstrap stays consumed after server restart
 PASS enrolled credentials authenticate after server restart
 PASS revocation survives server restart
@@ -48,10 +49,36 @@ PASS credential enrollment is bound to the initiating same-account session
 PASS browser enrolls second passkey on a separate device in the same account
 PASS second device authenticates after the original device is removed
 PASS second passkey invokes an existing same-account grant through the browser
+PASS valid bearer alone cannot authorize credential add
+PASS valid bearer alone cannot authorize credential revoke
+PASS valid bearer alone cannot authorize grant create
+PASS valid bearer alone cannot authorize grant revoke
+PASS management ceremonies require a session and its exact account
+PASS management rejects mixed purposes and unknown operation fields
+PASS management approval cannot elevate a guest to owner
+PASS management assertion binds exact parameters and consumes a changed finish
+PASS management approval requires a valid authenticator signature
+PASS management assertion is bound to the initiating same-account session
+PASS management assertion cannot finish in another account
+PASS approval binds credential label and mismatch burns the approval
+PASS approval binds credential target and mismatch burns the approval
+PASS approval binds grant recipient and mismatch burns the approval
+PASS approval binds grant TTL and mismatch burns the approval
+PASS approval binds grant target and mismatch burns the approval
+PASS approval cannot be used for a different action kind
+PASS approval is bound to its same-account session
+PASS approval is bound to its other account
+PASS single-use approval rejects replay after a successful grant mutation
+PASS parallel duplicate approval mutates exactly once
+PASS enrollment accepts an approving active key distinct from the session key
+PASS browser action confirmation can be cancelled without starting a ceremony
+PASS actual browser passkey assertion abort leaves the action recoverable
+PASS browser retry after a real assertion abort succeeds without a new login
 PASS other account cannot revoke a passkey it does not own
 PASS browser passkey revocation forces reauthentication and disables mutations
 PASS passkey revocation invalidates every session for the account
 PASS passkey revocation invalidates pending login and invocation ceremonies
+PASS credential revocation invalidates approvals and pending management ceremonies
 PASS last surviving passkey remains protected after another key is revoked
 PASS passkey revocation invalidates pending enrollment despite fresh surviving session
 PASS revoked passkey is excluded from fresh authentication options
@@ -67,4 +94,4 @@ PASS credential workbench fits 768px and keeps buttons on one line
 PASS multiple passkeys and inactive original survive server restart
 PASS legacy single-passkey database migrates and authenticates with the same key
 PASS legacy credential migration is idempotent across a second restart
-{"total":69,"passed":69,"failed":0,"elapsed_seconds":8.6}
+{"total":96,"passed":96,"failed":0,"elapsed_seconds":32.7}

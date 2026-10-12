@@ -1,0 +1,22 @@
+{"source_commit":"41f05ebc82ddf095f2ca75c02f8c2f52fc220fe1","mode":"synthetic virtual CTAP2","request_authentication":"copied valid bearer session only; no fresh assertion for these actions","grant_create_status":200,"additional_credential_finish_status":200,"original_credential_revoke_status":200,"desired_status":403,"regression_red":true}
+167 |   const finished=await post(guest,"/api/credentials/finish",enrolled,guestSession);
+168 |   const revoked=await post(guest,"/api/credentials/revoke",{id:original},guestSession);
+169 |   const baseline={source_commit:"41f05ebc82ddf095f2ca75c02f8c2f52fc220fe1",mode:"synthetic virtual CTAP2",request_authentication:"copied valid bearer session only; no fresh assertion for these actions",grant_create_status:grants.status,additional_credential_finish_status:finished.status,original_credential_revoke_status:revoked.status,desired_status:403,regression_red:grants.status===200&&finished.status===200&&revoked.status===200};
+170 |   await writeFile(join(evidence,"stepup-baseline.json"),JSON.stringify(baseline,null,2)+"\n");
+171 |   console.log(JSON.stringify(baseline));
+172 |   assert.equal(grants.status,403,"baseline should reject token-only mutation");
+               ^
+AssertionError: baseline should reject token-only mutation
+
+200 !== 403
+
+ generatedMessage: false,
+     actual: 200,
+   expected: 403,
+   operator: "strictEqual",
+       diff: "simple",
+       code: "ERR_ASSERTION"
+
+      at /Users/master/Documents/Codex/work/uac-spike/scripts/.stepup-baseline.mjs:172:10
+
+Bun v1.4.2 (macOS arm64)

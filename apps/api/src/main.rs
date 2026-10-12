@@ -21,7 +21,7 @@ use std::{
     io::Write,
     path::Path,
     sync::{Arc, Mutex},
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 use uac_verifier::{Action, Grant, Signed, authorize_passkey_grant, grant_id, sign_grant};
 use uuid::Uuid;
@@ -31,6 +31,8 @@ const RESOURCE: &str = "urn:uac:lab:document";
 const CEREMONY_TTL: u64 = 120;
 const MAX_PENDING: usize = 128;
 const MAX_CREDENTIALS: usize = 8;
+const MAX_APPROVALS: usize = 128;
+const APPROVAL_TTL: Duration = Duration::from_secs(60);
 
 #[derive(Clone)]
 struct App {
@@ -46,6 +48,7 @@ struct Inner {
     registrations: HashMap<String, Registration>,
     enrollments: HashMap<String, Enrollment>,
     authentications: HashMap<String, Authentication>,
+    approvals: HashMap<String, Approval>,
     sessions: HashMap<String, Session>,
 }
 struct Registration {
@@ -59,7 +62,19 @@ struct Authentication {
     user: User,
     state: PasskeyAuthentication,
     invocation: Option<Invocation>,
+    management: Option<ManagementCeremony>,
     expires: u64,
+}
+struct ManagementCeremony {
+    operation: Management,
+    session_token: String,
+}
+struct Approval {
+    user_id: String,
+    session_token: String,
+    credential_id: String,
+    operation: Management,
+    expires: Instant,
 }
 struct Enrollment {
     user_id: String,
@@ -111,6 +126,7 @@ struct Invocation {
 struct AuthStart {
     name: String,
     invocation: Option<Invocation>,
+    management: Option<Management>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -118,27 +134,49 @@ struct AuthFinish {
     request_id: String,
     credential: PublicKeyCredential,
     invocation: Option<Invocation>,
+    management: Option<Management>,
+}
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+enum Management {
+    CredentialAdd {
+        label: String,
+    },
+    CredentialRevoke {
+        id: String,
+    },
+    GrantCreate {
+        guest_name: String,
+        ttl_seconds: u64,
+    },
+    GrantRevoke {
+        id: String,
+    },
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct GrantCreate {
     guest_name: String,
     ttl_seconds: u64,
+    approval_id: Option<String>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct GrantRevoke {
     id: String,
+    approval_id: Option<String>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct CredentialStart {
     label: String,
+    approval_id: Option<String>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct CredentialRevoke {
     id: String,
+    approval_id: Option<String>,
 }
 
 #[derive(Debug)]
@@ -193,6 +231,8 @@ impl Inner {
         self.registrations.retain(|_, v| v.expires > time);
         self.enrollments.retain(|_, v| v.expires > time);
         self.authentications.retain(|_, v| v.expires > time);
+        let instant = Instant::now();
+        self.approvals.retain(|_, v| v.expires > instant);
         self.sessions.retain(|_, v| v.expires > time);
     }
     fn user(&self, field: &str, value: &str) -> ApiResult<User> {
@@ -293,6 +333,54 @@ impl Inner {
             return Err(ApiError(StatusCode::UNAUTHORIZED, "credential_revoked"));
         }
         self.user("id", &s.user_id)
+    }
+    fn management_allowed(&self, user: &User, operation: &Management) -> ApiResult<()> {
+        match operation {
+            Management::CredentialAdd { label } => {
+                credential_label(label)?;
+            }
+            Management::CredentialRevoke { .. } => {}
+            Management::GrantCreate { ttl_seconds, .. } => {
+                if !user.owner {
+                    return Err(forbidden("owner_required"));
+                }
+                if !(1..=3600).contains(ttl_seconds) {
+                    return Err(ApiError(StatusCode::BAD_REQUEST, "invalid_expiry"));
+                }
+            }
+            Management::GrantRevoke { .. } => {
+                if !user.owner {
+                    return Err(forbidden("owner_required"));
+                }
+            }
+        }
+        Ok(())
+    }
+    fn take_approval(&mut self, id: Option<&str>) -> Option<Approval> {
+        self.prune();
+        id.and_then(|id| self.approvals.remove(id))
+    }
+    fn require_approval(
+        &self,
+        headers: &HeaderMap,
+        user: &User,
+        id: Option<&str>,
+        approval: Option<Approval>,
+        operation: &Management,
+    ) -> ApiResult<String> {
+        id.ok_or(forbidden("approval_required"))?;
+        let approval = approval.ok_or(forbidden("approval_missing"))?;
+        if approval.expires <= Instant::now() {
+            return Err(forbidden("approval_missing"));
+        }
+        if approval.user_id != user.id
+            || approval.session_token != session_token(headers)?
+            || approval.operation != *operation
+            || !self.credential_active(&user.id, &approval.credential_id)?
+        {
+            return Err(forbidden("approval_mismatch"));
+        }
+        Ok(approval.credential_id)
     }
     fn grant_allowed(&self, user: &User, invocation: &Invocation) -> ApiResult<()> {
         if invocation.arguments.len() > 8
@@ -471,14 +559,39 @@ async fn register_finish(
 
 async fn auth_start(
     State(app): State<App>,
+    headers: HeaderMap,
     Json(input): Json<AuthStart>,
 ) -> ApiResult<Json<Value>> {
+    if input.management.is_some() && input.invocation.is_some() {
+        return Err(ApiError(
+            StatusCode::BAD_REQUEST,
+            "ambiguous_authentication",
+        ));
+    }
     let mut inner = app.inner.lock().map_err(internal)?;
     inner.prune();
     if inner.authentications.len() >= MAX_PENDING {
         return Err(ApiError(StatusCode::TOO_MANY_REQUESTS, "ceremony_limit"));
     }
-    let user = inner.user("name", &input.name)?;
+    let (user, management) = if let Some(operation) = input.management {
+        let user = inner.session_user(&headers)?;
+        if user.name != input.name {
+            return Err(forbidden("management_user_mismatch"));
+        }
+        inner.management_allowed(&user, &operation)?;
+        if inner.approvals.len() >= MAX_APPROVALS {
+            return Err(ApiError(StatusCode::TOO_MANY_REQUESTS, "approval_limit"));
+        }
+        (
+            user,
+            Some(ManagementCeremony {
+                operation,
+                session_token: session_token(&headers)?.to_owned(),
+            }),
+        )
+    } else {
+        (inner.user("name", &input.name)?, None)
+    };
     if let Some(invocation) = &input.invocation {
         inner.grant_allowed(&user, invocation)?;
     }
@@ -502,6 +615,7 @@ async fn auth_start(
             user,
             state,
             invocation: input.invocation,
+            management,
             expires: now() + CEREMONY_TTL,
         },
     );
@@ -512,6 +626,7 @@ async fn auth_start(
 
 async fn auth_finish(
     State(app): State<App>,
+    headers: HeaderMap,
     Json(input): Json<AuthFinish>,
 ) -> ApiResult<Json<Value>> {
     let mut inner = app.inner.lock().map_err(internal)?;
@@ -520,6 +635,26 @@ async fn auth_finish(
         .authentications
         .remove(&input.request_id)
         .ok_or(forbidden("ceremony_missing"))?;
+    if input.management.is_some() && input.invocation.is_some() {
+        return Err(ApiError(
+            StatusCode::BAD_REQUEST,
+            "ambiguous_authentication",
+        ));
+    }
+    match (&pending.management, &input.management) {
+        (Some(management), Some(operation)) if management.operation == *operation => {
+            let user = inner.session_user(&headers)?;
+            if management.session_token != session_token(&headers)? || user.id != pending.user.id {
+                return Err(forbidden("management_session_changed"));
+            }
+            inner.management_allowed(&user, operation)?;
+            if inner.approvals.len() >= MAX_APPROVALS {
+                return Err(ApiError(StatusCode::TOO_MANY_REQUESTS, "approval_limit"));
+            }
+        }
+        (None, None) => {}
+        _ => return Err(forbidden("management_changed")),
+    }
     if binding(&pending.invocation)? != binding(&input.invocation)? {
         return Err(forbidden("invocation_changed"));
     }
@@ -573,7 +708,22 @@ async fn auth_finish(
         }
     }
     tx.commit().map_err(internal)?;
-    if let Some(invocation) = pending.invocation {
+    if let Some(management) = pending.management {
+        let approval_id = Uuid::new_v4().to_string();
+        inner.approvals.insert(
+            approval_id.clone(),
+            Approval {
+                user_id: user.id,
+                session_token: management.session_token,
+                credential_id: id,
+                operation: management.operation,
+                expires: Instant::now() + APPROVAL_TTL,
+            },
+        );
+        Ok(Json(
+            json!({"approval_id":approval_id,"approved":true,"expires_in":APPROVAL_TTL.as_secs()}),
+        ))
+    } else if let Some(invocation) = pending.invocation {
         Ok(Json(
             json!({"authorized":true,"resource":invocation.resource,"action":invocation.action,"arguments":invocation.arguments,"operation":input.request_id,"data":"HeavenKey example document — verified access"}),
         ))
@@ -624,15 +774,22 @@ async fn credential_start(
     headers: HeaderMap,
     Json(input): Json<CredentialStart>,
 ) -> ApiResult<Json<Value>> {
-    let label = credential_label(&input.label)?;
     let mut inner = app.inner.lock().map_err(internal)?;
+    let approval = inner.take_approval(input.approval_id.as_deref());
+    let label = credential_label(&input.label)?;
     let user = inner.session_user(&headers)?;
     if inner.registrations.len() + inner.enrollments.len() >= MAX_PENDING {
         return Err(ApiError(StatusCode::TOO_MANY_REQUESTS, "ceremony_limit"));
     }
     inner.check_credential_capacity(&user.id)?;
     let token = session_token(&headers)?.to_owned();
-    let authorizing_credential_id = inner.sessions[&token].credential_id.clone();
+    let authorizing_credential_id = inner.require_approval(
+        &headers,
+        &user,
+        input.approval_id.as_deref(),
+        approval,
+        &Management::CredentialAdd { label: input.label },
+    )?;
     let excluded = inner
         .active_credentials(&user.id)?
         .into_iter()
@@ -674,10 +831,7 @@ async fn credential_finish(
         .enrollments
         .get(&input.request_id)
         .ok_or(forbidden("ceremony_missing"))?;
-    if pending.user_id != user.id
-        || pending.session_token != token
-        || pending.authorizing_credential_id != inner.sessions[token].credential_id
-    {
+    if pending.user_id != user.id || pending.session_token != token {
         return Err(forbidden("enrollment_session_changed"));
     }
     if !inner.credential_active(&user.id, &pending.authorizing_credential_id)? {
@@ -718,7 +872,17 @@ async fn credential_revoke(
     Json(input): Json<CredentialRevoke>,
 ) -> ApiResult<Json<Value>> {
     let mut inner = app.inner.lock().map_err(internal)?;
+    let approval = inner.take_approval(input.approval_id.as_deref());
     let user = inner.session_user(&headers)?;
+    inner.require_approval(
+        &headers,
+        &user,
+        input.approval_id.as_deref(),
+        approval,
+        &Management::CredentialRevoke {
+            id: input.id.clone(),
+        },
+    )?;
     let tx = inner.db.transaction().map_err(internal)?;
     let active = tx
         .query_row(
@@ -757,6 +921,9 @@ async fn credential_revoke(
     inner
         .enrollments
         .retain(|_, pending| pending.user_id != user.id);
+    inner
+        .approvals
+        .retain(|_, approval| approval.user_id != user.id);
     Ok(Json(
         json!({"id":input.id,"revoked":true,"reauthentication_required":true}),
     ))
@@ -767,15 +934,26 @@ async fn create_grant(
     headers: HeaderMap,
     Json(input): Json<GrantCreate>,
 ) -> ApiResult<Json<Value>> {
+    let mut inner = app.inner.lock().map_err(internal)?;
+    let approval = inner.take_approval(input.approval_id.as_deref());
     if !(1..=3600).contains(&input.ttl_seconds) {
         return Err(ApiError(StatusCode::BAD_REQUEST, "invalid_expiry"));
     }
-    let mut inner = app.inner.lock().map_err(internal)?;
     let owner = inner.session_user(&headers)?;
     if !owner.owner {
         return Err(forbidden("owner_required"));
     }
     let guest = inner.user("name", &input.guest_name)?;
+    inner.require_approval(
+        &headers,
+        &owner,
+        input.approval_id.as_deref(),
+        approval,
+        &Management::GrantCreate {
+            guest_name: input.guest_name,
+            ttl_seconds: input.ttl_seconds,
+        },
+    )?;
     let time = now();
     let grant = sign_grant(
         &inner.issuer,
@@ -812,9 +990,20 @@ async fn revoke_grant(
     Json(input): Json<GrantRevoke>,
 ) -> ApiResult<Json<Value>> {
     let mut inner = app.inner.lock().map_err(internal)?;
-    if !inner.session_user(&headers)?.owner {
+    let approval = inner.take_approval(input.approval_id.as_deref());
+    let owner = inner.session_user(&headers)?;
+    if !owner.owner {
         return Err(forbidden("owner_required"));
     }
+    inner.require_approval(
+        &headers,
+        &owner,
+        input.approval_id.as_deref(),
+        approval,
+        &Management::GrantRevoke {
+            id: input.id.clone(),
+        },
+    )?;
     let n = inner
         .db
         .execute("UPDATE grants SET revoked=1 WHERE id=?1", [&input.id])
@@ -960,6 +1149,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             registrations: HashMap::new(),
             enrollments: HashMap::new(),
             authentications: HashMap::new(),
+            approvals: HashMap::new(),
             sessions: HashMap::new(),
         })),
         origin: origin.clone(),
@@ -1018,6 +1208,7 @@ mod tests {
                 registrations: HashMap::new(),
                 enrollments: HashMap::new(),
                 authentications: HashMap::new(),
+                approvals: HashMap::new(),
                 sessions: HashMap::new(),
             })),
             origin: origin.into(),
@@ -1089,6 +1280,35 @@ mod tests {
                 expires: now() + CEREMONY_TTL,
             },
         );
+    }
+
+    fn add_approval(app: &App, token: &str, operation: Management) -> String {
+        let mut inner = app.inner.lock().expect("inner");
+        let session = inner.sessions.get(token).expect("synthetic session");
+        let approval = Approval {
+            user_id: session.user_id.clone(),
+            session_token: token.into(),
+            credential_id: session.credential_id.clone(),
+            operation,
+            expires: Instant::now() + APPROVAL_TTL,
+        };
+        let id = Uuid::new_v4().to_string();
+        inner.approvals.insert(id.clone(), approval);
+        id
+    }
+
+    fn management_app() -> (App, String, String, String) {
+        let app = app();
+        let (owner_token, guest_token, guest_id) = {
+            let mut inner = app.inner.lock().expect("inner");
+            let (owner, owner_id) = add_user(&mut inner, "owner", true);
+            let (guest, guest_id) = add_user(&mut inner, "guest", false);
+            add_credential(&inner, &guest, "guest-backup");
+            let owner_token = add_session(&mut inner, &owner, &owner_id);
+            let guest_token = add_session(&mut inner, &guest, &guest_id);
+            (owner_token, guest_token, guest_id)
+        };
+        (app, owner_token, guest_token, guest_id)
     }
 
     #[test]
@@ -1194,7 +1414,14 @@ mod tests {
         let foreign = credential_revoke(
             State(app.clone()),
             headers(&token),
-            Json(CredentialRevoke { id: bob_id.clone() }),
+            Json(CredentialRevoke {
+                id: bob_id.clone(),
+                approval_id: Some(add_approval(
+                    &app,
+                    &token,
+                    Management::CredentialRevoke { id: bob_id.clone() },
+                )),
+            }),
         )
         .await
         .expect_err("foreign key denied");
@@ -1202,11 +1429,32 @@ mod tests {
             (foreign.0, foreign.1),
             (StatusCode::NOT_FOUND, "credential_not_found")
         );
+        let alice_approval = add_approval(
+            &app,
+            &other_token,
+            Management::CredentialAdd {
+                label: "Next key".into(),
+            },
+        );
+        let bob_approval = add_approval(
+            &app,
+            &bob_token,
+            Management::CredentialAdd {
+                label: "Next key".into(),
+            },
+        );
         let Json(revoked) = credential_revoke(
             State(app.clone()),
             headers(&token),
             Json(CredentialRevoke {
                 id: alice_id.clone(),
+                approval_id: Some(add_approval(
+                    &app,
+                    &token,
+                    Management::CredentialRevoke {
+                        id: alice_id.clone(),
+                    },
+                )),
             }),
         )
         .await
@@ -1218,6 +1466,8 @@ mod tests {
             assert!(!inner.sessions.contains_key(&other_token));
             assert!(!inner.enrollments.contains_key(&alice));
             assert!(inner.enrollments.contains_key(&bob));
+            assert!(!inner.approvals.contains_key(&alice_approval));
+            assert!(inner.approvals.contains_key(&bob_approval));
             assert!(inner.session_user(&headers(&bob_token)).is_ok());
             assert!(
                 !inner
@@ -1234,7 +1484,14 @@ mod tests {
         let last = credential_revoke(
             State(app.clone()),
             headers(&surviving_token),
-            Json(CredentialRevoke { id: "extra".into() }),
+            Json(CredentialRevoke {
+                id: "extra".into(),
+                approval_id: Some(add_approval(
+                    &app,
+                    &surviving_token,
+                    Management::CredentialRevoke { id: "extra".into() },
+                )),
+            }),
         )
         .await
         .expect_err("last key denied");
@@ -1271,9 +1528,11 @@ mod tests {
         );
         let error = auth_start(
             State(app),
+            HeaderMap::new(),
             Json(AuthStart {
                 name: "alice".into(),
                 invocation: None,
+                management: None,
             }),
         )
         .await
@@ -1301,6 +1560,7 @@ mod tests {
             headers(&token),
             Json(CredentialStart {
                 label: "Ninth key".into(),
+                approval_id: None,
             }),
         )
         .await
@@ -1340,6 +1600,14 @@ mod tests {
             Json(GrantCreate {
                 guest_name: "guest".into(),
                 ttl_seconds: 60,
+                approval_id: Some(add_approval(
+                    &app,
+                    &token,
+                    Management::GrantCreate {
+                        guest_name: "guest".into(),
+                        ttl_seconds: 60,
+                    },
+                )),
             }),
         )
         .await
@@ -1374,5 +1642,420 @@ mod tests {
                 },
             )
             .expect("existing grant survives with same account subject");
+    }
+
+    #[tokio::test]
+    async fn bearer_sessions_cannot_perform_any_management_mutation() {
+        let (app, owner_token, guest_token, guest_id) = management_app();
+        let errors = [
+            credential_start(
+                State(app.clone()),
+                headers(&guest_token),
+                Json(CredentialStart {
+                    label: "Backup".into(),
+                    approval_id: None,
+                }),
+            )
+            .await
+            .expect_err("add requires approval"),
+            credential_revoke(
+                State(app.clone()),
+                headers(&guest_token),
+                Json(CredentialRevoke {
+                    id: guest_id,
+                    approval_id: None,
+                }),
+            )
+            .await
+            .expect_err("revoke requires approval"),
+            create_grant(
+                State(app.clone()),
+                headers(&owner_token),
+                Json(GrantCreate {
+                    guest_name: "guest".into(),
+                    ttl_seconds: 60,
+                    approval_id: None,
+                }),
+            )
+            .await
+            .expect_err("grant requires approval"),
+            revoke_grant(
+                State(app.clone()),
+                headers(&owner_token),
+                Json(GrantRevoke {
+                    id: "grant".into(),
+                    approval_id: None,
+                }),
+            )
+            .await
+            .expect_err("grant revocation requires approval"),
+        ];
+        for error in errors {
+            assert_eq!(
+                (error.0, error.1),
+                (StatusCode::FORBIDDEN, "approval_required")
+            );
+        }
+        let inner = app.inner.lock().expect("inner");
+        assert!(inner.enrollments.is_empty());
+        assert_eq!(
+            inner
+                .db
+                .query_row("SELECT COUNT(*) FROM grants", [], |r| r.get::<_, i64>(0))
+                .expect("no writes"),
+            0
+        );
+        assert_eq!(
+            inner
+                .db
+                .query_row("SELECT COUNT(*) FROM credentials WHERE active=1", [], |r| r
+                    .get::<_, i64>(0))
+                .expect("keys unchanged"),
+            3
+        );
+    }
+
+    #[test]
+    fn every_operation_parameter_is_exact_and_mismatches_consume_approval() {
+        let (app, token, _, _) = management_app();
+        let cases = [
+            (
+                Management::CredentialAdd {
+                    label: "Backup".into(),
+                },
+                Management::CredentialAdd {
+                    label: " Backup ".into(),
+                },
+            ),
+            (
+                Management::CredentialRevoke { id: "one".into() },
+                Management::CredentialRevoke { id: "two".into() },
+            ),
+            (
+                Management::GrantCreate {
+                    guest_name: "guest".into(),
+                    ttl_seconds: 60,
+                },
+                Management::GrantCreate {
+                    guest_name: "guest".into(),
+                    ttl_seconds: 61,
+                },
+            ),
+            (
+                Management::GrantCreate {
+                    guest_name: "guest".into(),
+                    ttl_seconds: 60,
+                },
+                Management::GrantCreate {
+                    guest_name: "other".into(),
+                    ttl_seconds: 60,
+                },
+            ),
+            (
+                Management::GrantRevoke { id: "one".into() },
+                Management::GrantRevoke { id: "two".into() },
+            ),
+            (
+                Management::GrantRevoke { id: "one".into() },
+                Management::CredentialRevoke { id: "one".into() },
+            ),
+        ];
+        for (approved, attempted) in cases {
+            let id = add_approval(&app, &token, approved.clone());
+            let mut inner = app.inner.lock().expect("inner");
+            let user = inner.session_user(&headers(&token)).expect("session");
+            let taken = inner.take_approval(Some(&id));
+            let error = inner
+                .require_approval(&headers(&token), &user, Some(&id), taken, &attempted)
+                .expect_err("parameter mismatch");
+            assert_eq!(
+                (error.0, error.1),
+                (StatusCode::FORBIDDEN, "approval_mismatch")
+            );
+            let replay = inner.take_approval(Some(&id));
+            let error = inner
+                .require_approval(&headers(&token), &user, Some(&id), replay, &approved)
+                .expect_err("mismatched approval cannot be retried");
+            assert_eq!(
+                (error.0, error.1),
+                (StatusCode::FORBIDDEN, "approval_missing")
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn invalid_parameters_and_wrong_sessions_burn_supplied_approvals() {
+        let (app, token, guest_token, _) = management_app();
+        let operation = Management::GrantCreate {
+            guest_name: "guest".into(),
+            ttl_seconds: 60,
+        };
+        let invalid_id = add_approval(&app, &token, operation.clone());
+        let invalid = create_grant(
+            State(app.clone()),
+            headers(&token),
+            Json(GrantCreate {
+                guest_name: "guest".into(),
+                ttl_seconds: 0,
+                approval_id: Some(invalid_id.clone()),
+            }),
+        )
+        .await
+        .expect_err("invalid expiry");
+        assert_eq!(
+            (invalid.0, invalid.1),
+            (StatusCode::BAD_REQUEST, "invalid_expiry")
+        );
+        assert!(
+            !app.inner
+                .lock()
+                .expect("inner")
+                .approvals
+                .contains_key(&invalid_id)
+        );
+        let alternate_token = {
+            let mut inner = app.inner.lock().expect("inner");
+            let user = inner.user("name", "owner").expect("owner");
+            let credential_id = inner.sessions[&token].credential_id.clone();
+            add_session(&mut inner, &user.id, &credential_id)
+        };
+        for attempted_token in [&alternate_token, &guest_token] {
+            let id = add_approval(
+                &app,
+                &token,
+                Management::CredentialAdd {
+                    label: "Backup".into(),
+                },
+            );
+            let error = credential_start(
+                State(app.clone()),
+                headers(attempted_token),
+                Json(CredentialStart {
+                    label: "Backup".into(),
+                    approval_id: Some(id.clone()),
+                }),
+            )
+            .await
+            .expect_err("session or account mismatch");
+            assert_eq!(
+                (error.0, error.1),
+                (StatusCode::FORBIDDEN, "approval_mismatch")
+            );
+            assert!(!app.inner.lock().expect("inner").approvals.contains_key(&id));
+        }
+        let unauthenticated_id = add_approval(&app, &token, operation);
+        let error = create_grant(
+            State(app.clone()),
+            HeaderMap::new(),
+            Json(GrantCreate {
+                guest_name: "guest".into(),
+                ttl_seconds: 60,
+                approval_id: Some(unauthenticated_id.clone()),
+            }),
+        )
+        .await
+        .expect_err("missing authentication");
+        assert_eq!(
+            (error.0, error.1),
+            (StatusCode::UNAUTHORIZED, "session_required")
+        );
+        assert!(
+            !app.inner
+                .lock()
+                .expect("inner")
+                .approvals
+                .contains_key(&unauthenticated_id)
+        );
+    }
+
+    #[tokio::test]
+    async fn duplicate_approved_mutations_commit_once() {
+        let (app, token, _, _) = management_app();
+        let id = add_approval(
+            &app,
+            &token,
+            Management::GrantCreate {
+                guest_name: "guest".into(),
+                ttl_seconds: 60,
+            },
+        );
+        let input = || {
+            Json(GrantCreate {
+                guest_name: "guest".into(),
+                ttl_seconds: 60,
+                approval_id: Some(id.clone()),
+            })
+        };
+        let (first, second) = tokio::join!(
+            create_grant(State(app.clone()), headers(&token), input()),
+            create_grant(State(app.clone()), headers(&token), input()),
+        );
+        assert!(first.is_ok());
+        let error = second.expect_err("single-use duplicate denied");
+        assert_eq!(
+            (error.0, error.1),
+            (StatusCode::FORBIDDEN, "approval_missing")
+        );
+        let inner = app.inner.lock().expect("inner");
+        assert_eq!(
+            inner
+                .db
+                .query_row("SELECT COUNT(*) FROM grants", [], |r| r.get::<_, i64>(0))
+                .expect("one grant"),
+            1
+        );
+    }
+
+    #[tokio::test]
+    async fn monotonic_expiry_and_signer_state_are_checked_at_consumption() {
+        let (app, token, _, _) = management_app();
+        let operation = Management::GrantCreate {
+            guest_name: "guest".into(),
+            ttl_seconds: 60,
+        };
+        let expired = add_approval(&app, &token, operation.clone());
+        {
+            let mut inner = app.inner.lock().expect("inner");
+            inner.approvals.get_mut(&expired).expect("approval").expires = Instant::now();
+        }
+        let error = create_grant(
+            State(app.clone()),
+            headers(&token),
+            Json(GrantCreate {
+                guest_name: "guest".into(),
+                ttl_seconds: 60,
+                approval_id: Some(expired),
+            }),
+        )
+        .await
+        .expect_err("monotonic expired approval");
+        assert_eq!(
+            (error.0, error.1),
+            (StatusCode::FORBIDDEN, "approval_missing")
+        );
+        let revoked = add_approval(&app, &token, operation);
+        {
+            let mut inner = app.inner.lock().expect("inner");
+            let owner = inner.user("name", "owner").expect("owner");
+            add_credential(&inner, &owner.id, "revoked-approver");
+            inner
+                .approvals
+                .get_mut(&revoked)
+                .expect("approval")
+                .credential_id = "revoked-approver".into();
+            inner
+                .db
+                .execute(
+                    "UPDATE credentials SET active=0 WHERE id='revoked-approver'",
+                    [],
+                )
+                .expect("retire approving key while session key remains active");
+        }
+        let error = create_grant(
+            State(app.clone()),
+            headers(&token),
+            Json(GrantCreate {
+                guest_name: "guest".into(),
+                ttl_seconds: 60,
+                approval_id: Some(revoked),
+            }),
+        )
+        .await
+        .expect_err("active signer required");
+        assert_eq!(
+            (error.0, error.1),
+            (StatusCode::FORBIDDEN, "approval_mismatch")
+        );
+    }
+
+    #[tokio::test]
+    async fn management_checks_authority_and_bounds_outstanding_approvals() {
+        let (app, token, guest_token, _) = management_app();
+        let operation = Management::GrantCreate {
+            guest_name: "guest".into(),
+            ttl_seconds: 60,
+        };
+        let error = auth_start(
+            State(app.clone()),
+            headers(&guest_token),
+            Json(AuthStart {
+                name: "guest".into(),
+                invocation: None,
+                management: Some(operation),
+            }),
+        )
+        .await
+        .expect_err("owner-only approval");
+        assert_eq!(
+            (error.0, error.1),
+            (StatusCode::FORBIDDEN, "owner_required")
+        );
+        let error = auth_start(
+            State(app.clone()),
+            headers(&token),
+            Json(AuthStart {
+                name: "guest".into(),
+                invocation: None,
+                management: Some(Management::CredentialAdd {
+                    label: "Backup".into(),
+                }),
+            }),
+        )
+        .await
+        .expect_err("session account must match requested name");
+        assert_eq!(
+            (error.0, error.1),
+            (StatusCode::FORBIDDEN, "management_user_mismatch")
+        );
+        for _ in 0..MAX_APPROVALS {
+            add_approval(
+                &app,
+                &token,
+                Management::CredentialAdd {
+                    label: "Backup".into(),
+                },
+            );
+        }
+        let error = auth_start(
+            State(app.clone()),
+            headers(&token),
+            Json(AuthStart {
+                name: "owner".into(),
+                invocation: None,
+                management: Some(Management::CredentialAdd {
+                    label: "Backup".into(),
+                }),
+            }),
+        )
+        .await
+        .expect_err("approval map is capped");
+        assert_eq!(
+            (error.0, error.1),
+            (StatusCode::TOO_MANY_REQUESTS, "approval_limit")
+        );
+        assert_eq!(
+            app.inner.lock().expect("inner").approvals.len(),
+            MAX_APPROVALS
+        );
+    }
+
+    #[test]
+    fn management_schema_rejects_ambiguous_or_extra_fields() {
+        for invalid in [
+            json!({"kind":"credential_add","label":"Backup","id":"extra"}),
+            json!({"kind":"grant_revoke","id":"grant","ttl_seconds":60}),
+            json!({"kind":"credential_add"}),
+            json!({"kind":"unknown","id":"grant"}),
+            json!({"kind":"grant_create","guest_name":"guest","ttl_seconds":"60"}),
+        ] {
+            assert!(serde_json::from_value::<Management>(invalid).is_err());
+        }
+        assert_eq!(
+            serde_json::from_value::<Management>(json!({"kind":"credential_add","label":"Backup"}))
+                .expect("exact shape"),
+            Management::CredentialAdd {
+                label: "Backup".into()
+            }
+        );
     }
 }

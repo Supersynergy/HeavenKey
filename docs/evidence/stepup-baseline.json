@@ -1,0 +1,10 @@
+{
+  "source_commit": "41f05ebc82ddf095f2ca75c02f8c2f52fc220fe1",
+  "mode": "synthetic virtual CTAP2",
+  "request_authentication": "copied valid bearer session only; no fresh assertion for these actions",
+  "grant_create_status": 200,
+  "additional_credential_finish_status": 200,
+  "original_credential_revoke_status": 200,
+  "desired_status": 403,
+  "regression_red": true
+}

@@ -1,0 +1,10 @@
+bun run build
+$ python3 scripts/build_web.py
+Bundled 21 modules in 139ms
+
+  main.js  32.1 KB  (entry point)
+
+cargo build --locked --offline
+   Compiling uac-verifier v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/crates/verifier)
+   Compiling uac-api v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/apps/api)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 32.61s
