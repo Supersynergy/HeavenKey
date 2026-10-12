@@ -1,0 +1,225 @@
+{
+  "project": "HeavenKey",
+  "version": "0.4.0",
+  "integrated_files": [
+    {
+      "path": "Cargo.toml",
+      "sha256": "5e6cc11d991660dc71d3385943fd60b726d695c644cb3d05d41fe8f45d8b3fb9"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "7c87d9edb49eaabccff4528b799cb1f730d25b8b23b763f74693b719223a7d57"
+    },
+    {
+      "path": "bun.lock",
+      "sha256": "bad9b2e6010f1147d6e4b17f28a812dd1e02a709222125a0a632b662a9e5ae1c"
+    },
+    {
+      "path": "package.json",
+      "sha256": "f3af43dfdec333284d630ab1654d2afb6d12b8785ba024f6db489f8e63c780e4"
+    },
+    {
+      "path": "apps/web/package.json",
+      "sha256": "e43ce5ea28af95d3d4c856a6263477f2cd4bab714b9912008f2f7c286f986c27"
+    },
+    {
+      "path": "apps/api/src/main.rs",
+      "sha256": "7e0d005eab9f24264cafb2cdc4b6d046cb2f82230bb856714f8fe863bd6b8519"
+    },
+    {
+      "path": "crates/verifier/src/lib.rs",
+      "sha256": "65f708e43607a6afa3dd18d10cb2c0260d9eafe490abcaf91e31d7da9ad8257c"
+    },
+    {
+      "path": "apps/web/index.html",
+      "sha256": "f30ba4f8cabb365949474437119b694e4f63288985fad60d9ef74b2068d74b6f"
+    },
+    {
+      "path": "apps/web/src/main.ts",
+      "sha256": "fe8c3d6888960de8ce63a58812ef440ee45faea0dbbd04cf8f0c26ac411135e2"
+    },
+    {
+      "path": "apps/web/src/style.css",
+      "sha256": "057035419ac2c7d8e4af533456a3f373d98ec7732656c25be53e3235772c0157"
+    },
+    {
+      "path": "scripts/e2e.mjs",
+      "sha256": "632086a18a5f65ca8965b30db0a00fc0b1f7ee4e07cb7a6784430afb6b21f37f"
+    },
+    {
+      "path": "scripts/run.py",
+      "sha256": "4174867b676d4f08787d79a4a32e883792586f8a2e7c200c2155363e220bb506"
+    },
+    {
+      "path": "scripts/startup_probe.py",
+      "sha256": "e30e08c6b41160389cac9aa504c26a1b219ef8a7ec845021266bc787ce577256"
+    },
+    {
+      "path": "scripts/build_web.py",
+      "sha256": "40bd5a832ac629498d41a3f7f4064dc1f7eff6418ed25ebe299e57714de8617c"
+    },
+    {
+      "path": "scripts/readme_preview.mjs",
+      "sha256": "98954771bc3b1b983835d1850dd18768e872cd8fbd3359868db89df125a302c5"
+    },
+    {
+      "path": "scripts/ci.sh",
+      "sha256": "f4fcde2e0ba15133037987f8017b6dcb9e7fdf8cc280dc46a82f8cd1c026777b"
+    },
+    {
+      "path": "justfile",
+      "sha256": "a319345e94e3f2bfe15008d85234bb31ef9dfffc1a3f682e9cb25f2b254cb320"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "6ba7c2450c5d8c0a5bb300b6caa467a9f690baee692be763775c67fc7333db2e"
+    },
+    {
+      "path": "docs/licenses/simplewebauthn-browser-MIT.txt",
+      "sha256": "bd9e3f45696472076c7160c7f66e54b2d62d38bc2646c812d19be83ee4400c63"
+    },
+    {
+      "path": "README.md",
+      "sha256": "8f54c6bc5018a599540862328c4b0b0c7c17cf6adc00e36798b3220897a0202a"
+    },
+    {
+      "path": "docs/assets/heavenkey-hero-square.png",
+      "sha256": "d90b4c752b010610bf9cb8f2bd0005930eef6a9a62558ca28083a23887e3dd5b"
+    },
+    {
+      "path": "docs/STEPUP-CONTRACT.md",
+      "sha256": "a98054155aa6081e33bfcb0d99fc9a2d890c60cb23fab0d7e0b1f603d63b6bae"
+    }
+  ],
+  "check_exit": 0,
+  "check_execution": "bounded scripts/run.py + ats-verify + just _check; complete recipe behind just check",
+  "rust_tests": {
+    "core": 24,
+    "api": 12,
+    "total": 36
+  },
+  "e2e": {
+    "completed": true,
+    "total": 96,
+    "passed": 96,
+    "failed": 0,
+    "elapsed_seconds": 32.7
+  },
+  "regression": {
+    "old_cases_preserved": 69,
+    "added": 27,
+    "removed": 0,
+    "all_four_bearer_only_writes_denied": true,
+    "actual_browser_assertion_abort_and_retry": true
+  },
+  "independent_review": {
+    "status": "green_independent_review_and_current_integrated_oracles",
+    "recorded_source_hashes_match": true,
+    "blocking_findings": []
+  },
+  "semgrep": {
+    "scanned": 8,
+    "findings": 0,
+    "errors": 0
+  },
+  "secret_scan": {
+    "staged_exit": 0,
+    "findings": 0,
+    "exact_historic_checksum_exceptions": 2,
+    "history_exit": 0,
+    "history_findings": 0
+  },
+  "fresh_clone_v04": {
+    "source_commit": "db31bae40b393104b2f4967e2c9324acbc5be0b3",
+    "passed": true,
+    "target": "initially empty clone-local target; registry cache warm",
+    "steps": [
+      {
+        "command": [
+          "gh",
+          "repo",
+          "clone",
+          "Supersynergy/HeavenKey",
+          "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v04-clone-kep_5z4k/HeavenKey",
+          "--",
+          "--quiet"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 11.614
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.243
+      },
+      {
+        "command": [
+          "aidev",
+          "doctor",
+          "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v04-clone-kep_5z4k/HeavenKey"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 3.457
+      },
+      {
+        "command": [
+          "bun",
+          "install",
+          "--frozen-lockfile",
+          "--ignore-scripts"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.194
+      },
+      {
+        "command": [
+          "cargo",
+          "fetch",
+          "--locked"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 6.52
+      },
+      {
+        "command": [
+          "just",
+          "build"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 257.997
+      },
+      {
+        "command": [
+          "just",
+          "e2e"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 65.697
+      }
+    ],
+    "integrated_hashes_match": 22,
+    "e2e_passed": 96,
+    "e2e_elapsed_seconds": 64,
+    "elapsed_seconds": 354.915,
+    "clone_removed": true
+  },
+  "github_ci": {
+    "source_commit": "db31bae40b393104b2f4967e2c9324acbc5be0b3",
+    "run_url": "https://github.com/Supersynergy/HeavenKey/actions/runs/38186956142",
+    "status": "completed",
+    "conclusion": "failure",
+    "executed_linux_evidence": false,
+    "account_cause": "recent payments failed OR spending limit too low; exact branch unknown"
+  },
+  "hardware": "virtual CTAP2 only; real devices deferred",
+  "linux": "not executed",
+  "saving_claim": "none; no comparable baseline, billing or active human-time measurement",
+  "check_executor": "controller",
+  "e2e_executor": "browser worker; controller separately executed fresh-clone96-case run",
+  "tested_application_source_commit": "db31bae40b393104b2f4967e2c9324acbc5be0b3",
+  "publication_source_note": "Subsequent commit contains documentation/evidence only; reviewed application and manifest hashes remain identical."
+}

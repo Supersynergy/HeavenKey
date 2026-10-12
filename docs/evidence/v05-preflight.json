@@ -1,0 +1,31 @@
+{
+  "baseline_source": "5de017d8b1a8eb46ca416ed92eed9e442e9350e3",
+  "baseline_accepted_browser_cases": 96,
+  "baseline_rust_tests": 36,
+  "requested_publication": "Supersynergy/HeavenKey",
+  "hardware": "deferred;isolated virtual CTAP2 only",
+  "source_trust": "existing reviewed own repository;unchanged dependencies,foreign work preserved",
+  "profile_decision": "heavenkey-delegation-v1:service-attested,online passkey-approved account delegation",
+  "skills_read": [
+    {
+      "path": "/Users/master/superskills/skills/best-defaults/SKILL.md",
+      "sha256": "def0541cc1ab34e3eef0723a03a039afbaaf71943aa9f9e2879298a40a2096c8"
+    },
+    {
+      "path": "/Users/master/superskills/skills/metacode/SKILL.md",
+      "sha256": "949ad8d1d2a5094d7b15aca4f46960f4227d34bdbff8ab532ec2bd566045ac6f"
+    }
+  ],
+  "new_runtime_dependencies": 0,
+  "capsule_attempts": "Rust capsule valid first;one overlong browser constraint rejected before dispatch,split into bounded constraints then dispatched.Three expert lanes reused without parent history.",
+  "metacode_check_diagnosis": "languages was a category,not an ID;no valid check from first command.Correct awesome-rust ID subsequently passed strict check.",
+  "required_oracles": [
+    "just check",
+    "just e2e",
+    "bun scripts/delegation-reference.mjs",
+    "independent source/hash review",
+    "fresh locked GitHub clone",
+    "remote blob equality"
+  ],
+  "saving_claim": null
+}

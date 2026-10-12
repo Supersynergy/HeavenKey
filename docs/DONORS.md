@@ -4,6 +4,8 @@ This local lab keeps the existing Rust verifier and SQLite storage. The selected
 
 Research used the local `metacode` index first. Its passkey/vault queries returned general Rust registries, with no candidate-specific donor. Candidate decisions therefore use official repository files, package metadata and product documentation. [Projected evidence](evidence/donors-v03.json) records exact versions, commits, integrity and limitations. Repository activity is an observation, not a security audit.
 
+The 0.5 delegation search likewise found no matching protocol donor. The general awesome-rust source was checked through Metacode; its status does not certify a listed dependency. Existing ed25519-dalek 2.2.0 remains the signer/verifier, with standard Node crypto as an independent reference. No UCAN implementation or additional key-vault code is consumed. The [delegation contract](DELEGATION-CONTRACT.md) defines the separate service-attested profile; current primary-source and package evidence is in [v05-donor-research.json](evidence/v05-donor-research.json).
+
 ## Selected layers
 
 | Layer | Choice | What HeavenKey takes | License and boundary |

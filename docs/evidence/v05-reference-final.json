@@ -1,0 +1,10 @@
+{
+  "check_stdout": {
+    "passed": 75,
+    "fixtures": 32,
+    "cases": 35,
+    "independent": "Node crypto Ed25519/SHA256 with separate binary encoder"
+  },
+  "execution": "public just check invokes bun scripts/delegation-reference.mjs",
+  "evidence_path": "docs/evidence/v05-check-full.log"
+}

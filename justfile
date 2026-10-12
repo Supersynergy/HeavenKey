@@ -11,6 +11,7 @@ check:
 _check:
     cargo fmt --check
     bun run node_modules/typescript/bin/tsc --noEmit
+    bun scripts/delegation-reference.mjs
     cargo clippy --locked --offline --all-targets -- -D warnings
     cargo nextest run --locked --offline
     cargo deny --offline check

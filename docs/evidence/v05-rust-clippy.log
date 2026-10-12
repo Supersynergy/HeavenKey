@@ -1,0 +1,44 @@
+    Checking uac-verifier v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/crates/verifier)
+    Checking uac-api v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/apps/api)
+error: unused `axum::Json` that must be used
+    --> apps/api/src/main.rs:2790:9
+     |
+2790 | /         approved_delegation_revoke(&app, &tokens["guest"], child_id)
+2791 | |             .await
+2792 | |             .expect("actual child issuer can revoke");
+     | |_____________________________________________________^
+     |
+     = note: `-D unused-must-use` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(unused_must_use)]`
+help: use `let _ = ...` to ignore the resulting value
+     |
+2790 |         let _ = approved_delegation_revoke(&app, &tokens["guest"], child_id)
+     |         +++++++
+
+error: unused `axum::Json` that must be used
+    --> apps/api/src/main.rs:2793:9
+     |
+2793 | /         approved_delegation_revoke(&app, &tokens["guest"], child_id)
+2794 | |             .await
+2795 | |             .expect("authorized repeated revoke is idempotent");
+     | |_______________________________________________________________^
+     |
+help: use `let _ = ...` to ignore the resulting value
+     |
+2793 |         let _ = approved_delegation_revoke(&app, &tokens["guest"], child_id)
+     |         +++++++
+
+error: unused `axum::Json` that must be used
+    --> apps/api/src/main.rs:2823:9
+     |
+2823 | /         approved_delegation_revoke(&app, &tokens["owner"], root_id)
+2824 | |             .await
+2825 | |             .expect("revoke ancestor");
+     | |______________________________________^
+     |
+help: use `let _ = ...` to ignore the resulting value
+     |
+2823 |         let _ = approved_delegation_revoke(&app, &tokens["owner"], root_id)
+     |         +++++++
+
+error: could not compile `uac-api` (bin "uac-api" test) due to 3 previous errors

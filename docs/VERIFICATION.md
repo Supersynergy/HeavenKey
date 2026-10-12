@@ -1,35 +1,30 @@
-# HeavenKey 0.4 verification
+# HeavenKey 0.5 verification
 
-The integrated Rust and TypeScript source passes the complete local check recipe and the browser oracle. Tests use virtual CTAP2 authenticators with native browser WebAuthn APIs and the real Rust verifier. No physical device or biometric was used.
+The controller executed the public native gates on the integrated 0.5 manifests and source. WebAuthn tests use isolated virtual CTAP2 authenticators in Chrome and the real Rust verifier; no physical device was used.
 
 | Check | Executed result |
 | --- | --- |
-| Full local recipe | `scripts/run.py stepup-check 900 -- ats-verify --json -- just _check`: exit0, ATS green; the recipe behind `just check` |
-| Rust tests | 36/36:24 verifier tests and12 API tests |
-| Browser oracle | `just e2e`:96/96, including all69 prior cases and27 added approval cases |
-| Valid session without approval | All four sensitive writes denied with403 |
-| Native browser cancellation | In-progress assertion aborted through the SDK, then retried successfully without a new login |
-| Approval expiry | Monotonic Instant expiry unit test; no elapsed60s hardware or browser test |
-| Source and dependency checks | TypeScript, fmt, Clippy, cargo-deny/audit, Bun audit, build and missing-binary regression green |
-| Aislop changed-source scan | Exit0;0 errors,3 nonblocking style warnings,0 AI-slop indicators |
-| Independent source review | 17 checks,14 source/manifest/bundle hashes compared,0 blocking findings |
-| Semgrep security audit | 8 own source files,0 findings,0 errors |
-| Staged secret scan | Exit0,0 findings; historical exceptions remain limited to2 exact image-checksum fingerprints |
-| Git-history secret scan | Exit0,0 findings with the same2 exact historical exceptions |
-| Fresh GitHub clone | Source `db31bae`;22 integrated hashes match,empty clone-local target,locked install/build,96/96 browser cases;clone removed |
+| `just check` | Exit 0, ATS green; 45/45 Rust tests, TypeScript, fmt, Clippy, nextest, source/license/advisory checks, negative startup regression and build |
+| Independent reference |75 checks with Bun inside `just check`; separate Node execution also75 passed |
+| `just e2e` |138/138; 96 original cases retained, 42 added, 0 removed |
+| Delegation path |Three- and five-link actual API/passkey chains, attenuation, current ancestor revocation, pending invocation, new-child approval and restart |
+| Independent review |19 checks, 24 source/bundle/manifest hashes and8 evidence hashes compared, 0 blockers |
+| Semgrep |10 own source files, 0 findings, 0 errors |
+| Grepgod review/security |Bounded exit0; source diff/security tools inspected; native scanner reports remain authoritative |
+| Aislop |Exit 0, 0 errors, 6 style warnings; no warning-only source refactor |
 
-The complete check log is evidence/stepup-check-full.log; the compact ATS result is evidence/stepup-check.log. Browser case names and execution results are in evidence/e2e.json. The controller compared case names against source41f05eb:69 preserved,0 removed. The original red baseline and the separate independent source review remain explicit artifacts.
+The full check output is evidence/v05-check-full.log; compact ATS results are v05-check.log and v05-e2e.log. E2E case evidence is e2e.json. The controller and independent reviewer compared names against 5de017d:96 retained, 42 added, 0 removed. The actual issuer service signs every profile link; account aliases do not become holder signing keys.
 
-Source scans, independent final hash review and fresh-clone verification are recorded in the acceptance JSON. The clone run took about355s under high host load,including258s build and66s browser execution,with a warm package-registry cache. It is not an equivalent-workload speed comparison. Final GitHub source equality is checked separately after the documentation/evidence commit; application source remains identical to the reviewed and clone-tested version.
+The six style warnings concern API/E2E file length, one regex escape, an existing bounded startup polling catch and two intentional negative-vector catches. Invalid reference fixtures retain null preimages or allowed=false and are checked against committed expectations. No confirmed defect was found; the scan score is not a security assurance.
 
-## Hosted CI boundary
+## Parser and interoperability boundary
 
-The [0.4 GitHub run](https://github.com/Supersynergy/HeavenKey/actions/runs/38186956142) for source commit `db31bae` failed before starting any workflow step. GitHub reports a failed-payment or spending-limit condition; its annotation does not distinguish those two causes. The run has zero executed steps. The raw annotation is preserved in evidence/stepup-github-ci-annotations.json.
+Rust is the authoritative strict raw parser. The independent reference verifies the committed 32grant fixtures, 35 chain cases and7 raw JSON denials, plus actual API signatures and identifiers. This is evidence for the HeavenKey profile and specific tested inputs. General JSON number-grammar equality, all Ed25519 policy edge cases and compatibility with external UCAN/DID implementations remain unproved. Service signing requires the current online account authorization; offline parties need updated revocation information.
 
-This is an account gate, not executed Linux test evidence. Billing, payments, limits and runners remain under the operator's control. Passing checks on macOS do not prove the Ubuntu environment.
+## Publication gates
 
-## Remaining proof boundaries
+Secret scans, fresh locked GitHub clone and exact remote bytes are recorded during final publication. Until that evidence is present, local source/test success alone is not a fresh-clone or GitHub claim. The previous hosted CI run was account-gated before any step; the 0.5 push run is checked separately. No billing, limits or runner changes are part of this task.
 
-Action approvals are enforced at the API access point and bind the exact data to a server-side WebAuthn challenge. They do not provide trusted transaction text on the authenticator or protection from a compromised browser displaying different data.
+Hardware, biometrics, provider sync, recovery, tenants, encryption, rotation, distributed execution and offline clock resilience remain separate gates. Historical reports and acceptance-v04.json preserve the prior phase.
 
-Source review and automated scans do not replace an external penetration test. Real devices, recovery, encrypted state, tenants, rotation, distributed concurrency and protocol interoperability remain separate roadmap gates. Versions0.1–0.3 retain their historical reports and evidence; acceptance-v03.json preserves the previous acceptance snapshot.
+Any later change to the reviewed Rust or browser source invalidates its affected oracle evidence and requires a new check before publication; documentation-only updates do not alter the executed application.

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0: Delegation profile preview
+
+- Eigenes versioniertes Profil mit festgelegten Signierbytes und Identifiern; der Dienst signiert nach Passkey-Zustimmung jedes Kettenglied.
+- Gäste geben erhaltene Rechte innerhalb der Laufzeit- und Weitergabegrenzen weiter; höchstens fünf Glieder und vier Weitergaben.
+- Widerruf eines Vorfahren sperrt Nachfolger, offene Aufrufe und bereits bestätigte neue Weitergaben; Sperren bleiben über Neustart erhalten.
+- Separate Delegationstabellen erhalten Legacy-Grants, Credentials und die 0.4-Aktionsfreigaben.
+- 138 Browserfälle bestanden, alle 96 bisherigen erhalten; 45 Rust-Tests und 75 unabhängige Referenzprüfungen grün.
+- Keine neue Laufzeitabhängigkeit; UCAN/DID- und Hardware-Abnahme bleiben gesondert.
+
 ## 0.4.0: Action approval preview
 
 - Vier sensible API-Aktionen verlangen eine frische Passkey-Freigabe: Schlüssel hinzufügen/widerrufen und Zugang erstellen/widerrufen.

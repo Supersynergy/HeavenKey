@@ -1,0 +1,341 @@
+{
+  "schema": "heavenkey-v05-independent-review-v1",
+  "status": "green_on_recorded_hashes",
+  "input_sha256": [
+    {
+      "path": "docs/DELEGATION-CONTRACT.md",
+      "sha256": "ea43ba1d0dfa3113e29ed1415fad4523f867af2c7517ae0d766ccb91189fcd69"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "c4ecc9233d3187ef5ff7b79f4e23a36ee071ab48d1498d04ca5ea013772f173e"
+    },
+    {
+      "path": "docs/evidence/v05-metacode-find.log",
+      "sha256": "ed8bdcce45636ff47d63f0ccbc9cc51fd3135da0e68fa519ee6f88954e7deb88"
+    }
+  ],
+  "source_sha256": [
+    {
+      "path": "apps/api/src/main.rs",
+      "sha256": "82ba97617177939b6bb4a0a60047f531c307be21345a5d4ea820eee587091f42"
+    },
+    {
+      "path": "crates/verifier/src/lib.rs",
+      "sha256": "a546a08fc0c96a71f9dcf61be8358f359f691b2900685fc1450abfe340d5764d"
+    },
+    {
+      "path": "crates/verifier/src/delegation.rs",
+      "sha256": "05caa3e30c97e3b48ffff52e41ca7af66a87c76ee37d686cf397f3e6abf2fbec"
+    },
+    {
+      "path": "scripts/delegation-reference.mjs",
+      "sha256": "926e525bd3572714ec5823c211a238c869a86e8ff2d39b18e7bc52f10ae64e67"
+    },
+    {
+      "path": "docs/vectors/delegation-v1.json",
+      "sha256": "d8131a54194ede44eb219186b0aac1fcba8ec4c17b459b068220b12c4dba5aab"
+    },
+    {
+      "path": "apps/web/src/main.ts",
+      "sha256": "8fad9e621f8dac6ad6adbb71e7553fe2ac588c8b16049af20a16c0bea1af2ea4"
+    },
+    {
+      "path": "apps/web/index.html",
+      "sha256": "552d71120c54c529ce9f2ad94abfdfd7f20778745be0e6854edb5a36eddee19a"
+    },
+    {
+      "path": "apps/web/src/style.css",
+      "sha256": "e2339e9fd75d5867e552c0af2952cf9c151b712128fc83e86ff8301a79c166ca"
+    },
+    {
+      "path": "scripts/e2e.mjs",
+      "sha256": "28ec8bb6d4f4b11650cd43ae8d480c54322f20365eee4237a449cc850862c7fd"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "71e5b9aa56cbe90c511bd6c341297f5c79e339e7331818ea964c3525b9d6240b"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "731bbe64b16bb8b2af6e2205e8fc8f9f2c397da91be01ec72b30185dc3104901"
+    },
+    {
+      "path": "apps/api/Cargo.toml",
+      "sha256": "7ff42fe9313057b271927a1cf48c0fedec0b247b4449c559f5b10a5090116247"
+    },
+    {
+      "path": "crates/verifier/Cargo.toml",
+      "sha256": "3cd5d6ea4ffe09ab539a441b67b288558a5aadf3351379d8dc10b176dd37ff4c"
+    },
+    {
+      "path": "apps/web/package.json",
+      "sha256": "94a23c0e4dca3cc61697eee1efcd9c3b998934c01861cbca1035dc353e22a466"
+    },
+    {
+      "path": "package.json",
+      "sha256": "f3af43dfdec333284d630ab1654d2afb6d12b8785ba024f6db489f8e63c780e4"
+    },
+    {
+      "path": "bun.lock",
+      "sha256": "7bca0edd3e4f3a2147c99456ad91fc3f3927682f730dbd2213a843ad1ac72df5"
+    },
+    {
+      "path": "justfile",
+      "sha256": "d96eb2400a1537c4e017aa1f984bc4bfeab4a6c6321ce978726e717e3874ba92"
+    },
+    {
+      "path": "scripts/build_web.py",
+      "sha256": "40bd5a832ac629498d41a3f7f4064dc1f7eff6418ed25ebe299e57714de8617c"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "6ba7c2450c5d8c0a5bb300b6caa467a9f690baee692be763775c67fc7333db2e"
+    },
+    {
+      "path": "scripts/ci.sh",
+      "sha256": "1bf7759f5dad54083028888744d4f42ba92bd3f5f648907d36a9c23342533681"
+    },
+    {
+      "path": "docs/licenses/simplewebauthn-browser-MIT.txt",
+      "sha256": "bd9e3f45696472076c7160c7f66e54b2d62d38bc2646c812d19be83ee4400c63"
+    },
+    {
+      "path": "apps/web/dist/main.js",
+      "sha256": "14b2a193bd5a968c099b65d9984bd19e831617a01754daf2906d300b315865ee"
+    },
+    {
+      "path": "scripts/startup_probe.py",
+      "sha256": "e30e08c6b41160389cac9aa504c26a1b219ef8a7ec845021266bc787ce577256"
+    },
+    {
+      "path": "scripts/run.py",
+      "sha256": "4174867b676d4f08787d79a4a32e883792586f8a2e7c200c2155363e220bb506"
+    }
+  ],
+  "evidence_sha256": [
+    {
+      "path": "docs/evidence/v05-check.log",
+      "sha256": "29797e62fece027224ee5537ce7b5fff38edd4c7a23c933d478e29064ec5f070"
+    },
+    {
+      "path": "docs/evidence/v05-check-full.log",
+      "sha256": "1b212915f9aabb6decceaf810effdc1fd014773b9ff83186732f185a3160eb01"
+    },
+    {
+      "path": "docs/evidence/v05-e2e.log",
+      "sha256": "9f6946464abfe5341703aa15a5c5d197536005ba36183aa82093c4dd92fb2fae"
+    },
+    {
+      "path": "docs/evidence/e2e.json",
+      "sha256": "5670fc32d0eafe16f678b26e563b77c64198ef96725e169cd2ac46fc74292e51"
+    },
+    {
+      "path": "docs/evidence/v05-reference-final.json",
+      "sha256": "98aa8135a624ad3b56178c5f9a07fdd53ade739bb58f78388b9d973e24943123"
+    },
+    {
+      "path": "docs/evidence/v05-regression-matrix.json",
+      "sha256": "0f49b6ca6d2a3d927897f115dc57fe33be14b16aca5d4ce6c4a500c96e8dcd28"
+    },
+    {
+      "path": "docs/evidence/v05-grepgod-review.log",
+      "sha256": "ec5e01480b066e0258b04c74f59634c90c8e25337100d698c2fa5a8366ac543a"
+    },
+    {
+      "path": "docs/evidence/v05-grepgod-security.log",
+      "sha256": "25b620211284874718ce71781240c82a10635979e15fbf94f17136ca41de861e"
+    }
+  ],
+  "checks": [
+    {
+      "id": "profile_and_raw_parser",
+      "status": "pass",
+      "evidence": "Rust strict envelope/body decoding denies unknown, missing and duplicate fields, including escaped duplicate spellings; required-nullable parent/delegator; unique nonempty actions; exact byte lengths; 4096-byte raw link and 32-KiB API limits."
+    },
+    {
+      "id": "typed_bounds",
+      "status": "pass",
+      "evidence": "Printable ASCII resource 1..256; times <=2^53-1 and not_before<expires_at; action enum; budget 0..4; at most five links."
+    },
+    {
+      "id": "deterministic_signed_bytes",
+      "status": "pass",
+      "evidence": "Domain-separated binary encoder, fixed field order, explicit optional tags, big-endian lengths/times and action bitmask; token ID SHA256(message||signature). JSON ordering/whitespace cannot change identity."
+    },
+    {
+      "id": "trusted_ed25519_service",
+      "status": "pass",
+      "evidence": "Existing ed25519-dalek 2.2.0 verify_strict; every link must match the service issuer. Stable account aliases are addresses, not Ed25519 keys or DIDs."
+    },
+    {
+      "id": "attenuation",
+      "status": "pass",
+      "evidence": "Every child binds exact signed parent ID and parent audience as delegator, same resource, subset actions, narrower validity and strictly decreasing budget; repeated audiences/cycles rejected."
+    },
+    {
+      "id": "database_chain_integrity",
+      "status": "pass",
+      "evidence": "Bounded full ancestor loading rechecks signed token ID against stored ID, signed parent against database pointer, and audience/delegator against recipient/issuer account metadata; no unsigned ancestor skip."
+    },
+    {
+      "id": "revocation_and_time",
+      "status": "pass",
+      "evidence": "Current time and every ancestor tombstone checked at delegation/invocation start, approval finish and mutation; descendant signature bytes remain unchanged. Independent reference requires explicit current revoked IDs."
+    },
+    {
+      "id": "role_and_visibility",
+      "status": "pass",
+      "evidence": "Root create owner-only; child delegation current parent audience-only; revoke owner or actual issuing account; unrelated holders denied. Listings limited to received/personally issued grants, except owner."
+    },
+    {
+      "id": "exact_action_approval",
+      "status": "pass",
+      "evidence": "Three new management variants bind exact action/session/account and recipient/parent/TTL/budget or revoke ID; authority and active approving key rechecked; mutation consumes approval before semantic validation."
+    },
+    {
+      "id": "approval_expiry_and_cap",
+      "status": "pass",
+      "evidence": "Existing monotonic Instant TTL60 seconds and cap128 retained. Mismatches, invalid parsed requests, replay and duplicate mutations consume/refuse approvals; approval state is memory-only."
+    },
+    {
+      "id": "credential_lifecycle",
+      "status": "pass",
+      "evidence": "Active signer/counter/UV checks retained; credential revocation clears all account sessions and pending ceremonies/approvals, preserves last active key and legacy stable account grant alias."
+    },
+    {
+      "id": "invocation_purpose_and_replay",
+      "status": "pass",
+      "evidence": "Delegation invocation has a distinct exact typed challenge binding for token ID, resource, action and arguments; mixed login/management/legacy purposes denied; fresh WebAuthn assertion and current holder authority required."
+    },
+    {
+      "id": "atomic_operation",
+      "status": "pass",
+      "evidence": "Shared service mutex plus SQLite transaction update signing counter, recheck every ancestor revoked flag and insert unique delegation operation ID before returning allowed; duplicate assertion executes once."
+    },
+    {
+      "id": "migration_and_restart",
+      "status": "pass",
+      "evidence": "Separate delegation tables/indexes and tombstones added under idempotent transaction migration; legacy grants untouched; root/descendant denial and spent in-memory approvals survive restart semantics."
+    },
+    {
+      "id": "ui_snapshot_and_rendering",
+      "status": "pass",
+      "evidence": "UI shows recipient, parent, TTL and budget, snapshots once into the approved object, and renders names/IDs with textContent. Buttons gated during ceremony; revoked/expired status shown; existing abort/retry path retained."
+    },
+    {
+      "id": "independent_reference",
+      "status": "pass",
+      "evidence": "Separate Node/Bun standard-crypto encoder: 32 fixtures, 35 chain scenarios, 7 raw denial cases and 1 reordered/whitespace identity check =75. Rust consumes the same public vectors; browser tests independently verify actual API output signatures/IDs and descendants against the first API root issuer."
+    },
+    {
+      "id": "regression",
+      "status": "pass",
+      "evidence": "Independent case-name comparison with v0.4 commit 5de017d8b1a8eb46ca416ed92eed9e442e9350e3 retains all96 unique prior cases, adds42 unique cases and removes0; all138 final cases pass."
+    },
+    {
+      "id": "dependency_bundle_and_ci",
+      "status": "pass",
+      "evidence": "Version0.5.0 manifests; zero new runtime dependencies. Existing browser SDK remains pinned14.0.0 with full MIT banner in reviewed generated bundle, same-origin fetch only, no browser persistence/telemetry path found. Native just check and CI include reference check; Linux execution is not proved by CI source."
+    },
+    {
+      "id": "oracle_evidence",
+      "status": "pass",
+      "evidence": "Root final public just check/e2e statusgreen Exit0; full check log includes45/45 Rust, reference75, formatting, TS, clippy, deny/audit, Bun audit, deliberate missing-binary negative probe and build. Source hashes match the frozen capsule; reviewer reads source/evidence and does not claim executing tests."
+    }
+  ],
+  "blocking_findings": [],
+  "design_review": "No blocking finding in the specified local, online service-attested delegation profile on the recorded integrated hashes.",
+  "oracle": {
+    "reviewer_executed_tests": false,
+    "reviewer_activity": "Source/contract/primary-source review, evidence inspection, SHA256 comparison and independent regression-name comparison.",
+    "executor": "Root/controller final integrated runs; writer preliminary checks are not substituted for these final oracles.",
+    "check": {
+      "status": "green",
+      "public_command": "just check",
+      "ats_exit_code": 0,
+      "ats_elapsed_ms": 18502,
+      "native_elapsed_seconds": 18.358,
+      "rust_passed": 45,
+      "rust_skipped": 0,
+      "reference_passed": 75,
+      "evidence": "docs/evidence/v05-check-full.log"
+    },
+    "e2e": {
+      "status": "green",
+      "public_command": "just e2e",
+      "ats_exit_code": 0,
+      "ats_elapsed_ms": 26585,
+      "native_elapsed_seconds": 26.537,
+      "report_elapsed_seconds": 26.4,
+      "completed": true,
+      "passed": 138,
+      "failed": 0,
+      "prior_retained": 96,
+      "new_cases": 42,
+      "removed_cases": 0,
+      "evidence": "docs/evidence/e2e.json",
+      "mode": "virtual CTAP2 authenticators; real navigator.credentials + Rust verification",
+      "hardware": "deferred by user"
+    },
+    "reference": {
+      "status": "green",
+      "checks": 75,
+      "fixtures": 32,
+      "chain_cases": 35,
+      "raw_denials": 7,
+      "reordered_identity_checks": 1,
+      "public_test_seed_byte": 7,
+      "production_key_used": false
+    }
+  },
+  "limits": [
+    "Local service-mediated simulation profile; not production vault/recovery hardening",
+    "UCAN wire interoperability and DID compatibility unverified",
+    "Holder-signed offline delegation absent",
+    "Real hardware and trusted authenticator transaction display unverified",
+    "Linux hosted runner execution unverified",
+    "Single-process mutex/transaction proof only; no distributed concurrency proof",
+    "Public synthetic seed_byte7 is deliberate test data; service private key is not in vectors",
+    "Static scan evidence inspected; no universal vulnerability absence claim"
+  ],
+  "invalidation_rule": "Final signoff applies only to recorded hashes and the matching Root integrated oracles; relevant edits invalidate affected evidence.",
+  "parser_boundary": {
+    "raw_denials_checked_in_both": [
+      "duplicate_body_field",
+      "escaped_duplicate_field",
+      "duplicate_envelope_field",
+      "unknown_envelope_field",
+      "missing_body_field",
+      "invalid_signature_length",
+      "oversized_json"
+    ],
+    "rust_additional_unit_cases": "Required nullable parent/delegator and other missing fields; byte-array lengths; authoritative strict typed decoding.",
+    "not_claimed": "Universal raw JSON parser or cryptographic rejection-policy equivalence. JavaScript JSON.parse normalizes numeric spellings such as 1.0; Rust u64 decoding is stricter. This reference is a fixture/signature/chain oracle, not an API input parser.",
+    "api_reference_anchor": "Captured first API root issuer reused for all subsequent actual API chains; no independent external issuer discovery claim."
+  },
+  "evidence_normalization": {
+    "status": "revalidated_after_evidence_only_normalization",
+    "reported_change": "Root normalized trailing whitespace in generated logs after the first hash capture; only v05-grepgod-review.log changed among the eight recorded evidence files.",
+    "reported_by": "Root/controller",
+    "changed_records": [
+      {
+        "path": "docs/evidence/v05-grepgod-review.log",
+        "previous_sha256": "b38949fb5ba8de3e153143a93c1eed041316e59cf2496f3b2e1a956a90ee3164",
+        "current_sha256": "ec5e01480b066e0258b04c74f59634c90c8e25337100d698c2fa5a8366ac543a"
+      }
+    ],
+    "reviewer_verification": "Rehashed all24 source and all8 evidence files; source24 unchanged, other7 evidence files unchanged. Re-read current normalized review log and matching full check/reference/E2E oracles. No source or oracle behavior change found.",
+    "source_records_matching": 24,
+    "evidence_records_matching": 8,
+    "oracles_retained": {
+      "rust_passed": 45,
+      "reference_passed": 75,
+      "browser_passed": 138,
+      "prior_cases_retained": 96,
+      "new_cases": 42,
+      "removed_cases": 0
+    },
+    "nonblocking_static_review_boundary": "Root inspected Aislop6 style warnings and0 errors: two intended negative fixture catches, regex escape, existing bounded startup catch and large source files. No warning-only source change; no universal absence-of-defects claim."
+  }
+}

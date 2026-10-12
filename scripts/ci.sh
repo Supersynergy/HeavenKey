@@ -2,6 +2,7 @@
 set -euo pipefail
 cargo fmt --check
 bun run node_modules/typescript/bin/tsc --noEmit
+bun scripts/delegation-reference.mjs
 cargo clippy --locked --offline --all-targets -- -D warnings
 cargo test --locked --offline
 bun audit

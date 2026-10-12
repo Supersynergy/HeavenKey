@@ -1,0 +1,20 @@
+   Compiling uac-verifier v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/crates/verifier)
+   Compiling uac-api v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/apps/api)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.76s
+     Running unittests src/main.rs (target/debug/build/uac-api/eb5606b8bb39b7e3/out/uac_api-eb5606b8bb39b7e3)
+
+running 12 tests
+test tests::management_schema_rejects_ambiguous_or_extra_fields ... ok
+test tests::active_key_rechecks_and_zero_key_authentication_fail_closed ... ok
+test tests::management_checks_authority_and_bounds_outstanding_approvals ... ok
+test tests::credential_cap_counts_active_keys_and_rejects_retired_duplicates ... ok
+test tests::every_operation_parameter_is_exact_and_mismatches_consume_approval ... ok
+test tests::duplicate_approved_mutations_commit_once ... ok
+test tests::bearer_sessions_cannot_perform_any_management_mutation ... ok
+test tests::invalid_parameters_and_wrong_sessions_burn_supplied_approvals ... ok
+test tests::revoke_is_account_scoped_invalidates_sessions_and_preserves_last_key ... ok
+test tests::existing_grant_keeps_initial_subject_after_original_key_revocation ... ok
+test tests::monotonic_expiry_and_signer_state_are_checked_at_consumption ... ok
+test tests::legacy_migration_survives_restart_without_resurrecting_revoked_keys ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s

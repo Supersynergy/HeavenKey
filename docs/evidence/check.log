@@ -1,45 +1,65 @@
 cargo fmt --check
 bun run node_modules/typescript/bin/tsc --noEmit
+bun scripts/delegation-reference.mjs
+{"passed":75,"fixtures":32,"cases":35,"independent":"Node crypto Ed25519/SHA256 with separate binary encoder"}
 cargo clippy --locked --offline --all-targets -- -D warnings
-    Checking uac-verifier v0.3.0 (/Users/master/Documents/Codex/work/uac-spike/crates/verifier)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.07s
+    Checking uac-verifier v0.5.0 (/Users/master/Documents/Codex/work/uac-spike/crates/verifier)
+    Checking uac-api v0.5.0 (/Users/master/Documents/Codex/work/uac-spike/apps/api)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.44s
 cargo nextest run --locked --offline
-   Compiling uac-verifier v0.3.0 (/Users/master/Documents/Codex/work/uac-spike/crates/verifier)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.70s
+   Compiling uac-verifier v0.5.0 (/Users/master/Documents/Codex/work/uac-spike/crates/verifier)
+   Compiling uac-api v0.5.0 (/Users/master/Documents/Codex/work/uac-spike/apps/api)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.26s
 ────────────
- Nextest run ID 725a4306-a2fe-42d2-b77f-590137d0e1c0 with nextest profile: default
-    Starting 29 tests across 2 binaries
-        PASS [   0.026s] ( 1/29) uac-verifier tests::rejects_descendant_of_revoked_parent
-        PASS [   0.029s] ( 2/29) uac-verifier tests::rejects_child_outliving_parent
-        PASS [   0.034s] ( 3/29) uac-verifier tests::rejects_changed_request_arguments
-        PASS [   0.034s] ( 4/29) uac-verifier tests::rejects_broken_parent_binding
-        PASS [   0.042s] ( 5/29) uac-verifier tests::rejects_different_resource
-        PASS [   0.046s] ( 6/29) uac-verifier tests::rejects_delegation_budget_expansion
-        PASS [   0.046s] ( 7/29) uac-verifier tests::rejects_clock_rollback_within_process
-        PASS [   0.050s] ( 8/29) uac-verifier tests::rejects_child_with_earlier_validity
-        PASS [   0.049s] ( 9/29) uac-verifier tests::rejects_delegation_when_parent_forbids_it
-        PASS [   0.056s] (10/29) uac-verifier tests::accepts_valid_attenuated_chain
-        PASS [   0.056s] (11/29) uac-verifier tests::offline_verifier_cannot_know_remote_revocation
-        PASS [   0.059s] (12/29) uac-api::bin/uac-api tests::active_key_rechecks_and_zero_key_authentication_fail_closed
-        PASS [   0.059s] (13/29) uac-api::bin/uac-api tests::existing_grant_keeps_initial_subject_after_original_key_revocation
-        PASS [   0.061s] (14/29) uac-api::bin/uac-api tests::revoke_is_account_scoped_invalidates_sessions_and_preserves_last_key
-        PASS [   0.069s] (15/29) uac-api::bin/uac-api tests::legacy_migration_survives_restart_without_resurrecting_revoked_keys
-        PASS [   0.041s] (16/29) uac-verifier tests::rejects_expired_grant_at_boundary
-        PASS [   0.044s] (17/29) uac-verifier tests::rejects_empty_and_excessive_chains
-        PASS [   0.026s] (18/29) uac-verifier tests::rejects_oversized_and_unknown_fields_before_verification
-        PASS [   0.038s] (19/29) uac-verifier tests::rejects_old_invocation_at_boundary
-        PASS [   0.078s] (20/29) uac-api::bin/uac-api tests::credential_cap_counts_active_keys_and_rejects_retired_duplicates
-        PASS [   0.045s] (21/29) uac-verifier tests::rejects_future_grant
-        PASS [   0.035s] (22/29) uac-verifier tests::rejects_tampered_signature
-        PASS [   0.037s] (23/29) uac-verifier tests::rejects_signed_rights_escalation
-        PASS [   0.041s] (24/29) uac-verifier tests::rejects_replayed_invocation
-        PASS [   0.026s] (25/29) uac-verifier tests::rejects_wrong_intermediate_issuer
-        PASS [   0.034s] (26/29) uac-verifier tests::rejects_untrusted_root
-        PASS [   0.030s] (27/29) uac-verifier tests::requires_holder_proof_even_with_valid_chain
-        PASS [   0.035s] (28/29) uac-verifier tests::rejects_unknown_challenge
-        PASS [   0.046s] (29/29) uac-verifier tests::rejects_request_action_outside_context
+ Nextest run ID a1634a96-faae-4eef-adf7-64a0b3c11930 with nextest profile: default
+    Starting 45 tests across 2 binaries
+        PASS [   0.030s] ( 1/45) uac-api::bin/uac-api tests::management_schema_rejects_ambiguous_or_extra_fields
+        PASS [   0.034s] ( 2/45) uac-api::bin/uac-api tests::credential_cap_counts_active_keys_and_rejects_retired_duplicates
+        PASS [   0.036s] ( 3/45) uac-api::bin/uac-api tests::active_key_rechecks_and_zero_key_authentication_fail_closed
+        PASS [   0.036s] ( 4/45) uac-api::bin/uac-api tests::bearer_sessions_cannot_perform_any_management_mutation
+        PASS [   0.037s] ( 5/45) uac-api::bin/uac-api tests::duplicate_approved_mutations_commit_once
+        PASS [   0.038s] ( 6/45) uac-api::bin/uac-api tests::invalid_parameters_and_wrong_sessions_burn_supplied_approvals
+        PASS [   0.040s] ( 7/45) uac-api::bin/uac-api tests::every_operation_parameter_is_exact_and_mismatches_consume_approval
+        PASS [   0.040s] ( 8/45) uac-api::bin/uac-api tests::existing_grant_keeps_initial_subject_after_original_key_revocation
+        PASS [   0.041s] ( 9/45) uac-api::bin/uac-api tests::management_checks_authority_and_bounds_outstanding_approvals
+        PASS [   0.041s] (10/45) uac-api::bin/uac-api tests::monotonic_expiry_and_signer_state_are_checked_at_consumption
+        PASS [   0.041s] (11/45) uac-api::bin/uac-api tests::revoke_is_account_scoped_invalidates_sessions_and_preserves_last_key
+        PASS [   0.041s] (12/45) uac-api::bin/uac-api tests::signed_database_tokens_cannot_skip_or_replace_their_parent_metadata
+        PASS [   0.047s] (13/45) uac-api::bin/uac-api tests::delegation_mutations_require_exact_fresh_approvals
+        PASS [   0.055s] (14/45) uac-api::bin/uac-api tests::legacy_migration_survives_restart_without_resurrecting_revoked_keys
+        PASS [   0.025s] (15/45) uac-verifier delegation::tests::reordered_json_and_whitespace_do_not_change_signature_or_id
+        PASS [   0.037s] (16/45) uac-verifier delegation::tests::raw_json_duplicate_fields_and_size_are_rejected
+        PASS [   0.032s] (17/45) uac-verifier tests::rejects_child_with_earlier_validity
+        PASS [   0.037s] (18/45) uac-verifier tests::accepts_valid_attenuated_chain
+        PASS [   0.034s] (19/45) uac-verifier tests::rejects_changed_request_arguments
+        PASS [   0.081s] (20/45) uac-api::bin/uac-api tests::ancestor_revocation_invalidates_descendants_and_preapproved_writes_after_restart
+        PASS [   0.052s] (21/45) uac-verifier tests::rejects_clock_rollback_within_process
+        PASS [   0.059s] (22/45) uac-verifier delegation::tests::independent_typescript_messages_ids_and_signatures_match
+        PASS [   0.055s] (23/45) uac-verifier tests::offline_verifier_cannot_know_remote_revocation
+        PASS [   0.041s] (24/45) uac-verifier tests::rejects_delegation_when_parent_forbids_it
+        PASS [   0.050s] (25/45) uac-verifier tests::rejects_delegation_budget_expansion
+        PASS [   0.061s] (26/45) uac-verifier tests::rejects_child_outliving_parent
+        PASS [   0.062s] (27/45) uac-verifier tests::rejects_broken_parent_binding
+        PASS [   0.031s] (28/45) uac-verifier tests::rejects_empty_and_excessive_chains
+        PASS [   0.105s] (29/45) uac-api::bin/uac-api tests::delegation_attenuation_and_visibility_are_account_bound
+        PASS [   0.043s] (30/45) uac-verifier tests::rejects_descendant_of_revoked_parent
+        PASS [   0.070s] (31/45) uac-verifier delegation::tests::nullable_fields_are_required_and_all_byte_lengths_are_strict
+        PASS [   0.040s] (32/45) uac-verifier tests::rejects_expired_grant_at_boundary
+        PASS [   0.034s] (33/45) uac-verifier tests::rejects_old_invocation_at_boundary
+        PASS [   0.043s] (34/45) uac-verifier tests::rejects_future_grant
+        PASS [   0.051s] (35/45) uac-verifier tests::rejects_different_resource
+        PASS [   0.039s] (36/45) uac-verifier tests::rejects_oversized_and_unknown_fields_before_verification
+        PASS [   0.034s] (37/45) uac-verifier tests::rejects_tampered_signature
+        PASS [   0.033s] (38/45) uac-verifier tests::rejects_unknown_challenge
+        PASS [   0.039s] (39/45) uac-verifier tests::rejects_signed_rights_escalation
+        PASS [   0.039s] (40/45) uac-verifier tests::rejects_untrusted_root
+        PASS [   0.040s] (41/45) uac-verifier tests::requires_holder_proof_even_with_valid_chain
+        PASS [   0.052s] (42/45) uac-verifier tests::rejects_replayed_invocation
+        PASS [   0.051s] (43/45) uac-verifier tests::rejects_request_action_outside_context
+        PASS [   0.043s] (44/45) uac-verifier tests::rejects_wrong_intermediate_issuer
+        PASS [   0.143s] (45/45) uac-verifier delegation::tests::independent_typescript_chain_allow_and_deny_cases_match
 ────────────
-     Summary [   0.097s] 29 tests run: 29 passed, 0 skipped
+     Summary [   0.176s] 45 tests run: 45 passed, 0 skipped
 cargo deny --offline check
 warning[license-not-encountered]: license was not encountered
   ┌─ /Users/master/Documents/Codex/work/uac-spike/deny.toml:5:64
@@ -55,17 +75,17 @@ warning[license-not-encountered]: license was not encountered
 
 warning[duplicate]: found 2 duplicate entries for crate 'base64'
   ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:8:1
-  │  
+  │
 8 │ ╭ base64 0.21.7 registry+https://github.com/rust-lang/crates.io-index
 9 │ │ base64 0.22.1 registry+https://github.com/rust-lang/crates.io-index
   │ ╰───────────────────────────────────────────────────────────────────┘ lock entries
-  │  
+  │
   ├ base64 v0.21.7
     ├── base64urlsafedata v0.5.5
     │   ├── webauthn-attestation-ca v0.5.5
     │   │   └── webauthn-rs-core v0.5.5
     │   │       └── webauthn-rs v0.5.5
-    │   │           └── uac-api v0.3.0
+    │   │           └── uac-api v0.5.0
     │   ├── webauthn-rs v0.5.5 (*)
     │   ├── webauthn-rs-core v0.5.5 (*)
     │   └── webauthn-rs-proto v0.5.5
@@ -73,95 +93,95 @@ warning[duplicate]: found 2 duplicate entries for crate 'base64'
     ├── webauthn-rs-core v0.5.5 (*)
     └── webauthn-rs-proto v0.5.5 (*)
   ├ base64 v0.22.1
-    └── uac-api v0.3.0
+    └── uac-api v0.5.0
 
 warning[duplicate]: found 2 duplicate entries for crate 'getrandom'
    ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:42:1
-   │  
+   │
 42 │ ╭ getrandom 0.3.4 registry+https://github.com/rust-lang/crates.io-index
 43 │ │ getrandom 0.4.3 registry+https://github.com/rust-lang/crates.io-index
    │ ╰─────────────────────────────────────────────────────────────────────┘ lock entries
-   │  
+   │
    ├ getrandom v0.3.4
      └── rand_core v0.9.5
          ├── rand v0.9.5
-         │   ├── uac-api v0.3.0
+         │   ├── uac-api v0.5.0
          │   └── webauthn-rs-core v0.5.5
          │       └── webauthn-rs v0.5.5
-         │           └── uac-api v0.3.0 (*)
+         │           └── uac-api v0.5.0 (*)
          └── rand_chacha v0.9.0
              ├── rand v0.9.5 (*)
              └── webauthn-rs-core v0.5.5 (*)
    ├ getrandom v0.4.3
      └── uuid v1.26.1
-         ├── uac-api v0.3.0
+         ├── uac-api v0.5.0
          ├── webauthn-attestation-ca v0.5.5
          │   └── webauthn-rs-core v0.5.5
          │       └── webauthn-rs v0.5.5
-         │           └── uac-api v0.3.0 (*)
+         │           └── uac-api v0.5.0 (*)
          ├── webauthn-rs v0.5.5 (*)
          └── webauthn-rs-core v0.5.5 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'hashbrown'
    ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:45:1
-   │  
+   │
 45 │ ╭ hashbrown 0.16.1 registry+https://github.com/rust-lang/crates.io-index
 46 │ │ hashbrown 0.17.1 registry+https://github.com/rust-lang/crates.io-index
    │ ╰──────────────────────────────────────────────────────────────────────┘ lock entries
-   │  
+   │
    ├ hashbrown v0.16.1
      └── rsqlite-vfs v0.1.1
          └── sqlite-wasm-rs v0.5.5
              └── rusqlite v0.40.2
-                 └── uac-api v0.3.0
+                 └── uac-api v0.5.0
    ├ hashbrown v0.17.1
      └── hashlink v0.12.2
          └── rusqlite v0.40.2
-             └── uac-api v0.3.0
+             └── uac-api v0.5.0
 
 warning[duplicate]: found 2 duplicate entries for crate 'r-efi'
    ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:96:1
-   │  
+   │
 96 │ ╭ r-efi 5.3.0 registry+https://github.com/rust-lang/crates.io-index
 97 │ │ r-efi 6.0.0 registry+https://github.com/rust-lang/crates.io-index
    │ ╰─────────────────────────────────────────────────────────────────┘ lock entries
-   │  
+   │
    ├ r-efi v5.3.0
      └── getrandom v0.3.4
          └── rand_core v0.9.5
              ├── rand v0.9.5
-             │   ├── uac-api v0.3.0
+             │   ├── uac-api v0.5.0
              │   └── webauthn-rs-core v0.5.5
              │       └── webauthn-rs v0.5.5
-             │           └── uac-api v0.3.0 (*)
+             │           └── uac-api v0.5.0 (*)
              └── rand_chacha v0.9.0
                  ├── rand v0.9.5 (*)
                  └── webauthn-rs-core v0.5.5 (*)
    ├ r-efi v6.0.0
      └── getrandom v0.4.3
          └── uuid v1.26.1
-             ├── uac-api v0.3.0
+             ├── uac-api v0.5.0
              ├── webauthn-attestation-ca v0.5.5
              │   └── webauthn-rs-core v0.5.5
              │       └── webauthn-rs v0.5.5
-             │           └── uac-api v0.3.0 (*)
+             │           └── uac-api v0.5.0 (*)
              ├── webauthn-rs v0.5.5 (*)
              └── webauthn-rs-core v0.5.5 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'syn'
     ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:125:1
-    │  
+    │
 125 │ ╭ syn 2.0.119 registry+https://github.com/rust-lang/crates.io-index
 126 │ │ syn 3.0.8 registry+https://github.com/rust-lang/crates.io-index
     │ ╰───────────────────────────────────────────────────────────────┘ lock entries
-    │  
+    │
     ├ syn v2.0.119
       ├── asn1-rs-derive v0.5.1
       │   └── asn1-rs v0.6.2
       │       ├── der-parser v9.0.0
       │       │   ├── webauthn-rs-core v0.5.5
       │       │   │   └── webauthn-rs v0.5.5
-      │       │   │       └── uac-api v0.3.0
+      │       │   │       └── uac-api v0.5.0
       │       │   └── x509-parser v0.16.0
       │       │       └── webauthn-rs-core v0.5.5 (*)
       │       ├── oid-registry v0.7.1
@@ -172,9 +192,9 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       ├── curve25519-dalek-derive v0.1.1
       │   └── curve25519-dalek v4.1.3
       │       └── ed25519-dalek v2.2.0
-      │           ├── uac-api v0.3.0 (*)
-      │           └── uac-verifier v0.3.0
-      │               └── uac-api v0.3.0 (*)
+      │           ├── uac-api v0.5.0 (*)
+      │           └── uac-verifier v0.5.0
+      │               └── uac-api v0.5.0 (*)
       ├── openssl-macros v0.1.1
       │   └── openssl v0.10.81
       │       ├── webauthn-attestation-ca v0.5.5
@@ -192,9 +212,9 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │   │   │   └── webauthn-rs-core v0.5.5 (*)
       │   │   ├── serde_urlencoded v0.7.1
       │   │   │   └── axum v0.8.9
-      │   │   │       └── uac-api v0.3.0 (*)
-      │   │   ├── uac-api v0.3.0 (*)
-      │   │   ├── uac-verifier v0.3.0 (*)
+      │   │   │       └── uac-api v0.5.0 (*)
+      │   │   ├── uac-api v0.5.0 (*)
+      │   │   ├── uac-verifier v0.5.0 (*)
       │   │   ├── url v2.5.8
       │   │   │   ├── webauthn-rs v0.5.5 (*)
       │   │   │   ├── webauthn-rs-core v0.5.5 (*)
@@ -228,7 +248,7 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
               └── ppv-lite86 v0.2.21
                   └── rand_chacha v0.9.0
                       ├── rand v0.9.5
-                      │   ├── uac-api v0.3.0 (*)
+                      │   ├── uac-api v0.5.0 (*)
                       │   └── webauthn-rs-core v0.5.5 (*)
                       └── webauthn-rs-core v0.5.5 (*)
     ├ syn v3.0.8
@@ -237,7 +257,7 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │   │   ├── der-parser v9.0.0
       │   │   │   ├── webauthn-rs-core v0.5.5
       │   │   │   │   └── webauthn-rs v0.5.5
-      │   │   │   │       └── uac-api v0.3.0
+      │   │   │   │       └── uac-api v0.5.0
       │   │   │   └── x509-parser v0.16.0
       │   │   │       └── webauthn-rs-core v0.5.5 (*)
       │   │   ├── oid-registry v0.7.1
@@ -294,11 +314,11 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │       └── rsqlite-vfs v0.1.1
       │           └── sqlite-wasm-rs v0.5.5
       │               └── rusqlite v0.40.2
-      │                   └── uac-api v0.3.0 (*)
+      │                   └── uac-api v0.5.0 (*)
       ├── tokio-macros v2.7.2
       │   └── tokio v1.53.2
       │       ├── axum v0.8.9
-      │       │   └── uac-api v0.3.0 (*)
+      │       │   └── uac-api v0.5.0 (*)
       │       ├── hyper v1.12.0
       │       │   ├── axum v0.8.9 (*)
       │       │   └── hyper-util v0.1.21
@@ -306,7 +326,7 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │       ├── hyper-util v0.1.21 (*)
       │       ├── tower v0.5.3
       │       │   └── axum v0.8.9 (*)
-      │       └── uac-api v0.3.0 (*)
+      │       └── uac-api v0.5.0 (*)
       ├── wasm-bindgen-macro-support v0.2.129
       │   └── wasm-bindgen-macro v0.2.129
       │       └── wasm-bindgen v0.2.129
@@ -320,18 +340,18 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
 
 warning[duplicate]: found 2 duplicate entries for crate 'synstructure'
     ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:128:1
-    │  
+    │
 128 │ ╭ synstructure 0.13.2 registry+https://github.com/rust-lang/crates.io-index
 129 │ │ synstructure 0.14.0 registry+https://github.com/rust-lang/crates.io-index
     │ ╰─────────────────────────────────────────────────────────────────────────┘ lock entries
-    │  
+    │
     ├ synstructure v0.13.2
       └── asn1-rs-derive v0.5.1
           └── asn1-rs v0.6.2
               ├── der-parser v9.0.0
               │   ├── webauthn-rs-core v0.5.5
               │   │   └── webauthn-rs v0.5.5
-              │   │       └── uac-api v0.3.0
+              │   │       └── uac-api v0.5.0
               │   └── x509-parser v0.16.0
               │       └── webauthn-rs-core v0.5.5 (*)
               ├── oid-registry v0.7.1
@@ -346,7 +366,7 @@ warning[duplicate]: found 2 duplicate entries for crate 'synstructure'
       │       │   │       └── idna v1.1.0
       │       │   │           └── url v2.5.8
       │       │   │               ├── webauthn-rs v0.5.5
-      │       │   │               │   └── uac-api v0.3.0
+      │       │   │               │   └── uac-api v0.5.0
       │       │   │               ├── webauthn-rs-core v0.5.5
       │       │   │               │   └── webauthn-rs v0.5.5 (*)
       │       │   │               └── webauthn-rs-proto v0.5.5
@@ -381,17 +401,17 @@ warning[duplicate]: found 2 duplicate entries for crate 'synstructure'
 
 warning[duplicate]: found 2 duplicate entries for crate 'thiserror'
     ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:130:1
-    │  
+    │
 130 │ ╭ thiserror 1.0.69 registry+https://github.com/rust-lang/crates.io-index
 131 │ │ thiserror 2.0.21 registry+https://github.com/rust-lang/crates.io-index
     │ ╰──────────────────────────────────────────────────────────────────────┘ lock entries
-    │  
+    │
     ├ thiserror v1.0.69
       ├── asn1-rs v0.6.2
       │   ├── der-parser v9.0.0
       │   │   ├── webauthn-rs-core v0.5.5
       │   │   │   └── webauthn-rs v0.5.5
-      │   │   │       └── uac-api v0.3.0
+      │   │   │       └── uac-api v0.5.0
       │   │   └── x509-parser v0.16.0
       │   │       └── webauthn-rs-core v0.5.5 (*)
       │   ├── oid-registry v0.7.1
@@ -403,22 +423,22 @@ warning[duplicate]: found 2 duplicate entries for crate 'thiserror'
       └── rsqlite-vfs v0.1.1
           └── sqlite-wasm-rs v0.5.5
               └── rusqlite v0.40.2
-                  └── uac-api v0.3.0
+                  └── uac-api v0.5.0
 
 warning[duplicate]: found 2 duplicate entries for crate 'thiserror-impl'
     ┌─ /Users/master/Documents/Codex/work/uac-spike/Cargo.lock:132:1
-    │  
+    │
 132 │ ╭ thiserror-impl 1.0.69 registry+https://github.com/rust-lang/crates.io-index
 133 │ │ thiserror-impl 2.0.21 registry+https://github.com/rust-lang/crates.io-index
     │ ╰───────────────────────────────────────────────────────────────────────────┘ lock entries
-    │  
+    │
     ├ thiserror-impl v1.0.69
       └── thiserror v1.0.69
           ├── asn1-rs v0.6.2
           │   ├── der-parser v9.0.0
           │   │   ├── webauthn-rs-core v0.5.5
           │   │   │   └── webauthn-rs v0.5.5
-          │   │   │       └── uac-api v0.3.0
+          │   │   │       └── uac-api v0.5.0
           │   │   └── x509-parser v0.16.0
           │   │       └── webauthn-rs-core v0.5.5 (*)
           │   ├── oid-registry v0.7.1
@@ -431,7 +451,7 @@ warning[duplicate]: found 2 duplicate entries for crate 'thiserror-impl'
           └── rsqlite-vfs v0.1.1
               └── sqlite-wasm-rs v0.5.5
                   └── rusqlite v0.40.2
-                      └── uac-api v0.3.0
+                      └── uac-api v0.5.0
 
 advisories ok, bans ok, licenses ok, sources ok
 cargo audit --no-fetch --no-yanked
@@ -440,14 +460,15 @@ cargo audit --no-fetch --no-yanked
 bun audit
 bun audit v1.4.2 (744846f84)
 
-No vulnerabilities found (checked 23 packages) [236.00ms]
+No vulnerabilities found (checked 23 packages) [251.00ms]
 python3 scripts/startup_probe.py
-{"exit_code": 1, "elapsed_seconds": 0.4, "completed": false, "fatal_error": "server spawn failed: ENOENT: no such file or directory, posix_spawn '/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-startup-probe-hyvq8w0o/target/debug/uac-api'", "passed": true}
+{"exit_code": 1, "elapsed_seconds": 0.44, "completed": false, "fatal_error": "server spawn failed: ENOENT: no such file or directory, posix_spawn '/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-startup-probe-2i6u_9_x/target/debug/uac-api'", "passed": true}
 bun run build
 $ python3 scripts/build_web.py
-Bundled 21 modules in 10ms
+Bundled 21 modules in 9ms
 
-  main.js  29.32 KB  (entry point)
+  main.js  39.76 KB  (entry point)
 
 cargo build --locked --offline
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.25s
+   Compiling uac-api v0.5.0 (/Users/master/Documents/Codex/work/uac-spike/apps/api)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.67s

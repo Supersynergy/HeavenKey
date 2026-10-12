@@ -1,0 +1,14 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling libc v0.2.190
+   Compiling serde_core v1.0.228
+   Compiling serde_json v1.0.154
+    Checking memchr v2.8.3
+    Checking cpufeatures v0.2.17
+   Compiling syn v2.0.119
+    Checking sha2 v0.10.9
+    Checking ed25519-dalek v2.2.0
+   Compiling serde_derive v1.0.228
+    Checking serde v1.0.228
+    Checking uac-verifier v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/crates/verifier)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.91s

@@ -1,0 +1,252 @@
+{
+  "schemaVersion": "1",
+  "cliVersion": "0.16.1",
+  "version": "0.16.1",
+  "score": 89,
+  "label": "Healthy",
+  "scoreable": true,
+  "coverage": {
+    "supportedFiles": 11,
+    "unsupportedFiles": 0,
+    "dominantUnsupported": null,
+    "scoreable": true
+  },
+  "engines": {
+    "format": {
+      "issues": 0,
+      "skipped": false,
+      "elapsed": 1516.7525419999997
+    },
+    "lint": {
+      "issues": 4,
+      "skipped": false,
+      "elapsed": 7011.629583
+    },
+    "code-quality": {
+      "issues": 2,
+      "skipped": false,
+      "elapsed": 1277.127125
+    },
+    "ai-slop": {
+      "issues": 0,
+      "skipped": false,
+      "elapsed": 1142.51125
+    },
+    "security": {
+      "issues": 0,
+      "skipped": false,
+      "elapsed": 2503.79875
+    }
+  },
+  "engineDefinitions": {
+    "format": {
+      "label": "Formatting",
+      "description": "Whitespace, indentation, line wrapping, and import ordering"
+    },
+    "lint": {
+      "label": "Linting",
+      "description": "Static analysis for likely bugs and bad patterns"
+    },
+    "code-quality": {
+      "label": "Code Quality",
+      "description": "Complexity limits, dead code detection, and duplication checks"
+    },
+    "ai-slop": {
+      "label": "AI Slop",
+      "description": "Narrative comments, dead patterns, unsafe type casts, TODO stubs, generic names"
+    },
+    "architecture": {
+      "label": "Architecture",
+      "description": "Project-specific import and layering rules"
+    },
+    "security": {
+      "label": "Security",
+      "description": "Secret leaks, risky APIs, and dependency vulnerabilities"
+    }
+  },
+  "diagnostics": [
+    {
+      "filePath": "scripts/delegation-reference.mjs",
+      "engine": "lint",
+      "rule": "eslint/no-useless-escape",
+      "severity": "warning",
+      "message": "Unnecessary escape character '['",
+      "help": "Replace `\\[` with `[`.",
+      "line": 48,
+      "column": 51,
+      "category": "Lint",
+      "fixable": false,
+      "changeContext": "changed-line",
+      "assessment": {
+        "kind": "style-policy",
+        "confidence": "medium",
+        "label": "style/policy"
+      },
+      "scoreImpact": {
+        "tier": "mechanical",
+        "multiplier": 0.5,
+        "cap": 16,
+        "rationale": "Useless escapes are mechanical cleanup."
+      },
+      "forceFixable": false
+    },
+    {
+      "filePath": "scripts/delegation-reference.mjs",
+      "engine": "lint",
+      "rule": "eslint/no-empty",
+      "severity": "warning",
+      "message": "Unexpected empty block statements",
+      "help": "Remove this block or add a comment inside it",
+      "line": 102,
+      "column": 90,
+      "category": "Lint",
+      "fixable": false,
+      "changeContext": "changed-line",
+      "assessment": {
+        "kind": "style-policy",
+        "confidence": "medium",
+        "label": "style/policy"
+      },
+      "scoreImpact": {
+        "tier": "style",
+        "multiplier": 0.5,
+        "cap": 8,
+        "rationale": "Empty blocks can be intentional placeholders but should be reviewed."
+      },
+      "forceFixable": false
+    },
+    {
+      "filePath": "scripts/delegation-reference.mjs",
+      "engine": "lint",
+      "rule": "eslint/no-empty",
+      "severity": "warning",
+      "message": "Unexpected empty block statements",
+      "help": "Remove this block or add a comment inside it",
+      "line": 163,
+      "column": 153,
+      "category": "Lint",
+      "fixable": false,
+      "changeContext": "changed-line",
+      "assessment": {
+        "kind": "style-policy",
+        "confidence": "medium",
+        "label": "style/policy"
+      },
+      "scoreImpact": {
+        "tier": "style",
+        "multiplier": 0.5,
+        "cap": 8,
+        "rationale": "Empty blocks can be intentional placeholders but should be reviewed."
+      },
+      "forceFixable": false
+    },
+    {
+      "filePath": "scripts/e2e.mjs",
+      "engine": "lint",
+      "rule": "eslint/no-empty",
+      "severity": "warning",
+      "message": "Unexpected empty block statements",
+      "help": "Remove this block or add a comment inside it",
+      "line": 40,
+      "column": 106,
+      "category": "Lint",
+      "fixable": false,
+      "changeContext": "existing-file-context",
+      "assessment": {
+        "kind": "style-policy",
+        "confidence": "medium",
+        "label": "style/policy"
+      },
+      "scoreImpact": {
+        "tier": "style",
+        "multiplier": 0.5,
+        "cap": 8,
+        "rationale": "Empty blocks can be intentional placeholders but should be reviewed."
+      },
+      "forceFixable": false
+    },
+    {
+      "filePath": "apps/api/src/main.rs",
+      "engine": "code-quality",
+      "rule": "complexity/file-too-large",
+      "severity": "warning",
+      "message": "File too large (max: 1000)",
+      "help": "Consider splitting this file into smaller modules",
+      "line": 0,
+      "column": 0,
+      "category": "Complexity",
+      "fixable": false,
+      "detail": "2944 lines",
+      "changeContext": "unknown",
+      "assessment": {
+        "kind": "style-policy",
+        "confidence": "medium",
+        "label": "style/policy"
+      },
+      "scoreImpact": {
+        "tier": "style",
+        "multiplier": 0.5,
+        "cap": 8,
+        "rationale": "Large files are reviewability pressure, but size alone is not a confirmed defect."
+      },
+      "forceFixable": false
+    },
+    {
+      "filePath": "scripts/e2e.mjs",
+      "engine": "code-quality",
+      "rule": "complexity/file-too-large",
+      "severity": "warning",
+      "message": "File too large (max: 400)",
+      "help": "Consider splitting this file into smaller modules",
+      "line": 0,
+      "column": 0,
+      "category": "Complexity",
+      "fixable": false,
+      "detail": "710 lines",
+      "changeContext": "unknown",
+      "assessment": {
+        "kind": "style-policy",
+        "confidence": "medium",
+        "label": "style/policy"
+      },
+      "scoreImpact": {
+        "tier": "style",
+        "multiplier": 0.5,
+        "cap": 8,
+        "rationale": "Large files are reviewability pressure, but size alone is not a confirmed defect."
+      },
+      "forceFixable": false
+    }
+  ],
+  "findingAssessment": {
+    "rows": [
+      {
+        "kind": "style-policy",
+        "label": "style/policy",
+        "count": 6,
+        "errors": 0,
+        "warnings": 6,
+        "info": 0,
+        "fixable": 0
+      }
+    ],
+    "byKind": {
+      "confirmed-defect": 0,
+      "conservative-security": 0,
+      "style-policy": 6,
+      "ai-slop-indicator": 0
+    },
+    "byConfidence": {
+      "high": 0,
+      "medium": 6,
+      "low": 0
+    }
+  },
+  "summary": {
+    "errors": 0,
+    "warnings": 6,
+    "fixable": 0,
+    "files": 11,
+    "elapsed": "7.3s"
+  }
+}

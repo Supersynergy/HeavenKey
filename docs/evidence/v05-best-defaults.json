@@ -1,0 +1,21 @@
+{
+  "objective": "Passkey-approved online delegation from owner through multiple guests,with bounded authority and transitive revocation",
+  "dominant_cost": "security and protocol rework; no development speed/billing comparison measured",
+  "decision": "reuse existing service Ed25519 signer,WebAuthn approvals,SQLite and standard Node crypto; separate v1 profile alongside legacy format",
+  "reason": "No fitting Metacode delegation donor was found; established signing primitive already installed; one explicit profile avoids false UCAN/DID interoperability claims",
+  "alternatives": [
+    {
+      "choice": "add holder key custody and general UCAN/DID stack now",
+      "status": "deferred",
+      "reason": "additional private-key lifecycle,recovery and external interoperability work beyond this simulation phase"
+    },
+    {
+      "choice": "only unit-test chained legacy grants",
+      "status": "insufficient",
+      "reason": "would not demonstrate current account-approved delegation and ancestor revocation at browser/API access point"
+    }
+  ],
+  "acceptance": "96 old browser cases retained,new delegation E2E matrix,independent Node/Rust signatures/IDs/vectors,current-hash independent review,native gates,fresh clone and exact GitHub source",
+  "rollback": "retain0.4 legacy routes and data;restore prior source for rollback;v1 is isolated in separate tables/profile",
+  "hardware": "virtual CTAP2 only"
+}

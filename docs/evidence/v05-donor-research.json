@@ -1,0 +1,102 @@
+{
+  "schema": "heavenkey-v05-donor-research-v1",
+  "observed_at_utc": "2026-10-12T01:08:41.659262+00:00",
+  "input_sha256": [
+    {
+      "path": "docs/DELEGATION-CONTRACT.md",
+      "sha256": "ea43ba1d0dfa3113e29ed1415fad4523f867af2c7517ae0d766ccb91189fcd69"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "c4ecc9233d3187ef5ff7b79f4e23a36ee071ab48d1498d04ca5ea013772f173e"
+    },
+    {
+      "path": "docs/evidence/v05-metacode-find.log",
+      "sha256": "ed8bdcce45636ff47d63f0ccbc9cc51fd3135da0e68fa519ee6f88954e7deb88"
+    }
+  ],
+  "metacode": {
+    "candidate_specific_donor_found": false,
+    "actual_results": "general Rust lists and crates.io registry",
+    "wrong_first_check_id": "languages was a category, not a source ID; unknown is not a successful check",
+    "successful_source_index_id": "awesome-rust",
+    "source_index_check_does_not_clear_consumed_code": true
+  },
+  "primary_specs": [
+    {
+      "repo": "ucan-wg/spec",
+      "sha": "a73ee55ec82a90004227034873095e080d0df619",
+      "version": "1.0.0",
+      "pushed_at": "2026-10-02T13:44:43Z",
+      "license_metadata": "NOASSERTION",
+      "url": "https://github.com/ucan-wg/spec/tree/a73ee55ec82a90004227034873095e080d0df619",
+      "principles": "DID-associated issuer signatures; attenuation and execution-time validity checks",
+      "consumed_source_code": false
+    },
+    {
+      "repo": "ucan-wg/delegation",
+      "sha": "1cb32dbc9d4d15a23bf9844a02515d760b81e816",
+      "pushed_at": "2026-07-08T23:25:57Z",
+      "license_metadata": "NOASSERTION",
+      "url": "https://github.com/ucan-wg/delegation/tree/1cb32dbc9d4d15a23bf9844a02515d760b81e816",
+      "principles": "Proof linkage, validity intersection and reduced authority",
+      "consumed_source_code": false
+    },
+    {
+      "repo": "ucan-wg/revocation",
+      "sha": "1235679bef2d74b7be46a6295e40184936247649",
+      "version": "1.0.0-rc.1",
+      "pushed_at": "2026-08-21T00:43:11Z",
+      "license_metadata": "NOASSERTION",
+      "url": "https://github.com/ucan-wg/revocation/tree/1235679bef2d74b7be46a6295e40184936247649",
+      "principles": "Invalidating a proof invalidates dependent chain uses; other unrevoked chains may survive",
+      "consumed_source_code": false
+    },
+    {
+      "name": "RFC8032",
+      "url": "https://www.rfc-editor.org/rfc/rfc8032.html",
+      "status": "IRTF Informational algorithm reference, published January2017",
+      "principles": "Ed25519 signature/verification and deterministic public vectors",
+      "illustrative_code_copied_into_production": false
+    }
+  ],
+  "consumed_crypto": {
+    "package": "ed25519-dalek",
+    "version": "2.2.0",
+    "license": "BSD-3-Clause",
+    "already_installed": true,
+    "new_dependency": false,
+    "source_sha": "8016d6d9b9cdbaa681f24147e0b9377cc8cef934",
+    "source_path": "ed25519-dalek",
+    "registry_checksum": "70e796c081cee67dc755e1a36a0a172b897fab85fc3f6bc48307991f64e4eca9",
+    "repository": "https://github.com/dalek-cryptography/curve25519-dalek",
+    "repository_pushed_at": "2026-09-24T14:03:37Z",
+    "repository_license_metadata": "NOASSERTION; actual consumed package manifest/license examined",
+    "license_url": "https://github.com/dalek-cryptography/curve25519-dalek/blob/8016d6d9b9cdbaa681f24147e0b9377cc8cef934/ed25519-dalek/LICENSE",
+    "manifest_url": "https://github.com/dalek-cryptography/curve25519-dalek/blob/8016d6d9b9cdbaa681f24147e0b9377cc8cef934/ed25519-dalek/Cargo.toml",
+    "verification_api": "verify_strict",
+    "docs": "https://docs.rs/ed25519-dalek/2.2.0/ed25519_dalek/struct.VerifyingKey.html#method.verify_strict",
+    "upstream_license_and_manifest_live_checked": true
+  },
+  "decision": {
+    "adopted": "existing reviewed crypto dependency; application-specific bounded encoder/profile fills the gap",
+    "ucan_library_added": false,
+    "new_runtime_dependencies": 0,
+    "proprietary_source_copied": false,
+    "no_legal_clearance_claim_for_reference_repositories": true,
+    "no_acceleration_multiplier_claim": true,
+    "final_source_review": "Recorded in docs/evidence/v05-independent-review.json; zero new runtime dependencies"
+  },
+  "semantic_boundary": {
+    "signer": "existing service issuer Ed25519 key signs every link",
+    "account_aliases": "stable account addresses, not key material or DIDs",
+    "revocation_oracle": "current service DB full-chain resolution; offline signatures alone cannot know current revocation",
+    "not_claimed": [
+      "UCAN wire interoperability",
+      "DID compatibility",
+      "holder-signed offline delegation",
+      "trusted hardware transaction display"
+    ]
+  },
+  "status": "research_complete"
+}

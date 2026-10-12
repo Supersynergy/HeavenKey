@@ -6,6 +6,7 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import assert from "node:assert/strict";
 import { Database } from "bun:sqlite";
+import { verifyChain as referenceVerifyChain, id as referenceId, decodeSigned as referenceDecode } from "./delegation-reference.mjs";
 
 const root = resolve(".");
 const evidence = join(root, "docs/evidence");
@@ -133,7 +134,7 @@ async function approval(a,session,management) {
   return r.body.approval_id;
 }
 function managementFor(path,body) {
-  const kinds={"/api/credentials/start":"credential_add","/api/credentials/revoke":"credential_revoke","/api/grants":"grant_create","/api/grants/revoke":"grant_revoke"};
+  const kinds={"/api/credentials/start":"credential_add","/api/credentials/revoke":"credential_revoke","/api/grants":"grant_create","/api/grants/revoke":"grant_revoke","/api/delegations":"delegation_create","/api/delegations/delegate":"delegation_delegate","/api/delegations/revoke":"delegation_revoke"};
   assert.ok(kinds[path],"known management mutation");return {kind:kinds[path],...body};
 }
 async function approvedPost(a,path,body,session) {
@@ -160,6 +161,26 @@ async function authentication(a,options) {
     const credential=await navigator.credentials.get(options);
     return credential.toJSON();
   },options);
+}
+function delegatedInvocation(grant) { return {id:grant.id,resource:"urn:uac:lab:document",action:"Read",arguments:{document:"overview"}}; }
+async function delegatedAssertion(a,grant,invocation=delegatedInvocation(grant)) {
+  const start=await post(a,"/api/auth/start",{name:a.name,delegation_invocation:invocation});assert.equal(start.status,200,JSON.stringify(start.body));
+  return {request_id:start.body.request_id,credential:await authentication(a,start.body.options),delegation_invocation:invocation};
+}
+async function uiDelegate(a,parent,recipient,ttl,budget) {
+  await a.page.locator("#refresh").click();
+  const form=a.page.locator(`.delegation[data-id="${parent.id}"] form`);await form.locator('[name="guest"]').fill(recipient);await form.locator('[name="ttl"]').fill(String(ttl));await form.locator('[name="budget"]').fill(String(budget));
+  const response=a.page.waitForResponse(r=>r.url().endsWith("/api/delegations/delegate"));await form.locator("button").click();
+  await a.page.locator("#management-dialog").waitFor({state:"visible"});const target=await a.page.locator("#management-target").innerText();
+  for(const expected of [`Empfänger: ${recipient}`,`Gültigkeit: ${ttl} Sekunden`,`Erlaubte Weitergaben: ${budget}`]) assert.ok(target.includes(expected));
+  await confirmUI(a,"Zugang weitergeben",parent.id);const r=await response;assert.equal(r.status(),200);return r.json();
+}
+function checkAPIChain(result,trustedIssuer) {
+  assert.equal(result.id,Buffer.from(referenceId(result.grant),"hex").toString("base64url"));
+  assert.equal(referenceId(result.grant),referenceId(result.chain.at(-1)));
+  const leaf=result.chain.at(-1).body;
+  assert.equal(referenceVerifyChain(result.chain,{issuer:trustedIssuer,audience:leaf.audience,resource:leaf.resource,action:"Read",now:Math.floor(Date.now()/1000)}).allowed,true);
+  for(const grant of result.chain) assert.equal(referenceId(referenceDecode(JSON.stringify({signature:grant.signature,body:Object.fromEntries(Object.entries(grant.body).reverse())},null,2))),referenceId(grant));
 }
 function invoke(grant) { return {grant:grant.grant,resource:"urn:uac:lab:document",action:"Read",arguments:{document:"overview"}}; }
 async function resign(a,payload,change) {
@@ -512,6 +533,147 @@ try {
     assert.equal(r.body.credentials.filter(c=>c.active).length,8);assert.equal(r.body.credentials.find(c=>c.id===initialId).active,false);assert.equal(r.body.current_credential_id,secondId);
     assert.equal((await post(guest,"/api/auth/finish",await assertion(guest,invoke(secondGrant)))).status,200);
   });
+  ownerSession=await login(owner);const outsiderSession=await login(foreign);
+  const secondguest=await actor("secondguest"),thirdguest=await actor("thirdguest"),fourthguest=await actor("fourthguest"),fifthguest=await actor("fifthguest");
+  for(const a of [secondguest,thirdguest,fourthguest,fifthguest]) assert.equal((await registration(a)).owner,false);
+  const secondSession=await login(secondguest),thirdSession=await login(thirdguest),fourthSession=await login(fourthguest),fifthSession=await login(fifthguest);
+  let delegationRoot,delegationChild,delegationLeaf,trustedIssuer;
+  await test("owner issues a service-signed delegation root through exact-action UI",async()=>{
+    await owner.page.locator("#delegation-guest").fill("guest");await owner.page.locator("#delegation-ttl").fill("240");await owner.page.locator("#delegation-budget").fill("2");
+    const response=owner.page.waitForResponse(r=>r.url().endsWith("/api/delegations")&&r.request().method()==="POST");await owner.page.locator("#delegation-issue").click();
+    await owner.page.locator("#management-dialog").waitFor({state:"visible"});const target=await owner.page.locator("#management-target").innerText();assert.ok(target.includes("Gültigkeit: 240 Sekunden"));assert.ok(target.includes("Erlaubte Weitergaben: 2"));
+    await confirmUI(owner,"Weitergabe erlauben","Empfänger: guest");const r=await response;assert.equal(r.status(),200);delegationRoot=await r.json();trustedIssuer=delegationRoot.grant.body.issuer;
+    checkAPIChain(delegationRoot,trustedIssuer);assert.equal(delegationRoot.chain.length,1);assert.equal(delegationRoot.grant.body.parent,null);assert.equal(delegationRoot.grant.body.delegator,null);
+    assert.deepEqual(delegationRoot.grant.body.audience,[...createHash("sha256").update(Buffer.from(initialId,"base64url")).digest()]);
+  });
+  await test("holder delegates an attenuated child through the browser",async()=>{
+    delegationChild=await uiDelegate(guest,delegationRoot,"secondguest",180,1);checkAPIChain(delegationChild,trustedIssuer);assert.equal(delegationChild.chain.length,2);assert.equal(delegationChild.grant.body.remaining_delegations,1);
+    assert.deepEqual(delegationChild.grant.body.delegator,delegationRoot.grant.body.audience);assert.deepEqual(delegationChild.grant.body.parent,[...Buffer.from(referenceId(delegationRoot.grant),"hex")]);
+  });
+  await test("second holder delegates a grandchild to a third holder through the browser",async()=>{
+    delegationLeaf=await uiDelegate(secondguest,delegationChild,"thirdguest",120,0);checkAPIChain(delegationLeaf,trustedIssuer);assert.equal(delegationLeaf.chain.length,3);assert.equal(delegationLeaf.grant.body.remaining_delegations,0);
+  });
+  for(const [a,grant,depth] of [[guest,delegationRoot,1],[secondguest,delegationChild,2],[thirdguest,delegationLeaf,3]]) await test(`${a.name} invokes a verified ${depth}-link chain through the browser`,async()=>{
+    await a.page.locator("#refresh").click();const response=a.page.waitForResponse(r=>r.url().endsWith("/api/auth/finish"));
+    await a.page.locator(`.delegation[data-id="${grant.id}"] .delegation-actions button`).filter({hasText:"Dokument lesen"}).click();const r=await response;assert.equal(r.status(),200);assert.equal((await r.json()).allowed,true);
+    await a.page.waitForFunction(()=>document.querySelector("#result").textContent.includes('"allowed": true'));
+  });
+  await thirdguest.page.screenshot({path:join(evidence,"browser-delegation-chain.png"),fullPage:true});
+  await test("delegation listings expose received and personally issued grants only",async()=>{
+    const ownerList=await get(owner,"/api/delegations",ownerSession);assert.equal(ownerList.body.profile,"heavenkey-delegation-v1");assert.equal(ownerList.body.max_chain,5);
+    const g=await get(guest,"/api/delegations",guestSession),s=await get(secondguest,"/api/delegations",secondSession),t=await get(thirdguest,"/api/delegations",thirdSession),f=await get(foreign,"/api/delegations",outsiderSession);
+    assert.deepEqual(g.body.grants.map(x=>x.id).sort(),[delegationRoot.id,delegationChild.id].sort());assert.deepEqual(s.body.grants.map(x=>x.id).sort(),[delegationChild.id,delegationLeaf.id].sort());assert.deepEqual(t.body.grants.map(x=>x.id),[delegationLeaf.id]);assert.equal(f.body.grants.length,0);
+    assert.equal((await get(guest,"/api/delegations")).status,401);assert.equal(g.body.grants.find(x=>x.id===delegationRoot.id).can_delegate,true);assert.equal(t.body.grants[0].can_delegate,false);
+  });
+  for(const [name,a,path,body,s] of [
+    ["delegation root",owner,"/api/delegations",{guest_name:"guest",ttl_seconds:200,remaining_delegations:2},ownerSession],
+    ["delegation child",guest,"/api/delegations/delegate",{parent_id:delegationRoot.id,guest_name:"foreign",ttl_seconds:60,remaining_delegations:0},guestSession],
+    ["delegation revoke",owner,"/api/delegations/revoke",{id:delegationRoot.id},ownerSession],
+  ]) await test(`bearer possession alone cannot authorize ${name}`,async()=>{const r=await post(a,path,body,s);assert.equal(r.status,403);assert.equal(r.body.error,"approval_required");});
+  await test("delegation root issuance remains owner-only",async()=>assert.equal((await post(guest,"/api/auth/start",{name:"guest",management:{kind:"delegation_create",guest_name:"foreign",ttl_seconds:60,remaining_delegations:1}},guestSession)).status,403));
+  await test("only the current parent audience can delegate its chain",async()=>assert.equal((await post(foreign,"/api/auth/start",{name:"foreign",management:{kind:"delegation_delegate",parent_id:delegationRoot.id,guest_name:"fourthguest",ttl_seconds:60,remaining_delegations:0}},outsiderSession)).status,403));
+  await test("delegation cannot widen expiry or retain its parent's budget",async()=>{
+    for(const change of [{ttl_seconds:3600,remaining_delegations:0},{ttl_seconds:60,remaining_delegations:2}]) assert.equal((await post(guest,"/api/auth/start",{name:"guest",management:{kind:"delegation_delegate",parent_id:delegationRoot.id,guest_name:"foreign",...change}},guestSession)).status,403);
+  });
+  await test("delegation prevents cycles back to any existing audience",async()=>{
+    for(const guest_name of ["guest","secondguest"]) assert.equal((await post(secondguest,"/api/auth/start",{name:"secondguest",management:{kind:"delegation_delegate",parent_id:delegationChild.id,guest_name,ttl_seconds:60,remaining_delegations:0}},secondSession)).status,403);
+  });
+  await test("zero-budget leaf cannot authorize another delegation",async()=>assert.equal((await post(thirdguest,"/api/auth/start",{name:"thirdguest",management:{kind:"delegation_delegate",parent_id:delegationLeaf.id,guest_name:"foreign",ttl_seconds:30,remaining_delegations:0}},thirdSession)).status,403));
+  await test("delegation root validates TTL and four-step maximum budget",async()=>{
+    for(const [ttl_seconds,remaining_delegations] of [[0,2],[60,5]]) assert.equal((await post(owner,"/api/auth/start",{name:"owner",management:{kind:"delegation_create",guest_name:"guest",ttl_seconds,remaining_delegations}},ownerSession)).status,400);
+  });
+  for(const [name,a,grant,change] of [["wrong audience",foreign,delegationLeaf,{}],["resource escalation",thirdguest,delegationLeaf,{resource:"urn:uac:other"}],["action escalation",thirdguest,delegationLeaf,{action:"Write"}]]) await test(`delegated invocation denies ${name}`,async()=>assert.equal((await post(a,"/api/auth/start",{name:a.name,delegation_invocation:{...delegatedInvocation(grant),...change}})).status,403));
+  await test("delegated invocation cannot mix with login-management or legacy invocation",async()=>{
+    const d=delegatedInvocation(delegationLeaf);assert.equal((await post(thirdguest,"/api/auth/start",{name:"thirdguest",delegation_invocation:d,invocation:invoke(secondGrant)})).status,400);
+    assert.equal((await post(thirdguest,"/api/auth/start",{name:"thirdguest",delegation_invocation:d,management:{kind:"credential_add",label:"Mixed"}},thirdSession)).status,400);
+  });
+  await test("delegated invocation binds exact ID, arguments and purpose at finish",async()=>{
+    for(const change of [{id:delegationChild.id},{arguments:{document:"different"}},null]) {
+      const p=await delegatedAssertion(thirdguest,delegationLeaf);p.delegation_invocation=change===null?null:{...p.delegation_invocation,...change};assert.equal((await post(thirdguest,"/api/auth/finish",p)).status,403);
+    }
+  });
+  await test("delegated assertion replay and parallel duplicate execute once",async()=>{
+    const p=await delegatedAssertion(thirdguest,delegationLeaf);assert.equal((await post(thirdguest,"/api/auth/finish",p)).status,200);assert.equal((await post(thirdguest,"/api/auth/finish",p)).status,403);
+    const duplicate=await delegatedAssertion(thirdguest,delegationLeaf);const results=await Promise.all([post(thirdguest,"/api/auth/finish",duplicate),post(thirdguest,"/api/auth/finish",duplicate)]);assert.deepEqual(results.map(x=>x.status).sort(),[200,403]);
+  });
+  await test("delegated assertion still requires a valid WebAuthn signature",async()=>{const p=await delegatedAssertion(thirdguest,delegationLeaf);p.credential.response.signature=Buffer.alloc(70,0).toString("base64url");assert.equal((await post(thirdguest,"/api/auth/finish",p)).status,401);});
+  const branchResponse=await approvedPost(owner,"/api/delegations",{guest_name:"guest",ttl_seconds:230,remaining_delegations:2},ownerSession);assert.equal(branchResponse.status,200);const branch=branchResponse.body;checkAPIChain(branch,trustedIssuer);
+  for(const [name,approved,changed] of [["recipient",{guest_name:"guest",ttl_seconds:200,remaining_delegations:2},{guest_name:"foreign",ttl_seconds:200,remaining_delegations:2}],["TTL",{guest_name:"guest",ttl_seconds:200,remaining_delegations:2},{guest_name:"guest",ttl_seconds:199,remaining_delegations:2}],["budget",{guest_name:"guest",ttl_seconds:200,remaining_delegations:2},{guest_name:"guest",ttl_seconds:200,remaining_delegations:1}]]) await test(`delegation approval binds exact ${name} and burns mismatch`,async()=>{
+    const approval_id=await approval(owner,ownerSession,managementFor("/api/delegations",approved));const r=await post(owner,"/api/delegations",{...changed,approval_id},ownerSession);assert.equal(r.status,403);assert.equal(r.body.error,"approval_mismatch");assert.equal((await post(owner,"/api/delegations",{...approved,approval_id},ownerSession)).body.error,"approval_missing");
+  });
+  await test("delegation approval binds the exact parent",async()=>{
+    const body={parent_id:delegationRoot.id,guest_name:"foreign",ttl_seconds:60,remaining_delegations:0};const approval_id=await approval(guest,guestSession,managementFor("/api/delegations/delegate",body));
+    const r=await post(guest,"/api/delegations/delegate",{...body,parent_id:branch.id,approval_id},guestSession);assert.equal(r.status,403);assert.equal(r.body.error,"approval_mismatch");assert.equal((await post(guest,"/api/delegations/delegate",{...body,approval_id},guestSession)).body.error,"approval_missing");
+  });
+  await test("delegation approval cannot cross action kind or session",async()=>{
+    const body={guest_name:"guest",ttl_seconds:200,remaining_delegations:2};const other=await post(owner,"/api/auth/finish",await assertion(owner));assert.equal(other.status,200);
+    let approval_id=await approval(owner,ownerSession,managementFor("/api/delegations",body));assert.equal((await post(owner,"/api/delegations",{...body,approval_id},other.body.session)).body.error,"approval_mismatch");
+    approval_id=await approval(owner,ownerSession,managementFor("/api/delegations",body));assert.equal((await post(owner,"/api/grants",{guest_name:"guest",ttl_seconds:200,approval_id},ownerSession)).body.error,"approval_mismatch");
+  });
+  await test("wrong-holder delegation attempt consumes a supplied approval",async()=>{
+    const body={parent_id:delegationRoot.id,guest_name:"foreign",ttl_seconds:60,remaining_delegations:0};const approval_id=await approval(guest,guestSession,managementFor("/api/delegations/delegate",body));assert.equal((await post(secondguest,"/api/delegations/delegate",{...body,approval_id},secondSession)).status,403);
+    assert.equal((await post(guest,"/api/delegations/delegate",{...body,approval_id},guestSession)).body.error,"approval_missing");
+  });
+  await test("delegation approval replay and parallel write cannot mint twice",async()=>{
+    const body={guest_name:"foreign",ttl_seconds:210,remaining_delegations:1};const approval_id=await approval(owner,ownerSession,managementFor("/api/delegations",body));
+    const before=(await get(owner,"/api/delegations",ownerSession)).body.grants.length;const results=await Promise.all([post(owner,"/api/delegations",{...body,approval_id},ownerSession),post(owner,"/api/delegations",{...body,approval_id},ownerSession)]);assert.deepEqual(results.map(x=>x.status).sort(),[200,403]);checkAPIChain(results.find(x=>x.status===200).body,trustedIssuer);
+    assert.equal((await get(owner,"/api/delegations",ownerSession)).body.grants.length,before+1);assert.equal((await post(owner,"/api/delegations",{...body,approval_id},ownerSession)).body.error,"approval_missing");
+  });
+  await test("parent holder cannot revoke a descendant issued by another account",async()=>assert.equal((await post(guest,"/api/auth/start",{name:"guest",management:{kind:"delegation_revoke",id:delegationLeaf.id}},guestSession)).status,403));
+  const branchChildResponse=await approvedPost(guest,"/api/delegations/delegate",{parent_id:branch.id,guest_name:"secondguest",ttl_seconds:100,remaining_delegations:0},guestSession);assert.equal(branchChildResponse.status,200);const branchChild=branchChildResponse.body;checkAPIChain(branchChild,trustedIssuer);
+  await test("actual child issuer can revoke its own child idempotently",async()=>{
+    for(let n=0;n<2;n++) {const r=await approvedPost(guest,"/api/delegations/revoke",{id:branchChild.id},guestSession);assert.equal(r.status,200);assert.equal(r.body.revoked,true);}
+    assert.equal((await post(secondguest,"/api/auth/start",{name:"secondguest",delegation_invocation:delegatedInvocation(branchChild)})).status,403);
+  });
+  const fixtureDb=new Database(join(data,"uac.sqlite"));
+  await test("stored tokens are reverified for unknown profile and bad signature",async()=>{
+    const saved=fixtureDb.query("SELECT token FROM delegations WHERE id=?1").get(delegationLeaf.id).token;
+    try {for(const mutation of [token=>{token.body.profile="unrecognized";},token=>{token.signature[0]^=1;}]) {const token=JSON.parse(saved);mutation(token);fixtureDb.query("UPDATE delegations SET token=?1 WHERE id=?2").run(JSON.stringify(token),delegationLeaf.id);assert.equal((await post(thirdguest,"/api/auth/start",{name:"thirdguest",delegation_invocation:delegatedInvocation(delegationLeaf)})).status,403);}}
+    finally {fixtureDb.query("UPDATE delegations SET token=?1 WHERE id=?2").run(saved,delegationLeaf.id);}
+  });
+  await test("stored parent pointer cannot silently replace a signed parent",async()=>{
+    try {fixtureDb.query("UPDATE delegations SET parent_id=?1 WHERE id=?2").run(branch.id,delegationChild.id);assert.equal((await post(secondguest,"/api/auth/start",{name:"secondguest",delegation_invocation:delegatedInvocation(delegationChild)})).status,403);}
+    finally {fixtureDb.query("UPDATE delegations SET parent_id=?1 WHERE id=?2").run(delegationRoot.id,delegationChild.id);}
+  });
+  await test("five-link delegation depth succeeds and a sixth link is refused",async()=>{
+    const root=await approvedPost(owner,"/api/delegations",{guest_name:"guest",ttl_seconds:300,remaining_delegations:4},ownerSession);assert.equal(root.status,200);let parent=root.body;checkAPIChain(parent,trustedIssuer);
+    for(const [a,s,next,ttl,budget] of [[guest,guestSession,"secondguest",260,3],[secondguest,secondSession,"thirdguest",220,2],[thirdguest,thirdSession,"fourthguest",180,1],[fourthguest,fourthSession,"fifthguest",140,0]]) {const r=await approvedPost(a,"/api/delegations/delegate",{parent_id:parent.id,guest_name:next,ttl_seconds:ttl,remaining_delegations:budget},s);assert.equal(r.status,200);parent=r.body;checkAPIChain(parent,trustedIssuer);}
+    assert.equal(parent.chain.length,5);assert.equal((await post(fifthguest,"/api/auth/finish",await delegatedAssertion(fifthguest,parent))).status,200);
+    assert.equal((await post(fifthguest,"/api/auth/start",{name:"fifthguest",management:{kind:"delegation_delegate",parent_id:parent.id,guest_name:"foreign",ttl_seconds:30,remaining_delegations:0}},fifthSession)).status,403);
+  });
+  await test("expired delegation denies invocation without changing signed token",async()=>{const r=await approvedPost(owner,"/api/delegations",{guest_name:"foreign",ttl_seconds:1,remaining_delegations:0},ownerSession);assert.equal(r.status,200);await new Promise(resolve=>setTimeout(resolve,1200));assert.equal((await post(foreign,"/api/auth/start",{name:"foreign",delegation_invocation:delegatedInvocation(r.body)})).status,403);});
+  const pendingDelegation=await delegatedAssertion(thirdguest,delegationLeaf);
+  const pendingDelegateBody={parent_id:delegationChild.id,guest_name:"foreign",ttl_seconds:60,remaining_delegations:0};
+  const pendingDelegateApproval=await approval(secondguest,secondSession,managementFor("/api/delegations/delegate",pendingDelegateBody));
+  const pendingDelegateManagement=await managementAssertion(secondguest,secondSession,managementFor("/api/delegations/delegate",pendingDelegateBody));
+  await test("owner ancestor revocation through UI invalidates the entire chain",async()=>{
+    await owner.page.locator("#refresh").click();const response=owner.page.waitForResponse(r=>r.url().endsWith("/api/delegations/revoke"));await owner.page.locator(`.delegation[data-id="${delegationRoot.id}"] .delegation-actions button`).filter({hasText:"Weitergabe widerrufen"}).click();await confirmUI(owner,"Weitergabe widerrufen",delegationRoot.id);assert.equal((await response).status(),200);
+    for(const [a,grant] of [[guest,delegationRoot],[secondguest,delegationChild],[thirdguest,delegationLeaf]]) assert.equal((await post(a,"/api/auth/start",{name:a.name,delegation_invocation:delegatedInvocation(grant)})).status,403);
+  });
+  await test("ancestor revocation denies pending invocation and approved new child",async()=>{
+    assert.equal((await post(thirdguest,"/api/auth/finish",pendingDelegation)).status,403);assert.equal((await post(secondguest,"/api/delegations/delegate",{...pendingDelegateBody,approval_id:pendingDelegateApproval},secondSession)).status,403);
+    assert.equal((await post(secondguest,"/api/auth/finish",pendingDelegateManagement,secondSession)).status,403);
+    assert.equal((await post(secondguest,"/api/auth/start",{name:"secondguest",management:managementFor("/api/delegations/delegate",pendingDelegateBody)},secondSession)).status,403);
+  });
+  await test("inherited revocation is visible while descendant signatures stay unchanged",async()=>{
+    const list=await get(thirdguest,"/api/delegations",thirdSession);const row=list.body.grants.find(x=>x.id===delegationLeaf.id);assert.equal(row.revoked,false);assert.equal(row.effective_revoked,true);assert.equal(row.can_delegate,false);
+    assert.deepEqual(row.chain.map(referenceId),delegationLeaf.chain.map(referenceId));assert.throws(()=>referenceVerifyChain(row.chain,{issuer:trustedIssuer,audience:row.grant.body.audience,resource:row.grant.body.resource,action:"Read",now:Math.floor(Date.now()/1000),revoked:[referenceId(delegationRoot.grant)]}));
+    await thirdguest.page.locator("#refresh").click();await thirdguest.page.waitForFunction(()=>document.querySelector("#delegations").textContent.includes("Vorfahre widerrufen"));await thirdguest.page.screenshot({path:join(evidence,"browser-delegation-revoked.png"),fullPage:true});
+  });
+  await test("signature-preserving ancestor skipping cannot bypass revocation",async()=>{
+    try {fixtureDb.query("UPDATE delegations SET parent_id=NULL WHERE id=?1").run(delegationChild.id);assert.equal((await post(thirdguest,"/api/auth/start",{name:"thirdguest",delegation_invocation:delegatedInvocation(delegationLeaf)})).status,403);assert.throws(()=>referenceVerifyChain(delegationLeaf.chain.slice(1),{issuer:trustedIssuer,audience:delegationLeaf.grant.body.audience,resource:delegationLeaf.grant.body.resource,action:"Read",now:Math.floor(Date.now()/1000)}));}
+    finally {fixtureDb.query("UPDATE delegations SET parent_id=?1 WHERE id=?2").run(delegationRoot.id,delegationChild.id);}
+  });fixtureDb.close();
+  const restartDelegationApproval=await approval(owner,ownerSession,{kind:"delegation_create",guest_name:"foreign",ttl_seconds:100,remaining_delegations:0});
+  await stopServer();await startServer();
+  await test("ancestor tombstones and descendant denial survive restart",async()=>{
+    const current=await login(thirdguest);const rows=(await get(thirdguest,"/api/delegations",current)).body.grants;assert.equal(rows.find(x=>x.id===delegationLeaf.id).effective_revoked,true);
+    assert.equal((await post(thirdguest,"/api/auth/start",{name:"thirdguest",delegation_invocation:delegatedInvocation(delegationLeaf)})).status,403);
+    const rootSession=await login(owner);const r=await post(owner,"/api/delegations",{guest_name:"foreign",ttl_seconds:100,remaining_delegations:0,approval_id:restartDelegationApproval},rootSession);assert.equal(r.status,403);assert.equal(r.body.error,"approval_missing");
+  });
+  await thirdguest.page.setViewportSize({width:375,height:900});
+  await test("delegation workbench fits a mobile viewport",async()=>assert.ok(await thirdguest.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)));
+  await thirdguest.page.screenshot({path:join(evidence,"browser-delegation-mobile.png"),fullPage:true});
   const currentDb=new Database(join(data,"uac.sqlite"),{readonly:true});
   const legacyUser=currentDb.query("SELECT id,name,owner,credential_id,passkey,counter FROM users WHERE name='foreign'").get();currentDb.close();
   legacyData=await mkdtemp(join(tmpdir(),"uac-legacy-"));

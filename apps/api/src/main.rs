@@ -16,13 +16,14 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
-    collections::HashMap,
+    collections::{BTreeSet, HashMap},
     fs,
     io::Write,
     path::Path,
     sync::{Arc, Mutex},
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
+use uac_verifier::delegation::{self, DelegationGrant};
 use uac_verifier::{Action, Grant, Signed, authorize_passkey_grant, grant_id, sign_grant};
 use uuid::Uuid;
 use webauthn_rs::prelude::*;
@@ -63,6 +64,7 @@ struct Authentication {
     state: PasskeyAuthentication,
     invocation: Option<Invocation>,
     management: Option<ManagementCeremony>,
+    delegation_invocation: Option<DelegationInvocation>,
     expires: u64,
 }
 struct ManagementCeremony {
@@ -121,12 +123,33 @@ struct Invocation {
     action: Action,
     arguments: std::collections::BTreeMap<String, String>,
 }
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DelegationInvocation {
+    id: String,
+    resource: String,
+    action: Action,
+    arguments: std::collections::BTreeMap<String, String>,
+}
+struct DelegationRecord {
+    id: String,
+    parent_id: Option<String>,
+    recipient_id: String,
+    delegator_id: String,
+    grant: Signed<DelegationGrant>,
+    revoked: bool,
+}
+struct DelegationChain {
+    chain: Vec<Signed<DelegationGrant>>,
+    revoked: BTreeSet<[u8; 32]>,
+}
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct AuthStart {
     name: String,
     invocation: Option<Invocation>,
     management: Option<Management>,
+    delegation_invocation: Option<DelegationInvocation>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -135,6 +158,7 @@ struct AuthFinish {
     credential: PublicKeyCredential,
     invocation: Option<Invocation>,
     management: Option<Management>,
+    delegation_invocation: Option<DelegationInvocation>,
 }
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
@@ -152,6 +176,43 @@ enum Management {
     GrantRevoke {
         id: String,
     },
+    DelegationCreate {
+        guest_name: String,
+        ttl_seconds: u64,
+        remaining_delegations: u8,
+    },
+    DelegationDelegate {
+        parent_id: String,
+        guest_name: String,
+        ttl_seconds: u64,
+        remaining_delegations: u8,
+    },
+    DelegationRevoke {
+        id: String,
+    },
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DelegationCreate {
+    guest_name: String,
+    ttl_seconds: u64,
+    remaining_delegations: u8,
+    approval_id: Option<String>,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DelegationDelegate {
+    parent_id: String,
+    guest_name: String,
+    ttl_seconds: u64,
+    remaining_delegations: u8,
+    approval_id: Option<String>,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DelegationRevoke {
+    id: String,
+    approval_id: Option<String>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -221,7 +282,7 @@ fn token_id(grant: &Signed<Grant>) -> ApiResult<String> {
         .map(|id| URL_SAFE_NO_PAD.encode(id))
         .map_err(internal)
 }
-fn binding(invocation: &Option<Invocation>) -> ApiResult<[u8; 32]> {
+fn binding<T: Serialize>(invocation: &Option<T>) -> ApiResult<[u8; 32]> {
     Ok(Sha256::digest(serde_json::to_vec(invocation).map_err(internal)?).into())
 }
 
@@ -353,6 +414,36 @@ impl Inner {
                     return Err(forbidden("owner_required"));
                 }
             }
+            Management::DelegationCreate {
+                guest_name,
+                ttl_seconds,
+                remaining_delegations,
+            } => {
+                self.delegation_target(
+                    user,
+                    guest_name,
+                    *ttl_seconds,
+                    *remaining_delegations,
+                    None,
+                )?;
+            }
+            Management::DelegationDelegate {
+                parent_id,
+                guest_name,
+                ttl_seconds,
+                remaining_delegations,
+            } => {
+                self.delegation_target(
+                    user,
+                    guest_name,
+                    *ttl_seconds,
+                    *remaining_delegations,
+                    Some(parent_id),
+                )?;
+            }
+            Management::DelegationRevoke { id } => {
+                self.delegation_revoke_allowed(user, id)?;
+            }
         }
         Ok(())
     }
@@ -413,6 +504,210 @@ impl Inner {
             revoked,
         )
         .map_err(|_| forbidden("grant_denied"))
+    }
+    fn delegation_record(&self, id: &str) -> ApiResult<DelegationRecord> {
+        let row = self.db.query_row(
+            "SELECT id,parent_id,recipient_id,delegator_id,token,revoked FROM delegations WHERE id=?1", [id],
+            |r| Ok((r.get::<_,String>(0)?,r.get::<_,Option<String>>(1)?,r.get::<_,String>(2)?,r.get::<_,String>(3)?,r.get::<_,String>(4)?,r.get::<_,bool>(5)?)),
+        ).optional().map_err(internal)?.ok_or(ApiError(StatusCode::NOT_FOUND,"delegation_not_found"))?;
+        Ok(DelegationRecord {
+            id: row.0,
+            parent_id: row.1,
+            recipient_id: row.2,
+            delegator_id: row.3,
+            grant: delegation::decode(row.4.as_bytes())
+                .map_err(|_| forbidden("delegation_denied"))?,
+            revoked: row.5,
+        })
+    }
+    fn delegation_chain(&self, id: &str) -> ApiResult<DelegationChain> {
+        let mut current = id.to_owned();
+        let mut seen = BTreeSet::new();
+        let mut chain = Vec::new();
+        let mut revoked = BTreeSet::new();
+        loop {
+            if seen.len() >= delegation::MAX_CHAIN || !seen.insert(current.clone()) {
+                return Err(forbidden("delegation_denied"));
+            }
+            let row = self.delegation_record(&current)?;
+            let raw_id = delegation::id(&row.grant).map_err(|_| forbidden("delegation_denied"))?;
+            let parent = row
+                .grant
+                .body
+                .parent
+                .map(|parent| URL_SAFE_NO_PAD.encode(parent));
+            let recipient = self.user("id", &row.recipient_id)?;
+            let issuer = self.user("id", &row.delegator_id)?;
+            if row.id != URL_SAFE_NO_PAD.encode(raw_id)
+                || parent != row.parent_id
+                || recipient.subject != row.grant.body.audience
+                || match row.grant.body.delegator {
+                    Some(alias) => issuer.subject != alias,
+                    None => !issuer.owner,
+                }
+            {
+                return Err(forbidden("delegation_denied"));
+            }
+            if row.revoked {
+                revoked.insert(raw_id);
+            }
+            chain.push(row.grant);
+            if let Some(parent) = row.parent_id {
+                current = parent;
+            } else {
+                break;
+            }
+        }
+        chain.reverse();
+        delegation::verify_structure(&chain, &self.issuer.verifying_key().to_bytes())
+            .map_err(|_| forbidden("delegation_denied"))?;
+        Ok(DelegationChain { chain, revoked })
+    }
+    fn delegation_verify(
+        &self,
+        user: &User,
+        chain: &DelegationChain,
+        resource: &str,
+        action: Action,
+    ) -> ApiResult<()> {
+        delegation::verify_chain(
+            &chain.chain,
+            delegation::Context {
+                root: &self.issuer.verifying_key().to_bytes(),
+                verified_holder: &user.subject,
+                resource,
+                action,
+                now: now(),
+                revoked: &chain.revoked,
+            },
+        )
+        .map_err(|_| forbidden("delegation_denied"))
+    }
+    fn delegation_target(
+        &self,
+        user: &User,
+        guest_name: &str,
+        ttl: u64,
+        budget: u8,
+        parent_id: Option<&str>,
+    ) -> ApiResult<(User, Option<DelegationChain>)> {
+        if parent_id.is_none() && !user.owner {
+            return Err(forbidden("owner_required"));
+        }
+        if !(1..=3600).contains(&ttl) {
+            return Err(ApiError(StatusCode::BAD_REQUEST, "invalid_expiry"));
+        }
+        if budget > 4 {
+            return Err(ApiError(
+                StatusCode::BAD_REQUEST,
+                "invalid_delegation_budget",
+            ));
+        }
+        let guest = self.user("name", guest_name)?;
+        let parent = if let Some(id) = parent_id {
+            let chain = self.delegation_chain(id)?;
+            self.delegation_verify(user, &chain, RESOURCE, Action::Read)?;
+            let leaf = &chain
+                .chain
+                .last()
+                .ok_or(forbidden("delegation_denied"))?
+                .body;
+            if chain.chain.len() >= delegation::MAX_CHAIN
+                || leaf.remaining_delegations == 0
+                || budget >= leaf.remaining_delegations
+                || now()
+                    .checked_add(ttl)
+                    .is_none_or(|expiry| expiry > leaf.expires_at)
+                || chain
+                    .chain
+                    .iter()
+                    .any(|grant| grant.body.audience == guest.subject)
+            {
+                return Err(forbidden("delegation_denied"));
+            }
+            Some(chain)
+        } else {
+            None
+        };
+        Ok((guest, parent))
+    }
+    fn delegation_revoke_allowed(&self, user: &User, id: &str) -> ApiResult<()> {
+        let row = self.delegation_record(id)?;
+        self.delegation_chain(id)?;
+        if !user.owner && row.delegator_id != user.id {
+            return Err(forbidden("delegation_revoke_denied"));
+        }
+        Ok(())
+    }
+    fn delegation_allowed(
+        &self,
+        user: &User,
+        invocation: &DelegationInvocation,
+    ) -> ApiResult<DelegationChain> {
+        if invocation.arguments.len() > 8
+            || invocation
+                .arguments
+                .iter()
+                .any(|(k, v)| k.len() > 64 || v.len() > 256)
+        {
+            return Err(forbidden("argument_limit"));
+        }
+        if invocation.resource != RESOURCE {
+            return Err(forbidden("resource_denied"));
+        }
+        let chain = self.delegation_chain(&invocation.id)?;
+        self.delegation_verify(user, &chain, &invocation.resource, invocation.action)?;
+        Ok(chain)
+    }
+    fn issue_delegation(
+        &mut self,
+        user: &User,
+        guest: &User,
+        ttl: u64,
+        budget: u8,
+        parent: Option<DelegationChain>,
+    ) -> ApiResult<Json<Value>> {
+        let time = now();
+        let mut nonce = [0; 16];
+        rand::rng().fill_bytes(&mut nonce);
+        let parent_raw = parent
+            .as_ref()
+            .map(|chain| {
+                delegation::id(chain.chain.last().ok_or(forbidden("delegation_denied"))?)
+                    .map_err(internal)
+            })
+            .transpose()?;
+        let grant = delegation::sign(
+            &self.issuer,
+            DelegationGrant {
+                profile: delegation::PROFILE.into(),
+                issuer: self.issuer.verifying_key().to_bytes(),
+                delegator: parent_raw.map(|_| user.subject),
+                audience: guest.subject,
+                resource: RESOURCE.into(),
+                actions: [Action::Read].into(),
+                not_before: time,
+                expires_at: time
+                    .checked_add(ttl)
+                    .ok_or(forbidden("delegation_denied"))?,
+                remaining_delegations: budget,
+                parent: parent_raw,
+                nonce,
+            },
+        )
+        .map_err(|_| forbidden("delegation_denied"))?;
+        let id = URL_SAFE_NO_PAD.encode(delegation::id(&grant).map_err(internal)?);
+        let parent_id = parent_raw.map(|id| URL_SAFE_NO_PAD.encode(id));
+        let mut chain = parent.unwrap_or(DelegationChain {
+            chain: Vec::new(),
+            revoked: BTreeSet::new(),
+        });
+        chain.chain.push(grant.clone());
+        self.delegation_verify(guest, &chain, RESOURCE, Action::Read)?;
+        let tx = self.db.transaction().map_err(internal)?;
+        tx.execute("INSERT INTO delegations(id,parent_id,recipient_id,delegator_id,token,revoked) VALUES(?1,?2,?3,?4,?5,0)",params![id,parent_id,guest.id,user.id,serde_json::to_string(&grant).map_err(internal)?]).map_err(internal)?;
+        tx.commit().map_err(internal)?;
+        Ok(Json(json!({"id":id,"grant":grant,"chain":chain.chain})))
     }
 }
 
@@ -562,7 +857,11 @@ async fn auth_start(
     headers: HeaderMap,
     Json(input): Json<AuthStart>,
 ) -> ApiResult<Json<Value>> {
-    if input.management.is_some() && input.invocation.is_some() {
+    if usize::from(input.management.is_some())
+        + usize::from(input.invocation.is_some())
+        + usize::from(input.delegation_invocation.is_some())
+        > 1
+    {
         return Err(ApiError(
             StatusCode::BAD_REQUEST,
             "ambiguous_authentication",
@@ -595,6 +894,9 @@ async fn auth_start(
     if let Some(invocation) = &input.invocation {
         inner.grant_allowed(&user, invocation)?;
     }
+    if let Some(invocation) = &input.delegation_invocation {
+        inner.delegation_allowed(&user, invocation)?;
+    }
     let keys: Vec<Passkey> = inner
         .active_credentials(&user.id)?
         .into_iter()
@@ -616,6 +918,7 @@ async fn auth_start(
             state,
             invocation: input.invocation,
             management,
+            delegation_invocation: input.delegation_invocation,
             expires: now() + CEREMONY_TTL,
         },
     );
@@ -635,7 +938,11 @@ async fn auth_finish(
         .authentications
         .remove(&input.request_id)
         .ok_or(forbidden("ceremony_missing"))?;
-    if input.management.is_some() && input.invocation.is_some() {
+    if usize::from(input.management.is_some())
+        + usize::from(input.invocation.is_some())
+        + usize::from(input.delegation_invocation.is_some())
+        > 1
+    {
         return Err(ApiError(
             StatusCode::BAD_REQUEST,
             "ambiguous_authentication",
@@ -657,6 +964,9 @@ async fn auth_finish(
     }
     if binding(&pending.invocation)? != binding(&input.invocation)? {
         return Err(forbidden("invocation_changed"));
+    }
+    if binding(&pending.delegation_invocation)? != binding(&input.delegation_invocation)? {
+        return Err(forbidden("delegation_invocation_changed"));
     }
     let user = inner.user("id", &pending.user.id)?;
     let result = inner
@@ -684,6 +994,11 @@ async fn auth_finish(
     if let Some(invocation) = &pending.invocation {
         inner.grant_allowed(&user, invocation)?;
     }
+    let delegated_chain = if let Some(invocation) = &pending.delegation_invocation {
+        Some(inner.delegation_allowed(&user, invocation)?)
+    } else {
+        None
+    };
     let key_json = serde_json::to_string(&current.passkey).map_err(internal)?;
     let tx = inner.db.transaction().map_err(internal)?;
     let updated = tx
@@ -707,6 +1022,26 @@ async fn auth_finish(
             return Err(forbidden("grant_revoked"));
         }
     }
+    if let Some(invocation) = &pending.delegation_invocation {
+        for grant in &delegated_chain
+            .as_ref()
+            .ok_or(forbidden("delegation_denied"))?
+            .chain
+        {
+            let id = URL_SAFE_NO_PAD.encode(delegation::id(grant).map_err(internal)?);
+            let active: bool = tx
+                .query_row(
+                    "SELECT EXISTS(SELECT 1 FROM delegations WHERE id=?1 AND revoked=0)",
+                    [id],
+                    |r| r.get(0),
+                )
+                .map_err(internal)?;
+            if !active {
+                return Err(forbidden("delegation_denied"));
+            }
+        }
+        tx.execute("INSERT INTO delegation_operations(id,delegation_id,holder,created) VALUES(?1,?2,?3,?4)",params![input.request_id,invocation.id,user.id,i64::try_from(now()).map_err(internal)?]).map_err(internal)?;
+    }
     tx.commit().map_err(internal)?;
     if let Some(management) = pending.management {
         let approval_id = Uuid::new_v4().to_string();
@@ -722,6 +1057,10 @@ async fn auth_finish(
         );
         Ok(Json(
             json!({"approval_id":approval_id,"approved":true,"expires_in":APPROVAL_TTL.as_secs()}),
+        ))
+    } else if let Some(invocation) = pending.delegation_invocation {
+        Ok(Json(
+            json!({"allowed":true,"resource":invocation.resource,"action":invocation.action,"arguments":invocation.arguments,"operation":input.request_id,"data":"HeavenKey example document — verified delegated access"}),
         ))
     } else if let Some(invocation) = pending.invocation {
         Ok(Json(
@@ -1038,6 +1377,128 @@ async fn grants(State(app): State<App>, headers: HeaderMap) -> ApiResult<Json<Va
     Ok(Json(json!({"grants":out})))
 }
 
+async fn create_delegation(
+    State(app): State<App>,
+    headers: HeaderMap,
+    Json(input): Json<DelegationCreate>,
+) -> ApiResult<Json<Value>> {
+    let mut inner = app.inner.lock().map_err(internal)?;
+    let approval = inner.take_approval(input.approval_id.as_deref());
+    let user = inner.session_user(&headers)?;
+    let (guest, parent) = inner.delegation_target(
+        &user,
+        &input.guest_name,
+        input.ttl_seconds,
+        input.remaining_delegations,
+        None,
+    )?;
+    inner.require_approval(
+        &headers,
+        &user,
+        input.approval_id.as_deref(),
+        approval,
+        &Management::DelegationCreate {
+            guest_name: input.guest_name,
+            ttl_seconds: input.ttl_seconds,
+            remaining_delegations: input.remaining_delegations,
+        },
+    )?;
+    inner.issue_delegation(
+        &user,
+        &guest,
+        input.ttl_seconds,
+        input.remaining_delegations,
+        parent,
+    )
+}
+
+async fn delegate_delegation(
+    State(app): State<App>,
+    headers: HeaderMap,
+    Json(input): Json<DelegationDelegate>,
+) -> ApiResult<Json<Value>> {
+    let mut inner = app.inner.lock().map_err(internal)?;
+    let approval = inner.take_approval(input.approval_id.as_deref());
+    let user = inner.session_user(&headers)?;
+    let (guest, parent) = inner.delegation_target(
+        &user,
+        &input.guest_name,
+        input.ttl_seconds,
+        input.remaining_delegations,
+        Some(&input.parent_id),
+    )?;
+    inner.require_approval(
+        &headers,
+        &user,
+        input.approval_id.as_deref(),
+        approval,
+        &Management::DelegationDelegate {
+            parent_id: input.parent_id,
+            guest_name: input.guest_name,
+            ttl_seconds: input.ttl_seconds,
+            remaining_delegations: input.remaining_delegations,
+        },
+    )?;
+    inner.issue_delegation(
+        &user,
+        &guest,
+        input.ttl_seconds,
+        input.remaining_delegations,
+        parent,
+    )
+}
+
+async fn revoke_delegation(
+    State(app): State<App>,
+    headers: HeaderMap,
+    Json(input): Json<DelegationRevoke>,
+) -> ApiResult<Json<Value>> {
+    let mut inner = app.inner.lock().map_err(internal)?;
+    let approval = inner.take_approval(input.approval_id.as_deref());
+    let user = inner.session_user(&headers)?;
+    inner.delegation_revoke_allowed(&user, &input.id)?;
+    inner.require_approval(
+        &headers,
+        &user,
+        input.approval_id.as_deref(),
+        approval,
+        &Management::DelegationRevoke {
+            id: input.id.clone(),
+        },
+    )?;
+    let tx = inner.db.transaction().map_err(internal)?;
+    tx.execute("UPDATE delegations SET revoked=1 WHERE id=?1", [input.id])
+        .map_err(internal)?;
+    tx.commit().map_err(internal)?;
+    Ok(Json(json!({"revoked":true})))
+}
+
+async fn delegations(State(app): State<App>, headers: HeaderMap) -> ApiResult<Json<Value>> {
+    let mut inner = app.inner.lock().map_err(internal)?;
+    let user = inner.session_user(&headers)?;
+    let mut stmt = inner.db.prepare("SELECT d.id,u.name FROM delegations d JOIN users u ON u.id=d.recipient_id WHERE ?1 OR d.recipient_id=?2 OR d.delegator_id=?2 ORDER BY d.rowid DESC LIMIT 100").map_err(internal)?;
+    let rows = stmt
+        .query_map(params![user.owner, user.id], |r| {
+            Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
+        })
+        .map_err(internal)?;
+    let mut out = Vec::new();
+    for row in rows {
+        let (id, guest) = row.map_err(internal)?;
+        let record = inner.delegation_record(&id)?;
+        let chain = inner.delegation_chain(&id)?;
+        let can_delegate = inner
+            .delegation_verify(&user, &chain, RESOURCE, Action::Read)
+            .is_ok()
+            && record.grant.body.remaining_delegations > 0
+            && chain.chain.len() < delegation::MAX_CHAIN;
+        out.push(json!({"id":id,"guest":guest,"grant":record.grant,"chain":chain.chain,"parent_id":record.parent_id,"revoked":record.revoked,"effective_revoked":!chain.revoked.is_empty(),"can_delegate":can_delegate,"can_revoke":user.owner || record.delegator_id==user.id}));
+    }
+    Ok(Json(
+        json!({"profile":delegation::PROFILE,"max_chain":delegation::MAX_CHAIN,"grants":out}),
+    ))
+}
+
 async fn index() -> Html<&'static str> {
     Html(include_str!("../../web/index.html"))
 }
@@ -1096,7 +1557,11 @@ fn initialize_database(db: &mut Connection) -> rusqlite::Result<()> {
          CREATE TABLE IF NOT EXISTS operations(id TEXT PRIMARY KEY,grant_id TEXT REFERENCES grants(id),holder TEXT REFERENCES users(id),created INTEGER NOT NULL);
          CREATE UNIQUE INDEX IF NOT EXISTS one_owner ON users(owner) WHERE owner=1;
          CREATE TABLE IF NOT EXISTS credentials(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),passkey TEXT NOT NULL,counter INTEGER NOT NULL DEFAULT 0 CHECK(counter>=0),label TEXT NOT NULL CHECK(length(label) BETWEEN 1 AND 48),active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1)),created INTEGER NOT NULL);
-         CREATE INDEX IF NOT EXISTS credentials_user_active ON credentials(user_id,active);",
+         CREATE INDEX IF NOT EXISTS credentials_user_active ON credentials(user_id,active);
+         CREATE TABLE IF NOT EXISTS delegations(id TEXT PRIMARY KEY,parent_id TEXT REFERENCES delegations(id),recipient_id TEXT NOT NULL REFERENCES users(id),delegator_id TEXT NOT NULL REFERENCES users(id),token TEXT NOT NULL,revoked INTEGER NOT NULL DEFAULT 0 CHECK(revoked IN (0,1)));
+         CREATE INDEX IF NOT EXISTS delegations_recipient ON delegations(recipient_id);
+         CREATE INDEX IF NOT EXISTS delegations_delegator ON delegations(delegator_id);
+         CREATE TABLE IF NOT EXISTS delegation_operations(id TEXT PRIMARY KEY,delegation_id TEXT NOT NULL REFERENCES delegations(id),holder TEXT NOT NULL REFERENCES users(id),created INTEGER NOT NULL);",
     )?;
     tx.execute(
         "INSERT OR IGNORE INTO credentials(id,user_id,passkey,counter,label,active,created) SELECT credential_id,id,passkey,counter,'Initial passkey',1,?1 FROM users",
@@ -1173,6 +1638,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/credentials/revoke", post(credential_revoke))
         .route("/api/grants", get(grants).post(create_grant))
         .route("/api/grants/revoke", post(revoke_grant))
+        .route("/api/delegations", get(delegations).post(create_delegation))
+        .route("/api/delegations/delegate", post(delegate_delegation))
+        .route("/api/delegations/revoke", post(revoke_delegation))
         .layer(DefaultBodyLimit::max(32 * 1024))
         .layer(middleware::from_fn_with_state(app.clone(), origin_guard))
         .with_state(app);
@@ -1533,6 +2001,7 @@ mod tests {
                 name: "alice".into(),
                 invocation: None,
                 management: None,
+                delegation_invocation: None,
             }),
         )
         .await
@@ -1982,6 +2451,7 @@ mod tests {
                 name: "guest".into(),
                 invocation: None,
                 management: Some(operation),
+                delegation_invocation: None,
             }),
         )
         .await
@@ -1999,6 +2469,7 @@ mod tests {
                 management: Some(Management::CredentialAdd {
                     label: "Backup".into(),
                 }),
+                delegation_invocation: None,
             }),
         )
         .await
@@ -2025,6 +2496,7 @@ mod tests {
                 management: Some(Management::CredentialAdd {
                     label: "Backup".into(),
                 }),
+                delegation_invocation: None,
             }),
         )
         .await
@@ -2057,5 +2529,415 @@ mod tests {
                 label: "Backup".into()
             }
         );
+    }
+
+    fn delegation_app() -> (App, HashMap<&'static str, String>) {
+        let app = app();
+        let mut tokens = HashMap::new();
+        {
+            let mut inner = app.inner.lock().expect("inner");
+            for name in ["owner", "guest", "second", "third", "fourth"] {
+                let (user, key) = add_user(&mut inner, name, name == "owner");
+                tokens.insert(name, add_session(&mut inner, &user, &key));
+            }
+        }
+        (app, tokens)
+    }
+
+    async fn root_delegation(
+        app: &App,
+        token: &str,
+        guest: &str,
+        ttl: u64,
+        budget: u8,
+    ) -> ApiResult<Json<Value>> {
+        let approval = add_approval(
+            app,
+            token,
+            Management::DelegationCreate {
+                guest_name: guest.into(),
+                ttl_seconds: ttl,
+                remaining_delegations: budget,
+            },
+        );
+        create_delegation(
+            State(app.clone()),
+            headers(token),
+            Json(DelegationCreate {
+                guest_name: guest.into(),
+                ttl_seconds: ttl,
+                remaining_delegations: budget,
+                approval_id: Some(approval),
+            }),
+        )
+        .await
+    }
+    async fn child_delegation(
+        app: &App,
+        token: &str,
+        parent: &str,
+        guest: &str,
+        ttl: u64,
+        budget: u8,
+    ) -> ApiResult<Json<Value>> {
+        let approval = add_approval(
+            app,
+            token,
+            Management::DelegationDelegate {
+                parent_id: parent.into(),
+                guest_name: guest.into(),
+                ttl_seconds: ttl,
+                remaining_delegations: budget,
+            },
+        );
+        delegate_delegation(
+            State(app.clone()),
+            headers(token),
+            Json(DelegationDelegate {
+                parent_id: parent.into(),
+                guest_name: guest.into(),
+                ttl_seconds: ttl,
+                remaining_delegations: budget,
+                approval_id: Some(approval),
+            }),
+        )
+        .await
+    }
+    async fn approved_delegation_revoke(
+        app: &App,
+        token: &str,
+        id: &str,
+    ) -> ApiResult<Json<Value>> {
+        let approval = add_approval(app, token, Management::DelegationRevoke { id: id.into() });
+        revoke_delegation(
+            State(app.clone()),
+            headers(token),
+            Json(DelegationRevoke {
+                id: id.into(),
+                approval_id: Some(approval),
+            }),
+        )
+        .await
+    }
+
+    #[tokio::test]
+    async fn delegation_mutations_require_exact_fresh_approvals() {
+        let (app, tokens) = delegation_app();
+        let error = create_delegation(
+            State(app.clone()),
+            headers(&tokens["owner"]),
+            Json(DelegationCreate {
+                guest_name: "guest".into(),
+                ttl_seconds: 300,
+                remaining_delegations: 2,
+                approval_id: None,
+            }),
+        )
+        .await
+        .expect_err("token alone cannot mint");
+        assert_eq!(
+            (error.0, error.1),
+            (StatusCode::FORBIDDEN, "approval_required")
+        );
+        let Json(root) = root_delegation(&app, &tokens["owner"], "guest", 300, 2)
+            .await
+            .expect("root");
+        let id = root["id"].as_str().expect("id");
+        let error = delegate_delegation(
+            State(app.clone()),
+            headers(&tokens["guest"]),
+            Json(DelegationDelegate {
+                parent_id: id.into(),
+                guest_name: "second".into(),
+                ttl_seconds: 200,
+                remaining_delegations: 1,
+                approval_id: None,
+            }),
+        )
+        .await
+        .expect_err("token alone cannot delegate");
+        assert_eq!(
+            (error.0, error.1),
+            (StatusCode::FORBIDDEN, "approval_required")
+        );
+        let error = revoke_delegation(
+            State(app.clone()),
+            headers(&tokens["owner"]),
+            Json(DelegationRevoke {
+                id: id.into(),
+                approval_id: None,
+            }),
+        )
+        .await
+        .expect_err("token alone cannot revoke");
+        assert_eq!(
+            (error.0, error.1),
+            (StatusCode::FORBIDDEN, "approval_required")
+        );
+        let approval = add_approval(
+            &app,
+            &tokens["owner"],
+            Management::DelegationCreate {
+                guest_name: "guest".into(),
+                ttl_seconds: 300,
+                remaining_delegations: 2,
+            },
+        );
+        let error = create_delegation(
+            State(app.clone()),
+            headers(&tokens["owner"]),
+            Json(DelegationCreate {
+                guest_name: "guest".into(),
+                ttl_seconds: 300,
+                remaining_delegations: 1,
+                approval_id: Some(approval.clone()),
+            }),
+        )
+        .await
+        .expect_err("budget is bound");
+        assert_eq!(
+            (error.0, error.1),
+            (StatusCode::FORBIDDEN, "approval_mismatch")
+        );
+        assert!(
+            !app.inner
+                .lock()
+                .expect("inner")
+                .approvals
+                .contains_key(&approval)
+        );
+        let inner = app.inner.lock().expect("inner");
+        assert_eq!(
+            inner
+                .db
+                .query_row("SELECT COUNT(*) FROM delegations", [], |r| r
+                    .get::<_, i64>(0))
+                .expect("one authorized root"),
+            1
+        );
+        assert!(inner.authentications.is_empty());
+    }
+
+    #[tokio::test]
+    async fn delegation_attenuation_and_visibility_are_account_bound() {
+        let (app, tokens) = delegation_app();
+        let Json(root) = root_delegation(&app, &tokens["owner"], "guest", 300, 2)
+            .await
+            .expect("root");
+        let root_id = root["id"].as_str().expect("root id");
+        for (token, guest, ttl, budget) in [
+            (&tokens["second"], "third", 200, 1),
+            (&tokens["guest"], "second", 301, 1),
+            (&tokens["guest"], "second", 200, 2),
+            (&tokens["guest"], "guest", 200, 1),
+        ] {
+            let error = child_delegation(&app, token, root_id, guest, ttl, budget)
+                .await
+                .expect_err("invalid holder or attenuation");
+            assert_eq!(
+                (error.0, error.1),
+                (StatusCode::FORBIDDEN, "delegation_denied")
+            );
+        }
+        let Json(child) = child_delegation(&app, &tokens["guest"], root_id, "second", 200, 1)
+            .await
+            .expect("child");
+        let child_id = child["id"].as_str().expect("child id");
+        let Json(grandchild) = child_delegation(&app, &tokens["second"], child_id, "third", 100, 0)
+            .await
+            .expect("grandchild");
+        assert_eq!(grandchild["chain"].as_array().expect("chain").len(), 3);
+        let grant: Signed<DelegationGrant> =
+            serde_json::from_value(grandchild["grant"].clone()).expect("signed leaf");
+        assert_eq!(
+            grant.body.issuer,
+            app.inner
+                .lock()
+                .expect("inner")
+                .issuer
+                .verifying_key()
+                .to_bytes()
+        );
+        let Json(owner_list) = delegations(State(app.clone()), headers(&tokens["owner"]))
+            .await
+            .expect("owner list");
+        assert_eq!(owner_list["grants"].as_array().expect("grants").len(), 3);
+        let Json(guest_list) = delegations(State(app.clone()), headers(&tokens["guest"]))
+            .await
+            .expect("guest list");
+        assert_eq!(guest_list["grants"].as_array().expect("grants").len(), 2);
+        let Json(third_list) = delegations(State(app.clone()), headers(&tokens["third"]))
+            .await
+            .expect("third list");
+        assert_eq!(third_list["grants"].as_array().expect("grants").len(), 1);
+        assert_eq!(third_list["grants"][0]["can_delegate"], false);
+        assert_eq!(third_list["grants"][0]["can_revoke"], false);
+        let Json(fourth_list) = delegations(State(app.clone()), headers(&tokens["fourth"]))
+            .await
+            .expect("unrelated list");
+        assert!(fourth_list["grants"].as_array().expect("grants").is_empty());
+        let unauthorized = approved_delegation_revoke(
+            &app,
+            &tokens["guest"],
+            grandchild["id"].as_str().expect("grandchild id"),
+        )
+        .await
+        .expect_err("ancestor holder cannot revoke another issuer's child");
+        assert_eq!(
+            (unauthorized.0, unauthorized.1),
+            (StatusCode::FORBIDDEN, "delegation_revoke_denied")
+        );
+        let Json(revoked) = approved_delegation_revoke(&app, &tokens["guest"], child_id)
+            .await
+            .expect("actual child issuer can revoke");
+        assert_eq!(revoked["revoked"], true);
+        let Json(repeated) = approved_delegation_revoke(&app, &tokens["guest"], child_id)
+            .await
+            .expect("authorized repeated revoke is idempotent");
+        assert_eq!(repeated["revoked"], true);
+    }
+
+    #[tokio::test]
+    async fn ancestor_revocation_invalidates_descendants_and_preapproved_writes_after_restart() {
+        let (app, tokens) = delegation_app();
+        let Json(root) = root_delegation(&app, &tokens["owner"], "guest", 300, 2)
+            .await
+            .expect("root");
+        let root_id = root["id"].as_str().expect("root id");
+        let Json(child) = child_delegation(&app, &tokens["guest"], root_id, "second", 200, 1)
+            .await
+            .expect("child");
+        let child_id = child["id"].as_str().expect("child id");
+        let Json(grandchild) = child_delegation(&app, &tokens["second"], child_id, "third", 100, 0)
+            .await
+            .expect("grandchild");
+        let grandchild_id = grandchild["id"].as_str().expect("grandchild id");
+        let approval = add_approval(
+            &app,
+            &tokens["second"],
+            Management::DelegationDelegate {
+                parent_id: child_id.into(),
+                guest_name: "fourth".into(),
+                ttl_seconds: 50,
+                remaining_delegations: 0,
+            },
+        );
+        let Json(revoked) = approved_delegation_revoke(&app, &tokens["owner"], root_id)
+            .await
+            .expect("revoke ancestor");
+        assert_eq!(revoked["revoked"], true);
+        let error = delegate_delegation(
+            State(app.clone()),
+            headers(&tokens["second"]),
+            Json(DelegationDelegate {
+                parent_id: child_id.into(),
+                guest_name: "fourth".into(),
+                ttl_seconds: 50,
+                remaining_delegations: 0,
+                approval_id: Some(approval.clone()),
+            }),
+        )
+        .await
+        .expect_err("current ancestry overrides past approval");
+        assert_eq!(
+            (error.0, error.1),
+            (StatusCode::FORBIDDEN, "delegation_denied")
+        );
+        assert!(
+            !app.inner
+                .lock()
+                .expect("inner")
+                .approvals
+                .contains_key(&approval)
+        );
+        let Json(list) = delegations(State(app.clone()), headers(&tokens["third"]))
+            .await
+            .expect("revoked list remains visible");
+        assert_eq!(list["grants"][0]["revoked"], false);
+        assert_eq!(list["grants"][0]["effective_revoked"], true);
+        assert_eq!(list["grants"][0]["can_delegate"], false);
+        let path =
+            std::env::temp_dir().join(format!("heavenkey-delegation-{}.sqlite", Uuid::new_v4()));
+        {
+            let inner = app.inner.lock().expect("inner");
+            inner
+                .db
+                .execute("VACUUM INTO ?1", [path.to_str().expect("temporary path")])
+                .expect("persist synthetic database");
+        }
+        let restarted = self::app();
+        {
+            let mut inner = restarted.inner.lock().expect("inner");
+            let mut db = Connection::open(&path).expect("reopened persisted data");
+            initialize_database(&mut db).expect("idempotent startup");
+            inner.db = db;
+            let user = inner.user("name", "third").expect("recipient");
+            let error = inner
+                .delegation_allowed(
+                    &user,
+                    &DelegationInvocation {
+                        id: grandchild_id.into(),
+                        resource: RESOURCE.into(),
+                        action: Action::Read,
+                        arguments: Default::default(),
+                    },
+                )
+                .err()
+                .expect("revoked ancestor persists");
+            assert_eq!(
+                (error.0, error.1),
+                (StatusCode::FORBIDDEN, "delegation_denied")
+            );
+            assert!(
+                inner.sessions.is_empty()
+                    && inner.approvals.is_empty()
+                    && inner.authentications.is_empty()
+            );
+            assert_eq!(
+                inner
+                    .db
+                    .query_row("SELECT COUNT(*) FROM delegations", [], |r| r
+                        .get::<_, i64>(0))
+                    .expect("no post-revoke child"),
+                3
+            );
+        }
+        drop(restarted);
+        fs::remove_file(path).expect("remove synthetic file");
+    }
+
+    #[tokio::test]
+    async fn signed_database_tokens_cannot_skip_or_replace_their_parent_metadata() {
+        let (app, tokens) = delegation_app();
+        let Json(root) = root_delegation(&app, &tokens["owner"], "guest", 300, 2)
+            .await
+            .expect("root");
+        let root_id = root["id"].as_str().expect("root id");
+        let Json(child) = child_delegation(&app, &tokens["guest"], root_id, "second", 200, 1)
+            .await
+            .expect("child");
+        let id = child["id"].as_str().expect("child id");
+        let inner = app.inner.lock().expect("inner");
+        inner
+            .db
+            .execute("UPDATE delegations SET parent_id=NULL WHERE id=?1", [id])
+            .expect("simulate signature-preserving ancestor skip");
+        assert!(inner.delegation_chain(id).is_err());
+        inner
+            .db
+            .execute(
+                "UPDATE delegations SET parent_id=?1 WHERE id=?2",
+                params![root_id, id],
+            )
+            .expect("restore parent metadata");
+        let owner = inner.user("name", "owner").expect("owner");
+        inner
+            .db
+            .execute(
+                "UPDATE delegations SET delegator_id=?1 WHERE id=?2",
+                params![owner.id, id],
+            )
+            .expect("simulate metadata authority substitution");
+        assert!(inner.delegation_chain(id).is_err());
     }
 }

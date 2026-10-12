@@ -1,0 +1,20 @@
+   Compiling libc v0.2.190
+   Compiling serde_core v1.0.228
+   Compiling memchr v2.8.3
+   Compiling cpufeatures v0.2.17
+   Compiling sha2 v0.10.9
+   Compiling ed25519-dalek v2.2.0
+   Compiling serde_json v1.0.154
+   Compiling serde v1.0.228
+   Compiling uac-verifier v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/crates/verifier)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.00s
+     Running unittests src/lib.rs (target/debug/build/uac-verifier/08b103ac291f0b20/out/uac_verifier-08b103ac291f0b20)
+
+running 5 tests
+test delegation::tests::raw_json_duplicate_fields_and_size_are_rejected ... ok
+test delegation::tests::reordered_json_and_whitespace_do_not_change_signature_or_id ... ok
+test delegation::tests::nullable_fields_are_required_and_all_byte_lengths_are_strict ... ok
+test delegation::tests::independent_typescript_messages_ids_and_signatures_match ... ok
+test delegation::tests::independent_typescript_chain_allow_and_deny_cases_match ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 24 filtered out; finished in 0.02s

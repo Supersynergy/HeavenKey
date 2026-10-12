@@ -92,6 +92,48 @@ PASS credential workbench fits 375px and keeps buttons on one line
 PASS credential workbench fits 414px and keeps buttons on one line
 PASS credential workbench fits 768px and keeps buttons on one line
 PASS multiple passkeys and inactive original survive server restart
+PASS owner issues a service-signed delegation root through exact-action UI
+PASS holder delegates an attenuated child through the browser
+PASS second holder delegates a grandchild to a third holder through the browser
+PASS guest invokes a verified 1-link chain through the browser
+PASS secondguest invokes a verified 2-link chain through the browser
+PASS thirdguest invokes a verified 3-link chain through the browser
+PASS delegation listings expose received and personally issued grants only
+PASS bearer possession alone cannot authorize delegation root
+PASS bearer possession alone cannot authorize delegation child
+PASS bearer possession alone cannot authorize delegation revoke
+PASS delegation root issuance remains owner-only
+PASS only the current parent audience can delegate its chain
+PASS delegation cannot widen expiry or retain its parent's budget
+PASS delegation prevents cycles back to any existing audience
+PASS zero-budget leaf cannot authorize another delegation
+PASS delegation root validates TTL and four-step maximum budget
+PASS delegated invocation denies wrong audience
+PASS delegated invocation denies resource escalation
+PASS delegated invocation denies action escalation
+PASS delegated invocation cannot mix with login-management or legacy invocation
+PASS delegated invocation binds exact ID, arguments and purpose at finish
+PASS delegated assertion replay and parallel duplicate execute once
+PASS delegated assertion still requires a valid WebAuthn signature
+PASS delegation approval binds exact recipient and burns mismatch
+PASS delegation approval binds exact TTL and burns mismatch
+PASS delegation approval binds exact budget and burns mismatch
+PASS delegation approval binds the exact parent
+PASS delegation approval cannot cross action kind or session
+PASS wrong-holder delegation attempt consumes a supplied approval
+PASS delegation approval replay and parallel write cannot mint twice
+PASS parent holder cannot revoke a descendant issued by another account
+PASS actual child issuer can revoke its own child idempotently
+PASS stored tokens are reverified for unknown profile and bad signature
+PASS stored parent pointer cannot silently replace a signed parent
+PASS five-link delegation depth succeeds and a sixth link is refused
+PASS expired delegation denies invocation without changing signed token
+PASS owner ancestor revocation through UI invalidates the entire chain
+PASS ancestor revocation denies pending invocation and approved new child
+PASS inherited revocation is visible while descendant signatures stay unchanged
+PASS signature-preserving ancestor skipping cannot bypass revocation
+PASS ancestor tombstones and descendant denial survive restart
+PASS delegation workbench fits a mobile viewport
 PASS legacy single-passkey database migrates and authenticates with the same key
 PASS legacy credential migration is idempotent across a second restart
-{"total":96,"passed":96,"failed":0,"elapsed_seconds":32.7}
+{"total":138,"passed":138,"failed":0,"elapsed_seconds":26.4}

@@ -1,0 +1,65 @@
+   Compiling uac-verifier v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/crates/verifier)
+   Compiling uac-api v0.4.0 (/Users/master/Documents/Codex/work/uac-spike/apps/api)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.94s
+     Running unittests src/main.rs (target/debug/build/uac-api/eb5606b8bb39b7e3/out/uac_api-eb5606b8bb39b7e3)
+
+running 16 tests
+test tests::management_schema_rejects_ambiguous_or_extra_fields ... ok
+test tests::active_key_rechecks_and_zero_key_authentication_fail_closed ... ok
+test tests::every_operation_parameter_is_exact_and_mismatches_consume_approval ... ok
+test tests::duplicate_approved_mutations_commit_once ... ok
+test tests::existing_grant_keeps_initial_subject_after_original_key_revocation ... ok
+test tests::management_checks_authority_and_bounds_outstanding_approvals ... ok
+test tests::credential_cap_counts_active_keys_and_rejects_retired_duplicates ... ok
+test tests::revoke_is_account_scoped_invalidates_sessions_and_preserves_last_key ... ok
+test tests::monotonic_expiry_and_signer_state_are_checked_at_consumption ... ok
+test tests::invalid_parameters_and_wrong_sessions_burn_supplied_approvals ... ok
+test tests::bearer_sessions_cannot_perform_any_management_mutation ... ok
+test tests::legacy_migration_survives_restart_without_resurrecting_revoked_keys ... ok
+test tests::delegation_mutations_require_exact_fresh_approvals ... ok
+test tests::signed_database_tokens_cannot_skip_or_replace_their_parent_metadata ... ok
+test tests::ancestor_revocation_invalidates_descendants_and_preapproved_writes_after_restart ... ok
+test tests::delegation_attenuation_and_visibility_are_account_bound ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running unittests src/lib.rs (target/debug/build/uac-verifier/7e4d7778b4721537/out/uac_verifier-7e4d7778b4721537)
+
+running 29 tests
+test tests::accepts_valid_attenuated_chain ... ok
+test tests::rejects_descendant_of_revoked_parent ... ok
+test delegation::tests::reordered_json_and_whitespace_do_not_change_signature_or_id ... ok
+test tests::rejects_clock_rollback_within_process ... ok
+test tests::rejects_different_resource ... ok
+test tests::offline_verifier_cannot_know_remote_revocation ... ok
+test tests::rejects_child_outliving_parent ... ok
+test delegation::tests::nullable_fields_are_required_and_all_byte_lengths_are_strict ... ok
+test tests::rejects_child_with_earlier_validity ... ok
+test delegation::tests::raw_json_duplicate_fields_and_size_are_rejected ... ok
+test tests::rejects_empty_and_excessive_chains ... ok
+test tests::rejects_delegation_budget_expansion ... ok
+test tests::rejects_delegation_when_parent_forbids_it ... ok
+test tests::rejects_changed_request_arguments ... ok
+test tests::rejects_expired_grant_at_boundary ... ok
+test tests::rejects_oversized_and_unknown_fields_before_verification ... ok
+test tests::rejects_old_invocation_at_boundary ... ok
+test tests::rejects_future_grant ... ok
+test tests::rejects_tampered_signature ... ok
+test tests::rejects_broken_parent_binding ... ok
+test tests::rejects_unknown_challenge ... ok
+test tests::rejects_untrusted_root ... ok
+test tests::rejects_wrong_intermediate_issuer ... ok
+test tests::requires_holder_proof_even_with_valid_chain ... ok
+test delegation::tests::independent_typescript_messages_ids_and_signatures_match ... ok
+test tests::rejects_request_action_outside_context ... ok
+test tests::rejects_signed_rights_escalation ... ok
+test tests::rejects_replayed_invocation ... ok
+test delegation::tests::independent_typescript_chain_allow_and_deny_cases_match ... ok
+
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+   Doc-tests uac_verifier
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
