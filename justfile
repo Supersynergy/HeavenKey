@@ -15,6 +15,9 @@ ci:
     bash scripts/ci.sh prepare
     python3 scripts/run.py ci 1200 -- bash scripts/ci.sh
 
+github-ci:
+    python3 scripts/github_ci.py
+
 e2e:
     python3 scripts/run.py e2e 300 -- bun scripts/e2e.mjs
 

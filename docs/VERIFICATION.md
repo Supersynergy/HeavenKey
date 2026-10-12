@@ -7,9 +7,9 @@ HeavenKey 0.5 ist lokal auf macOS und Ubuntu 24.04 geprüft. Die virtuellen CTAP
 | Rust | Jeweils 45 Tests auf macOS und Ubuntu bestanden |
 | Browser | Jeweils 138 Fälle auf macOS und Ubuntu bestanden |
 | Delegationsreferenz | 75 Prüfungen bestanden |
-| CI-Regressionen | Acht Fehler-/Artefaktprüfungen auf macOS und Ubuntu 24.04 bestanden |
+| CI-Regressionen | Acht Stufen-/Artefaktprüfungen; zusätzlich sechs Schutzprüfungen des kostenlosen Runner-Starters auf macOS bestanden |
 | Quellcode und Abhängigkeiten | Formatierung, TypeScript, Clippy, Lizenz-, Quellen- und Advisory-Prüfungen bestanden |
-| Ubuntu-CI | `scripts/ci.sh` lokal bestanden; GitHub blockiert den gehosteten Jobstart wegen einer Zahlungs-/Budget-Bedingung |
+| GitHub-CI | Kostenloser Runner-Routing-Test bestanden; vollständiger Lauf erfolgt über `just github-ci` |
 | Befehlsabbrüche | Je sechs Fälle auf macOS und Ubuntu bestanden; eigene Kindprozesse beendet, unabhängiger Kontrollprozess erhalten |
 | Prozesslisten vor dem Start | Fehlendes, fehlerhaftes, leeres, unlesbares oder hängendes `ps` startet keinen Auftrag; fünf Fälle auf macOS und Ubuntu bestanden |
 | Physische Passkeys | Noch nicht abgenommen |
