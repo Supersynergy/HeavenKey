@@ -1,0 +1,33 @@
+{
+  "pass": true,
+  "binary": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/target/aarch64-apple-darwin/release/uac-api",
+  "cases": [
+    {
+      "browser": "chromium",
+      "pass": true,
+      "startup_from_empty_directory": true,
+      "secure": true,
+      "webauthn": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "browser": "firefox",
+      "pass": true,
+      "startup_from_empty_directory": true,
+      "secure": true,
+      "webauthn": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "browser": "webkit",
+      "pass": true,
+      "startup_from_empty_directory": true,
+      "secure": true,
+      "webauthn": true,
+      "overflow": false,
+      "errors": []
+    }
+  ]
+}

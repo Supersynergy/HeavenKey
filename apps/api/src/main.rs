@@ -1,5 +1,7 @@
 #![forbid(unsafe_code)]
 
+mod desktop;
+
 use axum::{
     Json, Router,
     extract::{DefaultBodyLimit, Request, State},
@@ -727,7 +729,7 @@ async fn origin_guard(State(app): State<App>, req: Request, next: Next) -> Respo
         "x-content-type-options",
         "nosniff".parse().expect("static header"),
     );
-    headers.insert("content-security-policy", "default-src 'self'; script-src 'self'; style-src 'self'; frame-ancestors 'none'; base-uri 'none'".parse().expect("static header"));
+    headers.insert("content-security-policy", "default-src 'self'; script-src 'self'; style-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'".parse().expect("static header"));
     response
 }
 
@@ -1502,12 +1504,12 @@ async fn delegations(State(app): State<App>, headers: HeaderMap) -> ApiResult<Js
 async fn index() -> Html<&'static str> {
     Html(include_str!("../../web/index.html"))
 }
-async fn script() -> ApiResult<Response> {
-    Ok((
+async fn script() -> Response {
+    (
         [("content-type", "text/javascript")],
-        fs::read("apps/web/dist/main.js").map_err(internal)?,
+        include_bytes!("../../web/dist/main.js").as_slice(),
     )
-        .into_response())
+        .into_response()
 }
 async fn style() -> Response {
     (
@@ -1573,14 +1575,22 @@ fn initialize_database(db: &mut Connection) -> rusqlite::Result<()> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let port: u16 = std::env::var("UAC_PORT")
-        .unwrap_or_else(|_| "18240".into())
-        .parse()?;
+    #[cfg(feature = "portable")]
+    if !openssl::version::version().starts_with("OpenSSL 3.6.5 ") {
+        return Err(
+            "Portable builds require the pinned OpenSSL 3.6.5; use scripts/build_portable.py"
+                .into(),
+        );
+    }
+    let Some(options) = desktop::options()? else {
+        return Ok(());
+    };
+    let port = options.port;
     let origin = format!("http://localhost:{port}");
-    let data = std::env::var("UAC_DATA").unwrap_or_else(|_| "data".into());
-    fs::create_dir_all(&data)?;
-    let bootstrap_hash = bootstrap_hash(Path::new(&data))?;
-    let key_path = Path::new(&data).join("issuer.key");
+    let data = options.data;
+    desktop::prepare_data(&data)?;
+    let bootstrap_hash = bootstrap_hash(&data)?;
+    let key_path = data.join("issuer.key");
     let bytes = if key_path.exists() {
         fs::read(&key_path)?
     } else {
@@ -1599,7 +1609,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         bytes.to_vec()
     };
     let issuer = SigningKey::from_bytes(&bytes.try_into().map_err(|_| "invalid issuer key")?);
-    let mut db = Connection::open(Path::new(&data).join("uac.sqlite"))?;
+    let mut db = Connection::open(data.join("uac.sqlite"))?;
     db.busy_timeout(Duration::from_secs(2))?;
     initialize_database(&mut db)?;
     let webauthn = WebauthnBuilder::new("localhost", &Url::parse(&origin)?)?
@@ -1645,7 +1655,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(middleware::from_fn_with_state(app.clone(), origin_guard))
         .with_state(app);
     let listener = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, port)).await?;
-    println!("HeavenKey listening on {origin}; hardware verification deferred");
+    println!("HeavenKey {}: {origin}", env!("CARGO_PKG_VERSION"));
+    println!("Daten / data: {}", data.display());
+    println!(
+        "Einrichtungscode / setup code: {}",
+        data.join("owner-bootstrap.txt").display()
+    );
+    println!("Beenden / stop: Ctrl+C. Hardware verification deferred.");
+    if options.open {
+        desktop::open_browser(&origin);
+    }
     axum::serve(listener, router)
         .with_graceful_shutdown(async {
             if let Err(e) = tokio::signal::ctrl_c().await {

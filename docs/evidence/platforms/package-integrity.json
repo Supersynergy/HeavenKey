@@ -1,0 +1,100 @@
+{
+  "pass": true,
+  "archives": [
+    {
+      "file": "HeavenKey-0.6.0-extension-chromium.zip",
+      "manifest_v3": true,
+      "permissions": []
+    },
+    {
+      "file": "HeavenKey-0.6.0-extension-firefox.zip",
+      "manifest_v3": true,
+      "permissions": []
+    },
+    {
+      "file": "HeavenKey-0.6.0-linux-arm64.tar.gz",
+      "manifest": {
+        "version": "0.6.0",
+        "target": "aarch64-unknown-linux-musl",
+        "source_commit": "5055a8fe3a564e3136f8fcbcc1cbe3f2e3411a59",
+        "binary_sha256": "874d5d2f07abdaac1cf6a474645e72b0a6b9b04c89b04430897d49b2589dfe1d",
+        "source_fingerprint": "c8a2efa30773896c05e64374d4f9b57faec2f4480e0b3b292a3d2eabe7312fc8",
+        "portable_assets": true,
+        "publisher_signed": false,
+        "openssl_version": "3.6.5",
+        "openssl_source_sha256": "a2157c2830efdec3788939b00c9b0638306d3f0bbb76dc4832ee503bb397df98"
+      },
+      "extracted_binary_sha256_valid": true,
+      "licenses_and_mpl_sources": true,
+      "no_operator_secrets": true
+    },
+    {
+      "file": "HeavenKey-0.6.0-linux-x64.tar.gz",
+      "manifest": {
+        "version": "0.6.0",
+        "target": "x86_64-unknown-linux-musl",
+        "source_commit": "5055a8fe3a564e3136f8fcbcc1cbe3f2e3411a59",
+        "binary_sha256": "5d71830b44f380deaa0d60ecdbae2472158beff721d2e3f2a88699dfbd0736c9",
+        "source_fingerprint": "c8a2efa30773896c05e64374d4f9b57faec2f4480e0b3b292a3d2eabe7312fc8",
+        "portable_assets": true,
+        "publisher_signed": false,
+        "openssl_version": "3.6.5",
+        "openssl_source_sha256": "a2157c2830efdec3788939b00c9b0638306d3f0bbb76dc4832ee503bb397df98"
+      },
+      "extracted_binary_sha256_valid": true,
+      "licenses_and_mpl_sources": true,
+      "no_operator_secrets": true
+    },
+    {
+      "file": "HeavenKey-0.6.0-macos-arm64.zip",
+      "manifest": {
+        "version": "0.6.0",
+        "target": "aarch64-apple-darwin",
+        "source_commit": "5055a8fe3a564e3136f8fcbcc1cbe3f2e3411a59",
+        "binary_sha256": "9afe828ff71455632073e443573d6170743789b6fbd85c4e97d2271525a9153e",
+        "source_fingerprint": "c8a2efa30773896c05e64374d4f9b57faec2f4480e0b3b292a3d2eabe7312fc8",
+        "portable_assets": true,
+        "publisher_signed": false,
+        "openssl_version": "3.6.5",
+        "openssl_source_sha256": "a2157c2830efdec3788939b00c9b0638306d3f0bbb76dc4832ee503bb397df98"
+      },
+      "extracted_binary_sha256_valid": true,
+      "licenses_and_mpl_sources": true,
+      "no_operator_secrets": true
+    },
+    {
+      "file": "HeavenKey-0.6.0-macos-x64.zip",
+      "manifest": {
+        "version": "0.6.0",
+        "target": "x86_64-apple-darwin",
+        "source_commit": "5055a8fe3a564e3136f8fcbcc1cbe3f2e3411a59",
+        "binary_sha256": "304fe13554fab00750b508c4e3f34c9b2e7a60d15c038f3673b1e3d54791d3d2",
+        "source_fingerprint": "c8a2efa30773896c05e64374d4f9b57faec2f4480e0b3b292a3d2eabe7312fc8",
+        "portable_assets": true,
+        "publisher_signed": false,
+        "openssl_version": "3.6.5",
+        "openssl_source_sha256": "a2157c2830efdec3788939b00c9b0638306d3f0bbb76dc4832ee503bb397df98"
+      },
+      "extracted_binary_sha256_valid": true,
+      "licenses_and_mpl_sources": true,
+      "no_operator_secrets": true
+    },
+    {
+      "file": "HeavenKey-0.6.0-windows-x64.zip",
+      "manifest": {
+        "version": "0.6.0",
+        "target": "x86_64-pc-windows-gnu",
+        "source_commit": "5055a8fe3a564e3136f8fcbcc1cbe3f2e3411a59",
+        "binary_sha256": "eec950282d29dce877eba82b6fdc0e602fd0d6285a9eaaf776ad4df33a8d6d82",
+        "source_fingerprint": "c8a2efa30773896c05e64374d4f9b57faec2f4480e0b3b292a3d2eabe7312fc8",
+        "portable_assets": true,
+        "publisher_signed": false,
+        "openssl_version": "3.6.5",
+        "openssl_source_sha256": "a2157c2830efdec3788939b00c9b0638306d3f0bbb76dc4832ee503bb397df98"
+      },
+      "extracted_binary_sha256_valid": true,
+      "licenses_and_mpl_sources": true,
+      "no_operator_secrets": true
+    }
+  ]
+}

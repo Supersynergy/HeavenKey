@@ -6,6 +6,7 @@
 | --- | --- |
 | `apps/api/` | Rust-API mit Passkey-Verwaltung und SQLite-Zustand |
 | `apps/web/` | TypeScript-Oberfläche und WebAuthn-Dialoge |
+| `apps/extension/` | Erweiterung zum Öffnen des lokalen Dienstes, ohne Webseitenberechtigungen |
 | `crates/verifier/` | Signierte Zugänge und Prüfung der Delegationsketten |
 | `scripts/` | Build, Browsertests und CI |
 | `docs/vectors/` | Testvektoren zum Delegationsformat |
@@ -22,6 +23,8 @@ Die Rust-Version ist festgelegt. Nutze `rust-toolchain.toml`. Bun benötigt Vers
 | `just ci` | Vollständige CI mit aktuellen Advisories und frischen Browserartefakten ausführen |
 | `just github-ci` | Genau einen veröffentlichten Commit auf einem kostenlosen eigenen GitHub-Runner prüfen |
 | `just e2e` | Vollständigen Ablauf mit virtuellen Passkeys in Chrome testen |
+| `just portable TARGET` | Ein Desktop-Ziel mit eingebauter Oberfläche und statischem OpenSSL 3.6.5 bauen |
+| `just package TARGET ...` | Verifizierte Builds samt Lizenzen und Erweiterungen archivieren |
 | `bun scripts/delegation-reference.mjs` | Delegationsformat gegen öffentliche Testvektoren prüfen |
 
 `just dev` läuft höchstens zwei Stunden. Prüfungen laufen im Vordergrund mit Zeitlimit. Bei Zeitablauf, Strg+C oder SIGTERM beendet der Befehlswrapper auch eigene Kindprozesse in separaten Sitzungen. Dafür benötigt er eine funktionierende Prozessliste über `ps`; unter Ubuntu stellt `procps` diesen Befehl bereit. Eine fehlende, fehlerhafte oder zu langsame Prozessliste vor dem Start beendet den Wrapper mit Code `125`, `cleanup_error=process_tree_preflight_failed` und `process_started=false`, ohne den Auftrag zu starten.

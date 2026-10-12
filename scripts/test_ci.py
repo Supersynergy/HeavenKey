@@ -54,14 +54,28 @@ class CiFailureTests(unittest.TestCase):
             else []
         )
 
-    def test_failed_check_stops_before_build_or_browser(self):
+    def test_failed_check_stops_before_native_build_or_browser(self):
         for failure in (["cargo", "fmt", "--check"], ["bun", "audit"]):
             with self.subTest(failure=failure):
                 self.trace.unlink(missing_ok=True)
                 result = self.run_stage("all", CI_TEST_FAIL=" ".join(failure))
                 self.assertEqual(result.returncode, 23, result.stderr)
                 self.assertEqual(self.calls()[-1], failure)
-                self.assertNotIn(["bun", "run", "build"], self.calls())
+                self.assertNotIn(
+                    ["cargo", "build", "--locked", "--offline"], self.calls()
+                )
+                self.assertNotIn(
+                    [
+                        "python3",
+                        "scripts/run.py",
+                        "ci-e2e",
+                        "300",
+                        "--",
+                        "bun",
+                        "scripts/e2e.mjs",
+                    ],
+                    self.calls(),
+                )
 
     def test_failed_build_stops_before_browser(self):
         failure = ["cargo", "build", "--locked", "--offline"]

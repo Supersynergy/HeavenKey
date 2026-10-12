@@ -1,0 +1,8 @@
+{
+  "browser": "Chromium",
+  "manifest_v3_loaded": true,
+  "tab_url": "http://localhost:18240/",
+  "invalid_port_rejected": true,
+  "page_errors": [],
+  "pass": true
+}

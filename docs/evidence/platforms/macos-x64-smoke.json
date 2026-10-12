@@ -1,0 +1,45 @@
+{
+  "pass": true,
+  "binary": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/target/x86_64-apple-darwin/release/uac-api",
+  "binary_sha256": "304fe13554fab00750b508c4e3f34c9b2e7a60d15c038f3673b1e3d54791d3d2",
+  "windows_compatibility": false,
+  "cases": [
+    {
+      "arguments": [
+        "--version"
+      ],
+      "pass": true
+    },
+    {
+      "arguments": [
+        "--help"
+      ],
+      "pass": true
+    },
+    {
+      "arguments": [
+        "--unknown"
+      ],
+      "pass": true
+    },
+    {
+      "arguments": [
+        "--port",
+        "0"
+      ],
+      "pass": true
+    },
+    {
+      "restart": 0,
+      "assets_embedded": true,
+      "registration_options": true,
+      "pass": true
+    },
+    {
+      "restart": 1,
+      "assets_embedded": true,
+      "registration_options": true,
+      "pass": true
+    }
+  ]
+}

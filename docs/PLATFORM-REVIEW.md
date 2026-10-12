@@ -1,0 +1,9 @@
+# Review der Distribution 0.6
+
+Geprüfter Vertrag: Der Endnutzer startet ein entpacktes Programm ohne Build-Werkzeuge. Oberfläche und native Bibliotheken gehören zum Paket. Der Dienst bleibt auf localhost; Einrichtung und Passkey-Zustimmung bleiben erforderlich. Daten überleben Updates und Neustarts im Benutzerprofil. Erweiterungen öffnen ausschließlich den Dienst und besitzen keine Webseitenberechtigungen.
+
+Der Review berücksichtigt den integrierten Diff und die Nachweise unter `docs/evidence/platforms/`. Einbettung ersetzt den bisherigen relativen JavaScript-Dateizugriff. CLI-Fehler beenden den Prozess vor der Datenerzeugung. Die Paketprüfung verwirft falsche Architekturen, geänderte Binärdateien und veraltete Quellstände. Windows importiert nur System-DLLs; macOS benötigt nur Systembibliotheken; die Linux-Ausgaben sind statisch. OpenSSL 3.6.5 wird aus dem überprüften Herstellerarchiv gebaut und beim Start portabler Ausgaben auf seine Version geprüft.
+
+`grepgod review HEAD`, die Sicherheitskette, Cargo-Advisory-/Lizenzchecks und Bun-Audit wurden ausgeführt. Es bleiben keine gefundenen blockierenden Probleme im neuen Code. `aislop .` meldet vier bereits vorhandene `ProcessLookupError`-Handler in `scripts/run.py` als verschluckte Ausnahmen. Diese behandeln das Ende eigener Prozesse zwischen Prozessaufnahme und Signal; die bestehenden Regressionen prüfen diesen Ablauf. Der Bericht wird deshalb nicht als vollständig grüner Aislop-Befund bezeichnet.
+
+Windows-Dateirechte erben die Rechte des Benutzerprofils. Wine prüft den privaten POSIX-Elternordner; das ist kein Nachweis nativer Windows-ACLs. Die Windows-, Intel- und Linux-x64-Laufzeitnachweise verwenden Kompatibilitäts- beziehungsweise Emulationsumgebungen. Der einmalige Rosetta-Startfehler und die ausstehenden Signierungen stehen in der Paketabnahme. Die Firefox-Abnahme bestätigt Installation und Manifest; der Popup-Klick wurde in Chromium geprüft.
