@@ -1,0 +1,45 @@
+{
+  "pass": true,
+  "binary": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/.platform-tools/archive-qa/HeavenKey-0.6.0-macos-arm64/heavenkey",
+  "binary_sha256": "9afe828ff71455632073e443573d6170743789b6fbd85c4e97d2271525a9153e",
+  "windows_compatibility": false,
+  "cases": [
+    {
+      "arguments": [
+        "--version"
+      ],
+      "pass": true
+    },
+    {
+      "arguments": [
+        "--help"
+      ],
+      "pass": true
+    },
+    {
+      "arguments": [
+        "--unknown"
+      ],
+      "pass": true
+    },
+    {
+      "arguments": [
+        "--port",
+        "0"
+      ],
+      "pass": true
+    },
+    {
+      "restart": 0,
+      "assets_embedded": true,
+      "registration_options": true,
+      "pass": true
+    },
+    {
+      "restart": 1,
+      "assets_embedded": true,
+      "registration_options": true,
+      "pass": true
+    }
+  ]
+}
