@@ -13,10 +13,10 @@ _check:
 
 ci:
     bash scripts/ci.sh prepare
-    python3 scripts/run.py ci 900 -- bash scripts/ci.sh
+    python3 scripts/run.py ci 1200 -- bash scripts/ci.sh
 
 e2e:
-    python3 scripts/run.py e2e 180 -- bun scripts/e2e.mjs
+    python3 scripts/run.py e2e 300 -- bun scripts/e2e.mjs
 
 dev:
     bun run build

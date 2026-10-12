@@ -40,9 +40,9 @@ case ${1:-all} in
   source) source_checks ;;
   security) security_checks ;;
   build) build ;;
-  e2e) python3 scripts/run.py ci-e2e 180 -- bun scripts/e2e.mjs ;;
+  e2e) python3 scripts/run.py ci-e2e 300 -- bun scripts/e2e.mjs ;;
   check) source_checks; security_checks; build ;;
   all) source_checks; security_checks; build
-    python3 scripts/run.py ci-e2e 180 -- bun scripts/e2e.mjs ;;
+    python3 scripts/run.py ci-e2e 300 -- bun scripts/e2e.mjs ;;
   *) printf 'Unknown CI stage: %s\n' "$1" >&2; exit 2 ;;
 esac

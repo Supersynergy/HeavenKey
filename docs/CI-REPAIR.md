@@ -11,11 +11,13 @@ Der Job installiert die festgelegten Rust- und Bun-Versionen und lädt Abhängig
 | Source | CI-Regressionen, Formatierung, TypeScript, Delegationsreferenz, Clippy, Rust-Tests, fehlendes API-Binary | 900 Sekunden |
 | Sicherheit | Lizenz-/Quellenregeln, aktuelle Rust-Advisories und Bun-Audit | 180 Sekunden |
 | Build | Web-Bundle und Rust-API | 300 Sekunden |
-| Browser | Virtuelle CTAP2-Authentikatoren im echten Chrome | 180 Sekunden |
+| Browser | Virtuelle CTAP2-Authentikatoren im echten Chrome | 300 Sekunden |
 
-Ein Fehler beendet den Ablauf mit dem ursprünglichen Exitcode. Die nächste Stufe startet erst nach einer bestandenen Vorgängerstufe. Die CI-Regressionen prüfen Fehlerweitergabe, ungültige Stufen, Advisory-Aktualisierung und die Entfernung alter Testartefakte. Der gesamte GitHub-Job bleibt auf 20 Minuten begrenzt.
+Ein Fehler beendet den Ablauf mit dem ursprünglichen Exitcode. Die nächste Stufe startet erst nach einer bestandenen Vorgängerstufe. Die CI-Regressionen prüfen Fehlerweitergabe, ungültige Stufen, Advisory-Aktualisierung und die Entfernung alter Testartefakte. Der gesamte GitHub-Job bleibt auf 25 Minuten begrenzt.
 
-`just check` verwendet dieselben Source-, Sicherheits- und Build-Kommandos. Dabei nutzt es vorhandene Rust-Advisory-Datenbanken. `just ci` führt den vollständigen Ablauf mit frischen Advisories und Browserprüfungen im Vordergrund aus; sein Gesamtlimit beträgt 900 Sekunden. Vor dem äußeren Befehlswrapper entfernt es alte Artefakte, damit kein geöffnetes Laufprotokoll gelöscht wird.
+Chrome darf zum Start höchstens 60 Sekunden benötigen. Ein lokaler Nachtest bei einer Last von 265 erreichte 121 bestandene Fälle, bevor das bisherige Gesamtlimit von 180 Sekunden griff. Der Browserlauf erhält deshalb einschließlich Start und Aufräumen 300 Sekunden. Alle 138 Fälle und ihre Ablehnungsprüfungen bleiben erhalten.
+
+`just check` verwendet dieselben Source-, Sicherheits- und Build-Kommandos. Dabei nutzt es vorhandene Rust-Advisory-Datenbanken. `just ci` führt den vollständigen Ablauf mit frischen Advisories und Browserprüfungen im Vordergrund aus; sein Gesamtlimit beträgt 1200 Sekunden. Vor dem äußeren Befehlswrapper entfernt es alte Artefakte, damit kein geöffnetes Laufprotokoll gelöscht wird.
 
 cargo-deny 0.20.2 und cargo-audit 0.22.2 werden aus den offiziellen Linux-Archiven geladen. SHA256-Prüfungen sichern die verwendeten Dateien vor dem Auspacken. Die Advisory-Datenbanken werden in GitHub online initialisiert und aktualisiert.
 
@@ -38,3 +40,5 @@ Am 12. Oktober 2026 scheiterte [Lauf 38205830472](https://github.com/Supersynerg
 Prüfe [GitHub Billing](https://github.com/settings/billing) und gegebenenfalls die Organisationseinstellungen. Sobald die Sperre aufgehoben ist, starte den Workflow unter **Actions → HeavenKey CI → Run workflow** erneut. Weitere Hinweise stehen in [GitHubs Fehlerdiagnose](https://docs.github.com/en/actions/how-tos/troubleshoot-workflows#reviewing-billing-errors). Ein Workflow-Patch hebt eine Kontosperre nicht auf.
 
 Der bisherige Ubuntu-Nachweis gilt für den vorherigen Stand: 45 Rust-Tests, 75 Referenzprüfungen und 138 Browserfälle. Die Browserprüfung benötigte 108,6 Sekunden bei einem Zeitlimit von 180 Sekunden. GitHub-Ausführung und physische Passkeys bleiben separate Prüfziele; siehe [Prüfstatus](VERIFICATION.md).
+
+Der aktuelle integrierte Stand besteht lokal `just check` und `just e2e`: 45 Rust-Tests, 75 Referenzprüfungen, acht CI-Regressionen und 138 Browserfälle. Der letzte Browserlauf benötigte 201,8 Sekunden auf dem belasteten macOS-Rechner. [Aktuelle Nachweise mit Quellhashes](evidence/ci-hardening.json) halten Ergebnisse, Befehle, Abbrüche und die verbleibende GitHub-Sperre fest. Eine Laufzeitverbesserung durch den GitHub-Cache ist noch nicht nachgewiesen.

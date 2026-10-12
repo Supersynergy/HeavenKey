@@ -1,9 +1,7 @@
 from pathlib import Path
-import json
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import unittest
 
@@ -19,13 +17,11 @@ class CiFailureTests(unittest.TestCase):
         bin_dir.mkdir()
         stub = bin_dir / "tool"
         stub.write_text(
-            f"#!{sys.executable}\n"
-            "from pathlib import Path\n"
-            "import json, os, sys\n"
-            "call = [Path(sys.argv[0]).name, *sys.argv[1:]]\n"
-            "with open(os.environ['CI_TEST_TRACE'], 'a') as trace:\n"
-            "    trace.write(json.dumps(call) + '\\n')\n"
-            "raise SystemExit(23 if call == json.loads(os.environ.get('CI_TEST_FAIL', '[]')) else 0)\n"
+            "#!/bin/bash\n"
+            'printf "%s\\t" "${0##*/}" "$@" >> "$CI_TEST_TRACE"\n'
+            'printf "\\n" >> "$CI_TEST_TRACE"\n'
+            'if [[ "${0##*/} $*" == "${CI_TEST_FAIL:-}" ]]; then exit 23; fi\n'
+            "exit 0\n"
         )
         stub.chmod(0o755)
         for name in ("cargo", "bun", "python3"):
@@ -50,7 +46,10 @@ class CiFailureTests(unittest.TestCase):
 
     def calls(self):
         return (
-            [json.loads(line) for line in self.trace.read_text().splitlines()]
+            [
+                line.rstrip("\t").split("\t")
+                for line in self.trace.read_text().splitlines()
+            ]
             if self.trace.exists()
             else []
         )
@@ -59,14 +58,14 @@ class CiFailureTests(unittest.TestCase):
         for failure in (["cargo", "fmt", "--check"], ["bun", "audit"]):
             with self.subTest(failure=failure):
                 self.trace.unlink(missing_ok=True)
-                result = self.run_stage("all", CI_TEST_FAIL=json.dumps(failure))
+                result = self.run_stage("all", CI_TEST_FAIL=" ".join(failure))
                 self.assertEqual(result.returncode, 23, result.stderr)
                 self.assertEqual(self.calls()[-1], failure)
                 self.assertNotIn(["bun", "run", "build"], self.calls())
 
     def test_failed_build_stops_before_browser(self):
         failure = ["cargo", "build", "--locked", "--offline"]
-        result = self.run_stage("all", CI_TEST_FAIL=json.dumps(failure))
+        result = self.run_stage("all", CI_TEST_FAIL=" ".join(failure))
         self.assertEqual(result.returncode, 23, result.stderr)
         self.assertEqual(self.calls()[-1], failure)
 
@@ -75,12 +74,12 @@ class CiFailureTests(unittest.TestCase):
             "python3",
             "scripts/run.py",
             "ci-e2e",
-            "180",
+            "300",
             "--",
             "bun",
             "scripts/e2e.mjs",
         ]
-        result = self.run_stage("e2e", CI_TEST_FAIL=json.dumps(failure))
+        result = self.run_stage("e2e", CI_TEST_FAIL=" ".join(failure))
         self.assertEqual(result.returncode, 23, result.stderr)
 
     def test_unknown_stage_runs_no_tools(self):
