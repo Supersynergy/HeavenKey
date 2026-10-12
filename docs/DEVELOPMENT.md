@@ -22,7 +22,9 @@ Die Rust-Version ist festgelegt. Nutze `rust-toolchain.toml`. Bun benötigt Vers
 | `just e2e` | Vollständigen Ablauf mit virtuellen Passkeys in Chrome testen |
 | `bun scripts/delegation-reference.mjs` | Delegationsformat gegen öffentliche Testvektoren prüfen |
 
-`just dev` läuft höchstens zwei Stunden. Prüfungen laufen im Vordergrund mit Zeitlimit. Bei Zeitablauf, Strg+C oder SIGTERM beendet der Befehlswrapper auch eigene Kindprozesse in separaten Sitzungen. `just e2e` nutzt Port 18241; führe nur einen solchen Browserlauf gleichzeitig aus.
+`just dev` läuft höchstens zwei Stunden. Prüfungen laufen im Vordergrund mit Zeitlimit. Bei Zeitablauf, Strg+C oder SIGTERM beendet der Befehlswrapper auch eigene Kindprozesse in separaten Sitzungen. Dafür benötigt er eine funktionierende Prozessliste über `ps`; unter Ubuntu stellt `procps` diesen Befehl bereit. Eine fehlende, fehlerhafte oder zu langsame Prozessliste vor dem Start beendet den Wrapper mit Code `125`, `cleanup_error=process_tree_preflight_failed` und `process_started=false`, ohne den Auftrag zu starten.
+
+Fällt die Prozessliste erst beim Aufräumen aus, meldet der Wrapper `cleanup_error=process_tree_snapshot_failed`. Dann können abgetrennte Kindprozesse übrig bleiben. Prüfe in diesem Fall ausdrücklich die zum Auftrag gehörenden Prozesse. `just e2e` nutzt Port 18241; führe nur einen solchen Browserlauf gleichzeitig aus.
 
 ## Prüftools installieren
 

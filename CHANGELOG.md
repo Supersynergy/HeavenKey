@@ -4,6 +4,7 @@
 
 - Eine fehlende API-Datei beendet den Browsertest unter macOS und Linux mit einer eindeutigen Fehlermeldung.
 - Strg+C, SIGTERM und Zeitablauf beenden auch abgetrennte Kindprozesse des Befehlswrappers; normale Rückgabecodes bleiben erhalten.
+- Eine fehlende oder fehlerhafte Prozessliste verhindert den Start von Befehlen mit Code `125`; Ausfälle während des Aufräumens werden ausdrücklich gemeldet.
 
 ## 0.5.0: Delegation profile preview
 

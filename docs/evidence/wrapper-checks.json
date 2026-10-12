@@ -1,0 +1,202 @@
+{
+  "source_base": "46fdb65a26cfceb4673203d776e254bcb8200549",
+  "source_overlay": [
+    {
+      "path": "scripts/run.py",
+      "sha256": "92ce8853b0e194d1b69fb29eaa8635121d68d8fbdf81c23e56b0bfb438f2db19"
+    },
+    {
+      "path": "scripts/timeout_probe.py",
+      "sha256": "f6ae9790ff25dac7f41d5a682423a300b313a26fb81cd40105225f5dfc0e4119"
+    },
+    {
+      "path": "scripts/e2e.mjs",
+      "sha256": "1dc3239a3fccd6318806557db732abcde32411eb18764be4819c33cc9e0384ce"
+    }
+  ],
+  "current_application_check": {
+    "platform": "macOS",
+    "rust_tests": 45,
+    "delegation_reference_checks": 75,
+    "browser_cases": 138,
+    "passed": true
+  },
+  "wrapper_platforms": [
+    {
+      "platform": "macOS",
+      "protection_cases": [
+        {
+          "name": "SIGINT",
+          "exit_code": 130,
+          "process_started": true,
+          "passed": true
+        },
+        {
+          "name": "SIGTERM",
+          "exit_code": 143,
+          "process_started": true,
+          "passed": true
+        },
+        {
+          "name": "timeout",
+          "exit_code": 124,
+          "process_started": true,
+          "passed": true
+        },
+        {
+          "name": "repeated-SIGINT",
+          "exit_code": 130,
+          "process_started": true,
+          "passed": true
+        },
+        {
+          "name": "normal-exit-0",
+          "exit_code": 0,
+          "process_started": true,
+          "passed": true
+        },
+        {
+          "name": "normal-exit-7",
+          "exit_code": 7,
+          "process_started": true,
+          "passed": true
+        },
+        {
+          "name": "preflight-ps-exit1",
+          "exit_code": 125,
+          "process_started": false,
+          "passed": true
+        },
+        {
+          "name": "preflight-ps-missing",
+          "exit_code": 125,
+          "process_started": false,
+          "passed": true
+        },
+        {
+          "name": "preflight-ps-malformed",
+          "exit_code": 125,
+          "process_started": false,
+          "passed": true
+        },
+        {
+          "name": "preflight-ps-empty",
+          "exit_code": 125,
+          "process_started": false,
+          "passed": true
+        },
+        {
+          "name": "preflight-ps-hang",
+          "exit_code": 125,
+          "process_started": false,
+          "passed": true
+        }
+      ],
+      "diagnostic_reproductions": [
+        {
+          "name": "baseline-ps-exit1",
+          "owned_survivors_at_wrapper_exit": 2,
+          "passed": true
+        },
+        {
+          "name": "runtime-snapshot-loss-boundary",
+          "owned_survivors_at_wrapper_exit": 2,
+          "passed": true
+        }
+      ],
+      "unrelated_control_preserved": true,
+      "test_owned_survivors_removed": true
+    },
+    {
+      "platform": "Ubuntu ARM64",
+      "protection_cases": [
+        {
+          "name": "SIGINT",
+          "exit_code": 130,
+          "process_started": true,
+          "passed": true
+        },
+        {
+          "name": "SIGTERM",
+          "exit_code": 143,
+          "process_started": true,
+          "passed": true
+        },
+        {
+          "name": "timeout",
+          "exit_code": 124,
+          "process_started": true,
+          "passed": true
+        },
+        {
+          "name": "repeated-SIGINT",
+          "exit_code": 130,
+          "process_started": true,
+          "passed": true
+        },
+        {
+          "name": "normal-exit-0",
+          "exit_code": 0,
+          "process_started": true,
+          "passed": true
+        },
+        {
+          "name": "normal-exit-7",
+          "exit_code": 7,
+          "process_started": true,
+          "passed": true
+        },
+        {
+          "name": "preflight-ps-exit1",
+          "exit_code": 125,
+          "process_started": false,
+          "passed": true
+        },
+        {
+          "name": "preflight-ps-missing",
+          "exit_code": 125,
+          "process_started": false,
+          "passed": true
+        },
+        {
+          "name": "preflight-ps-malformed",
+          "exit_code": 125,
+          "process_started": false,
+          "passed": true
+        },
+        {
+          "name": "preflight-ps-empty",
+          "exit_code": 125,
+          "process_started": false,
+          "passed": true
+        },
+        {
+          "name": "preflight-ps-hang",
+          "exit_code": 125,
+          "process_started": false,
+          "passed": true
+        }
+      ],
+      "diagnostic_reproductions": [
+        {
+          "name": "baseline-ps-exit1",
+          "owned_survivors_at_wrapper_exit": 2,
+          "passed": true
+        },
+        {
+          "name": "runtime-snapshot-loss-boundary",
+          "owned_survivors_at_wrapper_exit": 2,
+          "passed": true
+        }
+      ],
+      "unrelated_control_preserved": true,
+      "test_owned_survivors_removed": true
+    }
+  ],
+  "limits": [
+    "The complete Ubuntu amd64 application run is recorded in platform-checks.json for the preceding wrapper version; application source is unchanged.",
+    "These new wrapper Linux tests ran on Ubuntu ARM64.",
+    "If ps fails after successful preflight, detached descendants may survive; the diagnostic tests explicitly reproduced and cleaned up owned survivors.",
+    "Physical passkeys and hosted GitHub CI remain separate acceptance gates."
+  ]
+}

@@ -10,7 +10,7 @@
 | 0.4 | Frische Passkey-Zustimmung für konkrete Änderungen, Abbruch und erneuter Versuch |
 | 0.5 | Begrenzte Weitergabe, bis zu fünf Kettenglieder und Widerruf aller abhängigen Nachfolger |
 
-Der aktuelle Stand ist lokal simuliert geprüft. Physische Passkeys und Ubuntu-CI sind noch offen; siehe [Prüfstatus](VERIFICATION.md).
+Der aktuelle Stand ist lokal mit virtuellen Passkeys auf macOS und Ubuntu geprüft. Physische Passkeys und der gehostete GitHub-CI-Lauf sind noch offen; siehe [Prüfstatus](VERIFICATION.md).
 
 ## Nächste Funktionen
 
