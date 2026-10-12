@@ -1,0 +1,24 @@
+{
+  "pass": true,
+  "temporary_install": true,
+  "signed": false,
+  "addon": {
+    "actor": "server1.conn0.webExtensionDescriptor15",
+    "debuggable": true,
+    "hidden": false,
+    "iconURL": null,
+    "id": "heavenkey@supersynergy.local",
+    "isSystem": false,
+    "isWebExtension": true,
+    "manifestURL": "moz-extension://8135b609-f494-4cd8-be19-5793c4df3f7d/manifest.json",
+    "name": "HeavenKey",
+    "temporarilyInstalled": true,
+    "traits": {
+      "supportsReloadDescriptor": true,
+      "watcher": true
+    },
+    "url": "file:///Users/master/Documents/Codex/work/heavenkey-ci-20261012/dist/extension-firefox/",
+    "warnings": []
+  },
+  "popup_click_verified": false
+}

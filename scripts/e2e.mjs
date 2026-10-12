@@ -27,15 +27,20 @@ async function test(name, action) {
   catch (e) { cases.push({ name, pass: false, error: e.message }); throw e; }
 }
 async function startServer() {
-  const binary = join(root,"target/debug/uac-api");
+  const binary = resolve(process.env.HEAVENKEY_BINARY || join(root,"target/debug/uac-api"));
+  const prefix = JSON.parse(process.env.HEAVENKEY_BINARY_PREFIX_JSON || "[]");
+  if (!Array.isArray(prefix) || prefix.some(value => typeof value !== "string")) throw new Error("invalid binary prefix");
   try { await stat(binary); }
   catch (error) { throw new Error(`server spawn failed: ${error.message}`); }
-  server = spawn(binary, [], { cwd:root, env:{ ...process.env,UAC_PORT:String(port),UAC_DATA:serverData }, stdio:["ignore","pipe","pipe"] });
+  const serverPath = process.env.HEAVENKEY_WINDOWS_PATHS === "1" ? `Z:${serverData.replaceAll("/", "\\")}` : serverData;
+  server = spawn(prefix[0] || binary, prefix.length ? [...prefix.slice(1),binary] : [], { cwd:process.env.HEAVENKEY_SERVER_CWD || root, env:{ ...process.env,UAC_PORT:String(port),UAC_DATA:serverPath }, stdio:["ignore","pipe","pipe"] });
   let output = "";
   let spawnError;
   server.on("error", error => { spawnError=error; });
   server.stdout.on("data", d => output += d); server.stderr.on("data", d => output += d);
-  const end = Date.now()+15000;
+  const startTimeout = Number(process.env.HEAVENKEY_SERVER_START_TIMEOUT_MS || 15000);
+  if (!Number.isFinite(startTimeout) || startTimeout < 1000 || startTimeout > 60000) throw new Error("invalid server startup timeout");
+  const end = Date.now()+startTimeout;
   while (Date.now()<end) {
     if (spawnError) throw new Error(`server spawn failed: ${spawnError.message}`);
     if (server.exitCode !== null) throw new Error(`server exited: ${output}`);
@@ -216,7 +221,10 @@ try {
   await test("browser owner passkey registration with operator bootstrap",async()=>{assert.equal((await registration(owner)).owner,true);assert.equal(await owner.page.locator("#bootstrap").inputValue(),"");});
   await test("pending competing enrollment cannot create another owner",async()=>assert.equal((await post(contender,"/api/register/finish",competingEnrollment)).status,403));
   await test("consumed bootstrap cannot start another owner enrollment",async()=>assert.equal((await post(contender,"/api/register/start",{name:"contender",bootstrap_token:bootstrapToken})).status,403));
-  await test("bootstrap file remains operator-only",async()=>assert.equal((await stat(join(data,"owner-bootstrap.txt"))).mode & 0o077,0));
+  await test("bootstrap storage remains operator-only",async()=>{
+    const path = process.env.HEAVENKEY_WINDOWS_PATHS === "1" ? data : join(data,"owner-bootstrap.txt");
+    assert.equal((await stat(path)).mode & 0o077,0);
+  });
   await test("browser foreign holder registration",async()=>assert.equal((await registration(foreign)).owner,false));
   await test("browser owner authentication",async()=>{ownerSession=await login(owner);assert.ok(ownerSession);});
   await test("browser guest authentication",async()=>{guestSession=await login(guest);assert.ok(guestSession);});
@@ -704,7 +712,7 @@ try {
 }
 finally {
   await browser?.close();await stopServer();
-  const report={completed:!fatalError,fatal_error:fatalError,mode:"virtual CTAP2 authenticators; real navigator.credentials + Rust verification",hardware:"deferred by user",total:cases.length,passed:cases.filter(x=>x.pass).length,failed:cases.filter(x=>!x.pass).length,cases,elapsed_seconds:Math.round((performance.now()-started)/100)/10};
+  const report={completed:!fatalError,fatal_error:fatalError,mode:"virtual CTAP2 authenticators; real navigator.credentials + Rust verification",binary:process.env.HEAVENKEY_BINARY || "target/debug/uac-api",windows_compatibility:process.env.HEAVENKEY_WINDOWS_PATHS === "1",storage_permission_oracle:process.env.HEAVENKEY_WINDOWS_PATHS === "1" ? "private POSIX parent of Wine data; native Windows ACL unverified" : "POSIX bootstrap file permissions",hardware:"deferred by user",total:cases.length,passed:cases.filter(x=>x.pass).length,failed:cases.filter(x=>!x.pass).length,cases,elapsed_seconds:Math.round((performance.now()-started)/100)/10};
   await writeFile(join(evidence,"e2e.json"),JSON.stringify(report,null,2)+"\n");
   await rm(data,{recursive:true,force:true});
   if(legacyData) await rm(legacyData,{recursive:true,force:true});

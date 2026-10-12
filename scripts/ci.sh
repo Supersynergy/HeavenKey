@@ -11,6 +11,7 @@ prepare() {
 
 source_checks() {
   python3 -m unittest discover -s scripts -p 'test_*.py'
+  bun run build
   cargo fmt --check
   bun run node_modules/typescript/bin/tsc --noEmit
   bun scripts/delegation-reference.mjs

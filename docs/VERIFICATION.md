@@ -1,5 +1,27 @@
 # Prüfstatus
 
+## 0.6: Desktop-Pakete und Erweiterungen
+
+| Ziel | Ausgeführter Nachweis |
+| --- | --- |
+| Windows x64 | Windows-EXE unter Wine 11.18; 138 Browserfälle bestanden |
+| macOS ARM64 | Portabler Release-Build; 138 Browserfälle bestanden |
+| macOS Intel | Start, eingebettete Dateien und Neustart unter Rosetta bestanden |
+| Linux ARM64 | Statischer musl-Build im Container; 138 Browserfälle bestanden |
+| Linux x64 | Start, Dateien, Registrierungsvorbereitung und Neustart unter Rosetta und QEMU 11.0.3 bestanden |
+| Weboberfläche | Chromium, Firefox und WebKit: Start aus leerem Ordner, mobile Breite, Fokus und keine JavaScript-Fehler |
+| Erweiterung Chromium | Manifest V3 geladen; Klick öffnet localhost-Tab; ungültiger Port abgewiesen |
+| Erweiterung Firefox | Temporär in Firefox installiert und entfernt; Manifest ohne Warnungen akzeptiert |
+| Quellprüfungen | 48 Rust-Tests, 20 Python-Tests und 75 Referenzprüfungen; `just check` bestanden |
+
+Die [Paketabnahme](evidence/platforms/acceptance.json) verzeichnet die genauen Builds und Grenzen. Alle portablen Builds verwenden die überprüfte offizielle OpenSSL-3.6.5-Quelle. Windows Hello, physische Passkeys, native Windows-ACLs und ein physischer Linux-x64-Rechner sind noch nicht abgenommen. Firefox braucht für dauerhafte Installation im normalen Browser eine Signierung. Edge erhält das Chromium-Paket; der Browser wurde hier nicht separat installiert. Herausgebersignaturen und Apple-Notarisierung fehlen.
+
+Ein erster Linux-x64-Start unter Rosetta brach mit SIGSEGV ab. Derselbe unveränderte Build bestand danach den Rosetta-Test und zusätzlich den unabhängigen QEMU-Test. Das bleibt als Grenze der emulierten Abnahme dokumentiert. Es wurde dafür kein Fehler in HeavenKey nachgewiesen.
+
+Pakete, Speicherorte und Wiederholungsbefehle stehen unter [Distribution](DISTRIBUTION.md). Native Smartphone-Apps, eine Safari-Erweiterung und ein nativer Windows-ARM64-Build sind noch nicht enthalten.
+
+## Vorherige Abnahme 0.5
+
 HeavenKey 0.5 ist lokal auf macOS und Ubuntu 24.04 geprüft. Die virtuellen CTAP2-Passkeys nutzen WebAuthn im echten Chrome-Browser, dessen tatsächlich erzeugte Antworten anschließend durch die Rust-API geprüft werden.
 
 | Bereich | Ergebnis |

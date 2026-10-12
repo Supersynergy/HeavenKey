@@ -1,0 +1,45 @@
+{
+  "pass": true,
+  "binary": "/app/heavenkey",
+  "binary_sha256": "5d71830b44f380deaa0d60ecdbae2472158beff721d2e3f2a88699dfbd0736c9",
+  "windows_compatibility": false,
+  "cases": [
+    {
+      "arguments": [
+        "--version"
+      ],
+      "pass": true
+    },
+    {
+      "arguments": [
+        "--help"
+      ],
+      "pass": true
+    },
+    {
+      "arguments": [
+        "--unknown"
+      ],
+      "pass": true
+    },
+    {
+      "arguments": [
+        "--port",
+        "0"
+      ],
+      "pass": true
+    },
+    {
+      "restart": 0,
+      "assets_embedded": true,
+      "registration_options": true,
+      "pass": true
+    },
+    {
+      "restart": 1,
+      "assets_embedded": true,
+      "registration_options": true,
+      "pass": true
+    }
+  ]
+}

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 preview
+
+- Desktop packages for Windows x64, macOS ARM64/Intel and Linux ARM64/x64, with browser assets embedded in the executable.
+- User-profile data directories, browser-opening starters and explicit command-line configuration.
+- Permission-free Manifest V3 launcher extensions for Chrome/Edge and Firefox.
+- Static OpenSSL 3.6.5 from a checksum-verified upstream release; dependency notices and MPL source archives included.
+- Release packaging rejects stale or modified builds and records source fingerprints and SHA256 checksums.
+
 ## 0.5: Test reliability fixes
 
 - Eine fehlende API-Datei beendet den Browsertest unter macOS und Linux mit einer eindeutigen Fehlermeldung.

@@ -24,3 +24,9 @@ e2e:
 dev:
     bun run build
     python3 scripts/run.py manual-dev 7200 -- cargo run --locked --offline -p uac-api
+
+portable target:
+    python3 scripts/build_portable.py {{target}}
+
+package *targets:
+    python3 scripts/package_release.py {{targets}}
