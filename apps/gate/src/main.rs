@@ -25,7 +25,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use uac_verifier::delegation::{self, DelegationGrant};
 use uac_verifier::{Action, Error, Signed};
 
-const DEFAULT_LISTEN: &str = "127.0.0.1:18440";
+const DEFAULT_LISTEN: &str = "127.0.0.1:18242";
 const DEFAULT_RESOURCE: &str = "urn:uac:lab:document";
 const MAX_BODY: usize = 64 * 1024;
 const MAX_SNAPSHOT_BYTES: u64 = 1024 * 1024;

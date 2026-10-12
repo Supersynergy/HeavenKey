@@ -8,7 +8,7 @@ Das Gate prüft `heavenkey-delegation-v1`-Ketten **offline** gegen `uac-verifier
 
 ```sh
 uac-gate \
-  --listen 127.0.0.1:18440 \
+  --listen 127.0.0.1:18242 \
   --resource urn:uac:lab:document \
   --resource-file /pfad/zur/ressource \
   --issuer-key /pfad/issuer.key \
@@ -17,7 +17,7 @@ uac-gate \
 
 | Flag | Env | Bedeutung |
 | --- | --- | --- |
-| `--listen` | `UAC_GATE_LISTEN` | Bind-Adresse, Standard `127.0.0.1:18440` |
+| `--listen` | `UAC_GATE_LISTEN` | Bind-Adresse, Standard `127.0.0.1:18242` |
 | `--resource` | `UAC_GATE_RESOURCE` | Ressourcen-URN, die die Kette gewähren muss (Standard `urn:uac:lab:document`) |
 | `--resource-file` | `UAC_GATE_RESOURCE_FILE` | Geschützte lokale Datei (Pflicht) |
 | `--issuer-key` | `UAC_GATE_ISSUER_KEY` | Vertrauter Issuer-Schlüssel: 32 Rohbytes oder 64 Hex-Zeichen (Pflicht) |

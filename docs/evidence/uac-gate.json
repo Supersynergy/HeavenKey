@@ -34,7 +34,7 @@
   ],
   "fixtures": "docs/vectors/delegation-v1.json (root/child/grandchild, depth_1..depth_6, same_budget) — synthetische Vektoren, Auswertungszeitpunkt now=1700000100 per --now-Fixierung",
   "live_demo": {
-    "command": "target/debug/uac-gate --listen 127.0.0.1:18440 --resource urn:uac:lab:document --resource-file resource.txt --issuer-key issuer.key --revocations revocations.json --now 1700000100",
+    "command": "target/debug/uac-gate --listen 127.0.0.1:18242 --resource urn:uac:lab:document --resource-file resource.txt --issuer-key issuer.key --revocations revocations.json --now 1700000100",
     "results": [
       {"request": "GET /health", "status": 200, "body": "{\"max_chain\":5,\"profile\":\"heavenkey-delegation-v1\",\"status\":\"ok\"}"},
       {"request": "POST /access (gültige Kette root/child/grandchild, holder=grandchild.audience, action=Read)", "status": 200, "body": "Rohbytes der geschützten Datei (application/octet-stream)"},
