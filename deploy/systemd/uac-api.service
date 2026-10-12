@@ -1,0 +1,68 @@
+# uac-api.service — HeavenKey Lab API unter systemd
+#
+# Installation (Beispiel):
+#   sudo useradd --system --home /var/lib/heavenkey --shell /usr/sbin/nologin heavenkey
+#   sudo install -m 0755 uac-api /usr/local/bin/uac-api
+#   sudo install -m 0644 uac-api.service /etc/systemd/system/uac-api.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now uac-api
+#
+# Der Dienst bindet nur an 127.0.0.1:18240; TLS terminiert Caddy/nginx.
+# Alle Pfade/Defaults: docs/OPERATIONS.md
+
+[Unit]
+Description=HeavenKey uac-api (local access lab)
+Documentation=https://github.com/Supersynergy/HeavenKey
+After=network.target
+# Loopback-Dienst: kein network-online.target noetig.
+
+[Service]
+Type=simple
+User=heavenkey
+Group=heavenkey
+ExecStart=/usr/local/bin/uac-api --port 18240 --data-dir /var/lib/heavenkey
+# Alternativ per Umgebung: Environment=UAC_PORT=18240 UAC_DATA=/var/lib/heavenkey
+
+# Neustart: die API haelt offene Challenges nur im Speicher; ein Restart
+# macht laufende Anmeldedialoge ungueltig (dann erneut anmelden).
+# SQLite-Bestaende und der Issuer-Key bleiben erhalten.
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=15s
+
+# --- Härtung -------------------------------------------------------------
+# Schreibzugriff nur auf das State-Directory (data/: uac.sqlite,
+# issuer.key, owner-bootstrap.txt). ProtectSystem=strict macht den Rest
+# des Dateisystems read-only.
+StateDirectory=heavenkey
+StateDirectoryMode=0700
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+# Loopback-TCP reicht: IPv4-Socket (Loopback) und Unix-Sockets fuer
+# locale Resourcen. Kein Netzwerk-Zugriff nach aussen noetig.
+RestrictAddressFamilies=AF_INET AF_UNIX
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+# Die API schreibt nur in ihr State-Directory; UMask deckt
+# owner-bootstrap.txt (0600) und issuer.key (0600) bereits ab.
+UMask=0077
+
+# Ressourcen-Grenzen (Lab): klein halten, die API ist Single-Process.
+LimitNOFILE=1024
+MemoryMax=512M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

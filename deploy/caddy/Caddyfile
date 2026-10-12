@@ -1,0 +1,83 @@
+# Caddyfile — HeavenKey Lab: HTTPS-Terminierung vor uac-api
+#
+# uac-api lauscht ausschliesslich auf 127.0.0.1:18240 (IPv4-Loopback).
+# Caddy terminiert TLS und reicht Anfragen an den Loopback-Port weiter.
+# Details und Alternativen (nginx): docs/OPERATIONS.md
+#
+# WICHTIG: Die API erzwingt derzeit Host "localhost:18240" exakt
+# (origin_guard in apps/api/src/main.rs). Der Host-Header wird deshalb
+# umgeschrieben. Nicht-GET-Anfragen aus dem Browser schlagen trotzdem fehl,
+# solange die API Origin/RP-ID auf http://localhost:18240 pinnt — siehe
+# docs/OPERATIONS.md, Abschnitt "Bekannte Grenzen".
+
+{
+	# Für automatische Zertifikate per ACME (Let's Encrypt):
+	# echte Admin-Mail eintragen; ohne "tls"-Direktive unten holt Caddy
+	# dann selbststaendig Zertifikate fuer $HEAVENKEY_DOMAIN.
+	# email admin@example.com
+
+	# Lab-Default: kein automatisches HTTPS, weil unten explizite
+	# Zertifikatsdateien benutzt werden.
+	auto_https off
+}
+
+# Domain kommt aus der Umgebung, Standard ist der Lab-Fall "localhost".
+# Beispiel: HEAVENKEY_DOMAIN=lab.example.test caddy run --config Caddyfile
+{$HEAVENKEY_DOMAIN:localhost} {
+
+	# --- TLS -------------------------------------------------------------
+	# Lab: eigene Zertifikate (mkcert oder self-signed, siehe OPERATIONS.md).
+	# Pfade an die eigene Installation anpassen.
+	tls /etc/heavenkey/tls/fullchain.pem /etc/heavenkey/tls/privkey.pem {
+		protocols tls1.2 tls1.3
+		# Cipher-Auswahl wirkt nur fuer TLS1.2; TLS1.3-Suiten sind in
+		# Go/Caddy fest und sicher. Keine RC4/DES/3DES/NULL/EXPORT.
+		ciphers TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+	}
+	# Lab-Alternative ohne eigene Zertifikate: Caddys interne CA.
+	# tls internal
+
+	# --- Statische Health-Route (ohne Upstream) ---------------------------
+	# Liefert 200, solange der Proxy laeuft — unabhaengig vom Zustand
+	# der API. Fuer Monitoring/Loadbalancer; die API-eigene Route
+	# /health wird weiter unten proxied.
+	respond /healthz "ok" 200
+
+	# --- Sicherheitsheader ------------------------------------------------
+	header {
+		# HSTS: im Lab mit localhost-Domain unkritisch; bei echter
+		# Domain includeSubDomains/preload erst nach Pruefung setzen.
+		Strict-Transport-Security "max-age=31536000"
+		# Die API setzt CSP/nosniff/no-store selbst; hier nur ergaenzen,
+		# nicht duplizieren.
+		-Server
+	}
+
+	# --- Request-Groesse ---------------------------------------------------
+	# Die API begrenzt Bodies selbst auf 32 KiB (DefaultBodyLimit in
+	# apps/api/src/main.rs). Der Proxy darf nicht darunter liegen;
+	# 64 KiB lassen der API-Fehlermeldung Vortritt statt 413 vom Proxy.
+	request_body {
+		max_size 64KB
+	}
+
+	# --- Upstream ----------------------------------------------------------
+	reverse_proxy 127.0.0.1:18240 {
+		# Zwingend: origin_guard erwartet exakt "localhost:18240".
+		header_up Host localhost:18240
+		# Origin NICHT umschreiben: die Origin-Pruefung ist eine
+		# CSRF-Schutzfunktion der API. Browser-POSTs hinter HTTPS
+		# werden derzeit abgelehnt (bekannte Grenze, siehe Doc).
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Real-IP {remote_host}
+
+		transport http {
+			dial_timeout 5s
+			response_header_timeout 30s
+			read_timeout 60s
+			write_timeout 60s
+		}
+		# Bei Ausfall der API liefert Caddy 502/504; kein eigenes
+		# Retry-Verhalten noetig (API ist zustandsbehaftet, SQLite).
+	}
+}

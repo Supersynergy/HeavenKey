@@ -1,0 +1,255 @@
+{
+  "tool": "ops_check",
+  "scope": "deploy/ + docs/OPERATIONS.md",
+  "ok": true,
+  "total": 41,
+  "failed": 0,
+  "checks": [
+    {
+      "check": "exists",
+      "file": "deploy/caddy/Caddyfile",
+      "status": "pass",
+      "detail": "Datei vorhanden"
+    },
+    {
+      "check": "exists",
+      "file": "deploy/nginx/nginx.conf",
+      "status": "pass",
+      "detail": "Datei vorhanden"
+    },
+    {
+      "check": "exists",
+      "file": "deploy/systemd/uac-api.service",
+      "status": "pass",
+      "detail": "Datei vorhanden"
+    },
+    {
+      "check": "exists",
+      "file": "deploy/systemd/uac-gate.service",
+      "status": "pass",
+      "detail": "Datei vorhanden"
+    },
+    {
+      "check": "exists",
+      "file": "docs/OPERATIONS.md",
+      "status": "pass",
+      "detail": "Datei vorhanden"
+    },
+    {
+      "check": "caddy-tls",
+      "file": "deploy/caddy/Caddyfile",
+      "status": "pass",
+      "detail": "tls-Direktive vorhanden"
+    },
+    {
+      "check": "caddy-tls-versions",
+      "file": "deploy/caddy/Caddyfile",
+      "status": "pass",
+      "detail": "protocols auf tls1.2/tls1.3 begrenzt"
+    },
+    {
+      "check": "caddy-ciphers",
+      "file": "deploy/caddy/Caddyfile",
+      "status": "pass",
+      "detail": "keine schwachen TLS1.2-Cipher"
+    },
+    {
+      "check": "caddy-upstream",
+      "file": "deploy/caddy/Caddyfile",
+      "status": "pass",
+      "detail": "reverse_proxy -> 127.0.0.1:18240"
+    },
+    {
+      "check": "caddy-host-rewrite",
+      "file": "deploy/caddy/Caddyfile",
+      "status": "pass",
+      "detail": "header_up Host localhost:18240 (origin_guard)"
+    },
+    {
+      "check": "caddy-health",
+      "file": "deploy/caddy/Caddyfile",
+      "status": "pass",
+      "detail": "statische Health-Route /healthz -> 200"
+    },
+    {
+      "check": "caddy-body-limit",
+      "file": "deploy/caddy/Caddyfile",
+      "status": "pass",
+      "detail": "request_body max_size >= 32768 Bytes (API: 32 KiB)"
+    },
+    {
+      "check": "caddy-hsts",
+      "file": "deploy/caddy/Caddyfile",
+      "status": "pass",
+      "detail": "HSTS-Header dokumentiert/gesetzt"
+    },
+    {
+      "check": "caddy-timeouts",
+      "file": "deploy/caddy/Caddyfile",
+      "status": "pass",
+      "detail": "Upstream-Timeouts konfiguriert"
+    },
+    {
+      "check": "nginx-listen-tls",
+      "file": "deploy/nginx/nginx.conf",
+      "status": "pass",
+      "detail": "listen 443 ssl konfiguriert"
+    },
+    {
+      "check": "nginx-tls-versions",
+      "file": "deploy/nginx/nginx.conf",
+      "status": "pass",
+      "detail": "ssl_protocols auf TLSv1.2/TLSv1.3 begrenzt"
+    },
+    {
+      "check": "nginx-ciphers",
+      "file": "deploy/nginx/nginx.conf",
+      "status": "pass",
+      "detail": "keine schwachen TLSv1.2-Cipher"
+    },
+    {
+      "check": "nginx-cert",
+      "file": "deploy/nginx/nginx.conf",
+      "status": "pass",
+      "detail": "Zertifikat und Schluessel-Pfad gesetzt"
+    },
+    {
+      "check": "nginx-upstream",
+      "file": "deploy/nginx/nginx.conf",
+      "status": "pass",
+      "detail": "proxy_pass/upstream -> 127.0.0.1:18240"
+    },
+    {
+      "check": "nginx-host-rewrite",
+      "file": "deploy/nginx/nginx.conf",
+      "status": "pass",
+      "detail": "proxy_set_header Host localhost:18240 (origin_guard)"
+    },
+    {
+      "check": "nginx-health",
+      "file": "deploy/nginx/nginx.conf",
+      "status": "pass",
+      "detail": "statische Health-Route /healthz -> 200"
+    },
+    {
+      "check": "nginx-body-limit",
+      "file": "deploy/nginx/nginx.conf",
+      "status": "pass",
+      "detail": "client_max_body_size >= 32768 Bytes (API: 32 KiB)"
+    },
+    {
+      "check": "nginx-hsts",
+      "file": "deploy/nginx/nginx.conf",
+      "status": "pass",
+      "detail": "HSTS-Header dokumentiert/gesetzt"
+    },
+    {
+      "check": "nginx-timeouts",
+      "file": "deploy/nginx/nginx.conf",
+      "status": "pass",
+      "detail": "Proxy-/Client-Timeouts konfiguriert"
+    },
+    {
+      "check": "systemd-exec-uac-api",
+      "file": "deploy/systemd/uac-api.service",
+      "status": "pass",
+      "detail": "ExecStart referenziert uac-api"
+    },
+    {
+      "check": "systemd-user-uac-api",
+      "file": "deploy/systemd/uac-api.service",
+      "status": "pass",
+      "detail": "dedizierter Nicht-Root-User (heavenkey)"
+    },
+    {
+      "check": "systemd-nnp-uac-api",
+      "file": "deploy/systemd/uac-api.service",
+      "status": "pass",
+      "detail": "NoNewPrivileges=yes"
+    },
+    {
+      "check": "systemd-protectsystem-uac-api",
+      "file": "deploy/systemd/uac-api.service",
+      "status": "pass",
+      "detail": "ProtectSystem=strict"
+    },
+    {
+      "check": "systemd-privatetmp-uac-api",
+      "file": "deploy/systemd/uac-api.service",
+      "status": "pass",
+      "detail": "PrivateTmp=yes"
+    },
+    {
+      "check": "systemd-statedir-uac-api",
+      "file": "deploy/systemd/uac-api.service",
+      "status": "pass",
+      "detail": "StateDirectory fuer data/ gesetzt"
+    },
+    {
+      "check": "systemd-restart-uac-api",
+      "file": "deploy/systemd/uac-api.service",
+      "status": "pass",
+      "detail": "Restart=on-failure dokumentiert"
+    },
+    {
+      "check": "systemd-exec-uac-gate",
+      "file": "deploy/systemd/uac-gate.service",
+      "status": "pass",
+      "detail": "ExecStart referenziert uac-gate"
+    },
+    {
+      "check": "systemd-user-uac-gate",
+      "file": "deploy/systemd/uac-gate.service",
+      "status": "pass",
+      "detail": "dedizierter Nicht-Root-User (heavenkey)"
+    },
+    {
+      "check": "systemd-nnp-uac-gate",
+      "file": "deploy/systemd/uac-gate.service",
+      "status": "pass",
+      "detail": "NoNewPrivileges=yes"
+    },
+    {
+      "check": "systemd-protectsystem-uac-gate",
+      "file": "deploy/systemd/uac-gate.service",
+      "status": "pass",
+      "detail": "ProtectSystem=strict"
+    },
+    {
+      "check": "systemd-privatetmp-uac-gate",
+      "file": "deploy/systemd/uac-gate.service",
+      "status": "pass",
+      "detail": "PrivateTmp=yes"
+    },
+    {
+      "check": "systemd-statedir-uac-gate",
+      "file": "deploy/systemd/uac-gate.service",
+      "status": "pass",
+      "detail": "StateDirectory fuer data/ gesetzt"
+    },
+    {
+      "check": "systemd-restart-uac-gate",
+      "file": "deploy/systemd/uac-gate.service",
+      "status": "pass",
+      "detail": "Restart=on-failure dokumentiert"
+    },
+    {
+      "check": "secrets-scan",
+      "file": "deploy/",
+      "status": "pass",
+      "detail": "keine Klartext-Secrets"
+    },
+    {
+      "check": "doc-mentions-port",
+      "file": "docs/OPERATIONS.md",
+      "status": "pass",
+      "detail": "docs/OPERATIONS.md nennt Port 18240"
+    },
+    {
+      "check": "port-consistency",
+      "file": "deploy/",
+      "status": "pass",
+      "detail": "alle Upstream-Referenzen auf Port 18240"
+    }
+  ]
+}
