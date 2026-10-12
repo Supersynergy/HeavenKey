@@ -24,10 +24,10 @@ cd /opt/heavenkey/deps
 bun install --frozen-lockfile --ignore-scripts
 PLAYWRIGHT_BROWSERS_PATH=/opt/heavenkey/browsers bun node_modules/playwright-core/cli.js install --with-deps chromium
 useradd --uid 501 --gid 20 --create-home --shell /bin/bash heavenkey
-chown -R 501:20 /opt/heavenkey/runner
 cp /source/scripts/ci/runner_entry.sh /opt/heavenkey/runner/entry.sh
 chmod 755 /opt/heavenkey/runner/entry.sh
 bun --version
 cargo-deny --version
 cargo-audit --version
 /opt/heavenkey/runner/bin/Runner.Listener --version
+chown -R 501:20 /opt/heavenkey/runner

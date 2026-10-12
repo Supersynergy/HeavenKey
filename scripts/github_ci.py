@@ -220,6 +220,29 @@ def validate_evidence(evidence, sha, run_id):
     return {"rust": rust, "reference": max(reference), "browser": browser["passed"]}
 
 
+def check_image_access(image):
+    command(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "--pull=never",
+            "--cpus=1",
+            "--memory=512m",
+            "--network=none",
+            "--cap-drop=ALL",
+            "--security-opt=no-new-privileges",
+            image,
+            "python3",
+            "-c",
+            "from pathlib import Path\nimport os\n"
+            'if os.getuid()!=501: raise RuntimeError("Runner must be unprivileged")\n'
+            'p=Path("/opt/heavenkey/runner/_diag/.write-probe"); '
+            'p.write_text("ok"); p.unlink()',
+        ]
+    )
+
+
 def run_ci(image):
     if command(["git", "status", "--porcelain", "--untracked-files=no"]).stdout:
         raise RuntimeError(
@@ -234,6 +257,7 @@ def run_ci(image):
         )
     if api(f"repos/{REPO}/commits/{sha}")["sha"] != sha:
         raise RuntimeError("Commit is not published")
+    check_image_access(image)
     runs = api(f"repos/{REPO}/actions/runs?head_sha={sha}&per_page=20")["workflow_runs"]
     matches = [
         r
