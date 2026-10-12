@@ -1,39 +1,29 @@
-# HeavenKey donor decisions
+# Bibliotheken und Referenzen
 
-This local lab keeps the existing Rust verifier and SQLite storage. The selected browser adapter removes manual WebAuthn serialization. The other products below supply design references or a future storage option. No copied product source or new backend service is part of v0.3.
+Rust prüft die Passkeys und signiert Zugänge. Für diese Aufgaben verwendet HeavenKey die unten genannten Bibliotheken; ihre Versions- und Prüfsummendaten stehen zusammen mit den übrigen Abhängigkeiten in den Lockfiles. Versionen und Prüfsummen stehen in `Cargo.lock` und `bun.lock`; Lizenzhinweise in [NOTICE.md](../NOTICE.md).
 
-Research used the local `metacode` index first. Its passkey/vault queries returned general Rust registries, with no candidate-specific donor. Candidate decisions therefore use official repository files, package metadata and product documentation. [Projected evidence](evidence/donors-v03.json) records exact versions, commits, integrity and limitations. Repository activity is an observation, not a security audit.
+## Verwendete Bibliotheken
 
-The 0.5 delegation search likewise found no matching protocol donor. The general awesome-rust source was checked through Metacode; its status does not certify a listed dependency. Existing ed25519-dalek 2.2.0 remains the signer/verifier, with standard Node crypto as an independent reference. No UCAN implementation or additional key-vault code is consumed. The [delegation contract](DELEGATION-CONTRACT.md) defines the separate service-attested profile; current primary-source and package evidence is in [v05-donor-research.json](evidence/v05-donor-research.json).
-
-## Selected layers
-
-| Layer | Choice | What HeavenKey takes | License and boundary |
-| --- | --- | --- | --- |
-| Relying-party verification | Existing `webauthn-rs =0.5.5` | Generate/verify ceremonies; register multiple credentials under one stable user ID; update the matching credential after authentication. | MPL-2.0. Keep the registry pin and lock checksum. The cached crate identifies source commit `d2c10d53ca5ef033d37ee6462e936e9eb72ad98c`. Its [manifest](https://github.com/kanidm/webauthn-rs/blob/d2c10d53ca5ef033d37ee6462e936e9eb72ad98c/webauthn-rs/Cargo.toml) and existing license evidence define the consumed package. |
-| Browser ceremony adapter | `@simplewebauthn/browser =14.0.0` | Replace hand-written Base64 and credential JSON conversion with `startRegistration` and `startAuthentication`. Rust still verifies every response. | MIT, 0 package dependencies. [Published metadata](https://registry.npmjs.org/@simplewebauthn/browser/14.0.0), [published source](https://github.com/MasterKale/SimpleWebAuthn/tree/83f87addc67b652ff5b84e681669451648216ef6/packages/browser), [package license](https://github.com/MasterKale/SimpleWebAuthn/blob/83f87addc67b652ff5b84e681669451648216ef6/packages/browser/LICENSE.md). Preserve its copyright and license notice. No server package or CDN request is needed. |
-| Local data ownership | Enpass principles | Keep account metadata and issuer state local; make future sync optional and user-controlled; distinguish authentication from data encryption. | Design reference only; no Enpass code is copied. Its [security documentation](https://www.enpass.io/security/) describes local encryption and encrypted sync. An [official team statement from 2016](https://discussion.enpass.io/topic/210-open-source/) identifies the product as closed source; it does not license product code for reuse. |
-| Credential management UX | KeePassXC principles | Show a named credential list and explicit add/remove actions; explain which account and credential are affected. | Reference only. [Passkey documentation](https://github.com/keepassxreboot/keepassxc/blob/9e0f57a4a4c6c629fa6d0a593acb7d089b1d95cd/docs/topics/Passkeys.adoc) shows confirmation, naming and overview flows. The repo has mixed licenses; [BrowserPasskeys.cpp](https://github.com/keepassxreboot/keepassxc/blob/9e0f57a4a4c6c629fa6d0a593acb7d089b1d95cd/src/browser/BrowserPasskeys.cpp) is GPL-3.0-or-later. Do not treat the whole repo as a permissive source donor. |
-| Future encrypted database | SQLCipher community edition | Evaluate SQLite encryption only when an encrypted-vault requirement has a key-storage, recovery and migration design. | Deferred, not installed. [BSD-3-Clause license](https://github.com/sqlcipher/sqlcipher/blob/c4b275a47932888216bade83aff2bbc73df0ff85/LICENSE.md); [official design](https://www.zetetic.net/sqlcipher/design/). Crypto-provider and binding licenses need separate review. Encryption must include migration, WAL/backup handling and wrong-key tests. |
-
-The browser package is published as 14.0.0; the repository's latest release tag 14.0.3 belongs to another package in the monorepo. The downloaded browser tarball's SHA-512 matches registry integrity. Its parsed npm provenance names the expected repository, workflow and source commit. Attestation signatures and certificates were not cryptographically verified. Official [browser documentation](https://simplewebauthn.dev/docs/packages/browser) specifies Node 22+; the package declares no `engines` field. Hardware/browser coverage remains the lab's explicit test boundary.
-
-## Candidates not consumed
-
-| Candidate | Observed boundary | Decision |
+| Bibliothek | Aufgabe | Lizenz |
 | --- | --- | --- |
-| Bitwarden SDK | `bitwarden/sdk` redirects to [`sdk-sm`](https://github.com/bitwarden/sdk-sm). Its [SDK license](https://github.com/bitwarden/sdk-sm/blob/03a4220327bfdb00b8aec3179c81f9e62f1fcde1/LICENSE) restricts use to compatible Bitwarden applications. [`sdk-internal`](https://github.com/bitwarden/sdk-internal/blob/7d5b1010297d6f2352b55c3d2ff27352e37433cd/LICENSE) defaults to GPL-3.0 or its SDK license; `bitwarden_license/` uses only the latter. Its FIDO/crypto crates explicitly say internal/do not use. | Study the separation of UI, shared logic and crypto. No dependency or copied source. |
-| Bitwarden `passkey-rs` fork | Its [workspace manifest](https://github.com/bitwarden/passkey-rs/blob/043279e92e2eb5f509bf87eb7fa50987fd377e32/Cargo.toml) is MIT OR Apache-2.0. Its client/authenticator role is different from HeavenKey's relying-party verifier. | Possible future passkey-provider research; no second verifier. |
-| Stronghold | Apache-2.0; examined `iota_stronghold` client manifest is 1.1.0. Observed dev-head commit is from 2023, repository push from 2025. | No present adoption: additional secret-vault machinery and unresolved maintenance fit. |
-| vaultwarden | AGPL-3.0 Rust implementation of a Bitwarden-compatible server. | Separate server and protocol are unnecessary for this local credential lifecycle. No source copied. |
-| OpenBao | MPL-2.0 Go secret-management service. | No service-operated secret-management requirement in v0.3. |
+| `webauthn-rs 0.5.5` | Passkey-Einschreibung und Prüfung der WebAuthn-Antworten in Rust | MPL-2.0 |
+| `@simplewebauthn/browser 14.0.0` | WebAuthn-Dialoge und Umwandlung der Browserantworten | MIT |
+| `ed25519-dalek 2.2.0` | Signieren und strikte Prüfung der Zugänge | BSD-3-Clause |
+| `axum` und `tokio` | HTTP-API und asynchrone Ausführung | Details im Lockfile und den Paketlizenzen |
+| `rusqlite` | Lokale Speicherung des Kontozustands | Details im Lockfile und den Paketlizenzen |
 
-## Authority and acceptance
+Der Browseradapter wird lokal gebündelt. Sein Copyright- und MIT-Hinweis bleibt im erzeugten Bundle erhalten. Die Rust-API prüft jede Antwort; der Adapter vergibt selbst keine Berechtigungen.
 
-The original credential ID remains a stable account alias for old grant audiences. Any active credential of that account can invoke those grants. Revoking the original credential prevents that key from authenticating; it does not revoke the account's grants. Use grant revocation to withdraw account authority. This is a preview-specific contract, not a claim of UCAN interoperability or device-bound delegation.
+Paketquellen: [webauthn-rs](https://github.com/kanidm/webauthn-rs/blob/d2c10d53ca5ef033d37ee6462e936e9eb72ad98c/webauthn-rs/Cargo.toml), [SimpleWebAuthn](https://github.com/MasterKale/SimpleWebAuthn/tree/83f87addc67b652ff5b84e681669451648216ef6/packages/browser), [ed25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek/blob/8016d6d9b9cdbaa681f24147e0b9377cc8cef934/ed25519-dalek/Cargo.toml).
 
-Enrollment must be bound to the initiating authenticated session and user. The server must reject unknown, foreign, duplicate and revoked credentials; protect the last active credential; recheck active state at authentication finish; consume challenges once; and invalidate that account's sessions and pending ceremonies on revocation. Migration must preserve grant bytes, counters and credential tombstones across restart. The SQLite database and local issuer key are **not an encrypted vault**. HeavenKey does not implement Enpass's encrypted sync or a zero-knowledge storage service.
+## Gestaltungsprinzipien
 
-The adapter passes the Rust options' `publicKey` object as `optionsJSON` and sends its returned JSON unchanged to Rust. Keep user verification required and conditional creation disabled. `just check` and `just e2e` must pass on the integrated state, including surviving-key invocation of an old grant, rejection of the removed original key, foreign-account rejection, replay and restart. Cancellation/retry cleanup was inspected in the UI; the browser report has no dedicated canceled-ceremony case. Actual hardware remains deferred. The adapter itself performs browser ceremony calls; application API traffic stays on the existing local origin.
+[Enpass](https://www.enpass.io/security/) ist eine Referenz für lokale Datenhoheit und optionale verschlüsselte Synchronisierung. [KeePassXC](https://github.com/keepassxreboot/keepassxc/blob/9e0f57a4a4c6c629fa6d0a593acb7d089b1d95cd/docs/topics/Passkeys.adoc) ist eine Referenz für benannte Passkeys, Übersichten und ausdrückliche Bestätigung.
 
-Rollback removes the browser package and restores the serialization adapter from base commit `dfab650043eb678b183d17a3ca2976aa29c2320c`, followed by the same checks. The benefit is a smaller owned serialization surface. Time, token and financial savings have not been measured; no acceleration multiplier is claimed.
+Produktcode aus diesen Anwendungen wird nicht eingebunden. HeavenKey besitzt derzeit weder einen verschlüsselten Tresor noch verschlüsselte Synchronisierung. SQLCipher ist bisher nicht integriert. Vor einer verschlüsselten Datenbank müssen Schlüsselverwahrung und Wiederherstellung geklärt sein, damit ein Umstieg bestehende Daten weder verliert noch unzugänglich macht.
+
+## Delegationsformat
+
+Das eigene HeavenKey-Profil übernimmt begrenzte Weitergabe und die Bindung an Vorgänger als Prinzipien. Der Dienst signiert alle Kettenglieder. Kontokennungen sind keine DIDs; eine UCAN-Implementierung wird nicht eingebunden. Das [Format](DELEGATION-CONTRACT.md) definiert die signierten Daten und die Kettenregeln.
+
+Die [Lizenz- und Paketbelege](evidence/donors-v03.json) und [Quellen zum Delegationsprofil](evidence/v05-donor-research.json) enthalten die detaillierten Versions- und Herkunftsdaten.

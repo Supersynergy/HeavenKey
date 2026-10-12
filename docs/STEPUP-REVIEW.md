@@ -1,6 +1,6 @@
 # Independent review: action-bound passkey approvals
 
-The review found 0 blocking defects on the final recorded source. The root-executed integrated checks passed: 36/36 Rust tests and 96/96 browser cases. All 69 previous browser cases remain, with 27 added and 0 removed; the reviewer independently compared their names. The five supplied source hashes match after the final build, and 14 source, manifest and bundle hashes are recorded in [machine-readable evidence](evidence/stepup-independent-review.json). This lane reviewed source and evidence and changed documentation only; it did not execute those test runs.
+The reviewed action-approval implementation has no recorded blocking source findings. Local checks for version 0.4 passed 36 Rust tests and 96 virtual browser cases. [Review evidence](evidence/stepup-independent-review.json) records the detailed checks.
 
 ## Why this work comes first
 

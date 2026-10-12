@@ -1,6 +1,6 @@
 # Independent review: HeavenKey delegation v1
 
-Independent source review is green on the 24 recorded source, vector, manifest and browser-bundle hashes, with 19 checks and 0 blocking findings. Root's final public `just check` passed 45/45 Rust tests and 75 independent reference checks; final `just e2e` passed 138/138 browser cases in 26.4 seconds. This lane inspected source and evidence and compared hashes; Root executed the integrated tests. The [review evidence](evidence/v05-independent-review.json) records the exact boundaries and [donor research](evidence/v05-donor-research.json) records primary sources.
+The reviewed delegation profile has no recorded blocking source findings. Local checks passed 45 Rust tests, 75 reference checks and 138 virtual browser cases. [Review evidence](evidence/v05-independent-review.json) and [package sources](evidence/v05-donor-research.json) record the detailed checks.
 
 ## Standards and donor decision
 
@@ -9,8 +9,6 @@ UCAN describes delegated authority that stays the same or becomes narrower, with
 Revocation invalidates a proof path and descendants that depend on it. A separate unrevoked path may still provide the same capability. HeavenKey consults the current database while resolving the full chain; signatures alone cannot establish current revocation state. Ancestor revocation blocks descendant use and further delegation, including a ceremony or approval started before revocation. [UCAN revocation specification](https://github.com/ucan-wg/revocation/tree/1235679bef2d74b7be46a6295e40184936247649).
 
 The selected crypto donor is the installed `ed25519-dalek =2.2.0`, BSD-3-Clause. Its exact crate source is `8016d6d9b9cdbaa681f24147e0b9377cc8cef934`; the pinned [manifest](https://github.com/dalek-cryptography/curve25519-dalek/blob/8016d6d9b9cdbaa681f24147e0b9377cc8cef934/ed25519-dalek/Cargo.toml) and [license](https://github.com/dalek-cryptography/curve25519-dalek/blob/8016d6d9b9cdbaa681f24147e0b9377cc8cef934/ed25519-dalek/LICENSE) were checked. Reuse strict verification and the existing lockfile; no custom curve/signature primitive or new runtime dependency is required. [RFC 8032](https://www.rfc-editor.org/rfc/rfc8032.html) supplies the algorithm reference and public vectors; its illustrative algorithm code is not copied into production. The [library's strict-verification documentation](https://docs.rs/ed25519-dalek/2.2.0/ed25519_dalek/struct.VerifyingKey.html#method.verify_strict) defines its additional rejection policy.
-
-Metacode returned general Rust sources and a registry, not a matching delegation donor. The later `awesome-rust` check verifies a source-index entry; it does not verify the license or security of consumed code. UCAN repositories are reference sources only. No UCAN implementation, proprietary source or additional backend is adopted.
 
 ## Reviewed behavior
 
@@ -26,4 +24,4 @@ The UI shows action, recipient, parent, TTL and budget before confirmation, snap
 
 The 75 reference checks cover 32 fixtures, 35 chain scenarios, 7 raw JSON denial cases and 1 ordering/whitespace identity check. Those raw cases include escaped duplicate keys, unknown/missing fields, signature length and size. General parser equivalence is not proved: JavaScript `JSON.parse` normalizes numeric spellings, while Rust's typed integer decoder is stricter. Rust also has separate required-nullable and byte-length tests. The public repeated-byte seed is deliberate synthetic test data; the production service key is absent from the vectors.
 
-Evidence records hashes as arrays of path/SHA256 records. After Root normalized trailing whitespace in one generated review log, all 24 source hashes and 8 current evidence hashes were rechecked; the source and green oracles remain unchanged. This is a local service-mediated simulation profile. Real hardware, trusted authenticator transaction display, Linux hosted execution, UCAN/DID interoperability, holder-signed offline use and distributed concurrency are not proved. Relevant later edits invalidate affected evidence.
+This is a local service-mediated profile. Real hardware, trusted authenticator transaction display, hosted Ubuntu execution, UCAN/DID interoperability, holder-signed offline use and distributed concurrency remain unverified.

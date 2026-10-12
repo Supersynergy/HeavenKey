@@ -18,6 +18,6 @@ Trust and failure paths reviewed:
 
 Executed evidence is in e2e.json and the native check log. Semgrep's security-audit rules scanned four source files without findings or parser errors. Gitleaks scoped to apps/, crates/ and scripts/ found zero secrets. The earlier default scan included dependencies/build artifacts; its metadata is separately diagnosed rather than treated as a successful source scan.
 
-The v0.3 expert reviewer is separate from the implementation lanes. Its source hashes and findings are recorded in evidence/v03-independent-review.json. This is not a penetration test or production certification. The browser donor's MIT notice is included in the generated bundle.
+The browser SDK MIT notice is included in the generated bundle. Detailed historical findings are recorded in [review evidence](evidence/v03-independent-review.json).
 
 Remaining release gates: real-device UX, production owner identity/provisioning, recovery, key rotation, tenant model, distributed concurrency, rate limits, hardened storage/permissions, secure time for offline operation, formal wire-profile choice, second independent verifier and external security audit. No production release is claimed.

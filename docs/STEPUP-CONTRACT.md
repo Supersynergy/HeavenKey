@@ -1,6 +1,6 @@
 # Action-bound passkey approvals
 
-Best Defaults prioritizes a concrete authority gap before wider delegation features. The v0.3 API accepts a valid bearer session for sensitive writes; fresh passkey confirmation is only requested by the UI. The baseline probe uses synthetic users and virtual CTAP2 devices and records the observed token-only mutations in evidence/stepup-baseline.json.
+Sensitive credential and grant writes require a fresh passkey approval bound to the precise action. This contract covers the four credential/grant mutations; version 0.5 extends management approvals for [delegation mutations](DELEGATION-CONTRACT.md).
 
 ## Shared API contract
 
@@ -21,10 +21,8 @@ Credential-add approval is consumed at /api/credentials/start. The enrollment is
 
 ## Browser behavior
 
-Use the installed SimpleWebAuthn browser adapter. Replace the current generic fresh-login step before credential writes with the management-specific assertion; pass approval_id immediately to the exact mutation. Grant issuance/revocation also use this path. Existing login and guest invocation remain separate. Show the concrete action/target before asking for confirmation. Keep cancellation/errors recoverable and serialize actions. Never store approval/session tokens in persistent browser storage or logs.
+The browser uses the SimpleWebAuthn adapter and a management-specific assertion before credential writes. It passes approval_id immediately to the exact mutation. Grant issuance/revocation also use this path. Existing login and guest invocation remain separate. Show the concrete action/target before asking for confirmation. Keep cancellation/errors recoverable and serialize actions. Never store approval/session tokens in persistent browser storage or logs.
 
-## Oracle and ownership
+## Verification
 
-Rust lane owns apps/api/src/main.rs and its tests. Browser lane owns apps/web/src/main.ts, apps/web/index.html, apps/web/src/style.css and scripts/e2e.mjs. Review lane owns docs/evidence/stepup-independent-review.json and docs/STEPUP-REVIEW.md. The controller owns documentation, manifests, evidence integration and publication. Writers are not alone; preserve other edits. No subagent commits or pushes.
-
-Oracle: just check and just e2e. Preserve the existing69 behavioral cases, adapting only legitimate mutations to include verified approval. Add token-only denial for all four actions; exact target/TTL/label/kind/session/user binding; replay/parallel duplicate denial; approval expiry (monotonic unit test); restart and revocation invalidation; and an actual aborted browser assertion followed by successful retry. Hardware stays virtual. Do not add dependencies, crypto primitives, a second backend, clock-test backdoors or a live authenticator flow. Bound each agent lane to45 minutes, each test/process with a timeout and a compact evidence return.
+Run `just check` and `just e2e`. Cover missing approval, exact target/TTL/label/kind/session/account binding, replay and parallel duplicates, monotonic expiry, restart, revocation, and an aborted passkey assertion followed by a successful retry. Browser checks use virtual authenticators; hardware remains a separate test.

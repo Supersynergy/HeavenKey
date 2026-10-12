@@ -1,30 +1,62 @@
-# Development contract
+# HeavenKey entwickeln
 
-The main cost is security rework. Integration access is still uncertain. The loop is objective, executable acceptance, bottleneck, smallest complete slice, verification and recorded evidence. A token-saving claim requires a comparison that includes the failures and checking needed to produce the same accepted result.
+## Projektaufbau
 
-Metacode was used during preflight and v0.3 to find reusable sources, followed by primary-source checks. HeavenKey consumes webauthn-rs and the MIT SimpleWebAuthn browser package. No product implementation was copied from Enpass or the reference tools. The Efficiency Orchestrator bounds work and ties claims to output. Skills are development aids; the selected libraries are pinned application dependencies. See DONORS.md for the distinction.
-
-| Selected SI Atlas skill | Contribution |
+| Pfad | Inhalt |
 | --- | --- |
-| metacode | Reuse and provenance |
-| agent-efficiency-orchestrator | Bounded execution and evidence |
-| best-defaults | Result, effort and risk prioritization |
-| ponytail | Small complete changes and dependency reuse |
-| speedtuning | Dominant cost and equivalent-workload measurement |
-| security-review | Trust boundaries and denial paths |
-| rust-patterns | Ownership and error handling |
-| rust-testing | Core invariants and failure cases |
-| coding-standards | Structure and maintainability |
-| verification-loop | Current integrated-state checks |
+| `apps/api/` | Rust-API mit Passkey-Verwaltung und SQLite-Zustand |
+| `apps/web/` | TypeScript-Oberfläche und WebAuthn-Dialoge |
+| `crates/verifier/` | Signierte Zugänge und Prüfung der Delegationsketten |
+| `scripts/` | Build, Browsertests und CI |
+| `docs/vectors/` | Testvektoren zum Delegationsformat |
 
-The initial skill-path/hash inventory remains in evidence/skills.json. It records the development environment, not portable runtime dependencies. The README phase additionally uses Repo Release Excellence; the workbench retains its Hallmark design contract.
+Die Rust-Version ist festgelegt. Nutze `rust-toolchain.toml`. Bun benötigt Version **1.4.2**. Für die Hilfsskripte brauchst du Python 3 und `just`; die Browserprüfung verwendet Google Chrome. Der native macOS-Build benötigt die Xcode Command Line Tools. Installiere Anwendungsabhängigkeiten mit `bun install --frozen-lockfile --ignore-scripts` und `cargo fetch --locked`.
 
-Run `just check` for the full local gate and `just e2e` for browser acceptance. Portable CI uses `bash scripts/ci.sh` after fetching locked dependencies. Commands have timeouts; HEAVENKEY_DEADLINE_UTC can impose a shared cutoff. The original eight-hour spike budget remains historical evidence.
+## Befehle
 
-CI uses read-only permission, pinned action commit SHAs and a 20-minute job limit. It runs on push, pull_request and manual dispatch, with no deployment or real authenticator. The design follows [GitHub secure-use guidance](https://docs.github.com/en/actions/reference/security/secure-use).
+| Befehl | Ergebnis |
+| --- | --- |
+| `just build` | Weboberfläche bündeln und Rust-API bauen |
+| `just dev` | Lokale Oberfläche auf `http://localhost:18240` starten |
+| `just check` | Source- und Abhängigkeitschecks ausführen; anschließend bauen |
+| `just e2e` | Vollständigen Ablauf mit virtuellen Passkeys in Chrome testen |
+| `bun scripts/delegation-reference.mjs` | Delegationsformat gegen öffentliche Testvektoren prüfen |
 
-The user explicitly authorized expert subagents. Three lanes own Rust authorization, browser UI/E2E and independent security review. Each receives a fresh scope-and-oracle capsule without parent history. The controller owns documentation, package pins, integration and acceptance. Writers have disjoint files and no commit authority; only one fixed-port E2E runs at a time. No acceleration multiplier or financial saving is inferred from parallel work.
+`just dev` läuft höchstens zwei Stunden. Prüfungen laufen im Vordergrund mit Zeitlimit. `just e2e` nutzt Port 18241; führe nur einen solchen Browserlauf gleichzeitig aus.
 
-For 0.4, Best Defaults selects server-enforced action approvals before wider delegation: the baseline demonstrates sensitive writes using only a copied valid session. The implementation reuses the existing WebAuthn handlers and typed action data. The shared contract is STEPUP-CONTRACT.md; the full gate and independent review run on the resulting integrated source. Existing dependencies remain pinned. A failed or canceled browser ceremony can be retried; it cannot authorize an unrelated operation. Remote source equality, a fresh clone and hosted CI status are separate evidence surfaces.
+## Prüftools installieren
 
-For 0.5, the closed objective is a passkey-approved online delegation chain and transitive revocation at the API execution point. DELEGATION-CONTRACT.md fixes the profile, signing bytes, limits, endpoints and disjoint expert ownership before implementation. Metacode found no fitting delegation donor; existing Ed25519/WebAuthn/SQLite dependencies are reused. The browser lane independently authors a Node standard-crypto encoder and public synthetic vectors; Rust consumes those fixtures and the browser checks actual API-produced signatures. The read-only reference CLI joins both native and portable CI gates. The custom service-attested profile is explicitly separate from UCAN, DIDs and holder-signed offline credentials.
+Für `just check` sind zusätzlich diese Versionen erforderlich:
+
+```sh
+cargo install --locked --version 0.9.146 cargo-nextest
+cargo install --locked --version 0.20.2 cargo-deny
+cargo install --locked --version 0.22.2 cargo-audit
+```
+
+Die Prüftools brauchen lokale Advisory-Datenbanken. Bei einer neuen Installation müssen diese erst online geladen werden, bevor `just check` seine Prüfungen ohne erneutes Laden der Rust-Datenbanken ausführen kann:
+
+```sh
+cargo deny --locked check
+cargo audit --no-yanked
+just check
+just e2e
+```
+
+Lokale Checks verwenden anschließend die vorhandenen Rust-Advisory-Datenbanken. Aktualisiere sie regelmäßig mit den beiden Online-Befehlen. Bun prüft seine Abhängigkeiten online.
+
+## Konfiguration
+
+| Variable | Zweck | Standard |
+| --- | --- | --- |
+| `UAC_PORT` | Port der lokalen API | `18240` |
+| `UAC_DATA` | Verzeichnis des lokalen Datenbestands | `data/` |
+| `CHROME_PATH` | Ausführbare Chrome-Datei für Browsertests | Plattformpfad in `scripts/e2e.mjs` |
+
+## Änderungen prüfen
+
+Führe `just check` und `just e2e` aus. Sicherheitsrelevante Änderungen müssen auch die passenden Ablehnungsfälle erhalten: fremde Konten, veränderte Parameter, Replay, abgelaufene Rechte, Widerruf und Neustart.
+
+Nutze ausschließlich synthetische Testdaten. Einrichtungscodes, Sitzungen, Signierschlüssel, echte Passkeys und lokale Datenbanken gehören nicht ins Repository. Protokolländerungen benötigen eine Versionsentscheidung und passende Testvektoren. Die [Aktionsfreigaben](STEPUP-CONTRACT.md) und das [Delegationsformat](DELEGATION-CONTRACT.md) definieren die Schnittstellen.
+
+Der [CI-Ablauf](CI-REPAIR.md) führt Source-, Sicherheits- und Browserprüfungen aus. Der [Prüfstatus](VERIFICATION.md) trennt lokale Simulation, Ubuntu-CI und Hardwaretests.
