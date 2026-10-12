@@ -1473,6 +1473,13 @@ version = "0.6.0"
 [[package]]
 name = "uac-ucan-bridge"
 version = "0.6.0"
+dependencies = [
+ "base64 0.22.1",
+ "ed25519-dalek",
+ "serde",
+ "serde_json",
+ "uac-verifier",
+]
 
 [[package]]
 name = "uac-verifier"
