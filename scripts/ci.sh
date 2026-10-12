@@ -1,14 +1,48 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cargo fmt --check
-bun run node_modules/typescript/bin/tsc --noEmit
-bun scripts/delegation-reference.mjs
-cargo clippy --locked --offline --all-targets -- -D warnings
-cargo test --locked --offline
-cargo deny --locked check
-cargo audit --no-yanked
-bun audit
-python3 scripts/startup_probe.py
-bun run build
-cargo build --locked --offline
-python3 scripts/run.py ci-e2e 180 -- bun scripts/e2e.mjs
+
+prepare() {
+  mkdir -p docs/evidence
+  rm -f docs/evidence/ci.log docs/evidence/ci-*.log docs/evidence/commands.jsonl \
+    docs/evidence/e2e.json docs/evidence/heavenkey-missing-binary.json \
+    docs/evidence/browser-*.png docs/evidence/failure-*.png \
+    docs/evidence/failure-diagnostic.json
+}
+
+source_checks() {
+  python3 -m unittest discover -s scripts -p 'test_*.py'
+  cargo fmt --check
+  bun run node_modules/typescript/bin/tsc --noEmit
+  bun scripts/delegation-reference.mjs
+  cargo clippy --locked --offline --all-targets -- -D warnings
+  cargo test --locked --offline
+  python3 scripts/startup_probe.py
+}
+
+security_checks() {
+  if [[ ${HEAVENKEY_ADVISORIES_OFFLINE:-0} == 1 ]]; then
+    cargo deny --locked --offline check
+    cargo audit --no-fetch --no-yanked
+  else
+    cargo deny --locked check
+    cargo audit --no-yanked
+  fi
+  bun audit
+}
+
+build() {
+  bun run build
+  cargo build --locked --offline
+}
+
+case ${1:-all} in
+  prepare) prepare ;;
+  source) source_checks ;;
+  security) security_checks ;;
+  build) build ;;
+  e2e) python3 scripts/run.py ci-e2e 180 -- bun scripts/e2e.mjs ;;
+  check) source_checks; security_checks; build ;;
+  all) source_checks; security_checks; build
+    python3 scripts/run.py ci-e2e 180 -- bun scripts/e2e.mjs ;;
+  *) printf 'Unknown CI stage: %s\n' "$1" >&2; exit 2 ;;
+esac

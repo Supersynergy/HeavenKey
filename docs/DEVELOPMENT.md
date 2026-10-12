@@ -19,6 +19,7 @@ Die Rust-Version ist festgelegt. Nutze `rust-toolchain.toml`. Bun benötigt Vers
 | `just build` | Weboberfläche bündeln und Rust-API bauen |
 | `just dev` | Lokale Oberfläche auf `http://localhost:18240` starten |
 | `just check` | Source- und Abhängigkeitschecks ausführen; anschließend bauen |
+| `just ci` | Vollständige CI mit aktuellen Advisories und frischen Browserartefakten ausführen |
 | `just e2e` | Vollständigen Ablauf mit virtuellen Passkeys in Chrome testen |
 | `bun scripts/delegation-reference.mjs` | Delegationsformat gegen öffentliche Testvektoren prüfen |
 
@@ -31,7 +32,6 @@ Fällt die Prozessliste erst beim Aufräumen aus, meldet der Wrapper `cleanup_er
 Für `just check` sind zusätzlich diese Versionen erforderlich:
 
 ```sh
-cargo install --locked --version 0.9.146 cargo-nextest
 cargo install --locked --version 0.20.2 cargo-deny
 cargo install --locked --version 0.22.2 cargo-audit
 ```
@@ -46,6 +46,8 @@ just e2e
 ```
 
 Lokale Checks verwenden anschließend die vorhandenen Rust-Advisory-Datenbanken. Aktualisiere sie regelmäßig mit den beiden Online-Befehlen. Bun prüft seine Abhängigkeiten online.
+
+`just check` und GitHub verwenden dieselbe Prüfliste in `scripts/ci.sh`. Rust-Tests laufen in beiden Umgebungen mit `cargo test --locked --offline`. `just ci` aktualisiert zusätzlich die Advisories, entfernt alte CI-Artefakte und führt die Browserprüfung aus. Die einzelnen CI-Stufen heißen `source`, `security`, `build` und `e2e`.
 
 ## Konfiguration
 

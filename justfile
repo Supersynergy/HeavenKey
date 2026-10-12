@@ -9,17 +9,11 @@ check:
     python3 scripts/run.py check 900 -- just _check
 
 _check:
-    cargo fmt --check
-    bun run node_modules/typescript/bin/tsc --noEmit
-    bun scripts/delegation-reference.mjs
-    cargo clippy --locked --offline --all-targets -- -D warnings
-    cargo nextest run --locked --offline
-    cargo deny --offline check
-    cargo audit --no-fetch --no-yanked
-    bun audit
-    python3 scripts/startup_probe.py
-    bun run build
-    cargo build --locked --offline
+    HEAVENKEY_ADVISORIES_OFFLINE=1 bash scripts/ci.sh check
+
+ci:
+    bash scripts/ci.sh prepare
+    python3 scripts/run.py ci 900 -- bash scripts/ci.sh
 
 e2e:
     python3 scripts/run.py e2e 180 -- bun scripts/e2e.mjs

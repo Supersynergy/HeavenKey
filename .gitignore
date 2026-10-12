@@ -5,3 +5,4 @@ node_modules/
 /.grepgod/
 .env
 .env.*
+__pycache__/
