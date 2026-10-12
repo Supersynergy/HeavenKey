@@ -30,10 +30,18 @@ Ein WebAuthn-Nachweis bindet die vom Browser signierte Challenge an serverseitig
 | Unabhängiger Review | 17 Prüfungen, 14 Quell-/Manifest-/Bundle-Hashes verglichen, 0 offene Blocker |
 | Source-Scans | Semgrep: 8 eigene Dateien, 0 Findings, 0 Fehler; gestagter Secret-Scan: 0 Findings |
 | Code-Stilscan | 0 Fehler, 3 nichtblockierende Stilwarnungen zu Dateigröße und begrenztem Health-Polling |
+| Frischer GitHub-Clone | Source-Commit `db31bae`, 22 integrierte Datei-Hashes gleich; gelockte Installation, leeres Build-Verzeichnis und 96/96 Browser-Fälle bestanden |
+| Git-Historienscan | Exit 0, 0 Findings; nur die zwei bereits dokumentierten Prüfsummen-Ausnahmen |
 
 Der Controller führte die vollständige `just _check`-Recipe über `scripts/run.py` und `ats-verify` aus. Dies ist der Prüfablauf hinter `just check`; die Wrapper-Grenze beträgt 900 Sekunden. Er brauchte hier rund 69 Sekunden. Der Browser-Lane führte `just e2e` aus: rund 36 Sekunden einschließlich Wrapper. Diese Einzelmessungen liefern keinen Vergleich der Entwicklungsgeschwindigkeit oder Abrechnung.
 
-Der ursprüngliche rote Test ist ein Fehlernachweis für 0.3, keine bestandene Prüfung von 0.4. Die drei Stilwarnungen wurden geprüft; es wurde kein bestätigter Defekt gefunden. Ein Refactor nur zum Erhöhen eines Scanner-Scores gehört nicht zu dieser Sicherheitsänderung. Der frische GitHub-Clone folgt auf die Veröffentlichung; sein Ergebnis wird gesondert dokumentiert.
+Der ursprüngliche rote Test ist ein Fehlernachweis für 0.3, keine bestandene Prüfung von 0.4. Die drei Stilwarnungen wurden geprüft; es wurde kein bestätigter Defekt gefunden. Ein Refactor nur zum Erhöhen eines Scanner-Scores gehört nicht zu dieser Sicherheitsänderung.
+
+Der frische Clone hatte ein leeres Build-Verzeichnis und verwendete einen warmen Paket-Registry-Cache. Installation, Build und Simulation benötigten insgesamt rund 355 Sekunden; Build rund 258 und Browserlauf rund 66 Sekunden. Die gemessene Host-Last lag zwischenzeitlich über 90 bei 16 logischen CPUs. Fremde Arbeiten liefen weiter. Diese Abnahme ist daher ein Funktionsnachweis und kein kontrollierter Laufzeitvergleich. Das temporäre Clone-Verzeichnis wurde entfernt; Browser und Testserver sind beendet.
+
+Aktuelle maschinenlesbare Nachweise: [acceptance.json](evidence/acceptance.json), [Browser-Matrix](evidence/e2e.json), [vollständige lokale Prüfung](evidence/stepup-check-full.log), [unabhängiger Review](evidence/stepup-independent-review.json), [frischer Clone](evidence/stepup-fresh-clone.json), [ursprünglicher Fehlernachweis](evidence/stepup-baseline.json).
+
+Der [GitHub-CI-Job für 0.4](https://github.com/Supersynergy/HeavenKey/actions/runs/38186956142) wurde vor dem ersten Schritt durch eine Zahlungs-/Ausgabenlimit-Bedingung des Accounts abgewiesen. Die Annotation nennt beide Möglichkeiten und unterscheidet ihre Ursache nicht. Ubuntu ist damit weiterhin ungeprüft. Zahlungen, Limits und Runner wurden nicht geändert.
 
 ## Planung
 

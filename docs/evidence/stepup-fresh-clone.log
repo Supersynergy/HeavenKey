@@ -1,0 +1,25 @@
+
+db31bae40b393104b2f4967e2c9324acbc5be0b3
+
+Repository: /private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v04-clone-kep_5z4k/HeavenKey
+Git: yes
+REVIEW repository-controlled execution/context: package.json
+REVIEW package scripts (names only): build
+Execution trust: no
+Doctor complete: 2 review signal(s); no repository code executed.
+
+bun install v1.4.2 (744846f84)
+
++ playwright-core@1.62.1
++ typescript@7.0.2
+
+4 packages installed [119.00ms]
+
+
+python3 scripts/run.py build 900 -- just _build
+{"name": "build", "command": ["just", "_build"], "exit_code": 0, "elapsed_seconds": 257.407, "time_utc": "2026-10-12T00:15:11.690505+00:00", "log": "/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v04-clone-kep_5z4k/HeavenKey/docs/evidence/build.log", "timeout_cleanup_pids": []}
+
+python3 scripts/run.py e2e 180 -- bun scripts/e2e.mjs
+{"name": "e2e", "command": ["bun", "scripts/e2e.mjs"], "exit_code": 0, "elapsed_seconds": 65.35, "time_utc": "2026-10-12T00:16:17.395800+00:00", "log": "/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v04-clone-kep_5z4k/HeavenKey/docs/evidence/e2e.log", "timeout_cleanup_pids": []}
+
+{"source_commit": "db31bae40b393104b2f4967e2c9324acbc5be0b3", "passed": true, "target": "initially empty clone-local target; registry cache warm", "steps": [{"command": ["gh", "repo", "clone", "Supersynergy/HeavenKey", "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v04-clone-kep_5z4k/HeavenKey", "--", "--quiet"], "exit_code": 0, "elapsed_seconds": 11.614}, {"command": ["git", "rev-parse", "HEAD"], "exit_code": 0, "elapsed_seconds": 0.243}, {"command": ["aidev", "doctor", "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v04-clone-kep_5z4k/HeavenKey"], "exit_code": 0, "elapsed_seconds": 3.457}, {"command": ["bun", "install", "--frozen-lockfile", "--ignore-scripts"], "exit_code": 0, "elapsed_seconds": 0.194}, {"command": ["cargo", "fetch", "--locked"], "exit_code": 0, "elapsed_seconds": 6.52}, {"command": ["just", "build"], "exit_code": 0, "elapsed_seconds": 257.997}, {"command": ["just", "e2e"], "exit_code": 0, "elapsed_seconds": 65.697}], "integrated_hashes_match": 22, "e2e_passed": 96, "e2e_elapsed_seconds": 64, "elapsed_seconds": 354.915, "clone_removed": true}

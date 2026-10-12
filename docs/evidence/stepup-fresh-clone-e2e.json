@@ -1,0 +1,491 @@
+{
+  "completed": true,
+  "mode": "virtual CTAP2 authenticators; real navigator.credentials + Rust verification",
+  "hardware": "deferred by user",
+  "total": 96,
+  "passed": 96,
+  "failed": 0,
+  "cases": [
+    {
+      "name": "first guest enrollment does not claim ownership",
+      "pass": true,
+      "elapsed_ms": 992
+    },
+    {
+      "name": "reserved owner name requires bootstrap",
+      "pass": true,
+      "elapsed_ms": 76
+    },
+    {
+      "name": "invalid bootstrap cannot claim ownership",
+      "pass": true,
+      "elapsed_ms": 63
+    },
+    {
+      "name": "browser owner passkey registration with operator bootstrap",
+      "pass": true,
+      "elapsed_ms": 493
+    },
+    {
+      "name": "pending competing enrollment cannot create another owner",
+      "pass": true,
+      "elapsed_ms": 38
+    },
+    {
+      "name": "consumed bootstrap cannot start another owner enrollment",
+      "pass": true,
+      "elapsed_ms": 55
+    },
+    {
+      "name": "bootstrap file remains operator-only",
+      "pass": true,
+      "elapsed_ms": 5
+    },
+    {
+      "name": "browser foreign holder registration",
+      "pass": true,
+      "elapsed_ms": 380
+    },
+    {
+      "name": "browser owner authentication",
+      "pass": true,
+      "elapsed_ms": 511
+    },
+    {
+      "name": "browser guest authentication",
+      "pass": true,
+      "elapsed_ms": 496
+    },
+    {
+      "name": "owner grant issuance through UI",
+      "pass": true,
+      "elapsed_ms": 675
+    },
+    {
+      "name": "guest grant invocation through UI",
+      "pass": true,
+      "elapsed_ms": 1896
+    },
+    {
+      "name": "copied token without session cannot issue grants",
+      "pass": true,
+      "elapsed_ms": 43
+    },
+    {
+      "name": "guest cannot issue grants",
+      "pass": true,
+      "elapsed_ms": 51
+    },
+    {
+      "name": "foreign holder denied before ceremony",
+      "pass": true,
+      "elapsed_ms": 45
+    },
+    {
+      "name": "write escalation denied",
+      "pass": true,
+      "elapsed_ms": 58
+    },
+    {
+      "name": "foreign resource denied",
+      "pass": true,
+      "elapsed_ms": 33
+    },
+    {
+      "name": "modified signed grant denied",
+      "pass": true,
+      "elapsed_ms": 31
+    },
+    {
+      "name": "bound invocation arguments cannot change",
+      "pass": true,
+      "elapsed_ms": 249
+    },
+    {
+      "name": "bound invocation cannot become login",
+      "pass": true,
+      "elapsed_ms": 169
+    },
+    {
+      "name": "valid signature with wrong origin",
+      "pass": true,
+      "elapsed_ms": 398
+    },
+    {
+      "name": "valid signature with wrong challenge",
+      "pass": true,
+      "elapsed_ms": 285
+    },
+    {
+      "name": "valid signature with wrong RP hash",
+      "pass": true,
+      "elapsed_ms": 298
+    },
+    {
+      "name": "valid signature without user verification",
+      "pass": true,
+      "elapsed_ms": 243
+    },
+    {
+      "name": "valid signature with rolled-back counter",
+      "pass": true,
+      "elapsed_ms": 408
+    },
+    {
+      "name": "tampered authenticator signature rejected",
+      "pass": true,
+      "elapsed_ms": 404
+    },
+    {
+      "name": "valid fresh assertion accepted",
+      "pass": true,
+      "elapsed_ms": 333
+    },
+    {
+      "name": "assertion replay rejected",
+      "pass": true,
+      "elapsed_ms": 11
+    },
+    {
+      "name": "parallel duplicate invocation executes once",
+      "pass": true,
+      "elapsed_ms": 338
+    },
+    {
+      "name": "guest cannot revoke",
+      "pass": true,
+      "elapsed_ms": 50
+    },
+    {
+      "name": "owner revocation committed",
+      "pass": true,
+      "elapsed_ms": 438
+    },
+    {
+      "name": "revoked grant rejects already started ceremony",
+      "pass": true,
+      "elapsed_ms": 55
+    },
+    {
+      "name": "revoked grant cannot start new invocation",
+      "pass": true,
+      "elapsed_ms": 51
+    },
+    {
+      "name": "duplicate name registration rejected",
+      "pass": true,
+      "elapsed_ms": 42
+    },
+    {
+      "name": "HTTP origin CSRF guard",
+      "pass": true,
+      "elapsed_ms": 2
+    },
+    {
+      "name": "expired grant denied",
+      "pass": true,
+      "elapsed_ms": 1582
+    },
+    {
+      "name": "server restart discards outstanding action approvals",
+      "pass": true,
+      "elapsed_ms": 411
+    },
+    {
+      "name": "bootstrap stays consumed after server restart",
+      "pass": true,
+      "elapsed_ms": 25
+    },
+    {
+      "name": "enrolled credentials authenticate after server restart",
+      "pass": true,
+      "elapsed_ms": 1046
+    },
+    {
+      "name": "revocation survives server restart",
+      "pass": true,
+      "elapsed_ms": 27
+    },
+    {
+      "name": "replay rejected after server restart",
+      "pass": true,
+      "elapsed_ms": 13
+    },
+    {
+      "name": "mobile width has no horizontal overflow",
+      "pass": true,
+      "elapsed_ms": 8
+    },
+    {
+      "name": "credential list is scoped and exposes only public metadata",
+      "pass": true,
+      "elapsed_ms": 25
+    },
+    {
+      "name": "credential listing and enrollment require a session",
+      "pass": true,
+      "elapsed_ms": 25
+    },
+    {
+      "name": "last active passkey cannot be revoked through UI or API",
+      "pass": true,
+      "elapsed_ms": 376
+    },
+    {
+      "name": "credential labels enforce nonempty 48-character bound",
+      "pass": true,
+      "elapsed_ms": 56
+    },
+    {
+      "name": "credential enrollment cannot finish in another account session",
+      "pass": true,
+      "elapsed_ms": 578
+    },
+    {
+      "name": "credential enrollment is bound to the initiating same-account session",
+      "pass": true,
+      "elapsed_ms": 816
+    },
+    {
+      "name": "browser enrolls second passkey on a separate device in the same account",
+      "pass": true,
+      "elapsed_ms": 1732
+    },
+    {
+      "name": "second device authenticates after the original device is removed",
+      "pass": true,
+      "elapsed_ms": 587
+    },
+    {
+      "name": "second passkey invokes an existing same-account grant through the browser",
+      "pass": true,
+      "elapsed_ms": 1884
+    },
+    {
+      "name": "valid bearer alone cannot authorize credential add",
+      "pass": true,
+      "elapsed_ms": 34
+    },
+    {
+      "name": "valid bearer alone cannot authorize credential revoke",
+      "pass": true,
+      "elapsed_ms": 28
+    },
+    {
+      "name": "valid bearer alone cannot authorize grant create",
+      "pass": true,
+      "elapsed_ms": 17
+    },
+    {
+      "name": "valid bearer alone cannot authorize grant revoke",
+      "pass": true,
+      "elapsed_ms": 21
+    },
+    {
+      "name": "management ceremonies require a session and its exact account",
+      "pass": true,
+      "elapsed_ms": 50
+    },
+    {
+      "name": "management rejects mixed purposes and unknown operation fields",
+      "pass": true,
+      "elapsed_ms": 159
+    },
+    {
+      "name": "management approval cannot elevate a guest to owner",
+      "pass": true,
+      "elapsed_ms": 22
+    },
+    {
+      "name": "management assertion binds exact parameters and consumes a changed finish",
+      "pass": true,
+      "elapsed_ms": 158
+    },
+    {
+      "name": "management approval requires a valid authenticator signature",
+      "pass": true,
+      "elapsed_ms": 181
+    },
+    {
+      "name": "management assertion is bound to the initiating same-account session",
+      "pass": true,
+      "elapsed_ms": 230
+    },
+    {
+      "name": "management assertion cannot finish in another account",
+      "pass": true,
+      "elapsed_ms": 199
+    },
+    {
+      "name": "approval binds credential label and mismatch burns the approval",
+      "pass": true,
+      "elapsed_ms": 327
+    },
+    {
+      "name": "approval binds credential target and mismatch burns the approval",
+      "pass": true,
+      "elapsed_ms": 251
+    },
+    {
+      "name": "approval binds grant recipient and mismatch burns the approval",
+      "pass": true,
+      "elapsed_ms": 198
+    },
+    {
+      "name": "approval binds grant TTL and mismatch burns the approval",
+      "pass": true,
+      "elapsed_ms": 198
+    },
+    {
+      "name": "approval binds grant target and mismatch burns the approval",
+      "pass": true,
+      "elapsed_ms": 218
+    },
+    {
+      "name": "approval cannot be used for a different action kind",
+      "pass": true,
+      "elapsed_ms": 234
+    },
+    {
+      "name": "approval is bound to its same-account session",
+      "pass": true,
+      "elapsed_ms": 350
+    },
+    {
+      "name": "approval is bound to its other account",
+      "pass": true,
+      "elapsed_ms": 477
+    },
+    {
+      "name": "single-use approval rejects replay after a successful grant mutation",
+      "pass": true,
+      "elapsed_ms": 354
+    },
+    {
+      "name": "parallel duplicate approval mutates exactly once",
+      "pass": true,
+      "elapsed_ms": 318
+    },
+    {
+      "name": "enrollment accepts an approving active key distinct from the session key",
+      "pass": true,
+      "elapsed_ms": 1348
+    },
+    {
+      "name": "browser action confirmation can be cancelled without starting a ceremony",
+      "pass": true,
+      "elapsed_ms": 563
+    },
+    {
+      "name": "actual browser passkey assertion abort leaves the action recoverable",
+      "pass": true,
+      "elapsed_ms": 2193
+    },
+    {
+      "name": "browser retry after a real assertion abort succeeds without a new login",
+      "pass": true,
+      "elapsed_ms": 823
+    },
+    {
+      "name": "other account cannot revoke a passkey it does not own",
+      "pass": true,
+      "elapsed_ms": 322
+    },
+    {
+      "name": "browser passkey revocation forces reauthentication and disables mutations",
+      "pass": true,
+      "elapsed_ms": 862
+    },
+    {
+      "name": "passkey revocation invalidates every session for the account",
+      "pass": true,
+      "elapsed_ms": 169
+    },
+    {
+      "name": "passkey revocation invalidates pending login and invocation ceremonies",
+      "pass": true,
+      "elapsed_ms": 158
+    },
+    {
+      "name": "credential revocation invalidates approvals and pending management ceremonies",
+      "pass": true,
+      "elapsed_ms": 282
+    },
+    {
+      "name": "last surviving passkey remains protected after another key is revoked",
+      "pass": true,
+      "elapsed_ms": 436
+    },
+    {
+      "name": "passkey revocation invalidates pending enrollment despite fresh surviving session",
+      "pass": true,
+      "elapsed_ms": 30
+    },
+    {
+      "name": "revoked passkey is excluded from fresh authentication options",
+      "pass": true,
+      "elapsed_ms": 40
+    },
+    {
+      "name": "genuine fresh assertion by revoked device is rejected",
+      "pass": true,
+      "elapsed_ms": 495
+    },
+    {
+      "name": "surviving passkey retains same-account grant invocation after revocation",
+      "pass": true,
+      "elapsed_ms": 1110
+    },
+    {
+      "name": "seven active passkeys enroll across distinct virtual devices",
+      "pass": true,
+      "elapsed_ms": 3820
+    },
+    {
+      "name": "credential cap is rechecked when an in-flight enrollment finishes",
+      "pass": true,
+      "elapsed_ms": 798
+    },
+    {
+      "name": "credential cap rejects new enrollment and disables the add control",
+      "pass": true,
+      "elapsed_ms": 355
+    },
+    {
+      "name": "credential workbench fits 320px and keeps buttons on one line",
+      "pass": true,
+      "elapsed_ms": 310
+    },
+    {
+      "name": "credential workbench fits 375px and keeps buttons on one line",
+      "pass": true,
+      "elapsed_ms": 135
+    },
+    {
+      "name": "credential workbench fits 414px and keeps buttons on one line",
+      "pass": true,
+      "elapsed_ms": 192
+    },
+    {
+      "name": "credential workbench fits 768px and keeps buttons on one line",
+      "pass": true,
+      "elapsed_ms": 235
+    },
+    {
+      "name": "multiple passkeys and inactive original survive server restart",
+      "pass": true,
+      "elapsed_ms": 537
+    },
+    {
+      "name": "legacy single-passkey database migrates and authenticates with the same key",
+      "pass": true,
+      "elapsed_ms": 353
+    },
+    {
+      "name": "legacy credential migration is idempotent across a second restart",
+      "pass": true,
+      "elapsed_ms": 617
+    }
+  ],
+  "elapsed_seconds": 64
+}

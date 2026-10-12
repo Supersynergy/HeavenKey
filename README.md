@@ -48,6 +48,8 @@ just e2e
 
 Die lokale Browser-Abnahme für 0.4 besteht **96/96 Fälle**: sämtliche 69 bisherigen Prüfungen und 27 neue Fälle für konkrete Zustimmung, Manipulation und Abbruch. Die Rust-Suite umfasst **36 Tests**. Der [Ausbaubericht](docs/V04-RESULT.md) hält Prüfabläufe und Grenzen fest.
 
+Der Quick Start wurde für Source-Commit `db31bae` aus einem frischen GitHub-Clone mit leerem Build-Verzeichnis geprüft: Installation, Build und **96/96 Browser-Fälle bestanden**. Der Durchlauf dauerte unter hoher Host-Last rund sechs Minuten; er ist kein Geschwindigkeitsvergleich.
+
 Der Test startet einen isolierten Browser und einen lokalen Server und beendet beide danach. Er verwendet kein persönliches Browserprofil. Testdaten und virtuelle Schlüssel werden gelöscht. Ein anderer Chrome-Pfad lässt sich mit `CHROME_PATH=/pfad/zu/chrome just e2e` angeben.
 
 Für `just check` werden außerdem `cargo-nextest` **0.9.146**, `cargo-deny` **0.20.2** und `cargo-audit` **0.22.2** benötigt. Die vollständige Prüfung umfasst Formatierung, TypeScript, Clippy, Rust-Tests, Lizenz-/Quellenregeln, Advisories und Build. CI führt den portablen Source- und Browser-Testablauf aus; er enthält keine Deployment-Schritte.

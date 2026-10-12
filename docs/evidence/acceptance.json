@@ -80,7 +80,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "4db827061dacd97794f359c07f258467f4f0e1c53b69b214acbefb6599f3fce6"
+      "sha256": "8f54c6bc5018a599540862328c4b0b0c7c17cf6adc00e36798b3220897a0202a"
     },
     {
       "path": "docs/assets/heavenkey-hero-square.png",
@@ -125,15 +125,101 @@
   "secret_scan": {
     "staged_exit": 0,
     "findings": 0,
-    "exact_historic_checksum_exceptions": 2
+    "exact_historic_checksum_exceptions": 2,
+    "history_exit": 0,
+    "history_findings": 0
   },
   "fresh_clone_v04": {
-    "status": "pending publication"
+    "source_commit": "db31bae40b393104b2f4967e2c9324acbc5be0b3",
+    "passed": true,
+    "target": "initially empty clone-local target; registry cache warm",
+    "steps": [
+      {
+        "command": [
+          "gh",
+          "repo",
+          "clone",
+          "Supersynergy/HeavenKey",
+          "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v04-clone-kep_5z4k/HeavenKey",
+          "--",
+          "--quiet"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 11.614
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.243
+      },
+      {
+        "command": [
+          "aidev",
+          "doctor",
+          "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v04-clone-kep_5z4k/HeavenKey"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 3.457
+      },
+      {
+        "command": [
+          "bun",
+          "install",
+          "--frozen-lockfile",
+          "--ignore-scripts"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 0.194
+      },
+      {
+        "command": [
+          "cargo",
+          "fetch",
+          "--locked"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 6.52
+      },
+      {
+        "command": [
+          "just",
+          "build"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 257.997
+      },
+      {
+        "command": [
+          "just",
+          "e2e"
+        ],
+        "exit_code": 0,
+        "elapsed_seconds": 65.697
+      }
+    ],
+    "integrated_hashes_match": 22,
+    "e2e_passed": 96,
+    "e2e_elapsed_seconds": 64,
+    "elapsed_seconds": 354.915,
+    "clone_removed": true
   },
   "github_ci": {
-    "status": "pending current push; prior run account gate before any step"
+    "source_commit": "db31bae40b393104b2f4967e2c9324acbc5be0b3",
+    "run_url": "https://github.com/Supersynergy/HeavenKey/actions/runs/38186956142",
+    "status": "completed",
+    "conclusion": "failure",
+    "executed_linux_evidence": false,
+    "account_cause": "recent payments failed OR spending limit too low; exact branch unknown"
   },
   "hardware": "virtual CTAP2 only; real devices deferred",
   "linux": "not executed",
-  "saving_claim": "none; no comparable baseline, billing or active human-time measurement"
+  "saving_claim": "none; no comparable baseline, billing or active human-time measurement",
+  "check_executor": "controller",
+  "e2e_executor": "browser worker; controller separately executed fresh-clone96-case run",
+  "tested_application_source_commit": "db31bae40b393104b2f4967e2c9324acbc5be0b3",
+  "publication_source_note": "Subsequent commit contains documentation/evidence only; reviewed application and manifest hashes remain identical."
 }
