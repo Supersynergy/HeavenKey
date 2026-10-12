@@ -1,0 +1,22 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 87,
+  "EndLine": 87,
+  "StartColumn": 58,
+  "EndColumn": 124,
+  "Match": "heavenkey-v05-fresh.py\", \"REDACTED\"",
+  "Secret": "REDACTED",
+  "File": "docs/evidence/commands.jsonl",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 3.6470852,
+  "Author": "",
+  "Email": "",
+  "Date": "0001-01-01T00:00:00Z",
+  "Message": "",
+  "Tags": [],
+  "Fingerprint": "docs/evidence/commands.jsonl:generic-api-key:87"
+ }
+]

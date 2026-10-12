@@ -1,0 +1,33 @@
+{
+  "source_commit": "4916bdadb6a52cb225abfaf57699f71136eadfb3",
+  "passed": false,
+  "target": "initially empty clone-local target;registry cache warm",
+  "steps": [
+    {
+      "command": [
+        "gh",
+        "repo",
+        "clone",
+        "Supersynergy/HeavenKey",
+        "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v05-clone-0a5wfnfr/HeavenKey",
+        "--",
+        "--quiet"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.061
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.009
+    }
+  ],
+  "error": "",
+  "elapsed_seconds": 2.082,
+  "clone_removed": true,
+  "diagnosis": "Wrong manually transcribed expected commit hash; exact-head assertion stopped before install/build/code execution. Final retry takes expected SHA directly from local Git."
+}

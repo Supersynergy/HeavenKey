@@ -48,7 +48,9 @@ just build
 just e2e
 ```
 
-Die lokale Browser-Abnahme für 0.5 besteht **138/138 Fälle**: sämtliche 96 bisherigen Prüfungen und 42 neue Delegationsfälle. Dazu kommen **45 Rust-Tests** und **75 Prüfungen der unabhängigen Node-Referenz**. Der [Ausbaubericht](docs/V05-RESULT.md) hält Prüfabläufe und Grenzen fest; der frische Clone wird in der Veröffentlichungsabnahme gesondert erfasst.
+Die lokale Browser-Abnahme für 0.5 besteht **138/138 Fälle**: sämtliche 96 bisherigen Prüfungen und 42 neue Delegationsfälle. Dazu kommen **45 Rust-Tests** und **75 Prüfungen der unabhängigen Node-Referenz**. Der [Ausbaubericht](docs/V05-RESULT.md) hält Prüfabläufe und Grenzen fest.
+
+Der Quick Start wurde aus einem frischen GitHub-Clone von Source-Commit `4916bda` geprüft: 28 Datei-Hashes identisch, gelockte Installation, leeres Build-Verzeichnis und **138/138 Browserfälle bestanden**. Auch die Referenzprüfung besteht im Clone. Der Durchlauf dauerte hier rund 31 Sekunden mit warmem Paket-Registry-Cache; daraus folgt kein Vergleich der Entwicklungsgeschwindigkeit.
 
 Der Test startet einen isolierten Browser und einen lokalen Server und beendet beide danach. Er verwendet kein persönliches Browserprofil. Testdaten und virtuelle Schlüssel werden gelöscht. Ein anderer Chrome-Pfad lässt sich mit `CHROME_PATH=/pfad/zu/chrome just e2e` angeben.
 

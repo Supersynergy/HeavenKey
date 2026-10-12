@@ -1,0 +1,27 @@
+
+4916bda3c47b020e9976a9f96dd841d2af1fd889
+
+Repository: /private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v05-clone-51znw__r/HeavenKey
+Git: yes
+REVIEW repository-controlled execution/context: package.json
+REVIEW package scripts (names only): build
+Execution trust: no
+Doctor complete: 2 review signal(s); no repository code executed.
+
+bun install v1.4.2 (744846f84)
+
++ playwright-core@1.62.1
++ typescript@7.0.2
+
+4 packages installed [19.00ms]
+
+
+{"passed":75,"fixtures":32,"cases":35,"independent":"Node crypto Ed25519/SHA256 with separate binary encoder"}
+
+python3 scripts/run.py build 900 -- just _build
+{"name": "build", "command": ["just", "_build"], "exit_code": 0, "elapsed_seconds": 14.44, "time_utc": "2026-10-12T01:37:34.053519+00:00", "log": "/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v05-clone-51znw__r/HeavenKey/docs/evidence/build.log", "timeout_cleanup_pids": []}
+
+python3 scripts/run.py e2e 180 -- bun scripts/e2e.mjs
+{"name": "e2e", "command": ["bun", "scripts/e2e.mjs"], "exit_code": 0, "elapsed_seconds": 13.67, "time_utc": "2026-10-12T01:37:47.759779+00:00", "log": "/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v05-clone-51znw__r/HeavenKey/docs/evidence/e2e.log", "timeout_cleanup_pids": []}
+
+{"source_commit": "4916bda3c47b020e9976a9f96dd841d2af1fd889", "passed": true, "target": "initially empty clone-local target;registry cache warm", "steps": [{"command": ["gh", "repo", "clone", "Supersynergy/HeavenKey", "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v05-clone-51znw__r/HeavenKey", "--", "--quiet"], "exit_code": 0, "elapsed_seconds": 2.05}, {"command": ["git", "rev-parse", "HEAD"], "exit_code": 0, "elapsed_seconds": 0.009}, {"command": ["aidev", "doctor", "/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-v05-clone-51znw__r/HeavenKey"], "exit_code": 0, "elapsed_seconds": 0.123}, {"command": ["bun", "install", "--frozen-lockfile", "--ignore-scripts"], "exit_code": 0, "elapsed_seconds": 0.024}, {"command": ["cargo", "fetch", "--locked"], "exit_code": 0, "elapsed_seconds": 0.449}, {"command": ["bun", "scripts/delegation-reference.mjs"], "exit_code": 0, "elapsed_seconds": 0.02}, {"command": ["just", "build"], "exit_code": 0, "elapsed_seconds": 14.473}, {"command": ["just", "e2e"], "exit_code": 0, "elapsed_seconds": 13.707}], "integrated_hashes_match": 28, "e2e_passed": 138, "e2e_elapsed_seconds": 13.5, "elapsed_seconds": 31.076, "clone_removed": true}

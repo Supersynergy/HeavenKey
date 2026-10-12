@@ -29,8 +29,16 @@ Die Implementierung verteilt sich auf zwei Experten-Lanes für Rust/API und Brow
 | Widerruf eines Vorfahren | Nachfolger und offene Aufrufe abgewiesen; bereits bestätigte neue Weitergabe ebenfalls gesperrt; Zustand über Neustart erhalten |
 | Unabhängiger Review | 19 Prüfungen, 24 Quellen-/Manifest-/Bundle-Hashes und acht Evidenz-Hashes abgeglichen; 0 offene Blocker |
 | Semgrep | Zehn eigene Quelldateien, 0 Findings, 0 Fehler |
+| Secret-Scans | Gestagter Stand und Git-Historie ohne Findings; nur die zwei dokumentierten historischen Bildprüfsummen-Ausnahmen |
+| Frischer GitHub-Clone | Commit `4916bda`, 28 Datei-Hashes identisch; gelockte Installation, Referenzprüfung, leeres Build-Verzeichnis und 138/138 Browserfälle bestanden |
 
-Der Controller führte beide öffentlichen Gates mit den 0.5-Manifesten aus. Der vollständige Check brauchte hier rund 19 Sekunden, der Browserlauf rund 27 Sekunden einschließlich Wrapper. Ein vorheriger Lauf der Browser-Lane bestand dieselben 138 Fälle. Die Referenz wurde mit Bun und separat mit Node ausgeführt, jeweils 75 Prüfungen grün. Diese Einzelmessungen liefern keinen kontrollierten Geschwindigkeitsvergleich oder Abrechnungsnachweis. Secret-Scan und frischer GitHub-Clone folgen in der Veröffentlichungsabnahme.
+Der Controller führte beide öffentlichen Gates mit den 0.5-Manifesten aus. Der vollständige Check brauchte hier rund 19 Sekunden, der Browserlauf rund 27 Sekunden einschließlich Wrapper. Ein vorheriger Lauf der Browser-Lane bestand dieselben 138 Fälle. Die Referenz wurde mit Bun und separat mit Node ausgeführt, jeweils 75 Prüfungen grün. Der frische Clone benötigte insgesamt rund 31 Sekunden, davon rund 14 für den Build und 14 für die Simulation. Diese Einzelmessungen liefern keinen kontrollierten Geschwindigkeitsvergleich oder Abrechnungsnachweis.
+
+Die Veröffentlichungsprüfung erkannte eine zunächst nicht mitcommittete Bun-Lockversion; sie wurde vor dem Clone-Test ergänzt. Ein falscher Vergleichs-Hash im ersten Testaufruf stoppte vor Installation oder Codeausführung. Der erfolgreiche zweite Aufruf liest den erwarteten Hash direkt aus Git. Beide Befunde werden als Verpackungs-/Prüfablauffehler dokumentiert; die geprüften Anwendungssourcen blieben unverändert. Temporäre Clone-Daten, Browser und Testserver sind bereinigt.
+
+Der [GitHub-CI-Job für den geprüften Stand](https://github.com/Supersynergy/HeavenKey/actions/runs/38192503038) enthält keinen ausgeführten Schritt. GitHub meldet eine Zahlungs-/Ausgabenlimit-Bedingung und unterscheidet beide Ursachen nicht. Linux bleibt damit ungeprüft; Zahlungen, Limits und Runner wurden nicht geändert.
+
+Maschinenlesbare Belege: [Abnahme](evidence/acceptance.json), [Browserfälle](evidence/e2e.json), [unabhängiger Review](evidence/v05-independent-review.json), [frischer Clone](evidence/v05-fresh-clone.json), [Primärquellen](evidence/v05-donor-research.json).
 
 Tests verwenden virtuelle CTAP2-Geräte im echten Browser und den tatsächlichen Rust-Verifier. Es werden keine Hardware-Geräte, persönlichen Passkeys oder produktiven Zielsysteme verwendet. Die unabhängige Referenz prüft die eigenen Testbytes; sie ersetzt keinen Standard-Konformitätstest oder externen Penetrationstest.
 

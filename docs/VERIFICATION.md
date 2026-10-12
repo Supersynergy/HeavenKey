@@ -12,6 +12,8 @@ The controller executed the public native gates on the integrated 0.5 manifests 
 | Semgrep |10 own source files, 0 findings, 0 errors |
 | Grepgod review/security |Bounded exit0; source diff/security tools inspected; native scanner reports remain authoritative |
 | Aislop |Exit 0, 0 errors, 6 style warnings; no warning-only source refactor |
+| Secret scans |Staged source and Git history exit 0, 0 findings; two exact historical image-checksum exceptions retained |
+| Fresh GitHub clone |Source 4916bda, 28 integrated files identical, locked install, empty target, reference check and 138/138 browser cases; clone removed |
 
 The full check output is evidence/v05-check-full.log; compact ATS results are v05-check.log and v05-e2e.log. E2E case evidence is e2e.json. The controller and independent reviewer compared names against 5de017d:96 retained, 42 added, 0 removed. The actual issuer service signs every profile link; account aliases do not become holder signing keys.
 
@@ -23,7 +25,9 @@ Rust is the authoritative strict raw parser. The independent reference verifies 
 
 ## Publication gates
 
-Secret scans, fresh locked GitHub clone and exact remote bytes are recorded during final publication. Until that evidence is present, local source/test success alone is not a fresh-clone or GitHub claim. The previous hosted CI run was account-gated before any step; the 0.5 push run is checked separately. No billing, limits or runner changes are part of this task.
+The successful fresh-clone source is 4916bda. It took about 31s with a warm registry cache and an initially empty clone-local target. An omitted workspace lock version was committed before that run. A first probe with an incorrectly transcribed expected SHA stopped before package install or code execution; the corrected probe obtains the expected SHA directly from Git. Evidence/v05-fresh-clone-invocation-diagnosis.json preserves that failure.
+
+The [current hosted CI run](https://github.com/Supersynergy/HeavenKey/actions/runs/38192503038) was account-gated before any step. Its annotation reports failed payments OR a spending-limit condition; the exact branch is unknown. No billing, limits or runner changes are part of this task. Ubuntu is not executed proof. Final remote bytes are compared after the documentation/evidence commit; application source stays identical to the reviewed and clone-tested snapshot.
 
 Hardware, biometrics, provider sync, recovery, tenants, encryption, rotation, distributed execution and offline clock resilience remain separate gates. Historical reports and acceptance-v04.json preserve the prior phase.
 
