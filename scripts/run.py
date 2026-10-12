@@ -22,34 +22,80 @@ start = time.monotonic()
 logfile = root/'docs/evidence'/f'{name}.log'
 
 def kill_tree(pid):
-    rows = subprocess.check_output(['ps', '-axo', 'pid=,ppid='], text=True, timeout=5)
-    parents = {int(p):int(parent) for p,parent in (row.split() for row in rows.splitlines())}
     ordered = [pid]
-    for parent in ordered:
-        ordered.extend(p for p,ppid in parents.items() if ppid == parent and p not in ordered)
-    for owned in reversed(ordered):
+    try:
+        # Stop parents before discovering children, including detached sessions.
         try:
-            os.kill(owned, signal.SIGKILL)
+            os.killpg(pid, signal.SIGSTOP)
+        except ProcessLookupError:
+            pass
+        for _ in range(3):
+            rows = subprocess.check_output(['ps', '-axo', 'pid=,ppid='], text=True, timeout=5)
+            parents = {int(p):int(parent) for p,parent in (row.split() for row in rows.splitlines())}
+            previous = len(ordered)
+            for parent in ordered:
+                ordered.extend(p for p,ppid in parents.items() if ppid == parent and p not in ordered)
+                try:
+                    os.kill(parent, signal.SIGSTOP)
+                except ProcessLookupError:
+                    pass
+            if len(ordered) == previous:
+                break
+    finally:
+        for owned in reversed(ordered):
+            try:
+                os.kill(owned, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        try:
+            os.killpg(pid, signal.SIGKILL)
         except ProcessLookupError:
             pass
     return ordered
 
+class CommandInterrupted(Exception):
+    pass
+
+interrupted_signal = None
+waiting = False
+
+def interrupt(signum, _frame):
+    global interrupted_signal
+    if interrupted_signal is not None:
+        return
+    interrupted_signal = signum
+    if waiting:
+        raise CommandInterrupted
+
+signal.signal(signal.SIGINT, interrupt)
+signal.signal(signal.SIGTERM, interrupt)
 cleanup_pids = []
+cleanup_error = None
+termination = None
 with logfile.open('w') as log:
     child = subprocess.Popen(command, cwd=root, env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
     try:
-        code = child.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
+        waiting = True
+        try:
+            if interrupted_signal:
+                raise CommandInterrupted
+            code = child.wait(timeout=timeout)
+        finally:
+            waiting = False
+    except (subprocess.TimeoutExpired, CommandInterrupted, KeyboardInterrupt) as error:
+        waiting = False
+        termination = 'timeout' if isinstance(error, subprocess.TimeoutExpired) else 'interrupted'
+        code = 124 if termination == 'timeout' else 128 + (interrupted_signal or signal.SIGINT)
         try:
             cleanup_pids = kill_tree(child.pid)
         except subprocess.SubprocessError:
-            try:
-                os.killpg(child.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-        child.wait()
-        code = 124
-event = {'name':name,'command':command,'exit_code':code,'elapsed_seconds':round(time.monotonic()-start,3),'time_utc':datetime.now(timezone.utc).isoformat(),'log':str(logfile),'timeout_cleanup_pids':cleanup_pids}
+            cleanup_error = 'process_tree_snapshot_failed'
+        child.wait(timeout=5)
+    finally:
+        waiting = False
+if interrupted_signal and termination != 'timeout':
+    code = 128 + interrupted_signal
+event = {'name':name,'command':command,'exit_code':code,'elapsed_seconds':round(time.monotonic()-start,3),'time_utc':datetime.now(timezone.utc).isoformat(),'log':str(logfile),'timeout_cleanup_pids':cleanup_pids if termination == 'timeout' else [],'interruption_cleanup_pids':cleanup_pids if termination == 'interrupted' else [],'interrupted_signal':signal.Signals(interrupted_signal).name if interrupted_signal else None,'cleanup_error':cleanup_error}
 with (root/'docs/evidence/commands.jsonl').open('a') as ledger:
     ledger.write(json.dumps(event)+'\n')
 print(json.dumps(event))

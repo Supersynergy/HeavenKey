@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5: Test reliability fixes
+
+- Eine fehlende API-Datei beendet den Browsertest unter macOS und Linux mit einer eindeutigen Fehlermeldung.
+- Strg+C, SIGTERM und Zeitablauf beenden auch abgetrennte Kindprozesse des Befehlswrappers; normale Rückgabecodes bleiben erhalten.
+
 ## 0.5.0: Delegation profile preview
 
 - Eigenes versioniertes Profil mit festgelegten Signierbytes und Identifiern; der Dienst signiert nach Passkey-Zustimmung jedes Kettenglied.

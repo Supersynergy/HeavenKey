@@ -22,7 +22,7 @@ Die Rust-Version ist festgelegt. Nutze `rust-toolchain.toml`. Bun benötigt Vers
 | `just e2e` | Vollständigen Ablauf mit virtuellen Passkeys in Chrome testen |
 | `bun scripts/delegation-reference.mjs` | Delegationsformat gegen öffentliche Testvektoren prüfen |
 
-`just dev` läuft höchstens zwei Stunden. Prüfungen laufen im Vordergrund mit Zeitlimit. `just e2e` nutzt Port 18241; führe nur einen solchen Browserlauf gleichzeitig aus.
+`just dev` läuft höchstens zwei Stunden. Prüfungen laufen im Vordergrund mit Zeitlimit. Bei Zeitablauf, Strg+C oder SIGTERM beendet der Befehlswrapper auch eigene Kindprozesse in separaten Sitzungen. `just e2e` nutzt Port 18241; führe nur einen solchen Browserlauf gleichzeitig aus.
 
 ## Prüftools installieren
 

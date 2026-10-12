@@ -16,8 +16,8 @@ Nach dem Lauf enthält `heavenkey-evidence` die frisch erzeugten CI-Logs, Browse
 
 ## Aktuelle Startblockade
 
-Der [Lauf für den korrigierten Workflow](https://github.com/Supersynergy/HeavenKey/actions/runs/38194022734) wurde vor Runner-Zuweisung und vor dem ersten Schritt abgewiesen. GitHub meldet eine Zahlungs- oder Budget-Bedingung des Accounts; die Annotation unterscheidet die Ursache nicht.
+Die [GitHub-Läufe](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) wurden vor Runner-Zuweisung und vor dem ersten Schritt abgewiesen. GitHub meldet eine Zahlungs- oder Budget-Bedingung des Accounts; die Annotation unterscheidet die Ursache nicht.
 
 Prüfe [GitHub Billing](https://github.com/settings/billing). Sobald die Sperre aufgehoben ist, starte den Workflow unter **Actions → HeavenKey CI → Run workflow** erneut. Weitere Hinweise stehen in [GitHubs Fehlerdiagnose](https://docs.github.com/en/actions/how-tos/troubleshoot-workflows#reviewing-billing-errors).
 
-Der lokale Testablauf ist bestanden. Ubuntu bleibt bis zur tatsächlichen Ausführung ein offenes Prüfziel; siehe [Prüfstatus](VERIFICATION.md).
+`scripts/ci.sh` ist in einem lokalen Ubuntu-24.04-amd64-Container mit Rosetta bestanden: 45 Rust-Tests, 75 Referenzprüfungen und 138 Browserfälle. Der Browsertest benötigte 108,6 Sekunden bei unverändertem Zeitlimit von 180 Sekunden. Die GitHub-Ausführung und physische Passkeys bleiben offene Prüfziele; siehe [Prüfstatus](VERIFICATION.md).

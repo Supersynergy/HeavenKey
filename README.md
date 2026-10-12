@@ -54,7 +54,7 @@ Die Oberfläche startest du mit `cargo run --locked --offline -p uac-api` auf `h
 
 ## Stand und Grenzen
 
-**Version 0.5 ist eine lokale Vorschau.** Auf macOS sind 45 Rust-Tests und 138 simulierte Browserfälle bestanden. Physische Passkeys und Ubuntu-CI sind noch nicht abgenommen; der aktuelle Prüfstatus steht unter [Verifikation](docs/VERIFICATION.md).
+**Version 0.5 ist eine lokale Vorschau.** Auf macOS und in einem lokalen Ubuntu-24.04-Container sind jeweils 45 Rust-Tests und 138 simulierte Browserfälle bestanden. Physische Passkeys sind noch nicht abgenommen. GitHub blockiert den gehosteten CI-Jobstart wegen einer Zahlungs-/Budget-Bedingung; Details stehen unter [Verifikation](docs/VERIFICATION.md).
 
 Die Demo arbeitet mit einem Testdokument. Der Dienst signiert Zugänge und prüft sie online. Recovery, Mandanten, verschlüsselter Speicher, externe Integrationen und Offline-Nutzung sind geplant. Das Delegationsprofil ist ein eigenes Format; UCAN-/DID-Kompatibilität ist noch offen.
 

@@ -1,14 +1,15 @@
 # Prüfstatus
 
-HeavenKey 0.5 ist lokal auf macOS geprüft. Die virtuellen CTAP2-Passkeys nutzen WebAuthn im echten Chrome-Browser, dessen tatsächlich erzeugte Antworten anschließend durch die Rust-API geprüft werden.
+HeavenKey 0.5 ist lokal auf macOS und Ubuntu 24.04 geprüft. Die virtuellen CTAP2-Passkeys nutzen WebAuthn im echten Chrome-Browser, dessen tatsächlich erzeugte Antworten anschließend durch die Rust-API geprüft werden.
 
 | Bereich | Ergebnis |
 | --- | --- |
-| Rust | 45 Tests bestanden |
-| Browser | 138 Fälle bestanden |
+| Rust | Jeweils 45 Tests auf macOS und Ubuntu bestanden |
+| Browser | Jeweils 138 Fälle auf macOS und Ubuntu bestanden |
 | Delegationsreferenz | 75 Prüfungen bestanden |
 | Quellcode und Abhängigkeiten | Formatierung, TypeScript, Clippy, Lizenz-, Quellen- und Advisory-Prüfungen bestanden |
-| Ubuntu-CI | Noch nicht ausgeführt; GitHub blockiert den Jobstart wegen einer Zahlungs-/Budget-Bedingung |
+| Ubuntu-CI | `scripts/ci.sh` lokal bestanden; GitHub blockiert den gehosteten Jobstart wegen einer Zahlungs-/Budget-Bedingung |
+| Befehlsabbrüche | Je sechs Fälle auf macOS und Ubuntu bestanden; eigene Kindprozesse beendet, unabhängiger Kontrollprozess erhalten |
 | Physische Passkeys | Noch nicht abgenommen |
 
 ## Geprüftes Verhalten
@@ -23,8 +24,8 @@ HeavenKey 0.5 ist lokal auf macOS geprüft. Die virtuellen CTAP2-Passkeys nutzen
 
 ## Nachweise und Wiederholung
 
-[Browserfälle](evidence/e2e.json) · [Abnahme 0.5](evidence/acceptance.json) · [Testvektoren](vectors/delegation-v1.json) · [Delegationsreview](DELEGATION-REVIEW.md) · [CI-Prüfung](evidence/ci-repair-local.json)
+[Browserfälle](evidence/e2e.json) · [Abnahme 0.5](evidence/acceptance.json) · [Testvektoren](vectors/delegation-v1.json) · [Delegationsreview](DELEGATION-REVIEW.md) · [CI-Prüfung](evidence/ci-repair-local.json) · [Plattformprüfungen](evidence/platform-checks.json)
 
-Die [Entwicklungsanleitung](DEVELOPMENT.md) beschreibt `just check` und `just e2e`. Der [CI-Ablauf](CI-REPAIR.md) erzeugt ausschließlich frische Testartefakte. Der [GitHub-Lauf mit dem korrigierten Workflow](https://github.com/Supersynergy/HeavenKey/actions/runs/38194022734) wurde vor dem ersten Schritt abgewiesen.
+Die [Entwicklungsanleitung](DEVELOPMENT.md) beschreibt `just check` und `just e2e`. Der [CI-Ablauf](CI-REPAIR.md) erzeugt ausschließlich frische Testartefakte. Der Ubuntu-Nachweis stammt aus einem lokalen amd64-Container mit Rosetta auf macOS. Die [GitHub-Läufe](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) bleiben eine separate Abnahme.
 
 Die Referenz prüft das HeavenKey-Profil und seine Testvektoren. Vollständige Kompatibilität mit fremden JSON-/Ed25519-Implementierungen, externe Protokolle, Hardware, Recovery und verteilte Ausführung sind zusätzliche Prüfziele. Eine bestandene lokale Simulation ist keine Produktionsfreigabe.

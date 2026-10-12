@@ -1,4 +1,3 @@
-import { chromium } from "playwright-core";
 import { spawn } from "node:child_process";
 import { createHash, createPrivateKey, randomBytes, sign } from "node:crypto";
 import { mkdtemp, writeFile, mkdir, rm, stat, readFile } from "node:fs/promises";
@@ -28,7 +27,10 @@ async function test(name, action) {
   catch (e) { cases.push({ name, pass: false, error: e.message }); throw e; }
 }
 async function startServer() {
-  server = spawn(join(root,"target/debug/uac-api"), [], { cwd:root, env:{ ...process.env,UAC_PORT:String(port),UAC_DATA:serverData }, stdio:["ignore","pipe","pipe"] });
+  const binary = join(root,"target/debug/uac-api");
+  try { await stat(binary); }
+  catch (error) { throw new Error(`server spawn failed: ${error.message}`); }
+  server = spawn(binary, [], { cwd:root, env:{ ...process.env,UAC_PORT:String(port),UAC_DATA:serverData }, stdio:["ignore","pipe","pipe"] });
   let output = "";
   let spawnError;
   server.on("error", error => { spawnError=error; });
@@ -201,8 +203,9 @@ async function resign(a,payload,change) {
 try {
   await startServer();
   bootstrapToken=(await readFile(join(data,"owner-bootstrap.txt"),"utf8")).trim();
+  const { chromium } = await import("playwright-core");
   browser=await chromium.launch({executablePath:process.env.CHROME_PATH || (process.platform==="darwin" ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" : "/usr/bin/google-chrome"),headless:true,args:["--disable-background-networking"],timeout:20000});
-  const owner=await actor("owner"),guest=await actor("guest"),foreign=await actor("foreign");
+  const [owner,guest,foreign]=await Promise.all(["owner","guest","foreign"].map(actor));
   let ownerSession,guestSession,grant;
   await test("first guest enrollment does not claim ownership",async()=>assert.equal((await registration(guest)).owner,false));
   await test("reserved owner name requires bootstrap",async()=>assert.equal((await post(owner,"/api/register/start",{name:"owner"})).status,403));
@@ -534,7 +537,7 @@ try {
     assert.equal((await post(guest,"/api/auth/finish",await assertion(guest,invoke(secondGrant)))).status,200);
   });
   ownerSession=await login(owner);const outsiderSession=await login(foreign);
-  const secondguest=await actor("secondguest"),thirdguest=await actor("thirdguest"),fourthguest=await actor("fourthguest"),fifthguest=await actor("fifthguest");
+  const [secondguest,thirdguest,fourthguest,fifthguest]=await Promise.all(["secondguest","thirdguest","fourthguest","fifthguest"].map(actor));
   for(const a of [secondguest,thirdguest,fourthguest,fifthguest]) assert.equal((await registration(a)).owner,false);
   const secondSession=await login(secondguest),thirdSession=await login(thirdguest),fourthSession=await login(fourthguest),fifthSession=await login(fifthguest);
   let delegationRoot,delegationChild,delegationLeaf,trustedIssuer;

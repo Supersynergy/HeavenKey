@@ -1,0 +1,77 @@
+{
+  "version": "0.5",
+  "source_base": "6ee05d12b4c937d018c52f39ab9ce8388dfca82d",
+  "source_overlay": [
+    {
+      "path": "scripts/run.py",
+      "sha256": "24510bca97eb7e2b114d7a0d11c6b41390c3045c26dd0283bfac1e4a8e5a1760"
+    },
+    {
+      "path": "scripts/timeout_probe.py",
+      "sha256": "f6ae9790ff25dac7f41d5a682423a300b313a26fb81cd40105225f5dfc0e4119"
+    },
+    {
+      "path": "scripts/e2e.mjs",
+      "sha256": "1dc3239a3fccd6318806557db732abcde32411eb18764be4819c33cc9e0384ce"
+    }
+  ],
+  "platforms": [
+    {
+      "platform": "macOS",
+      "commands": [
+        "just check",
+        "just e2e"
+      ],
+      "passed": true,
+      "rust_tests": 45,
+      "reference_checks": 75,
+      "browser_cases": 138
+    },
+    {
+      "platform": "Ubuntu 24.04 amd64 via Rosetta",
+      "command": "bash scripts/ci.sh",
+      "passed": true,
+      "rust_tests": 45,
+      "reference_checks": 75,
+      "browser_cases": 138,
+      "browser_seconds": 108.6,
+      "browser_timeout_seconds": 180,
+      "ci_seconds": 145.2
+    }
+  ],
+  "interruptions": [
+    {
+      "platform": "macOS",
+      "passed": 6,
+      "total": 6,
+      "cases": [
+        "SIGINT",
+        "SIGTERM",
+        "timeout",
+        "repeated SIGINT",
+        "normal exit 0",
+        "normal exit 7"
+      ],
+      "owned_descendants_terminated": true,
+      "unrelated_control_preserved": true
+    },
+    {
+      "platform": "Ubuntu 24.04 amd64 via Rosetta",
+      "passed": 6,
+      "total": 6,
+      "cases": [
+        "SIGINT",
+        "SIGTERM",
+        "timeout",
+        "repeated SIGINT",
+        "normal exit 0",
+        "normal exit 7"
+      ],
+      "owned_descendants_terminated": true,
+      "unrelated_control_preserved": true
+    }
+  ],
+  "passkeys": "virtual CTAP2 authenticators; real browser WebAuthn + Rust verifier",
+  "physical_passkeys": "deferred",
+  "github_hosted_ci": "separate gate; account payment or budget condition prevented job startup"
+}
