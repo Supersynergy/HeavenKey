@@ -1455,6 +1455,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "uac-gate"
+version = "0.6.0"
+
+[[package]]
+name = "uac-keystore"
+version = "0.6.0"
+
+[[package]]
+name = "uac-recovery"
+version = "0.6.0"
+
+[[package]]
+name = "uac-tenancy"
+version = "0.6.0"
+
+[[package]]
+name = "uac-ucan-bridge"
+version = "0.6.0"
+
+[[package]]
 name = "uac-verifier"
 version = "0.6.0"
 dependencies = [

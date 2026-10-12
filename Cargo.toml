@@ -1,5 +1,13 @@
 [workspace]
-members = ["apps/api", "crates/verifier"]
+members = [
+    "apps/api",
+    "apps/gate",
+    "crates/keystore",
+    "crates/recovery",
+    "crates/tenancy",
+    "crates/ucan-bridge",
+    "crates/verifier",
+]
 resolver = "2"
 
 [workspace.package]
