@@ -2,6 +2,6 @@
   "exit_code": 1,
   "elapsed_seconds": 0.03,
   "completed": false,
-  "fatal_error": "server spawn failed: ENOENT: no such file or directory, stat '/tmp/heavenkey-startup-probe-tw2j3rda/target/debug/uac-api'",
+  "fatal_error": "server spawn failed: ENOENT: no such file or directory, stat '/tmp/heavenkey-startup-probe-e7kftekv/target/debug/uac-api'",
   "passed": true
 }
