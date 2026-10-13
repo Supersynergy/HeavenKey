@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod desktop;
+mod hosting;
 
 use axum::{
     Json, Router,
@@ -42,6 +43,7 @@ struct App {
     inner: Arc<Mutex<Inner>>,
     origin: String,
     host: String,
+    document: Arc<str>,
 }
 struct Inner {
     db: Connection,
@@ -726,6 +728,16 @@ async fn origin_guard(State(app): State<App>, req: Request, next: Next) -> Respo
     let headers = response.headers_mut();
     headers.insert("cache-control", "no-store".parse().expect("static header"));
     headers.insert(
+        "referrer-policy",
+        "no-referrer".parse().expect("static header"),
+    );
+    if app.origin.starts_with("https://") {
+        headers.insert(
+            "strict-transport-security",
+            "max-age=31536000".parse().expect("static header"),
+        );
+    }
+    headers.insert(
         "x-content-type-options",
         "nosniff".parse().expect("static header"),
     );
@@ -1062,11 +1074,11 @@ async fn auth_finish(
         ))
     } else if let Some(invocation) = pending.delegation_invocation {
         Ok(Json(
-            json!({"allowed":true,"resource":invocation.resource,"action":invocation.action,"arguments":invocation.arguments,"operation":input.request_id,"data":"HeavenKey example document — verified delegated access"}),
+            json!({"allowed":true,"resource":invocation.resource,"action":invocation.action,"arguments":invocation.arguments,"operation":input.request_id,"data":app.document.as_ref()}),
         ))
     } else if let Some(invocation) = pending.invocation {
         Ok(Json(
-            json!({"authorized":true,"resource":invocation.resource,"action":invocation.action,"arguments":invocation.arguments,"operation":input.request_id,"data":"HeavenKey example document — verified access"}),
+            json!({"authorized":true,"resource":invocation.resource,"action":invocation.action,"arguments":invocation.arguments,"operation":input.request_id,"data":app.document.as_ref()}),
         ))
     } else {
         let session = Uuid::new_v4().to_string();
@@ -1606,7 +1618,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     };
     let port = options.port;
-    let origin = format!("http://localhost:{port}");
+    let public_origin = std::env::var("HEAVENKEY_PUBLIC_ORIGIN").ok();
+    let hosting = hosting::Hosting::new(port, public_origin.as_deref())?;
+    let origin = hosting.origin;
+    let document_path = std::env::var_os("HEAVENKEY_DOCUMENT");
+    let document = hosting::document(
+        document_path.as_deref().map(Path::new),
+        public_origin.is_some(),
+    )?;
     let data = options.data;
     desktop::prepare_data(&data)?;
     let bootstrap_hash = bootstrap_hash(&data)?;
@@ -1632,7 +1651,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut db = Connection::open(data.join("uac.sqlite"))?;
     db.busy_timeout(Duration::from_secs(2))?;
     initialize_database(&mut db)?;
-    let webauthn = WebauthnBuilder::new("localhost", &Url::parse(&origin)?)?
+    let webauthn = WebauthnBuilder::new(&hosting.rp_id, &Url::parse(&origin)?)?
         .rp_name("HeavenKey access lab")
         .build()?;
     let app = App {
@@ -1648,7 +1667,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             sessions: HashMap::new(),
         })),
         origin: origin.clone(),
-        host: format!("localhost:{port}"),
+        host: hosting.host,
+        document: document.into(),
     };
     let router = Router::new()
         .route("/", get(index))
@@ -1660,7 +1680,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/demo/style.css", get(demo_style))
         .route(
             "/health",
-            get(|| async { Json(json!({"status":"ok","mode":"simulation-lab"})) }),
+            get(|State(app): State<App>| async move { Json(json!({"status":"ok","mode":if app.origin.starts_with("https://") {"https-passkey-pilot"} else {"simulation-lab"}})) }),
         )
         .route("/api/register/start", post(register_start))
         .route("/api/register/finish", post(register_finish))
@@ -1724,6 +1744,7 @@ mod tests {
             })),
             origin: origin.into(),
             host: "localhost:18240".into(),
+            document: "HeavenKey example document — verified access".into(),
         }
     }
 
