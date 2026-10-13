@@ -1519,6 +1519,26 @@ async fn style() -> Response {
         .into_response()
 }
 
+async fn demo() -> Html<&'static str> {
+    Html(include_str!("../../demo/index.html"))
+}
+
+async fn demo_script() -> Response {
+    (
+        [("content-type", "text/javascript")],
+        include_str!("../../demo/main.js"),
+    )
+        .into_response()
+}
+
+async fn demo_style() -> Response {
+    (
+        [("content-type", "text/css")],
+        include_str!("../../demo/style.css"),
+    )
+        .into_response()
+}
+
 fn bootstrap_hash(data: &Path) -> Result<[u8; 32], Box<dyn std::error::Error>> {
     let path = data.join("owner-bootstrap.txt");
     if !path.exists() {
@@ -1634,6 +1654,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/", get(index))
         .route("/main.js", get(script))
         .route("/style.css", get(style))
+        .route("/demo/", get(demo))
+        .route("/demo/index.html", get(demo))
+        .route("/demo/main.js", get(demo_script))
+        .route("/demo/style.css", get(demo_style))
         .route(
             "/health",
             get(|| async { Json(json!({"status":"ok","mode":"simulation-lab"})) }),

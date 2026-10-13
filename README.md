@@ -12,7 +12,7 @@ Mit Passkeys anmelden, zeitlich begrenzte Zugänge teilen und jede Weitergabe ko
   <img src="docs/assets/heavenkey-hero-square.png" alt="HeavenKey: ein schwebender Schlüssel vor dem Himmelstor" width="560">
 </p>
 
-[Funktionen](#funktionen) · [Ausprobieren](#ausprobieren) · [Benutzung](docs/USAGE.md) · [Roadmap](docs/ROADMAP.md)
+[Funktionen](#funktionen) · [Browserdemo](docs/BROWSER-DEMO.md) · [Ausprobieren](#ausprobieren) · [Benutzung](docs/USAGE.md) · [Roadmap](docs/ROADMAP.md)
 
 </div>
 
@@ -36,6 +36,8 @@ Du gibst Anna für 30 Minuten Zugang und erlaubst eine Weitergabe. Anna kann Ben
 ![HeavenKey: Übersicht geteilter Zugänge](docs/evidence/browser-delegation-chain.png)
 
 ## Ausprobieren
+
+Die neue [Browserdemo](docs/BROWSER-DEMO.md) zeigt Teilen, Öffnen und Widerrufen mit Beispieldaten. Sie braucht keine Anmeldung oder Installation. Im aktuellen Quellstand liegt sie unter `/demo/`; der Ordner `apps/demo` funktioniert auch direkt im Browser. Die veröffentlichten 0.6-Pakete enthalten diesen neuen Einstieg noch nicht.
 
 Fertige Pakete für **Windows x64, macOS ARM64/Intel und Linux ARM64/x64** stehen in den [Vorschau-Releases](https://github.com/Supersynergy/HeavenKey/releases). Entpacken und den enthaltenen Starter ausführen; ein aktueller Browser genügt. Rust, Bun und Docker brauchst du nur für die Entwicklung. Die [Paket-Anleitung](docs/DISTRIBUTION.md) erklärt Einrichtung, Datenordner und die Erweiterungen für Chrome, Edge und Firefox.
 

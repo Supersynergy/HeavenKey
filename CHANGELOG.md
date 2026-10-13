@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased: Browserdemo
+
+- Teilen, Öffnen und Widerrufen eines Beispieldokuments ohne Anmeldung oder Installation.
+- Eigener Browser-Einstieg unter `/demo/` und direkt nutzbare statische Dateien; keine zusätzliche Laufzeitabhängigkeit.
+- Gespeicherter Demostand, Ablaufzeiten, Gastwechsel, Widerruf über mehrere Tabs und bestätigter Reset.
+- Simulierte Rechte sind sichtbar gekennzeichnet und getrennt von der echten WebAuthn-/Serverprüfung.
+
 ## 0.6.0 preview
 
 - Desktop packages for Windows x64, macOS ARM64/Intel and Linux ARM64/x64, with browser assets embedded in the executable.
