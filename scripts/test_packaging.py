@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import patch
 
 import package_release as release
+import build_portable
 
 
 class PackagingTests(unittest.TestCase):
@@ -13,6 +14,26 @@ class PackagingTests(unittest.TestCase):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.root = Path(directory.name)
+
+    def test_each_embedded_demo_asset_invalidates_the_build_fingerprint(self):
+        for name in (
+            "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".cargo/config.toml",
+            "apps/web/dist/main.js", "apps/web/index.html",
+            "scripts/build_openssl.py", "scripts/build_portable.py",
+            "apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css",
+        ):
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(name)
+        with patch.object(build_portable, "ROOT", self.root):
+            baseline = build_portable.source_fingerprint()
+            for name in ("index.html", "main.js", "style.css"):
+                with self.subTest(asset=name):
+                    asset = self.root / "apps/demo" / name
+                    original = asset.read_text()
+                    asset.write_text(original + "changed")
+                    self.assertNotEqual(baseline, build_portable.source_fingerprint())
+                    asset.write_text(original)
 
     def test_wrong_architecture_is_rejected(self):
         binary = self.root / "binary"

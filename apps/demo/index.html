@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f3ee">
+  <title>Heaven · Zugang teilen und zurücknehmen</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Zur Demo</a>
+  <header class="masthead">
+    <a class="wordmark" href="index.html" aria-label="Heaven, Demo-Startseite"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 26V12a8 8 0 0 1 16 0v14M12 26V12a4 4 0 0 1 8 0v14M4 26h24"/></svg>Heaven<span>Key</span></a>
+    <div class="header-actions"><span class="demo-label"><span></span>Interaktive Demo</span><button id="reset" class="text-button" type="button">Neu beginnen <span aria-hidden="true">↺</span></button></div>
+  </header>
+
+  <main>
+    <div class="intro"><div><p class="kicker">Zugang bleibt deine Entscheidung.</p><h1>Teilen. Öffnen.<br>Wieder entziehen.</h1><p class="lede">Gib Anna Zugang zu einem Dokument. Sieh, was sie öffnen kann — und was nach deinem Widerruf passiert.</p></div><p class="demo-note">Mit Beispieldaten.<br>Ohne Anmeldung oder Installation.</p></div>
+    <ol class="journey" aria-label="Dein Ablauf">
+      <li id="step-share" aria-current="step"><span class="step-number" aria-hidden="true">1</span><span>Zugang teilen<small>Du legst die Grenze fest.</small></span><span class="step-mark" aria-hidden="true"></span></li>
+      <li id="step-open"><span class="step-number" aria-hidden="true">2</span><span>Dokument öffnen<small>Der Gast nutzt die Freigabe.</small></span><span class="step-mark" aria-hidden="true"></span></li>
+      <li id="step-revoke"><span class="step-number" aria-hidden="true">3</span><span>Zugang widerrufen<small>Du behältst die Kontrolle.</small></span><span class="step-mark" aria-hidden="true"></span></li>
+    </ol>
+
+    <div id="workspace" class="workspace" tabindex="-1">
+      <section class="control-panel" aria-labelledby="owner-heading">
+        <div class="person"><span class="avatar owner-avatar" aria-hidden="true">D</span><div><h2 id="owner-heading">Dein Bereich</h2><p>Du besitzt das Dokument.</p></div></div>
+        <form id="share-form">
+          <label for="recipient">Mit wem teilst du?</label>
+          <select id="recipient"><option value="anna">Anna</option><option value="ben">Ben</option></select>
+          <label for="duration">Wie lange darf der Zugang gelten?</label>
+          <select id="duration"><option value="60">1 Minute</option><option value="300">5 Minuten</option><option value="1800" selected>30 Minuten</option></select>
+          <div class="scope"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6M9 16h6"/></svg><div><strong>Projektübersicht</strong><span>Nur lesen · keine Weitergabe</span></div></div>
+          <button id="share" class="primary" type="submit">Zugang teilen <span aria-hidden="true">↗</span></button>
+        </form>
+        <div class="access-card"><div class="access-title"><span id="grant-indicator" class="indicator"></span><strong id="grant-status">Noch kein Zugang</strong></div><p id="grant-detail">Teile das Dokument, um den Ablauf zu starten.</p><p id="remaining" class="remaining" hidden></p><button id="revoke" class="revoke" type="button" disabled>Zugang widerrufen</button></div>
+        <p id="storage-note" class="storage-note">Dein Demostand bleibt in diesem Browser erhalten.</p>
+      </section>
+
+      <section class="guest-panel" aria-labelledby="guest-heading">
+        <div class="guest-bar"><div><span class="preview-label">Gastansicht</span><h2 id="guest-heading">Was Anna sehen kann</h2></div><div class="viewer-field"><label for="viewer">Vorschau als</label><select id="viewer"><option value="anna">Anna</option><option value="ben">Ben</option></select></div></div>
+        <div class="document-shell">
+          <div class="document-toolbar"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v5h4"/></svg>Projektübersicht</span><span id="document-status" class="document-status">Geschlossen</span></div>
+          <div id="locked-view" class="locked-view"><div id="lock-symbol" class="lock-symbol" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M10 14V9a6 6 0 0 1 12 0v5M8 14h16v13H8zM16 19v4"/></svg></div><h3 id="locked-title">Noch nicht freigegeben.</h3><p id="locked-help">Teile das Dokument links mit Anna. Danach kann sie es hier öffnen.</p><button id="open-document" class="primary" type="button">Dokument öffnen <span aria-hidden="true">→</span></button><p id="open-feedback" class="open-feedback" role="status" aria-live="polite"></p></div>
+          <article id="document" class="document" hidden aria-labelledby="document-title"><div class="document-meta"><span>Beispieldokument</span><span>Nur lesen</span></div><h3 id="document-title" tabindex="-1">Ein gemeinsamer Anfang.</h3><p class="document-lead">Ein kleiner Plan für das nächste gemeinsame Projekt.</p><div class="document-rule"></div><h4>Was wir vorhaben</h4><p>Eine Idee verständlich machen, gemeinsam ausprobieren und den nächsten Schritt festlegen.</p><h4>Unser nächster Schritt</h4><ul><li>Das Ziel in einem Satz beschreiben.</li><li>Einen ersten Entwurf zusammen ansehen.</li><li>Entscheiden, wer was übernehmen möchte.</li></ul><p class="document-signoff">Freigegeben zum Lesen. Der Zugang kann jederzeit enden.</p></article>
+        </div>
+      </section>
+    </div>
+
+    <div class="result-strip"><span id="result-icon" aria-hidden="true">↗</span><p id="announcement" role="status" aria-live="polite">Beginne mit „Zugang teilen“.</p></div>
+    <details class="history"><summary>Was ist gerade passiert?</summary><ol id="events"><li>Noch keine Aktion.</li></ol></details>
+    <footer><p>Diese Demo zeigt den Ablauf mit simulierten Rechten im Browser.<br>Die echte HeavenKey-Anwendung prüft Zugänge mit Passkeys und ihrem Server.</p><span>HeavenKey · Browserdemo</span></footer>
+  </main>
+  <dialog id="reset-dialog" aria-labelledby="reset-title" aria-describedby="reset-description"><h2 id="reset-title">Demo neu beginnen?</h2><p id="reset-description">Die Freigabe und der Verlauf werden zurückgesetzt. Du kannst den Ablauf danach erneut ausprobieren.</p><div class="dialog-actions"><button id="reset-cancel" class="secondary" type="button" autofocus>Weiter ausprobieren</button><button id="reset-confirm" class="primary" type="button">Neu beginnen</button></div></dialog>
+  <noscript><p class="noscript">Für die interaktive Demo muss JavaScript in deinem Browser aktiviert sein.</p></noscript>
+</body>
+</html>

@@ -33,7 +33,7 @@ def source_fingerprint():
             "scripts/build_portable.py",
         )
     ]
-    for name in ("apps/api", "crates/verifier", "apps/web/src"):
+    for name in ("apps/api", "crates/verifier", "apps/web/src", "apps/demo"):
         paths += [path for path in (ROOT / name).rglob("*") if path.is_file()]
     digest = hashlib.sha256()
     for path in sorted(set(paths)):

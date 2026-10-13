@@ -1,0 +1,125 @@
+{
+  "pass": true,
+  "origin": "http://127.0.0.1:58384/",
+  "elapsed_ms": 15662,
+  "cases": [
+    {
+      "name": "initial access denied without grant",
+      "pass": true,
+      "elapsed_ms": 130
+    },
+    {
+      "name": "share opens guest path and moves keyboard focus",
+      "pass": true,
+      "elapsed_ms": 39
+    },
+    {
+      "name": "authorized guest reads document",
+      "pass": true,
+      "elapsed_ms": 166
+    },
+    {
+      "name": "different guest cannot reuse grant",
+      "pass": true,
+      "elapsed_ms": 126
+    },
+    {
+      "name": "revocation immediately hides open document and denies retry",
+      "pass": true,
+      "elapsed_ms": 178
+    },
+    {
+      "name": "revocation survives reload",
+      "pass": true,
+      "elapsed_ms": 147
+    },
+    {
+      "name": "reset supports cancel escape and confirmed restart",
+      "pass": true,
+      "elapsed_ms": 158
+    },
+    {
+      "name": "full flow works by keyboard",
+      "pass": true,
+      "elapsed_ms": 45
+    },
+    {
+      "name": "revocation synchronizes a second browser tab",
+      "pass": true,
+      "elapsed_ms": 639
+    },
+    {
+      "name": "stale tab cannot overwrite a pending revocation",
+      "pass": true,
+      "elapsed_ms": 653
+    },
+    {
+      "name": "saved Ben grant restores recipient duration and guest",
+      "pass": true,
+      "elapsed_ms": 240
+    },
+    {
+      "name": "stale denied read cannot revive a revoked grant",
+      "pass": true,
+      "elapsed_ms": 607
+    },
+    {
+      "name": "stale read cannot restore a reset grant",
+      "pass": true,
+      "elapsed_ms": 762
+    },
+    {
+      "name": "mobile flow has no horizontal overflow",
+      "pass": true,
+      "elapsed_ms": 583
+    },
+    {
+      "name": "expiry closes a document already being read",
+      "pass": true,
+      "elapsed_ms": 573
+    },
+    {
+      "name": "malformed stored state fails closed",
+      "pass": true,
+      "elapsed_ms": 388
+    },
+    {
+      "name": "out of range stored timestamp fails closed",
+      "pass": true,
+      "elapsed_ms": 353
+    },
+    {
+      "name": "unavailable browser storage keeps current tab usable",
+      "pass": true,
+      "elapsed_ms": 526
+    },
+    {
+      "name": "browser without Web Locks uses isolated tab state",
+      "pass": true,
+      "elapsed_ms": 478
+    },
+    {
+      "name": "contended tab lock times out and permits retry",
+      "pass": true,
+      "elapsed_ms": 3878
+    },
+    {
+      "name": "static demo opens directly from disk",
+      "pass": true,
+      "elapsed_ms": 614
+    },
+    {
+      "name": "no unhandled page errors",
+      "pass": true,
+      "elapsed_ms": 0
+    }
+  ],
+  "sources": {
+    "apps/demo/index.html": "80ccf4b440a4d8e1a411ed11aeef691b37e8cbbfd3eb0db33d0c07d18009a2fa",
+    "apps/demo/main.js": "e72fcc4e51d5945b9f4c173d1aaa5b2f06928fab26a2b5bd947c4a09c0f2c8a9",
+    "apps/demo/style.css": "e3b2f3a786401d0621fe900ec2ff21c6d8aac798f2bd38d6c18061d9a07d1c6d",
+    "scripts/demo_e2e.mjs": "46de68822f86e8688fe21c8b30f630271983eda08d62a4854fc52a68d4054795"
+  },
+  "browser_kind": "real Chrome, isolated headless contexts",
+  "hardware_verified": false
+}
