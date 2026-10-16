@@ -1,0 +1,17 @@
+{
+  "pass": true,
+  "binary": "/work/target/x86_64-unknown-linux-musl/release/uac-api",
+  "binary_sha256": "97350938c978d00b3eac9fa9f4eb36c749e8c73998a4ddcd025c3ff8d00bebf8",
+  "prefix": [
+    "qemu-x86_64"
+  ],
+  "windows_compatibility": false,
+  "cases": [
+    "version",
+    "opaque ciphertext saved without OS keystore or lab keys",
+    "embedded assets and origin rejection restart 0",
+    "ciphertext retained and token rotated after restart",
+    "embedded assets and origin rejection restart 1"
+  ],
+  "scope": "API portable runtime; no physical device or OS credential provider proof"
+}

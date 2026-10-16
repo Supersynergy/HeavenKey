@@ -1,0 +1,18 @@
+{
+  "pass": true,
+  "binary": "/Users/master/Documents/Codex/work/heavenkey-password-manager-20261016/target/x86_64-apple-darwin/release/uac-api",
+  "binary_sha256": "d2662d26468860fcd74ca315b95c6a7ad8e34c0f3dd462894e9d333d3b9afccb",
+  "prefix": [
+    "/usr/bin/arch",
+    "-x86_64"
+  ],
+  "windows_compatibility": false,
+  "cases": [
+    "version",
+    "opaque ciphertext saved without OS keystore or lab keys",
+    "embedded assets and origin rejection restart 0",
+    "ciphertext retained and token rotated after restart",
+    "embedded assets and origin rejection restart 1"
+  ],
+  "scope": "API portable runtime; no physical device or OS credential provider proof"
+}

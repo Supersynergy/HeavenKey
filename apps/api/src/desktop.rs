@@ -12,6 +12,7 @@ pub struct Options {
     pub data: PathBuf,
     pub open: bool,
     pub store_query: Option<String>,
+    pub password_manager: bool,
 }
 
 fn default_data(
@@ -46,6 +47,7 @@ pub fn options() -> Result<Option<Options>, Box<dyn std::error::Error>> {
     let mut data = env::var_os("UAC_DATA").filter(|value| !value.is_empty());
     let mut open = false;
     let mut store_query = None;
+    let mut password_manager = env::var("HEAVENKEY_PASSWORD_MANAGER").is_ok_and(|v| v == "1");
     while let Some(arg) = args.next() {
         match arg.to_str() {
             Some("--version") => {
@@ -54,12 +56,13 @@ pub fn options() -> Result<Option<Options>, Box<dyn std::error::Error>> {
             }
             Some("--help" | "-h") => {
                 println!(
-                    "HeavenKey {}\n\n--open             Open the browser\n--port NUMBER      Loopback port (default 18240)\n--data-dir PATH    Persistent data directory\n--store-query JSON Run one local maintenance query, then exit\n--version          Version\n\nUAC_PORT, UAC_DATA, UAC_STORE_KEY and UAC_STORE_KEY_FILE are supported.\nHEAVENKEY_PUBLIC_ORIGIN: exact HTTPS origin behind a trusted TLS proxy.\nHEAVENKEY_DOCUMENT: private UTF-8 document (required for HTTPS).\nThe listener stays on loopback. Stop with Ctrl+C.",
+                    "HeavenKey {}\n\n--password-manager Local offline password vault (no account)\n--open             Open the browser\n--port NUMBER      Loopback port (default 18240)\n--data-dir PATH    Persistent data directory\n--store-query JSON Run one local maintenance query, then exit\n--version          Version\n\nUAC_PORT, UAC_DATA, UAC_STORE_KEY and UAC_STORE_KEY_FILE are supported.\nHEAVENKEY_PUBLIC_ORIGIN: exact HTTPS origin behind a trusted TLS proxy.\nHEAVENKEY_DOCUMENT: private UTF-8 document (required for HTTPS).\nThe listener stays on loopback. Stop with Ctrl+C.",
                     env!("CARGO_PKG_VERSION")
                 );
                 return Ok(None);
             }
             Some("--open") => open = true,
+            Some("--password-manager") => password_manager = true,
             Some("--port") => {
                 port = args
                     .next()
@@ -103,6 +106,7 @@ pub fn options() -> Result<Option<Options>, Box<dyn std::error::Error>> {
         data,
         open,
         store_query,
+        password_manager,
     }))
 }
 

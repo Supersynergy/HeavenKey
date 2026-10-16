@@ -8,5 +8,7 @@ for (const destination of destinations) {
 for (const port of ["0", "65536", "-1", "1.5", "NaN", "18240/evil", "1e3", " 80"]) assert.throws(() => target({ mode: "local", port, destination: "overview" }));
 for (const endpoint of ["http://example.test", "javascript:alert(1)", "https://user:password@example.test", "https://example.test/path", "https://example.test/?session=secret", "https://example.test/#secret"]) assert.throws(() => target({ mode: "https", endpoint, destination: "keys" }));
 assert.equal(target({ mode: "https", endpoint: "https://heaven.example.test", destination: "keys" }), "https://heaven.example.test/#keys");
+assert.equal(target({ mode: "local", port: "18240", destination: "passwords" }), "http://localhost:18240/passwords/");
+assert.throws(() => target({ mode: "https", endpoint: "https://heaven.example.test", destination: "passwords" }));
 assert.throws(() => target({ mode: "local", port: "18240", destination: "//evil.test" }));
 console.log("Extension connection and destination validation passed.");

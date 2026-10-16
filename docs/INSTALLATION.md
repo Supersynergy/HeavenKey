@@ -1,6 +1,6 @@
 # HeavenKey einfach installieren
 
-> Stand: **0.7.0, lokale Vorschau auf diesem Branch.** Die bereits veröffentlichten 0.6-Pakete enthalten die neuen Recovery-, Agenten- und Tresorfunktionen noch nicht. Diese Anleitung unterscheidet fertige Pakete und den aktuellen Quellstand. Es findet kein automatisches Cloud-Deployment statt.
+> **0.8.0:** Der Paket-Starter öffnet jetzt den [lokalen Passwortmanager](PASSWORD-MANAGER.md). Für Download, Start und Datensicherung gilt die aktuelle [Paket-Anleitung](DISTRIBUTION.md). Die folgenden Bilder und Schritte beschreiben das getrennte Passkey-Zugangslabor aus 0.7; starte es ohne `--password-manager`. Es findet kein automatisches Cloud-Deployment statt.
 
 ![Drei Schritte zum Start](images/01-installation.svg)
 
@@ -20,7 +20,7 @@ Die Bilder sind **schematische Bedienillustrationen** mit den Bezeichnungen der 
 | Linux x64 | `linux-x64.tar.gz` | `./start.sh` |
 | Linux ARM64 | `linux-arm64.tar.gz` | `./start.sh` |
 
-**Versionsnummer prüfen:** Für die neuen Funktionen muss im Paket mindestens 0.7.0 stehen. Ein vorhandenes 0.6-Paket bleibt der ältere Funktionsstand. Neue 0.7-Binärpakete für alle Plattformen und ihre Signierung sind nicht Bestandteil dieses Source-PRs.
+**Versionsnummer prüfen:** Für den Passwortmanager muss im Paket 0.8.0 stehen. Ältere 0.6-Pakete enthalten ihn nicht. Herkunftssignaturen und Apple-Notarisierung fehlen weiterhin.
 
 Die Vorschau ist nicht vom Herausgeber signiert oder von Apple notarisiert. Prüfe Quelle und die zugehörige `SHA256SUMS`, bevor du eine Betriebssystemfreigabe erteilst. Ändere keine globalen Sicherheitseinstellungen. Auf dem Mac zeigt ` → Über diesen Mac`, ob Apple Silicon oder Intel verbaut ist.
 

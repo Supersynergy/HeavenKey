@@ -15,6 +15,7 @@ source_checks() {
   cargo fmt --check
   bun run node_modules/typescript/bin/tsc --noEmit
   bun test apps/web/src/vault.test.ts
+  bun test apps/web/src/passwords-crypto.test.ts
   bun test apps/web/src/interface.test.ts
   bun test apps/extension/popup.test.ts
   bun scripts/test_extension.mjs
@@ -40,6 +41,9 @@ build() {
   bun run build
   cargo build --locked --offline
   HEAVENKEY_INTEGRATION_BINARY=target/debug/uac-api python3 -m unittest scripts.test_workstream_integration
+  HEAVENKEY_INTEGRATION_BINARY=target/debug/uac-api python3 -m unittest scripts.test_password_manager
+  bun scripts/password_manager_e2e.mjs
+  bun scripts/password_manager_ui_test.ts
   bun scripts/protocol_e2e.mjs
 }
 

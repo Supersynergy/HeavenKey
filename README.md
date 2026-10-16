@@ -4,9 +4,9 @@
 
 **Zugang beginnt mit Zustimmung.**
 
-Mit Passkeys anmelden, zeitlich begrenzte Zugänge teilen und jede Weitergabe kontrollieren.
+Passwörter lokal verschlüsseln und offline verwalten. Zusätzlich: mit Passkeys anmelden, zeitlich begrenzte Zugänge teilen und Weitergaben kontrollieren.
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) ![Version](https://img.shields.io/badge/version-0.7_preview-c5a36a)
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) ![Version](https://img.shields.io/badge/version-0.8_preview-c5a36a)
 
 <p align="center">
   <img src="docs/assets/heavenkey-hero-square.png" alt="HeavenKey: ein schwebender Schlüssel vor dem Himmelstor" width="560">
@@ -20,7 +20,9 @@ Mit Passkeys anmelden, zeitlich begrenzte Zugänge teilen und jede Weitergabe ko
 
 ![HeavenKey in drei Schritten starten](docs/images/01-installation.svg)
 
-**Aktueller Quellstand: 0.7.0, lokale Vorschau.** Die veröffentlichten 0.6-Pakete enthalten die neuen Funktionen noch nicht. Die [bebilderte Installationsanleitung](docs/INSTALLATION.md) erklärt beide Wege und die Chrome-/Firefox-Erweiterungen. Edge verwendet das Chromium-Paket.
+**Version 0.8.0, lokale Vorschau.** Wähle dein Paket unter [Releases](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.8.0-preview.1), entpacke es und starte den enthaltenen Starter. Er öffnet den lokalen Passwortmanager. Du brauchst einen aktuellen Browser; Rust, Bun, Konto und Internet sind für diesen Modus nicht erforderlich. Siehe [Passwortmanager](docs/PASSWORD-MANAGER.md), [Plattformpakete](docs/DISTRIBUTION.md) und [Enpass plus 20 Kandidaten: Gap-Analyse](docs/PASSWORD-MANAGER-GAPS.md).
+
+Für die Entwicklung aus dem Quellcode:
 
 Installiere Rustup und Python 3.11+ sowie Bun **1.4.2**. Starte danach im Projektordner:
 
@@ -28,12 +30,16 @@ Installiere Rustup und Python 3.11+ sowie Bun **1.4.2**. Starte danach im Projek
 python3 scripts/first_run.py
 ```
 
-Windows: `py -3 scripts/first_run.py`. Der Assistent baut und öffnet HeavenKey; `just` und Docker sind dafür nicht nötig. Neue vorkompilierte 0.7-Pakete für alle Plattformen und die Browser-/Hardware-Abnahme sind noch offen.
+Windows: `py -3 scripts/first_run.py`. Der Assistent baut und öffnet den Passwortmanager. `--lab` startet stattdessen das bisherige Passkey-Zugangslabor.
 
 ## Funktionen
 
 | Funktion | Was du damit machen kannst |
 | --- | --- |
+| Lokaler Passwortmanager | Logins mit Masterpasswort anlegen, bearbeiten, suchen und löschen; Tags und Favoriten verwenden. Kein Onlinekonto erforderlich. |
+| Passwörter und TOTP erzeugen | Zufällige Passwörter erzeugen und zeitbasierte Einmalcodes lokal berechnen. |
+| Tresor sichern | Verschlüsseltes Backup herunterladen und wiederherstellen; Login-CSV lokal prüfen und importieren. |
+| Tresor sperren | Manuell und nach Inaktivität sperren; Schlüssel und Einträge bleiben nur während der Entsperrung im Browser. |
 | Mit Passkey anmelden | Ein Konto über WebAuthn erstellen und dich mit einem aktiven Passkey anmelden. |
 | Mehrere Passkeys verwalten | Bis zu acht aktive Passkeys verwalten, mit Namen und individuellem Widerruf. Der letzte aktive Schlüssel bleibt geschützt. |
 | Zugang teilen | Einem registrierten Gast Leserechte auf das Demo-Dokument geben, gültig für 1–3.600 Sekunden. |
@@ -57,7 +63,7 @@ Du gibst Anna für 30 Minuten Zugang und erlaubst eine Weitergabe. Anna kann Ben
 
 ## Ausprobieren
 
-Die neue [Browserdemo](docs/BROWSER-DEMO.md) zeigt Teilen, Öffnen und Widerrufen mit Beispieldaten. Sie braucht keine Anmeldung oder Installation. Im aktuellen Quellstand liegt sie unter `/demo/`; der Ordner `apps/demo` funktioniert auch direkt im Browser. Die veröffentlichten 0.6-Pakete enthalten diesen neuen Einstieg noch nicht.
+Die [Browserdemo](docs/BROWSER-DEMO.md) zeigt Teilen, Öffnen und Widerrufen mit Beispieldaten. Sie braucht keine Anmeldung oder Installation. Im Zugangslabor liegt sie unter `/demo/`; der Ordner `apps/demo` funktioniert auch direkt im Browser.
 
 Fertige Pakete für **Windows x64, macOS ARM64/Intel und Linux ARM64/x64** stehen in den [Vorschau-Releases](https://github.com/Supersynergy/HeavenKey/releases). Entpacken und den enthaltenen Starter ausführen; ein aktueller Browser genügt. Rust, Bun und Docker brauchst du nur für die Entwicklung. Die [Paket-Anleitung](docs/DISTRIBUTION.md) erklärt Einrichtung, Datenordner und die Erweiterungen für Chrome, Edge und Firefox.
 
@@ -76,11 +82,13 @@ just e2e
 
 `just e2e` testet den vollständigen Ablauf mit virtuellen Passkeys in einem isolierten Chrome-Browser. Browser, Server und Testdaten werden anschließend entfernt. Ein anderer Chrome-Pfad lässt sich mit `CHROME_PATH=/pfad/zu/chrome just e2e` angeben.
 
-Die Oberfläche startest du mit `cargo run --locked --offline -p uac-api -- --open` auf `http://localhost:18240`. Die [Anleitung](docs/USAGE.md) beschreibt Einrichtung, Schlüsselverwaltung und Zugangsteilung.
+Den Passwortmanager startest du mit `cargo run --locked --offline -p uac-api -- --password-manager --open`. Ohne `--password-manager` startet das separate Zugangslabor. Die [Anleitung](docs/USAGE.md) beschreibt dessen Einrichtung, Schlüsselverwaltung und Zugangsteilung.
 
 ## Stand und Grenzen
 
-**Version 0.7 ist eine lokale Vorschau im Quellstand.** Verfügbare 0.6-Desktop-Pakete haben den älteren Funktionsumfang. Desktop-Pakete enthalten die Weboberfläche und ihre nativen Bibliotheken. Windows wird zusätzlich über Wine geprüft; das ersetzt keine Abnahme von Windows Hello oder physischen Passkeys. Firefox-Erweiterungen sind vorerst temporär installierbar. Der kostenlose GitHub-Runner läuft lokal; gehostete kostenpflichtige Runner werden nicht verwendet. Neue Prüfungen und offene Browser-/Hardware-Grenzen stehen unter [0.7-Verifikation](docs/V07-VERIFICATION.md); ältere Nachweise unter [Verifikation](docs/VERIFICATION.md).
+**Version 0.8 ist eine lokale Vorschau.** Die [Release-Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) bindet Prüfungen an Quelle und Pakete. Desktop-Pakete enthalten die Weboberfläche und ihre nativen Bibliotheken. Kompatibilitätsprüfungen ersetzen keine Abnahme von Windows Hello oder physischen Passkeys. Firefox-Erweiterungen sind vorerst temporär installierbar. Kostenpflichtige Runner werden nicht verwendet. Ältere Nachweise stehen unter [0.7-Verifikation](docs/V07-VERIFICATION.md) und [Verifikation](docs/VERIFICATION.md).
+
+Der Passwortmanager schließt die lokale Kernlücke, übertrifft Enpass aber noch nicht im gesamten Funktionsumfang. Browser-Autofill, mobile Apps, Synchronisation, verwaltete Website-Passkeys und ein externes Sicherheits-Audit fehlen. Die Gap-Analyse unterscheidet Herstellerangaben, eigenen Quellstand und ausgeführte Tests.
 
 Die Demo arbeitet mit einem Testdokument. Der Dienst signiert Zugänge und prüft sie online. Der integrierte 0.7-Quellstand verbindet HTTPS-Passkeys, SQLCipher-Datenbank, geschützte Signierschlüssel, Recovery, optionalen PRF-Notiztresor und einen lokalen Agenten-/CRM-Adapter. Das Offline-Gate und die Mandantenbibliothek sind enthalten; die API verwendet weiterhin einzelne Konten und keinen externen Mandantenconnector. Reale Next-Office-Anbindung und UCAN-/DID-Kompatibilität bleiben offen. Die zusammengeführten Entwicklungszweige und Abnahmegrenzen stehen in [Integration](docs/INTEGRATION.md).
 

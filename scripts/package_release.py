@@ -176,17 +176,23 @@ def desktop(target):
         if windows:
             starter = directory / "Start HeavenKey.cmd"
             starter.write_bytes(
-                b'@echo off\r\n"%~dp0HeavenKey.exe" --open %*\r\nif errorlevel 1 pause\r\n'
+                b'@echo off\r\n"%~dp0HeavenKey.exe" --password-manager --open %*\r\nif errorlevel 1 pause\r\n'
             )
         else:
             starter = directory / (
                 "Start HeavenKey.command" if "apple" in target else "start.sh"
             )
             starter.write_text(
-                '#!/bin/sh\nset -eu\ncd "$(dirname "$0")"\nexec ./heavenkey --open "$@"\n'
+                '#!/bin/sh\nset -eu\ncd "$(dirname "$0")"\nexec ./heavenkey --password-manager --open "$@"\n'
             )
             starter.chmod(0o755)
         shutil.copyfile(ROOT / "docs/DISTRIBUTION.md", directory / "README.md")
+        for name in (
+            "PASSWORD-MANAGER.md", "PASSWORD-MANAGER-GAPS.md",
+            "PASSWORD-MANAGER-VERIFICATION.md", "PASSWORD-MANAGER-RESEARCH-TOOLS.md",
+            "password-manager-matrix.json",
+        ):
+            shutil.copyfile(ROOT / "docs" / name, directory / name)
         dependency_notices(directory)
         openssl_source = ROOT / ".platform-tools" / f"openssl-{build_openssl.VERSION}"
         shutil.copyfile(

@@ -1,0 +1,17 @@
+{
+  "pass": true,
+  "binary": "/Users/master/Documents/Codex/work/heavenkey-password-manager-20261016/target/x86_64-pc-windows-gnu/release/uac-api.exe",
+  "binary_sha256": "a17aaffc0e8e5133349945c687a77289ef6226a541fc641cb360a1f1274977a7",
+  "prefix": [
+    "/Users/master/Documents/Codex/work/heavenkey-password-manager-20261016/.platform-tools/Wine Devel.app/Contents/Resources/wine/bin/wine"
+  ],
+  "windows_compatibility": true,
+  "cases": [
+    "version",
+    "opaque ciphertext saved without OS keystore or lab keys",
+    "embedded assets and origin rejection restart 0",
+    "ciphertext retained and token rotated after restart",
+    "embedded assets and origin rejection restart 1"
+  ],
+  "scope": "API portable runtime; no physical device or OS credential provider proof"
+}

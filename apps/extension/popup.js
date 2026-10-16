@@ -31,6 +31,6 @@ form.addEventListener("submit", async event => {
     const url = target(settings);
     await extension.tabs.create({ url });
     try { localStorage.setItem("heavenkey.connection.v1", JSON.stringify(settings)); } catch { /* Tab opening also works without persistent preferences. */ }
-    status.textContent = "HeavenKey ist in einem neuen Tab geöffnet. Bestätige dort mit deinem Passkey.";
+    status.textContent = settings.destination === "passwords" ? "Der lokale Passwortmanager ist geöffnet. Entsperre ihn dort mit deinem Masterpasswort." : "Das separat gestartete Zugangslabor ist geöffnet. Bestätige dort mit deinem Passkey.";
   } catch (error) { status.textContent = `Tab konnte nicht geöffnet werden: ${error instanceof Error ? error.message : "Unbekannter Fehler"}`; }
 });

@@ -1,4 +1,4 @@
-export const destinations = new Set(["overview", "keys", "access", "recovery", "agents", "vault", "help"]);
+export const destinations = new Set(["passwords", "overview", "keys", "access", "recovery", "agents", "vault", "help"]);
 export function target(settings) {
   if (!destinations.has(settings.destination)) throw new Error("Unbekanntes Ziel.");
   let origin;
@@ -13,5 +13,9 @@ export function target(settings) {
     if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.search || parsed.hash || parsed.pathname !== "/") throw new Error("Nur die HTTPS-Basisadresse ohne Pfad, Anmeldung oder Parameter eingeben.");
     origin = parsed.origin;
   } else throw new Error("Unbekannte Verbindung.");
+  if (settings.destination === "passwords") {
+    if (settings.mode !== "local") throw new Error("Der Passwortmanager ist ausschließlich lokal verfügbar.");
+    return `${origin}/passwords/`;
+  }
   return `${origin}/${settings.destination === "overview" ? "" : `#${settings.destination}`}`;
 }

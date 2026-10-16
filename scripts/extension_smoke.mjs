@@ -27,8 +27,8 @@ try {
   const created = context.waitForEvent("page");
   await popup.getByRole("button", { name: "HeavenKey öffnen" }).click();
   const opened = await created;
-  await opened.waitForURL("http://localhost:18240/");
-  await popup.locator("#status").filter({ hasText: "neuen Tab" }).waitFor();
+  await opened.waitForURL("http://localhost:18240/passwords/");
+  await popup.locator("#status").filter({ hasText: "Masterpasswort" }).waitFor();
   assert.deepEqual(errors, []);
   await popup.locator("#port").fill("65536");
   assert.equal(await popup.locator("#port").evaluate(input => input.checkValidity()), false);

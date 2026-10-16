@@ -19,6 +19,7 @@ class PackagingTests(unittest.TestCase):
         for name in (
             "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".cargo/config.toml",
             "apps/web/dist/main.js", "apps/web/index.html",
+            "apps/web/dist/passwords.js", "apps/web/passwords.html",
             "scripts/build_openssl.py", "scripts/build_portable.py",
             "apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css",
         ):

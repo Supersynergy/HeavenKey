@@ -1,0 +1,146 @@
+{
+  "pass": true,
+  "binary": "/Users/master/Documents/Codex/work/heavenkey-password-manager-20261016/target/x86_64-pc-windows-gnu/release/uac-api.exe",
+  "binary_sha256": "a17aaffc0e8e5133349945c687a77289ef6226a541fc641cb360a1f1274977a7",
+  "cases": [
+    {
+      "name": "portable startup redirects to local vault without OS keys",
+      "pass": true
+    },
+    {
+      "name": "create vault without account or passkey",
+      "pass": true
+    },
+    {
+      "name": "structured credential saved and title is rendered as text",
+      "pass": true
+    },
+    {
+      "name": "TOTP displayed",
+      "pass": true
+    },
+    {
+      "name": "search includes encrypted tags after unlock",
+      "pass": true
+    },
+    {
+      "name": "edit restores secret only inside unlocked editor",
+      "pass": true
+    },
+    {
+      "name": "backup contains ciphertext and no credential plaintext",
+      "pass": true
+    },
+    {
+      "name": "lock clears credentials and form state",
+      "pass": true
+    },
+    {
+      "name": "wrong master rejected",
+      "pass": true
+    },
+    {
+      "name": "correct master restores persisted login",
+      "pass": true
+    },
+    {
+      "name": "stale tab cannot overwrite current revision",
+      "pass": true
+    },
+    {
+      "name": "delete persists with confirmation",
+      "pass": true
+    },
+    {
+      "name": "encrypted backup restored",
+      "pass": true
+    },
+    {
+      "name": "tampered restore leaves stored vault unchanged",
+      "pass": true
+    },
+    {
+      "name": "quoted synthetic Bitwarden CSV imports atomically",
+      "pass": true
+    },
+    {
+      "name": "invalid later CSV row imports nothing",
+      "pass": true
+    },
+    {
+      "name": "master password change retires old key",
+      "pass": true
+    },
+    {
+      "name": "generator fills a fresh 24-character password",
+      "pass": true
+    },
+    {
+      "name": "real process restart preserves encrypted vault",
+      "pass": true
+    },
+    {
+      "name": "TOTP needs no network after unlock",
+      "pass": true
+    },
+    {
+      "name": "no plaintext secret or master sent to API",
+      "pass": true
+    },
+    {
+      "name": "mobile-width layout has no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "1000 synthetic logins imported with external web requests blocked",
+      "pass": true
+    },
+    {
+      "name": "1000-entry vault lock and decrypt roundtrip",
+      "pass": true
+    },
+    {
+      "name": "1000-entry backup restore and cold process restart",
+      "pass": true
+    },
+    {
+      "name": "locked restore with wrong backup password preserves damaged current file",
+      "pass": true
+    },
+    {
+      "name": "valid backup recovers corrupted vault from locked screen and survives restart",
+      "pass": true
+    },
+    {
+      "name": "invalid-base64 prevents ordinary unlock",
+      "pass": true
+    },
+    {
+      "name": "invalid-base64 can be replaced by validated encrypted backup",
+      "pass": true
+    },
+    {
+      "name": "invalid-json prevents ordinary unlock",
+      "pass": true
+    },
+    {
+      "name": "invalid-json can be replaced by validated encrypted backup",
+      "pass": true
+    },
+    {
+      "name": "lock returns focus to master",
+      "pass": true
+    },
+    {
+      "name": "no uncaught browser errors",
+      "pass": true
+    },
+    {
+      "name": "stored file contains no plaintext credentials",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "online_service_used": false,
+  "synthetic_only": true
+}

@@ -28,12 +28,14 @@ def source_fingerprint():
             "rust-toolchain.toml",
             ".cargo/config.toml",
             "apps/web/dist/main.js",
+            "apps/web/dist/passwords.js",
             "apps/web/index.html",
+            "apps/web/passwords.html",
             "scripts/build_openssl.py",
             "scripts/build_portable.py",
         )
     ]
-    for name in ("apps/api", "crates/verifier", "apps/web/src", "apps/demo"):
+    for name in ("apps/api", "crates", "apps/web/src", "apps/demo"):
         paths += [path for path in (ROOT / name).rglob("*") if path.is_file()]
     digest = hashlib.sha256()
     for path in sorted(set(paths)):

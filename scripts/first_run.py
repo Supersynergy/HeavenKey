@@ -14,6 +14,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check-only", action="store_true")
     parser.add_argument("--no-open", action="store_true")
+    parser.add_argument("--lab", action="store_true", help="Start the separate passkey access lab")
     parser.add_argument("--port", type=int, default=18240)
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument("--protection-key-file", type=Path)
@@ -52,6 +53,8 @@ def main():
         subprocess.run(command, cwd=ROOT, env=env, check=True, timeout=timeout)
     binary = ROOT / "target/debug" / ("uac-api.exe" if os.name == "nt" else "uac-api")
     command = [str(binary), "--port", str(args.port)]
+    if not args.lab:
+        command.append("--password-manager")
     if not args.no_open:
         command.append("--open")
     if args.data_dir:

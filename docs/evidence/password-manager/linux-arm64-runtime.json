@@ -1,0 +1,15 @@
+{
+  "pass": true,
+  "binary": "/work/target/aarch64-unknown-linux-musl/release/uac-api",
+  "binary_sha256": "4fa2f0f195f6d4bf9442a6a1b81a715cee47adaad3351917cc623d3915eae88f",
+  "prefix": [],
+  "windows_compatibility": false,
+  "cases": [
+    "version",
+    "opaque ciphertext saved without OS keystore or lab keys",
+    "embedded assets and origin rejection restart 0",
+    "ciphertext retained and token rotated after restart",
+    "embedded assets and origin rejection restart 1"
+  ],
+  "scope": "API portable runtime; no physical device or OS credential provider proof"
+}

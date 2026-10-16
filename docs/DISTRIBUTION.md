@@ -1,8 +1,8 @@
 # HeavenKey-Pakete und Browser-Erweiterungen
 
-Die bisher veröffentlichten Pakete sind 0.6. Der neue 0.7-Quellstand ergänzt Funktionen und Schlüsselverwahrung; siehe [bebilderte Installation](INSTALLATION.md). Neue Desktop-Binärpakete und ihre Plattformabnahme sind separat ausstehend.
+Version 0.8.0 startet über den enthaltenen Starter den lokalen Passwortmanager. Sie enthält außerdem die zusammengeführten Zugangslabor-Funktionen aus 0.7. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Verbindliche Build- und Laufzeitnachweise stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md).
 
-Die veröffentlichten 0.6-Pakete enthalten den Server, die Weboberfläche und Lizenzhinweise. Dafür brauchst du einen aktuellen Browser mit WebAuthn, aber kein Rust, Bun, Python oder Docker. Die SQLCipher-Verschlüsselung und Schlüsselhülle gehören zum integrierten 0.7-Quellstand; vorhandene 0.6-Downloads enthalten sie noch nicht. Physische Passkeys sind noch nicht abgenommen.
+Die Pakete enthalten Server, Weboberfläche und Lizenzhinweise. Für den Passwortmanager brauchst du einen aktuellen Browser, aber kein Rust, Bun, Python, Docker oder Passkey. Das optionale Zugangslabor verwendet WebAuthn, SQLCipher und eine geschützte Signierschlüsselhülle. Physische Passkeys sind noch nicht abgenommen.
 
 ## Paket wählen
 
@@ -14,13 +14,15 @@ Die veröffentlichten 0.6-Pakete enthalten den Server, die Weboberfläche und Li
 | Linux, x64 | `linux-x64.tar.gz` | Entpacken; `./start.sh` ausführen. |
 | Linux, ARM64 | `linux-arm64.tar.gz` | Entpacken; `./start.sh` ausführen. |
 
-Das Terminal bleibt geöffnet. Der Starter öffnet `http://localhost:18240`; falls das nicht klappt, öffne die Adresse selbst. `Ctrl+C` beendet HeavenKey. Die API bindet nur an die lokale IPv4-Adresse. Unter Linux braucht das automatische Öffnen `xdg-open`; die manuelle Adresse funktioniert auch ohne Desktop.
+Das Terminal bleibt geöffnet. Der Starter öffnet `http://localhost:18240/passwords/`; falls das nicht klappt, öffne die Adresse selbst. `Ctrl+C` beendet HeavenKey. Die API bindet nur an die lokale IPv4-Adresse. Unter Linux braucht das automatische Öffnen `xdg-open`; die manuelle Adresse funktioniert auch ohne Desktop.
 
 Die Vorschau ist nicht vom Herausgeber signiert oder von Apple notarisiert. Windows und macOS können eine Herkunftswarnung anzeigen. Prüfe Quelle und SHA256SUMS vor dem Start. Verändere keine globalen Sicherheitseinstellungen. Auf macOS lässt sich eine geprüfte App über „Datenschutz & Sicherheit“ freigeben. Auf Windows ARM ist das x64-Paket nur ein Kandidat für die Betriebssystem-Emulation; eine native ARM64-Ausgabe fehlt.
 
 ## Einrichten und Daten behalten
 
-Der Server zeigt den Speicherort und den Pfad zur Datei `owner-bootstrap.txt` an. Öffne diese Textdatei lokal und übertrage den Einrichtungscode in das Feld für die Eigentümer-Einschreibung. Der Code wird weder in URLs noch in der Browser-Erweiterung abgelegt. Gäste registrieren sich ohne Einrichtungscode. Die weitere Bedienung steht in `docs/USAGE.md` im Quellrepository.
+Der Passwortmanager zeigt den Speicherort an und fragt nach einem eigenen Masterpasswort mit mindestens 14 Zeichen. Er benötigt keinen Einrichtungscode. Das Masterpasswort bleibt im Browser; der Server speichert nur die verschlüsselte Hülle in `passwords.sqlite`. Lade eine verschlüsselte Sicherung herunter und prüfe ihre Wiederherstellung. Ohne das damalige Masterpasswort lässt sich eine Sicherung nicht öffnen.
+
+Das getrennte Zugangslabor startest du mit dem Programm ohne `--password-manager`, bei parallelem Betrieb auf einem anderen Port: `./heavenkey --port 18241 --open`. Nur für diesen Modus gelten Einrichtungscode, Passkey-Anmeldung und Signierschlüsselverwahrung. Die weitere Bedienung steht in `docs/USAGE.md` im Quellrepository.
 
 | System | Standardspeicher |
 | --- | --- |
@@ -28,7 +30,7 @@ Der Server zeigt den Speicherort und den Pfad zur Datei `owner-bootstrap.txt` an
 | macOS | `~/Library/Application Support/HeavenKey` |
 | Linux | `$XDG_DATA_HOME/HeavenKey` oder `~/.local/share/HeavenKey` |
 
-Für 0.7 bewahrst du den gesamten Datenordner und beide Schutzschlüssel auf: den Datenbankschlüssel (`UAC_STORE_KEY` oder `UAC_STORE_KEY_FILE`, sonst private Konfigurationsdatei) sowie den Schutzschlüssel für `issuer.enc` (Betriebssystem-Keystore oder `HEAVENKEY_KEY_FILE`). Ohne sie sind die Daten beziehungsweise der Signierschlüssel nicht verwendbar. Ein Update des entpackten Programms behält den Datenordner. Mehrere Instanzen mit demselben Port können nicht gleichzeitig starten. Die Meldung „address already in use“ verlangt, die laufende Instanz zu beenden oder einen anderen Port zu wählen. Bestehende Entwicklerdaten unter `data/` verwendest du ausdrücklich mit `--data-dir data`; sie werden nicht automatisch verschoben.
+Für das Zugangslabor bewahrst du den gesamten Datenordner und beide Schutzschlüssel auf: den Datenbankschlüssel (`UAC_STORE_KEY` oder `UAC_STORE_KEY_FILE`, sonst private Konfigurationsdatei) sowie den Schutzschlüssel für `issuer.enc` (Betriebssystem-Keystore oder `HEAVENKEY_KEY_FILE`). Ohne sie sind die Labordaten beziehungsweise der Signierschlüssel nicht verwendbar. Der Passwortmanager verwendet ausschließlich sein Masterpasswort. Ein Update des entpackten Programms behält den Datenordner. Mehrere Instanzen mit demselben Port können nicht gleichzeitig starten. Die Meldung „address already in use“ verlangt, die laufende Instanz zu beenden oder einen anderen Port zu wählen. Bestehende Entwicklerdaten unter `data/` verwendest du ausdrücklich mit `--data-dir data`; sie werden nicht automatisch verschoben.
 
 Optional: `HeavenKey.exe --port 18245 --data-dir "C:\Users\Name\HeavenKey-Test"` beziehungsweise `./heavenkey --port 18245 --data-dir /eigener/pfad`. Der Standardordner liegt im Benutzerprofil; verwende keinen gemeinsam beschreibbaren Ordner. Unix-Ordner erhalten Modus 0700, Schlüsseldateien 0600. Windows nutzt die geerbten Zugriffsrechte des Benutzerprofils. Der Port in der Browser-Erweiterung muss mit dem Server übereinstimmen.
 
@@ -38,7 +40,7 @@ Chrome und Edge verwenden dasselbe Chromium-Paket. Entpacke `extension-chromium.
 
 Firefox: Entpacke `extension-firefox.zip`; öffne `about:debugging#/runtime/this-firefox` und lade `manifest.json` über „Temporäres Add-on laden“. Diese Installation endet beim Browser-Neustart. Eine dauerhafte Installation im normalen Firefox braucht Mozilla-Signierung; das Paket ist noch unsigniert.
 
-Klicke auf HeavenKey in der Browserleiste, wähle den gewünschten Bereich und dann „HeavenKey öffnen“. Im 0.7-Quellstand öffnet die Erweiterung wahlweise localhost oder eine ausdrücklich eingerichtete HTTPS-Installation; sie speichert nur die Verbindungseinstellung. Sie startet keinen Server und liest keine besuchten Seiten. Anmeldung, Schlüsselverwaltung und Freigaben bleiben auf der geprüften WebAuthn-Origin. Sie fordert keine Webseiten-, Speicher- oder Native-Messaging-Berechtigung an.
+Klicke auf HeavenKey in der Browserleiste, wähle den gewünschten Bereich und dann „HeavenKey öffnen“. Die Erweiterung öffnet den lokalen Passwortmanager oder das separat gestartete Zugangslabor; dessen Port muss zur Auswahl passen. Eine HTTPS-Verbindung ist nur für das Zugangslabor erlaubt. Die Erweiterung speichert nur die Verbindungseinstellung, startet keinen Server und liest keine besuchten Seiten. Sie bietet kein Autofill. Sie fordert keine Webseiten-, Speicher- oder Native-Messaging-Berechtigung an.
 
 Safari verwendet die Weboberfläche direkt; eine Safari-Erweiterung ist nicht enthalten. iOS und Android erhalten hier keine native App. Für den lokalen Dienst auf dem Computer ersetzt ein Mobilbrowser keine spätere HTTPS- und Netzwerkbereitstellung.
 

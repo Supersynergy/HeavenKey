@@ -1132,6 +1132,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8"
 dependencies = [
  "cc",
+ "openssl-sys",
  "pkg-config",
  "vcpkg",
 ]
@@ -2151,7 +2152,7 @@ checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
 
 [[package]]
 name = "uac-api"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "axum",
  "base64 0.22.1",
@@ -2172,7 +2173,7 @@ dependencies = [
 
 [[package]]
 name = "uac-gate"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "axum",
  "serde",
@@ -2183,7 +2184,7 @@ dependencies = [
 
 [[package]]
 name = "uac-keystore"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "base64 0.22.1",
  "keyring",
@@ -2197,7 +2198,7 @@ dependencies = [
 
 [[package]]
 name = "uac-recovery"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "base64 0.22.1",
  "rand 0.9.5",
@@ -2206,7 +2207,7 @@ dependencies = [
 
 [[package]]
 name = "uac-tenancy"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "rusqlite",
  "serde",
@@ -2216,11 +2217,11 @@ dependencies = [
 
 [[package]]
 name = "uac-ucan-bridge"
-version = "0.7.0"
+version = "0.8.0"
 
 [[package]]
 name = "uac-verifier"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "ed25519-dalek",
  "serde",

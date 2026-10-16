@@ -1,5 +1,6 @@
 fn main() {
     println!("cargo:rerun-if-changed=../web/dist/main.js");
+    println!("cargo:rerun-if-changed=../web/dist/passwords.js");
     println!("cargo:rerun-if-changed=../demo");
     assert!(
         std::path::Path::new("../web/dist/main.js").is_file(),

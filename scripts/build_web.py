@@ -8,3 +8,7 @@ subprocess.run(
      '--target', 'browser', '--banner', '/*! @simplewebauthn/browser 14.0.0\n'+license_text+'*/'],
     cwd=root, check=True,
 )
+subprocess.run(
+    ['bun', 'build', 'apps/web/src/passwords.ts', '--outdir', 'apps/web/dist', '--target', 'browser'],
+    cwd=root, check=True,
+)

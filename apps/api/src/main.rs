@@ -2,6 +2,7 @@
 
 mod desktop;
 mod hosting;
+mod password_manager;
 mod platform;
 mod store;
 
@@ -1639,6 +1640,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let Some(options) = desktop::options()? else {
         return Ok(());
     };
+    if options.password_manager {
+        if options.store_query.is_some() {
+            return Err("--store-query is for the access lab only".into());
+        }
+        return password_manager::run(&options.data, options.port, options.open).await;
+    }
     if let Some(spec) = options.store_query {
         let spec: Value = serde_json::from_str(&spec)?;
         let sql = spec
