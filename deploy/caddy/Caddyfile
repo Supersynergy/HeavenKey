@@ -4,12 +4,8 @@
 # Caddy terminiert TLS und reicht Anfragen an den Loopback-Port weiter.
 # Details und Alternativen (nginx): docs/OPERATIONS.md
 #
-# WICHTIG: Die API erzwingt derzeit Host "localhost:18240" exakt
-# (origin_guard in apps/api/src/main.rs). Der Host-Header wird deshalb
-# umgeschrieben. Nicht-GET-Anfragen aus dem Browser schlagen trotzdem fehl,
-# solange die API Origin/RP-ID auf http://localhost:18240 pinnt — siehe
-# docs/OPERATIONS.md, Abschnitt "Bekannte Grenzen".
-
+# Site-Domain, HEAVENKEY_PUBLIC_ORIGIN und HEAVENKEY_RP_ID muessen passen.
+# Host und Origin bleiben fuer die Pruefung durch die API unveraendert.
 {
 	# Für automatische Zertifikate per ACME (Let's Encrypt):
 	# echte Admin-Mail eintragen; ohne "tls"-Direktive unten holt Caddy
@@ -21,10 +17,9 @@
 	auto_https off
 }
 
-# Domain kommt aus der Umgebung, Standard ist der Lab-Fall "localhost".
+# Domain kommt aus der Umgebung; den reservierten Beispielnamen ersetzen.
 # Beispiel: HEAVENKEY_DOMAIN=lab.example.test caddy run --config Caddyfile
-{$HEAVENKEY_DOMAIN:localhost} {
-
+{$HEAVENKEY_DOMAIN:lab.example.test} {
 	# --- TLS -------------------------------------------------------------
 	# Lab: eigene Zertifikate (mkcert oder self-signed, siehe OPERATIONS.md).
 	# Pfade an die eigene Installation anpassen.
@@ -45,8 +40,7 @@
 
 	# --- Sicherheitsheader ------------------------------------------------
 	header {
-		# HSTS: im Lab mit localhost-Domain unkritisch; bei echter
-		# Domain includeSubDomains/preload erst nach Pruefung setzen.
+		# includeSubDomains/preload erst nach Pruefung der Domain setzen.
 		Strict-Transport-Security "max-age=31536000"
 		# Die API setzt CSP/nosniff/no-store selbst; hier nur ergaenzen,
 		# nicht duplizieren.
@@ -58,17 +52,13 @@
 	# apps/api/src/main.rs). Der Proxy darf nicht darunter liegen;
 	# 64 KiB lassen der API-Fehlermeldung Vortritt statt 413 vom Proxy.
 	request_body {
-		max_size 64KB
+		max_size 64KiB
 	}
 
 	# --- Upstream ----------------------------------------------------------
 	reverse_proxy 127.0.0.1:18240 {
-		# Zwingend: origin_guard erwartet exakt "localhost:18240".
-		header_up Host localhost:18240
-		# Origin NICHT umschreiben: die Origin-Pruefung ist eine
-		# CSRF-Schutzfunktion der API. Browser-POSTs hinter HTTPS
-		# werden derzeit abgelehnt (bekannte Grenze, siehe Doc).
-		header_up X-Forwarded-Proto {scheme}
+		# Caddy reicht Host (einschliesslich Port) und Origin standardmaessig
+		# unveraendert durch. Die API prueft beide gegen ihre Konfiguration.
 		header_up X-Real-IP {remote_host}
 
 		transport http {

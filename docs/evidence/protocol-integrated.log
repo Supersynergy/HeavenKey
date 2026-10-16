@@ -1,0 +1,14 @@
+PASS operator bootstrap provisions owner; guest enrolls without ownership
+PASS real Rust verifier rejects correctly signed assertions for a foreign origin
+PASS cross-origin writes fail before reaching application handlers
+PASS passkey-approved delegation enables session reading and checks account binding
+PASS API-issued delegation works at the standalone offline gate with the exported snapshot
+PASS bearer-only agent issuance denied; approved issuance succeeds exactly once
+PASS agent proof changes only the scoped synthetic CRM contact
+PASS the shipped agent CLI validates the origin-bound challenge and executes a read
+PASS revoking an ancestor blocks session reads immediately
+PASS recovery code rotates with fresh passkey consent; no code is returned in status
+PASS failed recovery guesses are throttled without locking out a valid recovery code
+PASS a valid recovery code enrolls a fresh passkey and invalidates old sessions and agents
+PASS protected issuer survives restart and recovered identity remains stable
+PASS logout removes a preapproved sensitive operation

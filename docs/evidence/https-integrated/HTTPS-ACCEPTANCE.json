@@ -1,0 +1,457 @@
+{
+  "pass": true,
+  "origin": "https://heaven.test:60597",
+  "local_tls_with_test_certificate": true,
+  "cases": [
+    {
+      "name": "trusted HTTPS and exact public RP ID",
+      "pass": true
+    },
+    {
+      "name": "document is absent from anonymous routes and web assets",
+      "pass": true
+    },
+    {
+      "name": "first visitor cannot claim owner",
+      "pass": true
+    },
+    {
+      "name": "owner enrolls with one-use operator code and verified passkey",
+      "pass": true
+    },
+    {
+      "name": "guest enrolls own passkey and has no access initially",
+      "pass": true
+    },
+    {
+      "name": "owner issues read access after passkey confirmation",
+      "pass": true
+    },
+    {
+      "name": "share link opens recipient account without a bearer credential",
+      "pass": true
+    },
+    {
+      "name": "document opens only after recipient passkey and grant verification",
+      "pass": true
+    },
+    {
+      "name": "fresh ceremony prepared before revocation cannot survive it",
+      "pass": true
+    },
+    {
+      "name": "stale recipient page cannot fetch document after revocation",
+      "pass": true
+    },
+    {
+      "name": "reload and recipient login preserve revocation",
+      "pass": true
+    }
+  ],
+  "responses": [
+    {
+      "actor": "owner",
+      "path": "/api/config",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/config",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/register/start",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/grants",
+      "status": 401
+    },
+    {
+      "actor": "guest",
+      "path": "/api/register/start",
+      "status": 403
+    },
+    {
+      "actor": "owner",
+      "path": "/api/register/start",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/register/finish",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/auth/start",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/auth/finish",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/delegations",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/agents",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/recovery",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/audit",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/grants",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/register/start",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/register/finish",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/auth/start",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/auth/finish",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/delegations",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/recovery",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/agents",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/audit",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/grants",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/auth/start",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/auth/finish",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/grants",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/delegations",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/recovery",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/agents",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/audit",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/grants",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/config",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/auth/start",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/auth/finish",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/delegations",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/agents",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/recovery",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/audit",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/grants",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/auth/start",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/auth/finish",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/delegations",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/recovery",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/audit",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/agents",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/grants",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/read",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/auth/start",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/auth/start",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/auth/finish",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/grants/revoke",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/delegations",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/auth/finish",
+      "status": 403
+    },
+    {
+      "actor": "owner",
+      "path": "/api/audit",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/recovery",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/agents",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "owner",
+      "path": "/api/grants",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/auth/start",
+      "status": 403
+    },
+    {
+      "actor": "guest",
+      "path": "/api/config",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/auth/start",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/auth/finish",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/delegations",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/recovery",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/credentials",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/agents",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/audit",
+      "status": 200
+    },
+    {
+      "actor": "guest",
+      "path": "/api/grants",
+      "status": 200
+    }
+  ],
+  "verifier": "real Rust WebAuthn verifier",
+  "authenticator": "virtual CTAP2",
+  "hardware_verified": false,
+  "document_sha256": "a013dbb2ae84f6f245881faba79a626c156421828d1ab1c409b2e866ecb48ac7"
+}

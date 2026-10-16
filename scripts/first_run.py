@@ -1,4 +1,5 @@
 """Build and launch the checked-out preview without requiring just or Docker."""
+
 import argparse
 import os
 from pathlib import Path
@@ -24,7 +25,9 @@ def main():
         print("Install these tools first: " + ", ".join(missing))
         print("Rust: https://rustup.rs/\nBun 1.4.2: https://bun.sh/docs/installation")
         return 1
-    version = subprocess.check_output(["bun", "--version"], text=True, timeout=15).strip()
+    version = subprocess.check_output(
+        ["bun", "--version"], text=True, timeout=15
+    ).strip()
     if version != "1.4.2":
         print(f"Bun 1.4.2 is required; installed: {version}")
         return 1
@@ -34,6 +37,7 @@ def main():
     env = os.environ.copy()
     if args.protection_key_file:
         from create_protection_key import create
+
         path = args.protection_key_file.expanduser().absolute()
         if not path.exists():
             create(path)

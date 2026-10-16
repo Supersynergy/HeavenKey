@@ -20,9 +20,9 @@ Mit Passkeys anmelden, zeitlich begrenzte Zugänge teilen und jede Weitergabe ko
 
 ![HeavenKey in drei Schritten starten](docs/images/01-installation.svg)
 
-**Aktueller Quellstand: 0.7.0, lokale Vorschau.** Die veröffentlichten 0.6-Pakete enthalten die neuen Funktionen noch nicht. Die [bebilderte Installationsanleitung](docs/INSTALLATION.md) erklärt beide Wege und die Erweiterungen für Chrome, Edge und Firefox.
+**Aktueller Quellstand: 0.7.0, lokale Vorschau.** Die veröffentlichten 0.6-Pakete enthalten die neuen Funktionen noch nicht. Die [bebilderte Installationsanleitung](docs/INSTALLATION.md) erklärt beide Wege und die Chrome-/Firefox-Erweiterungen. Edge verwendet das Chromium-Paket.
 
-Nach Installation von Rustup, Bun **1.4.2** und Python 3.11+ im Projektordner starten:
+Installiere Rustup und Python 3.11+ sowie Bun **1.4.2**. Starte danach im Projektordner:
 
 ```sh
 python3 scripts/first_run.py
@@ -43,7 +43,7 @@ Windows: `py -3 scripts/first_run.py`. Der Assistent baut und öffnet HeavenKey;
 | Änderungen bestätigen | Die Details einer Änderung vor der frischen Passkey-Bestätigung prüfen. |
 | Zustände behalten | Den Kontozustand lokal speichern; ein Neustart hebt Sperren nicht auf. |
 | Einfach lesen | Innerhalb einer aktiven Sitzung mit laufend geprüften Berechtigungen lesen; sensible Änderungen weiterhin frisch bestätigen. |
-| Konto wiederherstellen | Gesicherten Einmalcode verbrauchen, neuen Passkey erstellen und alte Schlüssel, Sitzungen und Agenten sperren. |
+| Konto wiederherstellen | Einen neuen Passkey mit dem gesicherten Einmalcode einrichten. Alte Schlüssel und Agenten werden gesperrt; offene Sitzungen enden. |
 | Signierschlüssel schützen | Schlüssel verschlüsselt speichern; Schutzschlüssel im Betriebssystem-Keystore oder in einer expliziten externen Datei verwahren. |
 | Agenten begrenzen | Eigene Maschinenschlüssel, genaue Rechte, Laufzeiten, Schlüsselbesitznachweis und Widerruf; ausführbarer lokaler CRM-Pilot mit synthetischen Daten. |
 | Privaten Tresor nutzen | Optional mit PRF-fähigem Passkey lokal entschlüsseln, mehrere Passkeys berechtigen und unabhängigen Offline-Schlüssel sichern. |
@@ -82,7 +82,7 @@ Die Oberfläche startest du mit `cargo run --locked --offline -p uac-api -- --op
 
 **Version 0.7 ist eine lokale Vorschau im Quellstand.** Verfügbare 0.6-Desktop-Pakete haben den älteren Funktionsumfang. Desktop-Pakete enthalten die Weboberfläche und ihre nativen Bibliotheken. Windows wird zusätzlich über Wine geprüft; das ersetzt keine Abnahme von Windows Hello oder physischen Passkeys. Firefox-Erweiterungen sind vorerst temporär installierbar. Der kostenlose GitHub-Runner läuft lokal; gehostete kostenpflichtige Runner werden nicht verwendet. Neue Prüfungen und offene Browser-/Hardware-Grenzen stehen unter [0.7-Verifikation](docs/V07-VERIFICATION.md); ältere Nachweise unter [Verifikation](docs/VERIFICATION.md).
 
-Die Demo arbeitet mit einem Testdokument. Der Dienst signiert Zugänge und prüft sie online. Recovery, geschützte Signierschlüssel, ein optionaler PRF-Notiztresor und ein lokaler Agenten-/CRM-Adapter sind implementiert. Vollständige Datenbankverschlüsselung, echte Mandanten, reale externe Integrationen und Offline-Nutzung bleiben gesonderte Vorhaben. Das Delegationsprofil ist ein eigenes Format; UCAN-/DID-Kompatibilität ist noch offen.
+Die Demo arbeitet mit einem Testdokument. Der Dienst signiert Zugänge und prüft sie online. Der integrierte 0.7-Quellstand verbindet HTTPS-Passkeys, SQLCipher-Datenbank, geschützte Signierschlüssel, Recovery, optionalen PRF-Notiztresor und einen lokalen Agenten-/CRM-Adapter. Das Offline-Gate und die Mandantenbibliothek sind enthalten; die API verwendet weiterhin einzelne Konten und keinen externen Mandantenconnector. Reale Next-Office-Anbindung und UCAN-/DID-Kompatibilität bleiben offen. Die zusammengeführten Entwicklungszweige und Abnahmegrenzen stehen in [Integration](docs/INTEGRATION.md).
 
 ## Aufbau
 

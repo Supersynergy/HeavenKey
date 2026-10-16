@@ -1,8 +1,9 @@
 bun run build
-$ bun build apps/web/src/main.ts --outdir apps/web/dist --target browser
-Bundled 1 module in 3ms
+$ python3 scripts/build_web.py
+Bundled 22 modules in 13ms
 
-  main.js  6.76 KB  (entry point)
+  main.js  62.46 KB  (entry point)
 
 cargo build --locked --offline
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.13s
+   Compiling uac-api v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/api)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.01s

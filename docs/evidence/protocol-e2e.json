@@ -19,6 +19,10 @@
       "pass": true
     },
     {
+      "name": "API-issued delegation works at the standalone offline gate with the exported snapshot",
+      "pass": true
+    },
+    {
       "name": "bearer-only agent issuance denied; approved issuance succeeds exactly once",
       "pass": true
     },

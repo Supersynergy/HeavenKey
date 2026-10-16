@@ -1,0 +1,84 @@
+FF/opt/homebrew/Cellar/python@3.14/3.14.8_2/Frameworks/Python.framework/Versions/3.14/lib/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 403: 'Forbidden'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+FF..FE
+======================================================================
+ERROR: test_wrong_protection_key_is_rejected (scripts.test_workstream_integration.WorkstreamIntegration.test_wrong_protection_key_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/scripts/test_workstream_integration.py", line 109, in test_wrong_protection_key_is_rejected
+    self.assertIn("authentication failed", self.refuses_start({}))
+                                           ~~~~~~~~~~~~~~~~~~^^^^
+  File "/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/scripts/test_workstream_integration.py", line 86, in refuses_start
+    result = subprocess.run([self.binary], env=self.env | overrides, capture_output=True, timeout=10)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.8_2/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 557, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.8_2/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 1221, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.8_2/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 2154, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.8_2/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 1268, in _check_timeout
+    raise TimeoutExpired(
+    ...<2 lines>...
+            stderr=b''.join(stderr_seq) if stderr_seq else None)
+subprocess.TimeoutExpired: Command '['/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/target/debug/uac-api']' timed out after 10 seconds
+
+======================================================================
+FAIL: test_encrypted_database_and_protected_issuer_survive_restart (scripts.test_workstream_integration.WorkstreamIntegration.test_encrypted_database_and_protected_issuer_survive_restart)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/scripts/test_workstream_integration.py", line 93, in test_encrypted_database_and_protected_issuer_survive_restart
+    self.assertTrue((self.data / "issuer.enc").is_file())
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_existing_envelope_and_plaintext_database_keep_identity (scripts.test_workstream_integration.WorkstreamIntegration.test_existing_envelope_and_plaintext_database_keep_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/scripts/test_workstream_integration.py", line 136, in test_existing_envelope_and_plaintext_database_keep_identity
+    self.assertEqual(config["issuer_public_key"], issuer)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'HGJ7DVX5P5x0-5uAPn65o7EKOBhl8FNV33yNwv0ocwQ' != '6X7QOrQXFMwCztO_qYgmKAc6eqd_uZPM_Pj2vH-V-ps'
+- HGJ7DVX5P5x0-5uAPn65o7EKOBhl8FNV33yNwv0ocwQ
++ 6X7QOrQXFMwCztO_qYgmKAc6eqd_uZPM_Pj2vH-V-ps
+
+
+======================================================================
+FAIL: test_origin_alias_is_honored_and_conflicting_aliases_fail (scripts.test_workstream_integration.WorkstreamIntegration.test_origin_alias_is_honored_and_conflicting_aliases_fail)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/scripts/test_workstream_integration.py", line 145, in test_origin_alias_is_honored_and_conflicting_aliases_fail
+    with self.server({"HEAVENKEY_ORIGIN": "https://heaven.example"}, "heaven.example") as config:
+         ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.8_2/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/scripts/test_workstream_integration.py", line 73, in server
+    self.fail("owned integration server did not start within five seconds")
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: owned integration server did not start within five seconds
+
+======================================================================
+FAIL: test_plaintext_migration_preserves_data_and_legacy_issuer (scripts.test_workstream_integration.WorkstreamIntegration.test_plaintext_migration_preserves_data_and_legacy_issuer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/scripts/test_workstream_integration.py", line 120, in test_plaintext_migration_preserves_data_and_legacy_issuer
+    self.assertTrue((self.data / "issuer.enc").is_file())
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_wrong_database_key_is_rejected_without_replacing_data (scripts.test_workstream_integration.WorkstreamIntegration.test_wrong_database_key_is_rejected_without_replacing_data)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/scripts/test_workstream_integration.py", line 103, in test_wrong_database_key_is_rejected_without_replacing_data
+    self.assertEqual(hashlib.sha256((self.data / "uac.sqlite").read_bytes()).digest(), before)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'$HM\x8b"\xdaH\xf1\xf7R\x92L`\xd3j\xf9\x08[39 chars]dcHP' != b'B\xe6}\x025K?zv\x18\x12~\x1d\x9b\xb7;r)Jo[41 chars]\x8b'
+
+----------------------------------------------------------------------
+Ran 8 tests in 15.959s
+
+FAILED (failures=5, errors=1)

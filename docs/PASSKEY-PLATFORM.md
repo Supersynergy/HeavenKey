@@ -9,7 +9,7 @@ Dieser Stand erweitert die lokale Vorschau. Eine produktive, verteilte Identity-
 | Menschliche Identität | `webauthn-rs` verifiziert Registrierung und Authentifizierung. Mehrere aktive Credentials gehören zu einer stabilen Konto-ID. |
 | Zustimmung | Typisierte Aktionsfreigaben, an Sitzung, Konto, aktiven Signierer und genaue Parameter gebunden; 60 Sekunden, einmalig. |
 | Berechtigung | Vorhandene service-signierte Grant- und Delegationsprofile bleiben unverändert. |
-| Bequemer Lesezugriff | `/api/read` akzeptiert ausschließlich eine bestehende Grant- oder Delegations-ID, prüft die aktuelle Kontoidentität und aktuelle Rechte und gibt das feste Demo-Dokument zurück. |
+| Bequemer Lesezugriff | `/api/read` akzeptiert ausschließlich eine bestehende Grant- oder Delegations-ID, prüft die aktuelle Kontoidentität und aktuelle Rechte und gibt das konfigurierte private Dokument zurück. |
 | Maschinenidentität | Eigener Ed25519-Schlüssel; service-signierter Auftrag mit Resource, Aktionen, Zeitfenster und optionalem Elternzugang. |
 | Lokaler Zieladapter | Synthetischer CRM-Kontakt pro ausstellendem Konto; Leserecht oder eng begrenztes Notiz-Update. |
 | Private Inhalte | PRF-gestützter, ausschließlich im Browser entschlüsselter Notiztresor. |
@@ -23,12 +23,14 @@ Der Passkey autorisiert die Ausstellung von Rechten. Der Dienst signiert die por
 | --- | --- |
 | `UAC_PORT` | Lokaler Listener-Port, Standard 18240; Bindung bleibt IPv4-Loopback. |
 | `UAC_DATA` | Datenordner; alternativ `--data-dir`. |
-| `HEAVENKEY_ORIGIN` | Erwartete kanonische WebAuthn-Origin. Standard `http://localhost:PORT`. Andere Hosts benötigen HTTPS. |
-| `HEAVENKEY_PUBLIC_ORIGIN` | Kompatibler alternativer Name für die Origin-Konfiguration; `HEAVENKEY_ORIGIN` hat Vorrang. |
-| `HEAVENKEY_RP_ID` | Dauerhafte Passkey-RP-ID, Standard `localhost`. Muss zur Origin gehören und die Validierung von `webauthn-rs` bestehen. |
+| `HEAVENKEY_PUBLIC_ORIGIN` | Erwartete kanonische HTTPS-Origin. Standard ohne Angabe: `http://localhost:PORT`. |
+| `HEAVENKEY_ORIGIN` | Kompatibler Alias; widersprüchliche Origin-Angaben werden abgewiesen. |
+| `HEAVENKEY_RP_ID` | Dauerhafte Passkey-RP-ID; Vorgabe ist der Hostname der Origin. Muss zur Origin gehören und die Validierung von `webauthn-rs` bestehen. |
 | `HEAVENKEY_KEY_FILE` | Explizite private 32-Byte-Schutzdatei außerhalb des Datenordners; ersetzt die native Keystore-Auswahl. |
+| `UAC_STORE_KEY` / `UAC_STORE_KEY_FILE` | SQLCipher-Schlüssel als 64 Hex-Zeichen oder externe 32-Byte-Datei. |
+| `HEAVENKEY_DOCUMENT` | Privates UTF-8-Dokument außerhalb der Webdateien; bei HTTPS erforderlich, 1–65536 Bytes. |
 
-Origin und RP-ID vor dem Anlegen eines neuen Datenbestands festlegen. Die RP-ID wird im Datenbestand festgeschrieben. Ein Bestand mit localhost-Passkeys wird bei einem stillen Wechsel zu einer anderen RP-ID abgewiesen. Ein HTTPS-Reverse-Proxy muss `Host` und `Origin` korrekt erhalten. Dieser PR startet keinen Proxy und veröffentlicht keinen Dienst. Die Origin-/RP-ID-Konfiguration ist keine geprüfte HTTPS-Bereitstellung; der separate Hosting-Vorschlag in PR #23 muss bei einer Zusammenführung abgestimmt werden.
+Origin und RP-ID vor dem Anlegen eines neuen Datenbestands festlegen. Die RP-ID wird im Datenbestand festgeschrieben. Ein Bestand mit localhost-Passkeys wird beim Wechsel zu einer anderen RP-ID abgewiesen. Ein HTTPS-Reverse-Proxy muss `Host` und `Origin` erhalten; die Vorlagen unter `deploy/` und [Betrieb](OPERATIONS.md) verwenden diese gemeinsame Konfiguration. Die lokale HTTPS-Abnahme verwendet einen eigenen Caddy-Prozess und ein Testzertifikat. Sie veröffentlicht keinen Dienst.
 
 ## Neue API-Routen
 
@@ -73,7 +75,7 @@ Eine vorhandene private `issuer.key` wird unter demselben Ed25519-Seed migriert:
 
 Die native Keystore-Zuordnung hängt vom kanonischen Datenpfad ab. Vor einem Pfad-/Gerätewechsel oder einer Neuinstallation ist ein gesondertes, geschütztes Backup des Schutzschlüssels beziehungsweise des Betriebssystem-Keystores erforderlich. Die Wiederherstellungsdatei für das Benutzerkonto ist kein Server-Backup.
 
-Die Datenbank bleibt unverschlüsselt. Der separate SQLCipher-Vorschlag in PR #15 wird durch diesen Stand weder gemergt noch ersetzt. Die Cargo- und Speicherkonfigurationen müssen vor einer gemeinsamen Übernahme abgeglichen werden.
+Die Datenbank ist mit SQLCipher verschlüsselt. Bestehende Klartextbestände werden über eine temporäre verschlüsselte Datenbank migriert und anschließend umbenannt. Der Signierschlüssel aus der verschlüsselten Meta-Tabelle und `issuer.enc` müssen übereinstimmen; ein Konflikt verhindert den Start. Ein alter Dateischlüssel und eine vorhandene Schlüsselhülle behalten dieselbe Identität. Datenbankschlüssel und Schutzschlüssel sind getrennte Backup-Bestandteile.
 
 ## Grenzen und ausstehende Abnahme
 

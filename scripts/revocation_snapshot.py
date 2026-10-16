@@ -13,6 +13,9 @@ Usage:
 Environment: UAC_STORE_KEY / UAC_STORE_KEY_FILE apply to the store query
 exactly as for the API; UAC_API_BINARY overrides the binary path.
 """
+
+import base64
+import binascii
 import json
 import os
 import subprocess
@@ -22,7 +25,8 @@ import time
 
 STORE_QUERY = {"sql": "SELECT id FROM delegations WHERE revoked=1", "params": []}
 MAX_ID_LENGTH = 64
-MAX_ENTRIES = 65536
+MAX_ENTRIES = 16384
+MAX_SNAPSHOT_BYTES = 2 * 1024 * 1024
 
 
 def query_ids(binary, data_dir):
@@ -36,7 +40,9 @@ def query_ids(binary, data_dir):
         timeout=60,
     )
     if result.returncode != 0:
-        raise SystemExit(f"store query failed: {result.stderr.strip() or result.stdout.strip()}")
+        raise SystemExit(
+            f"store query failed: {result.stderr.strip() or result.stdout.strip()}"
+        )
     return parse_rows(result.stdout)
 
 
@@ -50,14 +56,32 @@ def parse_rows(text):
             raise SystemExit("delegations.id query must return one column per row")
         value = row[0]
         if isinstance(value, dict) and "blob_base64" in value:
-            import base64
-            value = base64.b64decode(value["blob_base64"]).hex()
+            try:
+                value = base64.b64decode(value["blob_base64"], validate=True).hex()
+            except (ValueError, binascii.Error) as error:
+                raise SystemExit("invalid blob grant id") from error
         if not isinstance(value, str):
             raise SystemExit("delegations.id must be text or a single blob column")
-        candidate = value.strip().lower()
-        if len(candidate) != MAX_ID_LENGTH or any(c not in "0123456789abcdef" for c in candidate):
-            raise SystemExit(f"delegations.id is not a 64-hex grant id: {value!r}")
-        revoked.append(candidate)
+        candidate = value.strip()
+        if len(candidate) == MAX_ID_LENGTH and all(
+            c in "0123456789abcdefABCDEF" for c in candidate
+        ):
+            revoked.append(candidate.lower())
+        elif len(candidate) == 43:
+            try:
+                raw = base64.b64decode(candidate + "=", altchars=b"-_", validate=True)
+            except (ValueError, binascii.Error) as error:
+                raise SystemExit("invalid API grant id") from error
+            if (
+                len(raw) != 32
+                or base64.urlsafe_b64encode(raw).decode().rstrip("=") != candidate
+            ):
+                raise SystemExit("noncanonical API grant id")
+            revoked.append(raw.hex())
+        else:
+            raise SystemExit(
+                "delegations.id must be a 32-byte canonical Base64url or hex grant id"
+            )
     if len(revoked) > MAX_ENTRIES:
         raise SystemExit("revocation snapshot exceeds entry limit")
     return sorted(set(revoked))
@@ -65,13 +89,15 @@ def parse_rows(text):
 
 def write_snapshot(path, revoked, generated_at):
     snapshot = {"version": 1, "generated_at": generated_at, "revoked": revoked}
+    payload = json.dumps(snapshot, indent=1, sort_keys=True) + "\n"
+    if len(revoked) > MAX_ENTRIES or len(payload.encode()) > MAX_SNAPSHOT_BYTES:
+        raise SystemExit("revocation snapshot exceeds gate capacity")
     directory = os.path.dirname(os.path.abspath(path)) or "."
     os.makedirs(directory, exist_ok=True)
     handle, tmp = tempfile.mkstemp(dir=directory, prefix=".revocations-", suffix=".tmp")
     try:
         with os.fdopen(handle, "w") as stream:
-            json.dump(snapshot, stream, indent=1, sort_keys=True)
-            stream.write("\n")
+            stream.write(payload)
         os.replace(tmp, path)
     except BaseException:
         os.unlink(tmp)
@@ -79,7 +105,12 @@ def write_snapshot(path, revoked, generated_at):
 
 
 def main(argv):
-    args = {"--out": None, "--data": "data", "--store-query-json": None, "--binary": None}
+    args = {
+        "--out": None,
+        "--data": "data",
+        "--store-query-json": None,
+        "--binary": None,
+    }
     index = 0
     while index < len(argv):
         flag = argv[index]

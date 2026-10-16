@@ -39,6 +39,7 @@ security_checks() {
 build() {
   bun run build
   cargo build --locked --offline
+  HEAVENKEY_INTEGRATION_BINARY=target/debug/uac-api python3 -m unittest scripts.test_workstream_integration
   bun scripts/protocol_e2e.mjs
 }
 

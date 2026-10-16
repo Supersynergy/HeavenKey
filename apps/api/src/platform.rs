@@ -759,7 +759,7 @@ pub(super) async fn agent_invoke(
     )
     .map_err(|_| forbidden("challenge_replayed"))?;
     let data = match pending.invocation.resource.as_str() {
-        "document" => json!({"document":"HeavenKey example document — verified agent access"}),
+        "document" => json!({"document":app.document.as_ref()}),
         "crm.contacts" => {
             tx.execute("INSERT OR IGNORE INTO crm_contacts(account_id,id,name,note) VALUES(?1,'demo-contact','Hotel Alpenblick · Beispiel','Synthetischer Testkontakt')",[&grant.account_id]).map_err(internal)?;
             if pending.invocation.action == Action::Write {
@@ -846,7 +846,7 @@ pub(super) async fn read(
             .unwrap_or_default(),
     )?;
     Ok(Json(
-        json!({"allowed":true,"data":"HeavenKey example document — session and current authorization verified","fresh_passkey_required":false}),
+        json!({"allowed":true,"data":app.document.as_ref(),"fresh_passkey_required":false}),
     ))
 }
 

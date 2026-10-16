@@ -1,0 +1,129 @@
+=== semgrep (auto) ===
+
+
+┌──────────────────┐
+│ 10 Code Findings │
+└──────────────────┘
+
+    scripts/build_openssl.py
+    ❯❱ python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+          ❰❰ Blocking ❱❱
+          Detected a dynamic value being used with urllib. urllib supports 'file://' schemes, so a dynamic
+          value controlled by a malicious actor may allow them to read arbitrary files. Audit uses of urllib
+          calls to ensure user data cannot control the URLs, or consider using the 'requests' library instead.
+          Details: https://sg.run/dKZZ
+
+           25┆ urllib.request.urlopen(URL, timeout=30) as response,
+
+   ❯❯❱ trailofbits.python.tarfile-extractall-traversal.tarfile-extractall-traversal
+          ❰❰ Blocking ❱❱
+          Possible path traversal through `tarfile.open($PATH).extractall()` if the source tar is controlled
+          by an attacker
+          Details: https://sg.run/2RLD
+
+           45┆ with tarfile.open(archive) as package:
+           46┆     package.extractall(directory, filter="data")
+
+    scripts/firefox_e2e.py
+    ❯❱ python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+          ❰❰ Blocking ❱❱
+          Detected a dynamic value being used with urllib. urllib supports 'file://' schemes, so a dynamic
+          value controlled by a malicious actor may allow them to read arbitrary files. Audit uses of urllib
+          calls to ensure user data cannot control the URLs, or consider using the 'requests' library instead.
+          Details: https://sg.run/dKZZ
+
+           25┆ with urllib.request.urlopen(request, timeout=20) as response:
+
+    scripts/local_https_e2e.py
+    ❯❱ python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+          ❰❰ Blocking ❱❱
+          Detected a dynamic value being used with urllib. urllib supports 'file://' schemes, so a dynamic
+          value controlled by a malicious actor may allow them to read arbitrary files. Audit uses of urllib
+          calls to ensure user data cannot control the URLs, or consider using the 'requests' library instead.
+          Details: https://sg.run/dKZZ
+
+           68┆ with urllib.request.urlopen(request, timeout=1) as response:
+
+    scripts/runtime_smoke.py
+    ❯❱ python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+          ❰❰ Blocking ❱❱
+          Detected a dynamic value being used with urllib. urllib supports 'file://' schemes, so a dynamic
+          value controlled by a malicious actor may allow them to read arbitrary files. Audit uses of urllib
+          calls to ensure user data cannot control the URLs, or consider using the 'requests' library instead.
+          Details: https://sg.run/dKZZ
+
+           75┆ response = urllib.request.urlopen(
+           76┆     "http://localhost:18244/health", timeout=1
+           77┆ )
+
+    ❯❱ python.lang.security.audit.insecure-transport.urllib.insecure-urlopen.insecure-urlopen
+          ❰❰ Blocking ❱❱
+          Detected 'urllib.urlopen()' using 'http://'. This request will not be encrypted. Use 'https://'
+          instead.
+          Details: https://sg.run/oxB9
+
+           ▶▶┆ Autofix ▶ urllib.request.urlopen( "https://localhost:18244/health", timeout=1 )
+           75┆ response = urllib.request.urlopen(
+           76┆     "http://localhost:18244/health", timeout=1
+           77┆ )
+
+    ❯❱ python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+          ❰❰ Blocking ❱❱
+          Detected a dynamic value being used with urllib. urllib supports 'file://' schemes, so a dynamic
+          value controlled by a malicious actor may allow them to read arbitrary files. Audit uses of urllib
+          calls to ensure user data cannot control the URLs, or consider using the 'requests' library instead.
+          Details: https://sg.run/dKZZ
+
+           92┆ with urllib.request.urlopen(
+           93┆     "http://localhost:18244" + resource, timeout=3
+           94┆ ) as response:
+
+    ❯❱ python.lang.security.audit.insecure-transport.urllib.insecure-request-object.insecure-request-object
+          ❰❰ Blocking ❱❱
+          Detected a 'urllib.request.Request()' object using an insecure transport protocol, 'http://'. This
+          connection will not be encrypted. Use 'https://' instead.
+          Details: https://sg.run/YvAe
+
+           ▶▶┆ Autofix ▶ urllib.request.Request( "https://localhost:18244/api/register/start", data=b'{"name":"guest"}',
+              headers={ "Content-Type": "application/json", "Origin": "http://localhost:18244",
+              }, )
+          100┆ request = urllib.request.Request(
+          101┆     "http://localhost:18244/api/register/start",
+          102┆     data=b'{"name":"guest"}',
+          103┆     headers={
+          104┆         "Content-Type": "application/json",
+          105┆         "Origin": "http://localhost:18244",
+          106┆     },
+          107┆ )
+
+    ❯❱ python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+          ❰❰ Blocking ❱❱
+          Detected a dynamic value being used with urllib. urllib supports 'file://' schemes, so a dynamic
+          value controlled by a malicious actor may allow them to read arbitrary files. Audit uses of urllib
+          calls to ensure user data cannot control the URLs, or consider using the 'requests' library instead.
+          Details: https://sg.run/dKZZ
+
+          108┆ with urllib.request.urlopen(request, timeout=3) as response:
+
+    scripts/test_workstream_integration.py
+    ❯❱ python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+          ❰❰ Blocking ❱❱
+          Detected a dynamic value being used with urllib. urllib supports 'file://' schemes, so a dynamic
+          value controlled by a malicious actor may allow them to read arbitrary files. Audit uses of urllib
+          calls to ensure user data cannot control the URLs, or consider using the 'requests' library instead.
+          Details: https://sg.run/dKZZ
+
+           56┆ with urllib.request.urlopen(request, timeout=2) as response:
+
+
+=== gitleaks (secrets) ===
+7:44PM INF 35 commits scanned.
+7:44PM INF scanned ~3737334 bytes (3.74 MB) in 361ms
+7:44PM INF no leaks found
+
+=== osv-scanner (deps CVE) ===
+Starting filesystem walk for root: /
+Scanned /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock file and found 291 packages
+End status: 0 dirs visited, 1 inodes visited, 1 Extract calls, 5.164625ms elapsed, 5.165ms wall time
+
+No issues found

@@ -1,92 +1,236 @@
 HEAVENKEY_ADVISORIES_OFFLINE=1 bash scripts/ci.sh check
-....................
+..........................................ssssssssss
 ----------------------------------------------------------------------
-Ran 20 tests in 0.064s
+Ran 52 tests in 0.206s
 
-OK
+OK (skipped=10)
 $ python3 scripts/build_web.py
-Bundled 21 modules in 4ms
+Bundled 22 modules in 18ms
 
-  main.js  39.76 KB  (entry point)
+  main.js  62.46 KB  (entry point)
 
-{"passed":75,"fixtures":32,"cases":35,"independent":"Node crypto Ed25519/SHA256 with separate binary encoder"}
-   Compiling uac-api v0.6.0 (/home/ubuntu/repos/HeavenKey/apps/api)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.53s
-   Compiling uac-api v0.6.0 (/home/ubuntu/repos/HeavenKey/apps/api)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.57s
-     Running unittests src/main.rs (target/debug/build/uac-api/498c56a178cedc06/out/uac_api-498c56a178cedc06)
+bun test v1.4.2 (744846f84)
 
-running 27 tests
+apps/web/src/vault.test.ts:
+(pass) vault rejects wrong key, changed account, wrong credential and modified ciphertext [14.56ms]
+(pass) multiple independent passkeys and offline recovery wrap the same vault key [0.61ms]
+
+ 2 pass
+ 0 fail
+ 12 expect() calls
+Ran 2 tests across 1 file. [236.00ms]
+bun test v1.4.2 (744846f84)
+
+apps/web/src/interface.test.ts:
+(pass) actual interface wires navigation, passkey login, sensitive confirmation and logout [20.12ms]
+
+ 1 pass
+ 0 fail
+ 15 expect() calls
+Ran 1 test across 1 file. [183.00ms]
+bun test v1.4.2 (744846f84)
+
+apps/extension/popup.test.ts:
+(pass) popup discards unsafe saved settings, opens the exact destination and stores no session [17.57ms]
+
+ 1 pass
+ 0 fail
+ 5 expect() calls
+Ran 1 test across 1 file. [144.00ms]
+Extension connection and destination validation passed.
+{"passed":147,"fixtures":56,"cases":55,"invalid_json":31,"equivalent_json":4,"independent":"Node crypto Ed25519/SHA256 with separate binary encoder"}
+{"passed":108,"fixtures":29,"cases":34,"independent":"Node crypto Ed25519/SHA256 with separate serde_json encoder"}
+    Checking uac-verifier v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/crates/verifier)
+   Compiling uac-api v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/api)
+    Checking uac-keystore v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/crates/keystore)
+    Checking uac-recovery v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/crates/recovery)
+    Checking uac-tenancy v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/crates/tenancy)
+    Checking uac-ucan-bridge v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/crates/ucan-bridge)
+    Checking uac-gate v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/gate)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.10s
+   Compiling uac-api v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/api)
+   Compiling uac-gate v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/gate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.82s
+     Running unittests src/main.rs (target/debug/build/uac-api/62f39eae976ff416/out/uac_api-62f39eae976ff416)
+
+running 37 tests
 test desktop::tests::platform_data_paths ... ok
 test desktop::tests::xdg_data_home_overrides_home ... ok
+test hosting::tests::public_mode_requires_private_document ... ok
+test hosting::tests::local_default_is_preserved ... ok
 test desktop::tests::missing_or_relative_data_root_fails ... ok
+test hosting::tests::insecure_or_ambiguous_public_origins_are_rejected ... ok
+test hosting::tests::public_origin_binds_host_and_rp_exactly ... ok
 test store::tests::key_dir_prefers_xdg_config ... ok
-test tests::active_key_rechecks_and_zero_key_authentication_fail_closed ... ok
 test store::tests::custody_conflict_detects_changed_file ... ok
-test tests::bearer_sessions_cannot_perform_any_management_mutation ... ok
 test store::tests::issuer_file_migrates_into_meta_and_is_removed ... ok
-test store::tests::issuer_file_conflicting_with_meta_fails_closed ... ok
-test store::tests::generated_issuer_is_stable_across_reopen ... ok
-2026-10-12 22:25:49.445: ERROR CORE sqlcipher_page_cipher: hmac check failed for pgno=1
-2026-10-12 22:25:49.445: ERROR CORE sqlite3Codec: error decrypting page 1 data: 1
-2026-10-12 22:25:49.445: ERROR CORE sqlcipher_codec_ctx_set_error 1
 test store::tests::query_returns_rows_and_affected ... ok
-test tests::credential_cap_counts_active_keys_and_rejects_retired_duplicates ... ok
+test store::tests::generated_issuer_is_stable_across_reopen ... ok
+test store::tests::issuer_file_conflicting_with_meta_fails_closed ... ok
 test store::tests::new_store_is_encrypted_and_rejects_wrong_key ... ok
-test tests::duplicate_approved_mutations_commit_once ... ok
-test tests::every_operation_parameter_is_exact_and_mismatches_consume_approval ... ok
-test tests::invalid_parameters_and_wrong_sessions_burn_supplied_approvals ... ok
-test tests::management_schema_rejects_ambiguous_or_extra_fields ... ok
-test tests::management_checks_authority_and_bounds_outstanding_approvals ... ok
-test tests::monotonic_expiry_and_signer_state_are_checked_at_consumption ... ok
-2026-10-12 22:25:49.454: ERROR CORE sqlcipher_page_cipher: hmac check failed for pgno=1
-2026-10-12 22:25:49.454: ERROR CORE sqlite3Codec: error decrypting page 1 data: 1
-2026-10-12 22:25:49.454: ERROR CORE sqlcipher_codec_ctx_set_error 1
-test tests::existing_grant_keeps_initial_subject_after_original_key_revocation ... ok
-test tests::revoke_is_account_scoped_invalidates_sessions_and_preserves_last_key ... ok
 test store::tests::plaintext_database_migrates_and_loses_plaintext_sidecars ... ok
+test platform::tests::rp_identity_is_durable_and_rejects_unsafe_origins ... ok
+test tests::active_key_rechecks_and_zero_key_authentication_fail_closed ... ok
+test tests::credential_cap_counts_active_keys_and_rejects_retired_duplicates ... ok
+test platform::tests::vault_writes_bind_ciphertext_revision_and_active_account_keys ... ok
+test tests::management_schema_rejects_ambiguous_or_extra_fields ... ok
+test platform::tests::recovery_setup_requires_fresh_exact_approval_and_only_stores_a_digest ... ok
+test tests::bearer_sessions_cannot_perform_any_management_mutation ... ok
+test platform::tests::agent_proof_is_required_one_use_and_bound_to_exact_action_and_authority ... ok
+test tests::every_operation_parameter_is_exact_and_mismatches_consume_approval ... ok
+test tests::duplicate_approved_mutations_commit_once ... ok
 test tests::delegation_mutations_require_exact_fresh_approvals ... ok
+test tests::invalid_parameters_and_wrong_sessions_burn_supplied_approvals ... ok
+test platform::tests::session_reads_recheck_live_delegation_and_logout_invalidates_approvals ... ok
+test tests::existing_grant_keeps_initial_subject_after_original_key_revocation ... ok
+test platform::tests::delegated_agent_cannot_bypass_parent_budget_expiry_or_ancestor_revocation ... ok
+test tests::revoke_is_account_scoped_invalidates_sessions_and_preserves_last_key ... ok
+test tests::monotonic_expiry_and_signer_state_are_checked_at_consumption ... ok
+test tests::management_checks_authority_and_bounds_outstanding_approvals ... ok
 test tests::legacy_migration_survives_restart_without_resurrecting_revoked_keys ... ok
 test tests::signed_database_tokens_cannot_skip_or_replace_their_parent_metadata ... ok
 test tests::ancestor_revocation_invalidates_descendants_and_preapproved_writes_after_restart ... ok
 test tests::delegation_attenuation_and_visibility_are_account_bound ... ok
 
-test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s
+test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 
-     Running unittests src/lib.rs (target/debug/build/uac-verifier/a76192ef5afa83fd/out/uac_verifier-a76192ef5afa83fd)
+     Running unittests src/main.rs (target/debug/build/uac-gate/c3b504982e83c8c0/out/uac_gate-c3b504982e83c8c0)
+
+running 16 tests
+test tests::issuer_key_accepts_hex_and_raw_32_bytes ... ok
+test tests::malformed_request_body_is_rejected ... ok
+test tests::empty_chain_is_denied ... ok
+test tests::tampered_signature_is_denied ... ok
+test tests::non_read_action_is_denied ... ok
+test tests::unreadable_snapshot_denies_closed ... ok
+test tests::wrong_holder_is_denied ... ok
+test tests::revoked_ancestor_denies_descendants ... ok
+test tests::directly_revoked_leaf_is_denied ... ok
+test tests::expired_chain_is_denied ... ok
+test tests::budget_violation_is_denied ... ok
+test tests::invalid_snapshot_content_denies_closed ... ok
+test tests::valid_chain_is_authorized ... ok
+test tests::chain_deeper_than_five_links_is_denied ... ok
+test tests::http_gate_grants_and_denies ... ok
+test tests::maximum_revocation_count_fits_the_snapshot_byte_budget ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running unittests src/lib.rs (target/debug/build/uac-keystore/8979eba84f297696/out/uac_keystore-8979eba84f297696)
+
+running 2 tests
+test tests::authenticated_envelope_rejects_wrong_keys_tampering_and_versions ... ok
+test tests::migration_preserves_issuer_and_restart_requires_the_same_external_key ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running unittests src/lib.rs (target/debug/build/uac-recovery/d4a70231cd652cf5/out/uac_recovery-d4a70231cd652cf5)
+
+running 1 test
+test tests::codes_are_random_canonical_and_account_bound ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/build/uac-tenancy/165c130a0288bcf8/out/uac_tenancy-165c130a0288bcf8)
+
+running 9 tests
+test tests::unknown_tenant_and_operator_views ... ok
+test tests::ids_roundtrip_through_serde_and_strings ... ok
+test tests::revoke_then_invoke_fails_closed ... ok
+test tests::runtime_check_rejects_forged_records ... ok
+test tests::no_shared_sequences_and_per_tenant_names ... ok
+test tests::writes_cannot_cross_tenants ... ok
+test tests::reads_cannot_cross_tenants ... ok
+test tests::delegation_cannot_cross_tenants ... ok
+test tests::invocation_cannot_cross_tenants ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests src/lib.rs (target/debug/build/uac-ucan-bridge/487231a8493a1794/out/uac_ucan_bridge-487231a8493a1794)
+
+running 1 test
+test tests::skeleton_compiles ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/build/uac-verifier/84fee44c8f9f08da/out/uac_verifier-84fee44c8f9f08da)
 
 running 29 tests
-test delegation::tests::raw_json_duplicate_fields_and_size_are_rejected ... ok
-test delegation::tests::nullable_fields_are_required_and_all_byte_lengths_are_strict ... ok
-test delegation::tests::reordered_json_and_whitespace_do_not_change_signature_or_id ... ok
-test delegation::tests::independent_typescript_messages_ids_and_signatures_match ... ok
-test tests::accepts_valid_attenuated_chain ... ok
-test tests::rejects_child_outliving_parent ... ok
-test tests::rejects_child_with_earlier_validity ... ok
-test tests::rejects_changed_request_arguments ... ok
-test tests::rejects_broken_parent_binding ... ok
+test tests::rejects_clock_rollback_within_process ... ok
 test tests::rejects_descendant_of_revoked_parent ... ok
+test tests::rejects_broken_parent_binding ... ok
+test tests::rejects_child_with_earlier_validity ... ok
+test tests::rejects_delegation_when_parent_forbids_it ... ok
+test tests::rejects_different_resource ... ok
+test tests::offline_verifier_cannot_know_remote_revocation ... ok
+test tests::accepts_valid_attenuated_chain ... ok
+test tests::rejects_changed_request_arguments ... ok
+test tests::rejects_child_outliving_parent ... ok
 test tests::rejects_empty_and_excessive_chains ... ok
 test tests::rejects_delegation_budget_expansion ... ok
-test tests::rejects_delegation_when_parent_forbids_it ... ok
-test tests::rejects_oversized_and_unknown_fields_before_verification ... ok
-test tests::rejects_clock_rollback_within_process ... ok
-test tests::rejects_different_resource ... ok
 test tests::rejects_expired_grant_at_boundary ... ok
-test tests::offline_verifier_cannot_know_remote_revocation ... ok
+test tests::rejects_oversized_and_unknown_fields_before_verification ... ok
 test tests::rejects_old_invocation_at_boundary ... ok
-test tests::rejects_tampered_signature ... ok
-test tests::rejects_signed_rights_escalation ... ok
 test tests::rejects_future_grant ... ok
-test tests::rejects_request_action_outside_context ... ok
 test tests::rejects_untrusted_root ... ok
-test tests::rejects_wrong_intermediate_issuer ... ok
+test tests::rejects_tampered_signature ... ok
+test delegation::tests::reordered_json_and_whitespace_do_not_change_signature_or_id ... ok
+test delegation::tests::nullable_fields_are_required_and_all_byte_lengths_are_strict ... ok
+test tests::rejects_signed_rights_escalation ... ok
+test delegation::tests::raw_json_duplicate_fields_and_size_are_rejected ... ok
 test tests::rejects_replayed_invocation ... ok
+test tests::rejects_wrong_intermediate_issuer ... ok
 test tests::requires_holder_proof_even_with_valid_chain ... ok
+test tests::rejects_request_action_outside_context ... ok
 test tests::rejects_unknown_challenge ... ok
+test delegation::tests::independent_typescript_messages_ids_and_signatures_match ... ok
 test delegation::tests::independent_typescript_chain_allow_and_deny_cases_match ... ok
 
-test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/delegation_v1_edge.rs (target/debug/build/uac-verifier/61e027186ac7e997/out/delegation_v1_edge-61e027186ac7e997)
+
+running 5 tests
+test edge_invalid_json_vectors_are_rejected ... ok
+test edge_equivalent_json_serializations_keep_id_and_message ... ok
+test edge_deep_chain_structure_variants ... ok
+test edge_fixture_messages_ids_and_signatures_match ... ok
+test edge_chain_allow_and_deny_cases_match ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/grant_v0.rs (target/debug/build/uac-verifier/3b51d871a5156add/out/grant_v0-3b51d871a5156add)
+
+running 1 test
+test grant_v0_conformance ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+   Doc-tests uac_keystore
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests uac_recovery
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests uac_tenancy
+
+running 2 tests
+test crates/tenancy/src/lib.rs - (line 18) - compile fail ... ok
+test crates/tenancy/src/lib.rs - (line 36) - compile fail ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+   Doc-tests uac_ucan_bridge
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
    Doc-tests uac_verifier
 
@@ -94,116 +238,144 @@ running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-{"exit_code": 1, "elapsed_seconds": 0.03, "completed": false, "fatal_error": "server spawn failed: ENOENT: no such file or directory, stat '/tmp/heavenkey-startup-probe-e7kftekv/target/debug/uac-api'", "passed": true}
+{"exit_code": 1, "elapsed_seconds": 0.03, "completed": false, "fatal_error": "server spawn failed: ENOENT: no such file or directory, stat '/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-startup-probe-pjifdwa9/target/debug/uac-api'", "passed": true}
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/deny.toml:5:64
+  │
+5 │ allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "Unicode-3.0", "MPL-2.0", "OpenSSL", "Zlib"]
+  │                                                                ━━━ unmatched license allowance
+
+warning[license-not-encountered]: license was not encountered
+  ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/deny.toml:5:97
+  │
+5 │ allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "Unicode-3.0", "MPL-2.0", "OpenSSL", "Zlib"]
+  │                                                                                                 ━━━━━━━ unmatched license allowance
+
 warning[duplicate]: found 2 duplicate entries for crate 'base64'
-  ┌─ /home/ubuntu/repos/HeavenKey/Cargo.lock:8:1
-  │  
-8 │ ╭ base64 0.21.7 registry+https://github.com/rust-lang/crates.io-index
-9 │ │ base64 0.22.1 registry+https://github.com/rust-lang/crates.io-index
-  │ ╰───────────────────────────────────────────────────────────────────┘ lock entries
-  │  
-  ├ base64 v0.21.7
-    ├── base64urlsafedata v0.5.5
-    │   ├── webauthn-attestation-ca v0.5.5
-    │   │   └── webauthn-rs-core v0.5.5
-    │   │       └── webauthn-rs v0.5.5
-    │   │           └── uac-api v0.6.0
-    │   ├── webauthn-rs v0.5.5 (*)
-    │   ├── webauthn-rs-core v0.5.5 (*)
-    │   └── webauthn-rs-proto v0.5.5
-    │       └── webauthn-rs-core v0.5.5 (*)
-    ├── webauthn-rs-core v0.5.5 (*)
-    └── webauthn-rs-proto v0.5.5 (*)
-  ├ base64 v0.22.1
-    └── uac-api v0.6.0
+   ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:9:1
+   │
+ 9 │ ╭ base64 0.21.7 registry+https://github.com/rust-lang/crates.io-index
+10 │ │ base64 0.22.1 registry+https://github.com/rust-lang/crates.io-index
+   │ ╰───────────────────────────────────────────────────────────────────┘ lock entries
+   │
+   ├ base64 v0.21.7
+     ├── base64urlsafedata v0.5.5
+     │   ├── webauthn-attestation-ca v0.5.5
+     │   │   └── webauthn-rs-core v0.5.5
+     │   │       └── webauthn-rs v0.5.5
+     │   │           └── uac-api v0.7.0
+     │   ├── webauthn-rs v0.5.5 (*)
+     │   ├── webauthn-rs-core v0.5.5 (*)
+     │   └── webauthn-rs-proto v0.5.5
+     │       └── webauthn-rs-core v0.5.5 (*)
+     ├── webauthn-rs-core v0.5.5 (*)
+     └── webauthn-rs-proto v0.5.5 (*)
+   ├ base64 v0.22.1
+     ├── uac-api v0.7.0
+     ├── uac-keystore v0.7.0
+     │   └── uac-api v0.7.0 (*)
+     └── uac-recovery v0.7.0
+         └── uac-api v0.7.0 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'getrandom'
-   ┌─ /home/ubuntu/repos/HeavenKey/Cargo.lock:42:1
-   │  
-42 │ ╭ getrandom 0.3.4 registry+https://github.com/rust-lang/crates.io-index
-43 │ │ getrandom 0.4.3 registry+https://github.com/rust-lang/crates.io-index
+   ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:52:1
+   │
+52 │ ╭ getrandom 0.3.4 registry+https://github.com/rust-lang/crates.io-index
+53 │ │ getrandom 0.4.3 registry+https://github.com/rust-lang/crates.io-index
    │ ╰─────────────────────────────────────────────────────────────────────┘ lock entries
-   │  
+   │
    ├ getrandom v0.3.4
      └── rand_core v0.9.5
          ├── rand v0.9.5
-         │   ├── uac-api v0.6.0
+         │   ├── uac-api v0.7.0
+         │   ├── uac-keystore v0.7.0
+         │   │   └── uac-api v0.7.0 (*)
+         │   ├── uac-recovery v0.7.0
+         │   │   └── uac-api v0.7.0 (*)
          │   └── webauthn-rs-core v0.5.5
          │       └── webauthn-rs v0.5.5
-         │           └── uac-api v0.6.0 (*)
+         │           └── uac-api v0.7.0 (*)
          └── rand_chacha v0.9.0
              ├── rand v0.9.5 (*)
              └── webauthn-rs-core v0.5.5 (*)
    ├ getrandom v0.4.3
      └── uuid v1.26.1
-         ├── uac-api v0.6.0
+         ├── uac-api v0.7.0
+         ├── uac-tenancy v0.7.0
          ├── webauthn-attestation-ca v0.5.5
          │   └── webauthn-rs-core v0.5.5
          │       └── webauthn-rs v0.5.5
-         │           └── uac-api v0.6.0 (*)
+         │           └── uac-api v0.7.0 (*)
          ├── webauthn-rs v0.5.5 (*)
          └── webauthn-rs-core v0.5.5 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'hashbrown'
-   ┌─ /home/ubuntu/repos/HeavenKey/Cargo.lock:45:1
-   │  
-45 │ ╭ hashbrown 0.16.1 registry+https://github.com/rust-lang/crates.io-index
-46 │ │ hashbrown 0.17.1 registry+https://github.com/rust-lang/crates.io-index
+   ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:55:1
+   │
+55 │ ╭ hashbrown 0.16.1 registry+https://github.com/rust-lang/crates.io-index
+56 │ │ hashbrown 0.17.1 registry+https://github.com/rust-lang/crates.io-index
    │ ╰──────────────────────────────────────────────────────────────────────┘ lock entries
-   │  
+   │
    ├ hashbrown v0.16.1
      └── rsqlite-vfs v0.1.1
          └── sqlite-wasm-rs v0.5.5
              └── rusqlite v0.40.2
-                 └── uac-api v0.6.0
+                 ├── uac-api v0.7.0
+                 └── uac-tenancy v0.7.0
    ├ hashbrown v0.17.1
      └── hashlink v0.12.2
          └── rusqlite v0.40.2
-             └── uac-api v0.6.0
+             ├── uac-api v0.7.0
+             └── uac-tenancy v0.7.0
 
 warning[duplicate]: found 2 duplicate entries for crate 'r-efi'
-   ┌─ /home/ubuntu/repos/HeavenKey/Cargo.lock:96:1
-   │  
-96 │ ╭ r-efi 5.3.0 registry+https://github.com/rust-lang/crates.io-index
-97 │ │ r-efi 6.0.0 registry+https://github.com/rust-lang/crates.io-index
-   │ ╰─────────────────────────────────────────────────────────────────┘ lock entries
-   │  
-   ├ r-efi v5.3.0
-     └── getrandom v0.3.4
-         └── rand_core v0.9.5
-             ├── rand v0.9.5
-             │   ├── uac-api v0.6.0
-             │   └── webauthn-rs-core v0.5.5
-             │       └── webauthn-rs v0.5.5
-             │           └── uac-api v0.6.0 (*)
-             └── rand_chacha v0.9.0
-                 ├── rand v0.9.5 (*)
-                 └── webauthn-rs-core v0.5.5 (*)
-   ├ r-efi v6.0.0
-     └── getrandom v0.4.3
-         └── uuid v1.26.1
-             ├── uac-api v0.6.0
-             ├── webauthn-attestation-ca v0.5.5
-             │   └── webauthn-rs-core v0.5.5
-             │       └── webauthn-rs v0.5.5
-             │           └── uac-api v0.6.0 (*)
-             ├── webauthn-rs v0.5.5 (*)
-             └── webauthn-rs-core v0.5.5 (*)
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:115:1
+    │
+115 │ ╭ r-efi 5.3.0 registry+https://github.com/rust-lang/crates.io-index
+116 │ │ r-efi 6.0.0 registry+https://github.com/rust-lang/crates.io-index
+    │ ╰─────────────────────────────────────────────────────────────────┘ lock entries
+    │
+    ├ r-efi v5.3.0
+      └── getrandom v0.3.4
+          └── rand_core v0.9.5
+              ├── rand v0.9.5
+              │   ├── uac-api v0.7.0
+              │   ├── uac-keystore v0.7.0
+              │   │   └── uac-api v0.7.0 (*)
+              │   ├── uac-recovery v0.7.0
+              │   │   └── uac-api v0.7.0 (*)
+              │   └── webauthn-rs-core v0.5.5
+              │       └── webauthn-rs v0.5.5
+              │           └── uac-api v0.7.0 (*)
+              └── rand_chacha v0.9.0
+                  ├── rand v0.9.5 (*)
+                  └── webauthn-rs-core v0.5.5 (*)
+    ├ r-efi v6.0.0
+      └── getrandom v0.4.3
+          └── uuid v1.26.1
+              ├── uac-api v0.7.0
+              ├── uac-tenancy v0.7.0
+              ├── webauthn-attestation-ca v0.5.5
+              │   └── webauthn-rs-core v0.5.5
+              │       └── webauthn-rs v0.5.5
+              │           └── uac-api v0.7.0 (*)
+              ├── webauthn-rs v0.5.5 (*)
+              └── webauthn-rs-core v0.5.5 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'syn'
-    ┌─ /home/ubuntu/repos/HeavenKey/Cargo.lock:125:1
-    │  
-125 │ ╭ syn 2.0.119 registry+https://github.com/rust-lang/crates.io-index
-126 │ │ syn 3.0.8 registry+https://github.com/rust-lang/crates.io-index
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:146:1
+    │
+146 │ ╭ syn 2.0.119 registry+https://github.com/rust-lang/crates.io-index
+147 │ │ syn 3.0.8 registry+https://github.com/rust-lang/crates.io-index
     │ ╰───────────────────────────────────────────────────────────────┘ lock entries
-    │  
+    │
     ├ syn v2.0.119
       ├── asn1-rs-derive v0.5.1
       │   └── asn1-rs v0.6.2
       │       ├── der-parser v9.0.0
       │       │   ├── webauthn-rs-core v0.5.5
       │       │   │   └── webauthn-rs v0.5.5
-      │       │   │       └── uac-api v0.6.0
+      │       │   │       └── uac-api v0.7.0
       │       │   └── x509-parser v0.16.0
       │       │       └── webauthn-rs-core v0.5.5 (*)
       │       ├── oid-registry v0.7.1
@@ -214,11 +386,14 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       ├── curve25519-dalek-derive v0.1.1
       │   └── curve25519-dalek v4.1.3
       │       └── ed25519-dalek v2.2.0
-      │           ├── uac-api v0.6.0 (*)
-      │           └── uac-verifier v0.6.0
-      │               └── uac-api v0.6.0 (*)
+      │           ├── uac-api v0.7.0 (*)
+      │           └── uac-verifier v0.7.0
+      │               ├── uac-api v0.7.0 (*)
+      │               └── uac-gate v0.7.0
       ├── openssl-macros v0.1.1
       │   └── openssl v0.10.81
+      │       ├── uac-keystore v0.7.0
+      │       │   └── uac-api v0.7.0 (*)
       │       ├── webauthn-attestation-ca v0.5.5
       │       │   └── webauthn-rs-core v0.5.5 (*)
       │       └── webauthn-rs-core v0.5.5 (*)
@@ -234,9 +409,13 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │   │   │   └── webauthn-rs-core v0.5.5 (*)
       │   │   ├── serde_urlencoded v0.7.1
       │   │   │   └── axum v0.8.9
-      │   │   │       └── uac-api v0.6.0 (*)
-      │   │   ├── uac-api v0.6.0 (*)
-      │   │   ├── uac-verifier v0.6.0 (*)
+      │   │   │       ├── uac-api v0.7.0 (*)
+      │   │   │       └── uac-gate v0.7.0 (*)
+      │   │   ├── uac-api v0.7.0 (*)
+      │   │   ├── uac-gate v0.7.0 (*)
+      │   │   ├── uac-keystore v0.7.0 (*)
+      │   │   ├── uac-tenancy v0.7.0
+      │   │   ├── uac-verifier v0.7.0 (*)
       │   │   ├── url v2.5.8
       │   │   │   ├── webauthn-rs v0.5.5 (*)
       │   │   │   ├── webauthn-rs-core v0.5.5 (*)
@@ -263,23 +442,35 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │       ├── webauthn-attestation-ca v0.5.5 (*)
       │       ├── webauthn-rs v0.5.5 (*)
       │       └── webauthn-rs-core v0.5.5 (*)
-      └── zerocopy-derive v0.8.62
-          └── zerocopy v0.8.62
-              ├── half v2.7.1
-              │   └── serde_cbor_2 v0.13.0 (*)
-              └── ppv-lite86 v0.2.21
-                  └── rand_chacha v0.9.0
-                      ├── rand v0.9.5
-                      │   ├── uac-api v0.6.0 (*)
-                      │   └── webauthn-rs-core v0.5.5 (*)
-                      └── webauthn-rs-core v0.5.5 (*)
+      ├── zerocopy-derive v0.8.62
+      │   └── zerocopy v0.8.62
+      │       ├── half v2.7.1
+      │       │   └── serde_cbor_2 v0.13.0 (*)
+      │       └── ppv-lite86 v0.2.21
+      │           └── rand_chacha v0.9.0
+      │               ├── rand v0.9.5
+      │               │   ├── uac-api v0.7.0 (*)
+      │               │   ├── uac-keystore v0.7.0 (*)
+      │               │   ├── uac-recovery v0.7.0
+      │               │   │   └── uac-api v0.7.0 (*)
+      │               │   └── webauthn-rs-core v0.5.5 (*)
+      │               └── webauthn-rs-core v0.5.5 (*)
+      └── zeroize_derive v1.5.0
+          └── zeroize v1.9.1
+              ├── curve25519-dalek v4.1.3 (*)
+              ├── dbus-secret-service v4.1.0
+              │   └── keyring v3.6.3
+              │       └── uac-keystore v0.7.0 (*)
+              ├── ed25519-dalek v2.2.0 (*)
+              ├── keyring v3.6.3 (*)
+              └── uac-keystore v0.7.0 (*)
     ├ syn v3.0.8
       ├── displaydoc v0.2.7
       │   ├── asn1-rs v0.6.2
       │   │   ├── der-parser v9.0.0
       │   │   │   ├── webauthn-rs-core v0.5.5
       │   │   │   │   └── webauthn-rs v0.5.5
-      │   │   │   │       └── uac-api v0.6.0
+      │   │   │   │       └── uac-api v0.7.0
       │   │   │   └── x509-parser v0.16.0
       │   │   │       └── webauthn-rs-core v0.5.5 (*)
       │   │   ├── oid-registry v0.7.1
@@ -336,11 +527,13 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │       └── rsqlite-vfs v0.1.1
       │           └── sqlite-wasm-rs v0.5.5
       │               └── rusqlite v0.40.2
-      │                   └── uac-api v0.6.0 (*)
+      │                   ├── uac-api v0.7.0 (*)
+      │                   └── uac-tenancy v0.7.0
       ├── tokio-macros v2.7.2
       │   └── tokio v1.53.2
       │       ├── axum v0.8.9
-      │       │   └── uac-api v0.6.0 (*)
+      │       │   ├── uac-api v0.7.0 (*)
+      │       │   └── uac-gate v0.7.0
       │       ├── hyper v1.12.0
       │       │   ├── axum v0.8.9 (*)
       │       │   └── hyper-util v0.1.21
@@ -348,7 +541,8 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │       ├── hyper-util v0.1.21 (*)
       │       ├── tower v0.5.3
       │       │   └── axum v0.8.9 (*)
-      │       └── uac-api v0.6.0 (*)
+      │       ├── uac-api v0.7.0 (*)
+      │       └── uac-gate v0.7.0 (*)
       ├── wasm-bindgen-macro-support v0.2.129
       │   └── wasm-bindgen-macro v0.2.129
       │       └── wasm-bindgen v0.2.129
@@ -361,19 +555,19 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
           └── zerovec v0.11.8 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'synstructure'
-    ┌─ /home/ubuntu/repos/HeavenKey/Cargo.lock:128:1
-    │  
-128 │ ╭ synstructure 0.13.2 registry+https://github.com/rust-lang/crates.io-index
-129 │ │ synstructure 0.14.0 registry+https://github.com/rust-lang/crates.io-index
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:149:1
+    │
+149 │ ╭ synstructure 0.13.2 registry+https://github.com/rust-lang/crates.io-index
+150 │ │ synstructure 0.14.0 registry+https://github.com/rust-lang/crates.io-index
     │ ╰─────────────────────────────────────────────────────────────────────────┘ lock entries
-    │  
+    │
     ├ synstructure v0.13.2
       └── asn1-rs-derive v0.5.1
           └── asn1-rs v0.6.2
               ├── der-parser v9.0.0
               │   ├── webauthn-rs-core v0.5.5
               │   │   └── webauthn-rs v0.5.5
-              │   │       └── uac-api v0.6.0
+              │   │       └── uac-api v0.7.0
               │   └── x509-parser v0.16.0
               │       └── webauthn-rs-core v0.5.5 (*)
               ├── oid-registry v0.7.1
@@ -388,7 +582,7 @@ warning[duplicate]: found 2 duplicate entries for crate 'synstructure'
       │       │   │       └── idna v1.1.0
       │       │   │           └── url v2.5.8
       │       │   │               ├── webauthn-rs v0.5.5
-      │       │   │               │   └── uac-api v0.6.0
+      │       │   │               │   └── uac-api v0.7.0
       │       │   │               ├── webauthn-rs-core v0.5.5
       │       │   │               │   └── webauthn-rs v0.5.5 (*)
       │       │   │               └── webauthn-rs-proto v0.5.5
@@ -422,18 +616,18 @@ warning[duplicate]: found 2 duplicate entries for crate 'synstructure'
               └── zerovec v0.11.8 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'thiserror'
-    ┌─ /home/ubuntu/repos/HeavenKey/Cargo.lock:130:1
-    │  
-130 │ ╭ thiserror 1.0.69 registry+https://github.com/rust-lang/crates.io-index
-131 │ │ thiserror 2.0.21 registry+https://github.com/rust-lang/crates.io-index
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:151:1
+    │
+151 │ ╭ thiserror 1.0.69 registry+https://github.com/rust-lang/crates.io-index
+152 │ │ thiserror 2.0.21 registry+https://github.com/rust-lang/crates.io-index
     │ ╰──────────────────────────────────────────────────────────────────────┘ lock entries
-    │  
+    │
     ├ thiserror v1.0.69
       ├── asn1-rs v0.6.2
       │   ├── der-parser v9.0.0
       │   │   ├── webauthn-rs-core v0.5.5
       │   │   │   └── webauthn-rs v0.5.5
-      │   │   │       └── uac-api v0.6.0
+      │   │   │       └── uac-api v0.7.0
       │   │   └── x509-parser v0.16.0
       │   │       └── webauthn-rs-core v0.5.5 (*)
       │   ├── oid-registry v0.7.1
@@ -445,22 +639,23 @@ warning[duplicate]: found 2 duplicate entries for crate 'thiserror'
       └── rsqlite-vfs v0.1.1
           └── sqlite-wasm-rs v0.5.5
               └── rusqlite v0.40.2
-                  └── uac-api v0.6.0
+                  ├── uac-api v0.7.0
+                  └── uac-tenancy v0.7.0
 
 warning[duplicate]: found 2 duplicate entries for crate 'thiserror-impl'
-    ┌─ /home/ubuntu/repos/HeavenKey/Cargo.lock:132:1
-    │  
-132 │ ╭ thiserror-impl 1.0.69 registry+https://github.com/rust-lang/crates.io-index
-133 │ │ thiserror-impl 2.0.21 registry+https://github.com/rust-lang/crates.io-index
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:153:1
+    │
+153 │ ╭ thiserror-impl 1.0.69 registry+https://github.com/rust-lang/crates.io-index
+154 │ │ thiserror-impl 2.0.21 registry+https://github.com/rust-lang/crates.io-index
     │ ╰───────────────────────────────────────────────────────────────────────────┘ lock entries
-    │  
+    │
     ├ thiserror-impl v1.0.69
       └── thiserror v1.0.69
           ├── asn1-rs v0.6.2
           │   ├── der-parser v9.0.0
           │   │   ├── webauthn-rs-core v0.5.5
           │   │   │   └── webauthn-rs v0.5.5
-          │   │   │       └── uac-api v0.6.0
+          │   │   │       └── uac-api v0.7.0
           │   │   └── x509-parser v0.16.0
           │   │       └── webauthn-rs-core v0.5.5 (*)
           │   ├── oid-registry v0.7.1
@@ -473,30 +668,77 @@ warning[duplicate]: found 2 duplicate entries for crate 'thiserror-impl'
           └── rsqlite-vfs v0.1.1
               └── sqlite-wasm-rs v0.5.5
                   └── rusqlite v0.40.2
-                      └── uac-api v0.6.0
+                      ├── uac-api v0.7.0
+                      └── uac-tenancy v0.7.0
 
-warning[license-not-encountered]: license was not encountered
-  ┌─ /home/ubuntu/repos/HeavenKey/deny.toml:5:64
-  │
-5 │ allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "Unicode-3.0", "MPL-2.0", "OpenSSL", "Zlib"]
-  │                                                                ━━━ unmatched license allowance
-
-warning[license-not-encountered]: license was not encountered
-  ┌─ /home/ubuntu/repos/HeavenKey/deny.toml:5:97
-  │
-5 │ allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "Unicode-3.0", "MPL-2.0", "OpenSSL", "Zlib"]
-  │                                                                                                 ━━━━━━━ unmatched license allowance
+warning[duplicate]: found 2 duplicate entries for crate 'windows-sys'
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:192:1
+    │
+192 │ ╭ windows-sys 0.60.2 registry+https://github.com/rust-lang/crates.io-index
+193 │ │ windows-sys 0.61.2 registry+https://github.com/rust-lang/crates.io-index
+    │ ╰────────────────────────────────────────────────────────────────────────┘ lock entries
+    │
+    ├ windows-sys v0.60.2
+      └── keyring v3.6.3
+          └── uac-keystore v0.7.0
+              └── uac-api v0.7.0
+    ├ windows-sys v0.61.2
+      ├── dbus v0.9.12
+      │   └── dbus-secret-service v4.1.0
+      │       └── keyring v3.6.3
+      │           └── uac-keystore v0.7.0
+      │               └── uac-api v0.7.0
+      ├── errno v0.3.14
+      │   └── signal-hook-registry v1.4.8
+      │       └── tokio v1.53.2
+      │           ├── axum v0.8.9
+      │           │   ├── uac-api v0.7.0 (*)
+      │           │   └── uac-gate v0.7.0
+      │           ├── hyper v1.12.0
+      │           │   ├── axum v0.8.9 (*)
+      │           │   └── hyper-util v0.1.21
+      │           │       └── axum v0.8.9 (*)
+      │           ├── hyper-util v0.1.21 (*)
+      │           ├── tower v0.5.3
+      │           │   └── axum v0.8.9 (*)
+      │           ├── uac-api v0.7.0 (*)
+      │           └── uac-gate v0.7.0 (*)
+      ├── mio v1.2.4
+      │   └── tokio v1.53.2 (*)
+      ├── socket2 v0.6.5
+      │   └── tokio v1.53.2 (*)
+      └── tokio v1.53.2 (*)
 
 advisories ok, bans ok, licenses ok, sources ok
-      Loaded 1307 security advisories (from /home/ubuntu/.cargo/advisory-db)
-    Scanning Cargo.lock for vulnerabilities (187 crate dependencies)
+      Loaded 1329 security advisories (from /Users/master/.cargo/advisory-db)
+    Scanning Cargo.lock for vulnerabilities (291 crate dependencies)
 bun audit v1.4.2 (744846f84)
 
-No vulnerabilities found (checked 23 packages) [53.00ms]
+No vulnerabilities found (checked 42 packages) [302.00ms]
 $ python3 scripts/build_web.py
-Bundled 21 modules in 5ms
+Bundled 22 modules in 5ms
 
-  main.js  39.76 KB  (entry point)
+  main.js  62.46 KB  (entry point)
 
-   Compiling uac-api v0.6.0 (/home/ubuntu/repos/HeavenKey/apps/api)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.69s
+   Compiling uac-api v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/api)
+   Compiling uac-gate v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/gate)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.67s
+..........
+----------------------------------------------------------------------
+Ran 10 tests in 0.807s
+
+OK
+PASS operator bootstrap provisions owner; guest enrolls without ownership
+PASS real Rust verifier rejects correctly signed assertions for a foreign origin
+PASS cross-origin writes fail before reaching application handlers
+PASS passkey-approved delegation enables session reading and checks account binding
+PASS API-issued delegation works at the standalone offline gate with the exported snapshot
+PASS bearer-only agent issuance denied; approved issuance succeeds exactly once
+PASS agent proof changes only the scoped synthetic CRM contact
+PASS the shipped agent CLI validates the origin-bound challenge and executes a read
+PASS revoking an ancestor blocks session reads immediately
+PASS recovery code rotates with fresh passkey consent; no code is returned in status
+PASS failed recovery guesses are throttled without locking out a valid recovery code
+PASS a valid recovery code enrolls a fresh passkey and invalidates old sessions and agents
+PASS protected issuer survives restart and recovered identity remains stable
+PASS logout removes a preapproved sensitive operation

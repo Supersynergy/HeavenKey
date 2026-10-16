@@ -36,7 +36,14 @@ def main():
         protection_path = str(protection)
         if args.windows_paths:
             protection_path = "Z:" + protection_path.replace("/", "\\")
-        env.update(UAC_DATA=data_path, UAC_PORT="18244", UAC_STORE_KEY="0a" * 32, HEAVENKEY_KEY_FILE=protection_path, HEAVENKEY_ORIGIN="http://localhost:18244", HEAVENKEY_RP_ID="localhost")
+        env.update(
+            UAC_DATA=data_path,
+            UAC_PORT="18244",
+            UAC_STORE_KEY="0a" * 32,
+            HEAVENKEY_KEY_FILE=protection_path,
+            HEAVENKEY_ORIGIN="http://localhost:18244",
+            HEAVENKEY_RP_ID="localhost",
+        )
         for arguments, expected in (
             (["--version"], 0),
             (["--help"], 0),
@@ -114,9 +121,7 @@ def main():
                             *command,
                             "--store-query",
                             json.dumps(
-                                {
-                                    "sql": "SELECT value FROM meta WHERE key='issuer_key'"
-                                }
+                                {"sql": "SELECT value FROM meta WHERE key='issuer_key'"}
                             ),
                         ],
                         cwd=root,
@@ -127,9 +132,7 @@ def main():
                     )
                     assert probe.returncode == 0, probe.stderr
                     issuer_blob = json.loads(probe.stdout)[0][0]["blob_base64"]
-                    current = hashlib.sha256(
-                        base64.b64decode(issuer_blob)
-                    ).hexdigest()
+                    current = hashlib.sha256(base64.b64decode(issuer_blob)).hexdigest()
                     if fingerprint is not None:
                         assert current == fingerprint, (
                             "Restart must retain the issuer key"

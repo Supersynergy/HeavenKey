@@ -2,7 +2,7 @@
 
 Die bisher veröffentlichten Pakete sind 0.6. Der neue 0.7-Quellstand ergänzt Funktionen und Schlüsselverwahrung; siehe [bebilderte Installation](INSTALLATION.md). Neue Desktop-Binärpakete und ihre Plattformabnahme sind separat ausstehend.
 
-Die Pakete enthalten den Server, die Weboberfläche und Lizenzhinweise. Du brauchst einen aktuellen Browser mit WebAuthn, aber kein Rust, Bun, Python oder Docker. HeavenKey ist eine lokale Vorschau mit einem Demo-Dokument. Die Datenbank ist verschlüsselt (Schlüsselverwahrung siehe unten); physische Passkeys sind noch nicht abgenommen.
+Die veröffentlichten 0.6-Pakete enthalten den Server, die Weboberfläche und Lizenzhinweise. Dafür brauchst du einen aktuellen Browser mit WebAuthn, aber kein Rust, Bun, Python oder Docker. Die SQLCipher-Verschlüsselung und Schlüsselhülle gehören zum integrierten 0.7-Quellstand; vorhandene 0.6-Downloads enthalten sie noch nicht. Physische Passkeys sind noch nicht abgenommen.
 
 ## Paket wählen
 
@@ -28,7 +28,7 @@ Der Server zeigt den Speicherort und den Pfad zur Datei `owner-bootstrap.txt` an
 | macOS | `~/Library/Application Support/HeavenKey` |
 | Linux | `$XDG_DATA_HOME/HeavenKey` oder `~/.local/share/HeavenKey` |
 
-Bewahre den gesamten Datenordner **zusammen mit dem Speicherschlüssel** auf: entweder `UAC_STORE_KEY` oder die Schlüsseldatei außerhalb des Datenordners (Linux `~/.config/heavenkey/store.key`, macOS `~/Library/Application Support/heavenkey/store.key`, Windows `%LOCALAPPDATA%\heavenkey\store.key`). Ohne ihn sind die Daten nicht lesbar. Ein Update des entpackten Programms behält diesen Ordner. Mehrere Instanzen mit demselben Port können nicht gleichzeitig starten. Die Meldung „address already in use“ verlangt, die laufende Instanz zu beenden oder einen anderen Port zu wählen. Bestehende Entwicklerdaten unter `data/` verwendest du ausdrücklich mit `--data-dir data`; sie werden nicht automatisch verschoben.
+Für 0.7 bewahrst du den gesamten Datenordner und beide Schutzschlüssel auf: den Datenbankschlüssel (`UAC_STORE_KEY` oder `UAC_STORE_KEY_FILE`, sonst private Konfigurationsdatei) sowie den Schutzschlüssel für `issuer.enc` (Betriebssystem-Keystore oder `HEAVENKEY_KEY_FILE`). Ohne sie sind die Daten beziehungsweise der Signierschlüssel nicht verwendbar. Ein Update des entpackten Programms behält den Datenordner. Mehrere Instanzen mit demselben Port können nicht gleichzeitig starten. Die Meldung „address already in use“ verlangt, die laufende Instanz zu beenden oder einen anderen Port zu wählen. Bestehende Entwicklerdaten unter `data/` verwendest du ausdrücklich mit `--data-dir data`; sie werden nicht automatisch verschoben.
 
 Optional: `HeavenKey.exe --port 18245 --data-dir "C:\Users\Name\HeavenKey-Test"` beziehungsweise `./heavenkey --port 18245 --data-dir /eigener/pfad`. Der Standardordner liegt im Benutzerprofil; verwende keinen gemeinsam beschreibbaren Ordner. Unix-Ordner erhalten Modus 0700, Schlüsseldateien 0600. Windows nutzt die geerbten Zugriffsrechte des Benutzerprofils. Der Port in der Browser-Erweiterung muss mit dem Server übereinstimmen.
 

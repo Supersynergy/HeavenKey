@@ -28,7 +28,7 @@ use uac_verifier::{Action, Error, Signed};
 const DEFAULT_LISTEN: &str = "127.0.0.1:18242";
 const DEFAULT_RESOURCE: &str = "urn:uac:lab:document";
 const MAX_BODY: usize = 64 * 1024;
-const MAX_SNAPSHOT_BYTES: u64 = 1024 * 1024;
+const MAX_SNAPSHOT_BYTES: u64 = 2 * 1024 * 1024;
 const MAX_REVOCATIONS: usize = 16_384;
 
 struct Options {
@@ -528,6 +528,23 @@ mod tests {
             Err(Denial::SnapshotUnavailable)
         );
         fs::remove_dir_all(&dir).expect("cleanup");
+    }
+
+    #[test]
+    fn maximum_revocation_count_fits_the_snapshot_byte_budget() {
+        let revoked: Vec<String> = (0..MAX_REVOCATIONS)
+            .map(|id| format!("{id:064x}"))
+            .collect();
+        let snapshot = serde_json::to_string_pretty(
+            &json!({"version":1,"generated_at":NOW,"revoked":revoked}),
+        )
+        .unwrap();
+        let (dir, gate) = gate_with(&[], Some(&snapshot));
+        assert_eq!(
+            load_revocations(&gate.revocations).unwrap().len(),
+            MAX_REVOCATIONS
+        );
+        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

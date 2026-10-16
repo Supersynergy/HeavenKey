@@ -1,7 +1,7 @@
 use base64::Engine as _;
 use ed25519_dalek::SigningKey;
 use rand::RngCore;
-use rusqlite::{Connection, params};
+use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::{Value, json};
 use std::ffi::OsString;
 use std::fs;
@@ -137,11 +137,12 @@ fn migrate_plaintext(db_path: &Path, key: &[u8; 32]) -> Result<(), Box<dyn std::
         plain.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")?;
         plain.execute_batch(&format!(
             "ATTACH DATABASE '{}' AS enc KEY \"x'{}'\"; SELECT sqlcipher_export('enc'); DETACH DATABASE enc;",
-            temp.display(),
+            temp.to_string_lossy().replace('\'', "''"),
             hex_encode(key)
         ))?;
     }
-    for side in ["", "-wal", "-shm"] {
+    fs::rename(&temp, db_path)?;
+    for side in ["-wal", "-shm"] {
         let side = db_path.with_file_name(format!(
             "{}{}",
             db_path.file_name().unwrap_or_default().to_string_lossy(),
@@ -151,7 +152,6 @@ fn migrate_plaintext(db_path: &Path, key: &[u8; 32]) -> Result<(), Box<dyn std::
             fs::remove_file(&side)?;
         }
     }
-    fs::rename(&temp, db_path)?;
     Ok(())
 }
 
@@ -164,7 +164,7 @@ fn custody_issuer(
         .query_row("SELECT value FROM meta WHERE key='issuer_key'", [], |row| {
             row.get(0)
         })
-        .ok();
+        .optional()?;
     let key_path = data.join("issuer.key");
     if key_path.exists() {
         let bytes = fs::read(&key_path)?;
@@ -202,7 +202,7 @@ fn custody_issuer(
     Ok(SigningKey::from_bytes(&bytes))
 }
 
-fn open_with_key(data: &Path, key: &[u8; 32]) -> Result<Store, Box<dyn std::error::Error>> {
+fn open_database(data: &Path, key: &[u8; 32]) -> Result<Connection, Box<dyn std::error::Error>> {
     let db_path = data.join("uac.sqlite");
     if is_plaintext(&db_path)? {
         migrate_plaintext(&db_path, key)?;
@@ -210,6 +210,12 @@ fn open_with_key(data: &Path, key: &[u8; 32]) -> Result<Store, Box<dyn std::erro
     let db = open_encrypted(&db_path, key)?;
     db.execute_batch("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;")?;
     db.execute_batch("CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY,value BLOB NOT NULL);")?;
+    Ok(db)
+}
+
+#[cfg(test)]
+fn open_with_key(data: &Path, key: &[u8; 32]) -> Result<Store, Box<dyn std::error::Error>> {
+    let db = open_database(data, key)?;
     let issuer = custody_issuer(&db, data, || {
         let mut bytes = [0; 32];
         rand::rng().fill_bytes(&mut bytes);
@@ -220,7 +226,23 @@ fn open_with_key(data: &Path, key: &[u8; 32]) -> Result<Store, Box<dyn std::erro
 
 pub fn open(data: &Path) -> Result<Store, Box<dyn std::error::Error>> {
     let key = resolve_key()?;
-    open_with_key(data, &key)
+    let db = open_database(data, &key)?;
+    let stored: Option<Vec<u8>> = db
+        .query_row("SELECT value FROM meta WHERE key='issuer_key'", [], |row| {
+            row.get(0)
+        })
+        .optional()?;
+    let imported: Option<[u8; 32]> = stored
+        .map(|bytes| {
+            bytes
+                .try_into()
+                .map_err(|_| "invalid issuer key length in store")
+        })
+        .transpose()?;
+    let key_file = std::env::var_os("HEAVENKEY_KEY_FILE").map(PathBuf::from);
+    let bytes = uac_keystore::load_issuer_with_seed(data, key_file.as_deref(), imported.as_ref())?;
+    let issuer = custody_issuer(&db, data, || *bytes)?;
+    Ok(Store { db, issuer })
 }
 
 fn json_to_param(value: &Value) -> rusqlite::types::Value {

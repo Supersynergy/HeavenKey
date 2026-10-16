@@ -1,7 +1,7 @@
 /** Software-authenticator integration checks. This does not replace browser/hardware acceptance. */
 import assert from "node:assert/strict";
 import { generateKeyPairSync, createHash, randomBytes, sign } from "node:crypto";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { mkdtemp, readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
@@ -12,16 +12,26 @@ const hash = x => createHash("sha256").update(x).digest();
 const directory = await mkdtemp(join(tmpdir(), "heavenkey-protocol-"));
 const data = join(directory, "data"), protection = join(directory, "protection.key");
 await writeFile(protection, randomBytes(32), { mode: 0o600 });
-const origin = "http://localhost:18243", cases = []; let server;
-async function test(name, fn) { await fn(); cases.push({ name, pass: true }); console.log(`PASS ${name}`); }
-async function stop() {
-  if (!server || server.exitCode !== null) return;
-  const exited = new Promise(resolve => server.once("exit", resolve)); server.kill("SIGINT");
-  const timer = setTimeout(() => server.kill("SIGKILL"), 3000);
+const origin = "http://localhost:18243", cases = []; let server, gate;
+const binary = resolve(process.env.HEAVENKEY_BINARY || "target/debug/uac-api");
+const serverEnv = { ...process.env, UAC_STORE_KEY: "0a".repeat(32), HEAVENKEY_KEY_FILE: protection, HEAVENKEY_ORIGIN: origin, HEAVENKEY_RP_ID: "localhost" };
+const snapshot = join(directory, "revocations.json");
+function exportSnapshot() {
+  const result = spawnSync("python3", ["scripts/revocation_snapshot.py", "--data", data, "--out", snapshot, "--binary", binary], { env: serverEnv, encoding: "utf8", timeout: 15000 });
+  assert.equal(result.status, 0, result.stderr);
+}
+async function stopProcess(child) {
+  if (!child || child.exitCode !== null) return;
+  const exited = new Promise(resolve => child.once("exit", resolve)); child.kill("SIGINT");
+  const timer = setTimeout(() => child.kill("SIGKILL"), 3000);
   await exited; clearTimeout(timer);
 }
+async function test(name, fn) { await fn(); cases.push({ name, pass: true }); console.log(`PASS ${name}`); }
+async function stop() {
+  await stopProcess(server);
+}
 async function start() {
-  server = spawn(resolve(process.env.HEAVENKEY_BINARY || "target/debug/uac-api"), ["--port", "18243", "--data-dir", data], { env: { ...process.env, HEAVENKEY_KEY_FILE: protection, HEAVENKEY_ORIGIN: origin, HEAVENKEY_RP_ID: "localhost" }, stdio: ["ignore", "pipe", "pipe"] });
+  server = spawn(binary, ["--port", "18243", "--data-dir", data], { env: serverEnv, stdio: ["ignore", "pipe", "pipe"] });
   let log = ""; server.stdout.on("data", x => log += x); server.stderr.on("data", x => log += x);
   for (let n = 0; n < 100; n++) {
     if (server.exitCode !== null) throw new Error(`Server failed: ${log}`);
@@ -85,6 +95,24 @@ try {
     assert.equal((await request("/api/read", { delegation_id: delegation.id }, g.session)).status, 200);
     assert.equal((await request("/api/read", { delegation_id: delegation.id }, o.session)).status, 403);
   });
+  const gateOrigin = "http://127.0.0.1:18248";
+  const gateRequest = () => fetch(gateOrigin + "/access", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chain: delegation.chain, holder: delegation.grant.body.audience, action: "Read" }), signal: AbortSignal.timeout(3000) });
+  await test("API-issued delegation works at the standalone offline gate with the exported snapshot", async () => {
+    const issuerFile = join(directory, "issuer-public.key"), resourceFile = join(directory, "gate-document.txt");
+    await writeFile(issuerFile, Buffer.from((await request("/api/config")).value.issuer_public_key, "base64url"));
+    await writeFile(resourceFile, "Synthetic offline gate document");
+    exportSnapshot();
+    gate = spawn(resolve("target/debug/uac-gate"), ["--listen", "127.0.0.1:18248", "--resource-file", resourceFile, "--issuer-key", issuerFile, "--revocations", snapshot], { stdio: ["ignore", "pipe", "pipe"] });
+    let log = ""; gate.stdout.on("data", x => log += x); gate.stderr.on("data", x => log += x);
+    let ready = false;
+    for (let n = 0; n < 60; n++) {
+      if (gate.exitCode !== null) throw new Error(`Gate failed: ${log}`);
+      try { if ((await fetch(gateOrigin + "/health", { signal: AbortSignal.timeout(200) })).ok) { ready = true; break; } } catch {}
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    assert.equal(ready, true, "owned gate startup timeout");
+    const result = await gateRequest(); assert.equal(result.status, 200); assert.equal(await result.text(), "Synthetic offline gate document");
+  });
   const agent = generateKeyPairSync("ed25519"); let task;
   const public_key = encode(agent.publicKey.export({ format: "der", type: "spki" }).subarray(-32));
   const spec = { name: "Protocol test agent", public_key, resource: "crm.contacts", actions: ["Read", "Write"], ttl_seconds: 300, parent_id: null };
@@ -116,6 +144,8 @@ try {
     const approval_id = await approval("owner", owner, o.session, { kind: "delegation_revoke", id: delegation.id });
     assert.equal((await request("/api/delegations/revoke", { id: delegation.id, approval_id }, o.session)).status, 200);
     assert.equal((await request("/api/read", { delegation_id: delegation.id }, g.session)).status, 403);
+    exportSnapshot();
+    assert.equal((await gateRequest()).status, 403);
   });
   let recoveryCode;
   await test("recovery code rotates with fresh passkey consent; no code is returned in status", async () => {
@@ -153,7 +183,7 @@ try {
   });
   passed = true;
 } finally {
-  await stop(); await mkdir("docs/evidence", { recursive: true });
+  await stopProcess(gate); await stop(); await mkdir("docs/evidence", { recursive: true });
   await writeFile("docs/evidence/protocol-e2e.json", JSON.stringify({ pass: passed, mode: "software P-256 authenticators and real Rust WebAuthn verification over HTTP; browser UI and hardware not covered", cases }, null, 2) + "\n");
   await rm(directory, { recursive: true, force: true });
 }

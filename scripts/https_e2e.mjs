@@ -6,7 +6,8 @@ import { chromium } from "playwright-core";
 const origin = process.env.HEAVENKEY_TEST_ORIGIN;
 const data = process.env.HEAVENKEY_TEST_DATA;
 const output = process.env.HEAVENKEY_TEST_EVIDENCE;
-if (!origin || !/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(origin) || !data || !output) {
+const localTLS = process.env.HEAVENKEY_LOCAL_TLS_TEST === "1" && /^https:\/\/heaven\.test:\d+$/.test(origin || "");
+if (!origin || (!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(origin) && !localTLS) || !data || !output) {
   throw new Error("explicit owned HTTPS test origin, isolated data and evidence directory required");
 }
 await mkdir(output, { recursive: true });
@@ -21,7 +22,7 @@ async function test(name, action) {
   catch (error) { cases.push({ name, pass: false, error: error.message }); throw error; }
 }
 async function actor(name) {
-  const context = await browser.newContext();
+  const context = await browser.newContext({ ignoreHTTPSErrors: localTLS });
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
   await cdp.send("WebAuthn.enable");
@@ -50,24 +51,30 @@ async function post(a, path, body) {
     return { status: r.status, body: await r.json() };
   }, { path, body });
 }
+async function get(a, path) {
+  return a.page.evaluate(async path => {
+    const response = await fetch(path);
+    return { status: response.status, text: await response.text() };
+  }, path);
+}
 try {
-  browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: true });
+  browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: true, args: localTLS ? ["--host-resolver-rules=MAP heaven.test 127.0.0.1", "--no-proxy-server", "--ignore-certificate-errors"] : [] });
   const owner = await actor("owner");
   const guest = await actor("guest");
   let grant;
   await test("trusted HTTPS and exact public RP ID", async () => {
     assert.equal(await owner.page.evaluate(() => isSecureContext), true);
-    const health = await owner.page.request.get(origin + "/health");
-    assert.equal((await health.json()).mode, "https-passkey-pilot");
+    const health = await get(owner, "/health");
+    assert.equal(JSON.parse(health.text).mode, "https-passkey-pilot");
     const start = await post(guest, "/api/register/start", { name: "rp-probe" });
     assert.equal(start.body.options.publicKey.rp.id, new URL(origin).hostname);
   });
   await test("document is absent from anonymous routes and web assets", async () => {
     for (const path of ["/", "/main.js", "/style.css", "/document", "/protected-document.txt", "/owner-bootstrap.txt"]) {
-      const response = await owner.page.request.get(origin + path);
-      assert.equal((await response.text()).includes(document), false, path);
+      const response = await get(owner, path);
+      assert.equal(response.text.includes(document), false, path);
     }
-    assert.equal((await owner.page.request.get(origin + "/api/grants")).status(), 401);
+    assert.equal((await get(owner, "/api/grants")).status, 401);
   });
   await test("first visitor cannot claim owner", async () => {
     assert.equal((await post(guest, "/api/register/start", { name: "owner" })).status, 403);
@@ -92,11 +99,13 @@ try {
     await guest.page.goto(link);
     assert.equal(await guest.page.locator("#name").inputValue(), "guest");
     await action(guest, "#login", "/api/auth/finish");
-    await guest.page.locator(".grant button").waitFor();
+    await guest.page.locator(".grant button").first().waitFor();
   });
   await test("document opens only after recipient passkey and grant verification", async () => {
-    const result = await action(guest, ".grant button", "/api/auth/finish");
+    const result = await action(guest, ".grant button:first-child", "/api/auth/finish");
     assert.equal(result.authorized, true); assert.equal(result.data, document);
+    const sessionResult = await action(guest, ".grant button:last-child", "/api/read");
+    assert.equal(sessionResult.allowed, true); assert.equal(sessionResult.data, document);
     await guest.page.screenshot({ path: output + "/https-document-open.png", fullPage: true });
   });
   await test("fresh ceremony prepared before revocation cannot survive it", async () => {
@@ -116,7 +125,7 @@ try {
   });
   await test("stale recipient page cannot fetch document after revocation", async () => {
     const response = guest.page.waitForResponse(r => r.url() === origin + "/api/auth/start");
-    await guest.page.locator(".grant button").click();
+    await guest.page.locator(".grant button").first().click();
     assert.equal((await response).status(), 403);
     await guest.page.waitForFunction(() => document.querySelector("#status").dataset.error === "true");
     assert.equal(await guest.page.locator("#result").innerText(), "—");
@@ -125,12 +134,12 @@ try {
   await test("reload and recipient login preserve revocation", async () => {
     await guest.page.reload(); await action(guest, "#login", "/api/auth/finish");
     await guest.page.getByText("Widerrufen", { exact: true }).waitFor();
-    assert.equal(await guest.page.locator(".grant button").isDisabled(), true);
+    assert.equal(await guest.page.locator(".grant button").first().isDisabled(), true);
     await guest.page.screenshot({ path: output + "/https-revoked-persistent.png", fullPage: true });
   });
 } catch (error) { failure = error; console.error(error); }
 finally {
   await browser?.close();
-  await writeFile(output + "/HTTPS-ACCEPTANCE.json", JSON.stringify({ pass: !failure, origin, cases, responses, verifier: "real Rust WebAuthn verifier", authenticator: "virtual CTAP2", hardware_verified: false, document_sha256: createHash("sha256").update(document).digest("hex") }, null, 2) + "\n");
+  await writeFile(output + "/HTTPS-ACCEPTANCE.json", JSON.stringify({ pass: !failure, origin, local_tls_with_test_certificate: localTLS, cases, responses, verifier: "real Rust WebAuthn verifier", authenticator: "virtual CTAP2", hardware_verified: false, document_sha256: createHash("sha256").update(document).digest("hex") }, null, 2) + "\n");
 }
 if (failure) process.exitCode = 1;

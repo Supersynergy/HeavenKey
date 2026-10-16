@@ -20,7 +20,7 @@ Paketquellen: [webauthn-rs](https://github.com/kanidm/webauthn-rs/blob/d2c10d53c
 
 [Enpass](https://www.enpass.io/security/) ist eine Referenz für lokale Datenhoheit und optionale verschlüsselte Synchronisierung. [KeePassXC](https://github.com/keepassxreboot/keepassxc/blob/9e0f57a4a4c6c629fa6d0a593acb7d089b1d95cd/docs/topics/Passkeys.adoc) ist eine Referenz für benannte Passkeys, Übersichten und ausdrückliche Bestätigung.
 
-Produktcode aus diesen Anwendungen wird nicht eingebunden. HeavenKey besitzt derzeit weder einen verschlüsselten Tresor noch verschlüsselte Synchronisierung. SQLCipher ist bisher nicht integriert. Vor einer verschlüsselten Datenbank müssen Schlüsselverwahrung und Wiederherstellung geklärt sein, damit ein Umstieg bestehende Daten weder verliert noch unzugänglich macht.
+Produktcode aus diesen Anwendungen wird nicht eingebunden. Der integrierte 0.7-Quellstand verwendet SQLCipher für den lokalen Datenbestand und einen zusätzlich im Browser verschlüsselten PRF-Notiztresor. Eine verschlüsselte Synchronisierung ist nicht enthalten. Migration und Schlüsselverwahrung erhalten bestehende Identitäten; ein Server-Backup braucht Datenordner, Datenbankschlüssel und den Schutzschlüssel der Signierschlüsselhülle.
 
 ## Delegationsformat
 

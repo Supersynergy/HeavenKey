@@ -178,11 +178,24 @@ fn master(data: &Path, key_file: Option<&Path>, existing: bool) -> Result<Zeroiz
 }
 
 pub fn load_issuer(data: &Path, key_file: Option<&Path>) -> Result<Zeroizing<[u8; 32]>> {
+    load_issuer_with_seed(data, key_file, None)
+}
+
+pub fn load_issuer_with_seed(
+    data: &Path,
+    key_file: Option<&Path>,
+    imported: Option<&[u8; 32]>,
+) -> Result<Zeroizing<[u8; 32]>> {
     let envelope = data.join("issuer.enc");
     let legacy = data.join("issuer.key");
     let master = master(data, key_file, envelope.exists())?;
     if envelope.exists() {
         let secret = decode(&protected_read(&envelope, 2048)?, &master)?;
+        if imported.is_some_and(|seed| seed != secret.as_ref()) {
+            return Err(StoreError(
+                "conflicting issuer custody: database and envelope differ",
+            ));
+        }
         if legacy.exists() {
             let old = Zeroizing::new(protected_read(&legacy, 32)?);
             if old.as_slice() != secret.as_slice() {
@@ -194,12 +207,19 @@ pub fn load_issuer(data: &Path, key_file: Option<&Path>) -> Result<Zeroizing<[u8
     }
     let secret = if legacy.exists() {
         let bytes = Zeroizing::new(protected_read(&legacy, 32)?);
+        if imported.is_some_and(|seed| seed.as_slice() != bytes.as_slice()) {
+            return Err(StoreError(
+                "conflicting issuer custody: database and legacy file differ",
+            ));
+        }
         Zeroizing::new(
             bytes
                 .as_slice()
                 .try_into()
                 .map_err(|_| StoreError("invalid legacy issuer"))?,
         )
+    } else if let Some(seed) = imported {
+        Zeroizing::new(*seed)
     } else {
         let mut bytes = Zeroizing::new([0u8; 32]);
         rand::rng().fill_bytes(bytes.as_mut());

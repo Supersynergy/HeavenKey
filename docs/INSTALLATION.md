@@ -80,7 +80,7 @@ Ein Gast verwendet einen eigenen Kontonamen mit 3–32 ASCII-Buchstaben/Ziffern/
 
 Der Dienst schützt seinen Signierschlüssel in `issuer.enc`. Der zugehörige Schutzschlüssel liegt standardmäßig im **macOS-Schlüsselbund, Windows Credential Manager oder Linux Secret Service**. Er wird nicht automatisch in eine Datei zurückgeschrieben, wenn dieser Dienst fehlt oder gesperrt ist.
 
-Die SQLite-Datenbank mit Konto- und Berechtigungsmetadaten ist weiterhin unverschlüsselt. Persönliche Tresorinhalte werden separat im Browser verschlüsselt. Betriebssystemzugriff auf den laufenden Dienst und ausgelieferter Browsercode bleiben Teil der Vertrauensbasis.
+Der integrierte Quellstand verschlüsselt die Datenbank mit SQLCipher. Für ein vollständiges Server-Backup brauchst du den Datenordner, den Datenbankschlüssel (`UAC_STORE_KEY` oder externe Schlüsseldatei) und den Schutzschlüssel für `issuer.enc` (Betriebssystem-Keystore oder `HEAVENKEY_KEY_FILE`). Persönliche Tresorinhalte werden zusätzlich im Browser verschlüsselt. Konto-Recovery und Tresorschlüssel ersetzen dieses Server-Backup nicht. Betriebssystemzugriff auf den laufenden Dienst und ausgelieferter Browsercode bleiben Teil der Vertrauensbasis.
 
 ### Linux ohne Desktop-Schlüsselbund / ausdrücklicher Dateibetrieb
 

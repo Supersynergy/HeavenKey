@@ -4,13 +4,15 @@
 Prueft ohne installierte nginx-/caddy-Binaeren:
 - Pflicht-Direktiven in deploy/caddy/Caddyfile und deploy/nginx/nginx.conf
   (TLS >= 1.2, keine schwachen Cipher, Upstream 127.0.0.1:18240,
-  Host-Rewrite, statische Health-Route, Timeouts, Body-Limit >= 32 KiB,
+  unveraenderte Host/Origin, statische Health-Route, begrenzte Timeouts,
+  Body-Limit >= 32 KiB,
   HSTS).
 - Haertungs-Defaults in deploy/systemd/*.service (NoNewPrivileges,
   ProtectSystem, PrivateTmp, StateDirectory, Restart, nicht-root User).
 - Keine Klartext-Secrets in deploy/ (Private-Key-Bloecke, Token/Passwort-
   Zuweisungen).
 - Konsistenter Upstream-Port 18240 ueber alle Configs und docs/OPERATIONS.md.
+- Oeffentliche HTTPS-Identitaet und externe Headless-Schluesseldatei.
 
 Exit-Code 0 = alles ok, 1 = mindestens ein Fehler, 2 = Aufruffehler.
 Ausgabe: menschenlesbare Zeilen plus optionalem JSON-Report (--json),
@@ -20,10 +22,13 @@ z. B. fuer docs/evidence/ops-check.json. Siehe docs/OPERATIONS.md.
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import json
 import re
+import shlex
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 API_UPSTREAM_PORT = 18240
 MIN_BODY_BYTES = 32 * 1024  # DefaultBodyLimit::max(32 * 1024) in apps/api
@@ -33,6 +38,7 @@ DEPLOY_FILES = [
     "deploy/nginx/nginx.conf",
     "deploy/systemd/uac-api.service",
     "deploy/systemd/uac-gate.service",
+    "deploy/systemd/api.env.example",
 ]
 DOC_FILE = "docs/OPERATIONS.md"
 
@@ -48,7 +54,7 @@ SECRET_PATTERNS = [
     re.compile(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----"),
     re.compile(
         r"(?i)\b(api[_-]?key|secret|password|passwd|token|privkey|"
-        r"private[_-]?key|issuer[_-]?key)\s*[:=]\s*"
+        r"private[_-]?key|issuer[_-]?key|UAC_STORE_KEY)\s*[:=]\s*"
         r"['\"]?[A-Za-z0-9+/_.=-]{12,}"
     ),
 ]
@@ -118,6 +124,24 @@ def parse_size(raw: str) -> int | None:
     return value * factors[unit]
 
 
+def bounded_timeouts(body: str, names: list[str]) -> bool:
+    """Reject missing, disabled or over-two-minute template timeouts."""
+    for name in names:
+        values = re.findall(rf"(?m)^\s*{re.escape(name)}\s+([^\s;}}]+)", body)
+        if not values:
+            return False
+        for value in values:
+            match = re.fullmatch(r"(\d+(?:\.\d+)?)(ms|s|m)", value)
+            if not match:
+                return False
+            seconds = (
+                float(match.group(1)) * {"ms": 0.001, "s": 1, "m": 60}[match.group(2)]
+            )
+            if not 0 < seconds <= 120:
+                return False
+    return True
+
+
 def check_caddy(text: str, rel: str, report: Report) -> None:
     body = strip_comments(text)
 
@@ -149,14 +173,16 @@ def check_caddy(text: str, rel: str, report: Report) -> None:
     report.add(
         "caddy-upstream",
         rel,
-        has(rf"reverse_proxy\s+(?:https?://)?(?:127\.0\.0\.1|localhost):{API_UPSTREAM_PORT}\b"),
+        has(
+            rf"reverse_proxy\s+(?:https?://)?(?:127\.0\.0\.1|localhost):{API_UPSTREAM_PORT}\b"
+        ),
         f"reverse_proxy -> 127.0.0.1:{API_UPSTREAM_PORT}",
     )
     report.add(
-        "caddy-host-rewrite",
+        "caddy-public-identity",
         rel,
-        has(rf"header_up\s+Host\s+localhost:{API_UPSTREAM_PORT}\b"),
-        f"header_up Host localhost:{API_UPSTREAM_PORT} (origin_guard)",
+        not has(r"(?im)^\s*header_up\s+[+\-]?(?:Host|Origin)\b"),
+        "Host und Origin unveraendert (Caddy-Default)",
     )
     report.add(
         "caddy-health",
@@ -181,8 +207,16 @@ def check_caddy(text: str, rel: str, report: Report) -> None:
     report.add(
         "caddy-timeouts",
         rel,
-        has(r"dial_timeout\s+\S+") and has(r"response_header_timeout\s+\S+"),
-        "Upstream-Timeouts konfiguriert",
+        bounded_timeouts(
+            body,
+            [
+                "dial_timeout",
+                "response_header_timeout",
+                "read_timeout",
+                "write_timeout",
+            ],
+        ),
+        "alle Upstream-Timeouts > 0 und <= 120s",
     )
 
 
@@ -242,10 +276,12 @@ def check_nginx(text: str, rel: str, report: Report) -> None:
         f"proxy_pass/upstream -> 127.0.0.1:{API_UPSTREAM_PORT}",
     )
     report.add(
-        "nginx-host-rewrite",
+        "nginx-public-identity",
         rel,
-        has(rf"proxy_set_header\s+Host\s+localhost:{API_UPSTREAM_PORT}\s*;"),
-        f"proxy_set_header Host localhost:{API_UPSTREAM_PORT} (origin_guard)",
+        re.findall(r"(?im)^\s*proxy_set_header\s+Host\s+([^;]+);", body)
+        == ["$http_host"]
+        and not has(r"(?im)^\s*proxy_set_header\s+Origin\b"),
+        "Host=$http_host und Origin unveraendert",
     )
     report.add(
         "nginx-health",
@@ -270,10 +306,17 @@ def check_nginx(text: str, rel: str, report: Report) -> None:
     report.add(
         "nginx-timeouts",
         rel,
-        has(r"proxy_connect_timeout\s+\S+;")
-        and has(r"proxy_read_timeout\s+\S+;")
-        and has(r"client_body_timeout\s+\S+;"),
-        "Proxy-/Client-Timeouts konfiguriert",
+        bounded_timeouts(
+            body,
+            [
+                "proxy_connect_timeout",
+                "proxy_read_timeout",
+                "proxy_send_timeout",
+                "client_header_timeout",
+                "client_body_timeout",
+            ],
+        ),
+        "alle Proxy-/Client-Timeouts > 0 und <= 120s",
     )
 
 
@@ -330,6 +373,105 @@ def check_systemd(text: str, rel: str, report: Report) -> None:
         restart in {"on-failure", "on-abnormal", "always"},
         f"Restart={restart or 'fehlt'} dokumentiert",
     )
+    if name == "uac-api":
+        report.add(
+            "systemd-api-env",
+            rel,
+            directive("EnvironmentFile") == "/etc/heavenkey/api.env",
+            "verbindliche Service-Umgebung /etc/heavenkey/api.env",
+        )
+        report.add(
+            "systemd-api-custody",
+            rel,
+            directive("StateDirectoryMode") == "0700"
+            and directive("UMask") == "0077"
+            and directive("ReadOnlyPaths") == "/etc/heavenkey",
+            "private Daten und schreibgeschuetzte externe Konfiguration",
+        )
+        report.add(
+            "systemd-api-restart-limit",
+            rel,
+            directive("StartLimitIntervalSec") == "60s"
+            and directive("StartLimitBurst") == "3",
+            "hoechstens drei Starts pro Minute",
+        )
+
+
+def check_environment(root: Path, report: Report) -> None:
+    rel = "deploy/systemd/api.env.example"
+    path = root / rel
+    values = {}
+    valid = path.is_file()
+    if valid:
+        for line in strip_comments(path.read_text(encoding="utf-8")).splitlines():
+            if not line.strip():
+                continue
+            match = re.fullmatch(r"([A-Z][A-Z0-9_]*)=(.*)", line)
+            try:
+                parts = shlex.split(match.group(2)) if match else []
+            except ValueError:
+                parts = []
+            if not match or len(parts) != 1 or match.group(1) in values:
+                valid = False
+                continue
+            values[match.group(1)] = parts[0]
+    report.add("api-env-format", rel, valid, "eindeutige EnvironmentFile-Zuweisungen")
+    origin = values.get("HEAVENKEY_PUBLIC_ORIGIN", "")
+    try:
+        url = urlsplit(origin)
+        alias = urlsplit(values.get("HEAVENKEY_ORIGIN", origin))
+        try:
+            ipaddress.ip_address(url.hostname or "")
+            dns = False
+        except ValueError:
+            dns = bool(url.hostname and "." in url.hostname)
+        identity = (
+            url.scheme == "https"
+            and bool(url.hostname)
+            and dns
+            and not url.username
+            and not url.password
+            and not url.query
+            and not url.fragment
+            and url.path in {"", "/"}
+            and values.get("HEAVENKEY_RP_ID") == url.hostname
+            and (alias.scheme, alias.hostname, alias.port or 443)
+            == (url.scheme, url.hostname, url.port or 443)
+            and not alias.username
+            and not alias.password
+            and not alias.query
+            and not alias.fragment
+            and alias.path in {"", "/"}
+        )
+        _ = url.port  # Reject malformed ports even when the host is valid.
+    except ValueError:
+        identity = False
+    report.add(
+        "api-env-identity",
+        rel,
+        identity,
+        "HTTPS-Domain, gleiche RP-ID, kein konkurrierender Origin-Override",
+    )
+    key = Path(values.get("HEAVENKEY_KEY_FILE", ""))
+    store_key = Path(values.get("UAC_STORE_KEY_FILE", ""))
+    document = Path(values.get("HEAVENKEY_DOCUMENT", ""))
+    private = (
+        all(
+            path.is_absolute() and ".." not in path.parts and len(path.parts) > 2
+            for path in [key, store_key, document]
+        )
+        and all(
+            not path.is_relative_to("/var/lib/heavenkey") for path in [key, store_key]
+        )
+        and len({key, store_key, document}) == 3
+        and "UAC_STORE_KEY" not in values
+    )
+    report.add(
+        "api-env-private-files",
+        rel,
+        private,
+        "getrennte absolute Dokument-/Schluesselpfade; beide Schluessel ausserhalb data/",
+    )
 
 
 def check_secrets(root: Path, report: Report) -> None:
@@ -370,10 +512,6 @@ def check_port_consistency(root: Path, report: Report) -> None:
         ):
             add(rel, int(m.group(1)))
         for m in re.finditer(r"--port\s+(\d+)", body):
-            add(rel, int(m.group(1)))
-        for m in re.finditer(r"header_up\s+Host\s+\S+?:(\d+)", body):
-            add(rel, int(m.group(1)))
-        for m in re.finditer(r"proxy_set_header\s+Host\s+\S+?:(\d+)", body):
             add(rel, int(m.group(1)))
 
     doc = root / DOC_FILE
@@ -429,18 +567,23 @@ def main() -> int:
 
     caddy_path = root / "deploy/caddy/Caddyfile"
     if caddy_path.is_file():
-        check_caddy(caddy_path.read_text(encoding="utf-8"), "deploy/caddy/Caddyfile", report)
+        check_caddy(
+            caddy_path.read_text(encoding="utf-8"), "deploy/caddy/Caddyfile", report
+        )
     nginx_path = root / "deploy/nginx/nginx.conf"
     if nginx_path.is_file():
-        check_nginx(nginx_path.read_text(encoding="utf-8"), "deploy/nginx/nginx.conf", report)
+        check_nginx(
+            nginx_path.read_text(encoding="utf-8"), "deploy/nginx/nginx.conf", report
+        )
     for rel in DEPLOY_FILES:
-        if "systemd" not in rel:
+        if not rel.endswith(".service"):
             continue
         path = root / rel
         if path.is_file():
             check_systemd(path.read_text(encoding="utf-8"), rel, report)
 
     check_secrets(root, report)
+    check_environment(root, report)
     check_port_consistency(root, report)
 
     summary = report.to_json()

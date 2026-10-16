@@ -23,7 +23,9 @@ function storeQuery(sql, params = []) {
   const binary = resolve(process.env.HEAVENKEY_BINARY || join(root,"target/debug/uac-api"));
   const prefix = JSON.parse(process.env.HEAVENKEY_BINARY_PREFIX_JSON || "[]");
   const queryPath = process.env.HEAVENKEY_WINDOWS_PATHS === "1" ? `Z:${serverData.replaceAll("/", "\\")}` : serverData;
-  const r = spawnSync(prefix[0] || binary, [...prefix.slice(1), ...(prefix.length ? [binary] : []), "--store-query", JSON.stringify({ sql, params })], { cwd:process.env.HEAVENKEY_SERVER_CWD || root, env:{ ...process.env,UAC_DATA:queryPath,UAC_STORE_KEY:storeKey }, encoding:"utf8" });
+  const protectionPath = join(tmpdir(), `heavenkey-protection-${serverData.split("/").pop()}.key`);
+  const keyPath = process.env.HEAVENKEY_WINDOWS_PATHS === "1" ? `Z:${protectionPath.replaceAll("/", "\\")}` : protectionPath;
+  const r = spawnSync(prefix[0] || binary, [...prefix.slice(1), ...(prefix.length ? [binary] : []), "--store-query", JSON.stringify({ sql, params })], { cwd:process.env.HEAVENKEY_SERVER_CWD || root, env:{ ...process.env,UAC_DATA:queryPath,UAC_STORE_KEY:storeKey,HEAVENKEY_KEY_FILE:keyPath }, encoding:"utf8", timeout:15000 });
   if (r.status !== 0) throw new Error(`store query failed: ${r.stderr || r.stdout}`);
   return JSON.parse(r.stdout);
 }
@@ -356,7 +358,7 @@ try {
   await test("second passkey invokes an existing same-account grant through the browser",async()=>{
     await guest.page.locator("#refresh").click();
     const response=guest.page.waitForResponse(r=>r.url().endsWith("/api/auth/finish"));
-    await guest.page.locator(`.grant[data-id="${secondGrant.id}"] button`).click();assert.equal((await response).status(),200);
+    await guest.page.locator(`.grant[data-id="${secondGrant.id}"]`).getByRole("button", { name: "Dokument lesen", exact: true }).click();assert.equal((await response).status(),200);
     await guest.page.waitForFunction(()=>document.querySelector("#result").textContent.includes('"authorized": true'));
     await guest.page.waitForFunction(()=>!document.querySelector("#credential-add").disabled);
     await guest.page.screenshot({path:join(evidence,"browser-credentials.png"),fullPage:true});

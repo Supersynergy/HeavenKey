@@ -2,7 +2,7 @@
   "tool": "ops_check",
   "scope": "deploy/ + docs/OPERATIONS.md",
   "ok": true,
-  "total": 41,
+  "total": 48,
   "failed": 0,
   "checks": [
     {
@@ -26,6 +26,12 @@
     {
       "check": "exists",
       "file": "deploy/systemd/uac-gate.service",
+      "status": "pass",
+      "detail": "Datei vorhanden"
+    },
+    {
+      "check": "exists",
+      "file": "deploy/systemd/api.env.example",
       "status": "pass",
       "detail": "Datei vorhanden"
     },
@@ -60,10 +66,10 @@
       "detail": "reverse_proxy -> 127.0.0.1:18240"
     },
     {
-      "check": "caddy-host-rewrite",
+      "check": "caddy-public-identity",
       "file": "deploy/caddy/Caddyfile",
       "status": "pass",
-      "detail": "header_up Host localhost:18240 (origin_guard)"
+      "detail": "Host und Origin unveraendert (Caddy-Default)"
     },
     {
       "check": "caddy-health",
@@ -87,7 +93,7 @@
       "check": "caddy-timeouts",
       "file": "deploy/caddy/Caddyfile",
       "status": "pass",
-      "detail": "Upstream-Timeouts konfiguriert"
+      "detail": "alle Upstream-Timeouts > 0 und <= 120s"
     },
     {
       "check": "nginx-listen-tls",
@@ -120,10 +126,10 @@
       "detail": "proxy_pass/upstream -> 127.0.0.1:18240"
     },
     {
-      "check": "nginx-host-rewrite",
+      "check": "nginx-public-identity",
       "file": "deploy/nginx/nginx.conf",
       "status": "pass",
-      "detail": "proxy_set_header Host localhost:18240 (origin_guard)"
+      "detail": "Host=$http_host und Origin unveraendert"
     },
     {
       "check": "nginx-health",
@@ -147,7 +153,7 @@
       "check": "nginx-timeouts",
       "file": "deploy/nginx/nginx.conf",
       "status": "pass",
-      "detail": "Proxy-/Client-Timeouts konfiguriert"
+      "detail": "alle Proxy-/Client-Timeouts > 0 und <= 120s"
     },
     {
       "check": "systemd-exec-uac-api",
@@ -190,6 +196,24 @@
       "file": "deploy/systemd/uac-api.service",
       "status": "pass",
       "detail": "Restart=on-failure dokumentiert"
+    },
+    {
+      "check": "systemd-api-env",
+      "file": "deploy/systemd/uac-api.service",
+      "status": "pass",
+      "detail": "verbindliche Service-Umgebung /etc/heavenkey/api.env"
+    },
+    {
+      "check": "systemd-api-custody",
+      "file": "deploy/systemd/uac-api.service",
+      "status": "pass",
+      "detail": "private Daten und schreibgeschuetzte externe Konfiguration"
+    },
+    {
+      "check": "systemd-api-restart-limit",
+      "file": "deploy/systemd/uac-api.service",
+      "status": "pass",
+      "detail": "hoechstens drei Starts pro Minute"
     },
     {
       "check": "systemd-exec-uac-gate",
@@ -238,6 +262,24 @@
       "file": "deploy/",
       "status": "pass",
       "detail": "keine Klartext-Secrets"
+    },
+    {
+      "check": "api-env-format",
+      "file": "deploy/systemd/api.env.example",
+      "status": "pass",
+      "detail": "eindeutige EnvironmentFile-Zuweisungen"
+    },
+    {
+      "check": "api-env-identity",
+      "file": "deploy/systemd/api.env.example",
+      "status": "pass",
+      "detail": "HTTPS-Domain, gleiche RP-ID, kein konkurrierender Origin-Override"
+    },
+    {
+      "check": "api-env-private-files",
+      "file": "deploy/systemd/api.env.example",
+      "status": "pass",
+      "detail": "getrennte absolute Dokument-/Schluesselpfade; beide Schluessel ausserhalb data/"
     },
     {
       "check": "doc-mentions-port",

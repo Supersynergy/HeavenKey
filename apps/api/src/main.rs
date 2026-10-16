@@ -2,8 +2,8 @@
 
 mod desktop;
 mod hosting;
-mod store;
 mod platform;
+mod store;
 
 use axum::{
     Json, Router,
@@ -1639,21 +1639,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let Some(options) = desktop::options()? else {
         return Ok(());
     };
-    let port = options.port;
-    let public_origin = std::env::var("HEAVENKEY_PUBLIC_ORIGIN").ok();
-    let hosting = hosting::Hosting::new(port, public_origin.as_deref())?;
-    let origin = hosting.origin;
-    let rp_id = std::env::var("HEAVENKEY_RP_ID").unwrap_or(hosting.rp_id);
-    platform::identity(&origin, &rp_id)?;
-    let document_path = std::env::var_os("HEAVENKEY_DOCUMENT");
-    let document = hosting::document(
-        document_path.as_deref().map(Path::new),
-        public_origin.is_some(),
-    )?;
-    let data = options.data;
-    desktop::prepare_data(&data)?;
-    let bootstrap_hash = bootstrap_hash(&data)?;
-    let store::Store { mut db, issuer } = store::open(&data)?;
     if let Some(spec) = options.store_query {
         let spec: Value = serde_json::from_str(&spec)?;
         let sql = spec
@@ -1665,9 +1650,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .and_then(Value::as_array)
             .cloned()
             .unwrap_or_default();
-        println!("{}", store::query(&db, sql, &parameters)?);
+        desktop::prepare_data(&options.data)?;
+        let store = store::open(&options.data)?;
+        println!("{}", store::query(&store.db, sql, &parameters)?);
         return Ok(());
     }
+    let port = options.port;
+    let public_origin = std::env::var("HEAVENKEY_PUBLIC_ORIGIN").ok();
+    let alias_origin = std::env::var("HEAVENKEY_ORIGIN").ok();
+    if let (Some(public), Some(alias)) = (&public_origin, &alias_origin)
+        && Url::parse(public)?.origin() != Url::parse(alias)?.origin()
+    {
+        return Err("HEAVENKEY_ORIGIN and HEAVENKEY_PUBLIC_ORIGIN disagree".into());
+    }
+    let configured_origin = public_origin.as_deref().or(alias_origin.as_deref());
+    let local_origin = format!("http://localhost:{port}");
+    let hosting = hosting::Hosting::new(
+        port,
+        configured_origin.filter(|value| *value != local_origin),
+    )?;
+    let origin = hosting.origin;
+    let rp_id = std::env::var("HEAVENKEY_RP_ID").unwrap_or(hosting.rp_id);
+    platform::identity(&origin, &rp_id)?;
+    let document_path = std::env::var_os("HEAVENKEY_DOCUMENT");
+    let document = hosting::document(
+        document_path.as_deref().map(Path::new),
+        origin.starts_with("https://"),
+    )?;
+    let data = options.data;
+    desktop::prepare_data(&data)?;
+    let bootstrap_hash = bootstrap_hash(&data)?;
+    let store::Store { mut db, issuer } = store::open(&data)?;
     db.busy_timeout(Duration::from_secs(2))?;
     initialize_database(&mut db)?;
     let webauthn = WebauthnBuilder::new(&rp_id, &Url::parse(&origin)?)?

@@ -9,7 +9,10 @@
 - Sitzungsgebundenes Lesen mit erneuter aktueller Berechtigungsprüfung, Abmeldung und Pilot-Audit.
 - Chrome-/Firefox-Popup mit Bereichsauswahl, lokaler/HTTPS-Verbindung und gespeicherten Verbindungseinstellungen ohne zusätzliche Berechtigungen.
 - Einfacher Quellstarter und sieben reproduzierbare Bedienillustrationen; Installations- und Benutzeranleitungen.
-- Software-Protokollintegration, DOM- und Kryptografietests ergänzt. Browserstarts sind in der aktuellen Ausführungsumgebung blockiert; Hardware, native Keystores, neue Desktop-Pakete und Firefox-Signierung bleiben offen.
+- SQLCipher-Speicher, Schlüsselhülle, Recovery und HTTPS auf einem gemeinsamen Stand integriert; widersprüchliche Schlüssel und Origin-Angaben verhindern den Start.
+- HTTPS-Passkey-Zugriff, Sitzungslesen und Dokument-Agenten verwenden dieselbe private Dokumentquelle. TLS-Proxys erhalten die öffentliche Host-/Origin-Bindung.
+- Offline-Gate, Widerruf-Snapshot, Mandantenbibliothek und unabhängige Referenzvektoren zusammengeführt. Die Mandantenbibliothek ist noch kein externer Produktconnector.
+- Software-Protokollintegration, Browser-, DOM- und Kryptografietests ergänzt. Hardware, native Keystores, neue Desktop-Pakete und Firefox-Signierung bleiben offen.
 
 
 ## Unreleased: Browserdemo

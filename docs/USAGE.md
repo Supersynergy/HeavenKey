@@ -55,7 +55,9 @@ Der Eigentümer oder das tatsächlich ausstellende Konto kann einen Delegationsz
 | Nach Neustart abgemeldet | Melde dich erneut an; gespeicherte Schlüssel und Widerrufe bleiben erhalten. |
 | Chrome wird beim Test nicht gefunden | Setze `CHROME_PATH` auf die ausführbare Chrome-Datei. |
 
-Die Kontodatenbank ist weiterhin unverschlüsselt. Der 0.7-Quellstand ergänzt einen getrennten, im Browser verschlüsselten [PRF-Notiztresor](PASSKEY-GUIDE.md#optionalen-tresor-einrichten). Die API und ihr Signierschlüssel müssen vertrauenswürdig bleiben. Eine Passkey-Bestätigung bietet keine unabhängige Anzeige der Transaktionsdaten auf dem Authentikator. Weitere technische Grenzen stehen in der [Spezifikation](SPEC.md).
+Die Kontodatenbank ist mit SQLCipher verschlüsselt. Ihr Schlüssel stammt aus `UAC_STORE_KEY` (64 Hex-Zeichen) oder einer externen `UAC_STORE_KEY_FILE`; ohne diese Angabe liegt die private Schlüsseldatei im Benutzer-Konfigurationsordner. Der Signierschlüssel ist zusätzlich als authentifizierte `issuer.enc` geschützt. Dafür brauchst du den Betriebssystem-Keystore oder eine separate `HEAVENKEY_KEY_FILE`. Sichere Datenordner und beide Schutzschlüssel getrennt und geschützt; ein Konto-Recovery-Code ersetzt kein Server-Backup. Widersprüchliche Signierschlüssel oder falsche Schutzschlüssel verhindern den Start. Der [PRF-Notiztresor](PASSKEY-GUIDE.md#optionalen-tresor-einrichten) verschlüsselt persönliche Inhalte zusätzlich im Browser. Die API und der ausgelieferte Browsercode bleiben Teil der Vertrauensbasis.
+
+Mit `uac-api --store-query '{"sql":"SELECT ...","params":[]}'` führt ein lokaler Operator Wartungsabfragen aus. Für das Offline-Gate exportiert `python3 scripts/revocation_snapshot.py --data DATENORDNER --out revocations.json` den aktuellen Widerruf-Snapshot; dafür sind dieselben Speicher- und Schutzschlüssel nötig. Eine Passkey-Bestätigung bietet keine unabhängige Anzeige der Transaktionsdaten auf dem Authentikator. Weitere Grenzen stehen in der [Spezifikation](SPEC.md).
 
 
 ## Erweiterte Funktionen in 0.7

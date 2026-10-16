@@ -1,5 +1,7 @@
 # Prüfstatus 0.7.0
 
+Dieser Bericht dokumentiert den ursprünglichen Stand von PR #24 und dessen damalige Ausführungsumgebung. Die zusammengeführte Fassung wurde auf diesem Mac mit `just check`, 138 Browserfällen und elf lokalen HTTPS-Fällen geprüft. Aktueller Integrationsumfang und Wiederholungsbefehle stehen in [Integration](INTEGRATION.md); die damaligen Umgebungsblockaden unten gelten als historische Beobachtung.
+
 Stand: **16. Oktober 2026**. Ausgangspunkt: `main` mit Commit `1aa9accabcbde3469e6ed4d3fe15c43ca5c04141`. Dieser Bericht beschreibt die neu implementierte lokale Vorschau, keine Produktionsfreigabe.
 
 ## Bestanden

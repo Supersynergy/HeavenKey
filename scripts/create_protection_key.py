@@ -1,4 +1,5 @@
 """Explicit headless setup: create one private key file outside HeavenKey's data directory."""
+
 import argparse
 import os
 from pathlib import Path
@@ -21,4 +22,6 @@ if __name__ == "__main__":
     parser.add_argument("path", type=Path)
     args = parser.parse_args()
     print(f"Private protection key created: {create(args.path)}")
-    print("Set HEAVENKEY_KEY_FILE to this path. Back it up separately; never put it inside the data directory.")
+    print(
+        "Set HEAVENKEY_KEY_FILE to this path. Back it up separately; never put it inside the data directory."
+    )

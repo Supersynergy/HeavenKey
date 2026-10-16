@@ -1,0 +1,36 @@
+   Compiling syn v3.0.8
+   Compiling syn v2.0.119
+   Compiling tracing v0.1.44
+   Compiling axum-core v0.5.6
+   Compiling serde_derive v1.0.228
+   Compiling tokio-macros v2.7.2
+   Compiling tokio v1.53.2
+   Compiling serde v1.0.228
+   Compiling serde_urlencoded v0.7.1
+   Compiling uac-verifier v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/crates/verifier)
+   Compiling hyper v1.12.0
+   Compiling tower v0.5.3
+   Compiling hyper-util v0.1.21
+   Compiling axum v0.8.9
+   Compiling uac-gate v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/gate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.00s
+     Running unittests src/main.rs (target/debug/build/uac-gate/9933a3b483e8357b/out/uac_gate-9933a3b483e8357b)
+
+running 1 test
+test tests::maximum_revocation_count_fits_the_snapshot_byte_budget ... FAILED
+
+failures:
+
+---- tests::maximum_revocation_count_fits_the_snapshot_byte_budget stdout ----
+
+thread 'tests::maximum_revocation_count_fits_the_snapshot_byte_budget' (17031748) panicked at apps/gate/src/main.rs:538:56:
+called `Result::unwrap()` on an `Err` value: SnapshotUnavailable
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tests::maximum_revocation_count_fits_the_snapshot_byte_budget
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `-p uac-gate --bin uac-gate`

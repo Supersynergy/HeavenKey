@@ -1,0 +1,11 @@
+PASS trusted HTTPS and exact public RP ID
+PASS document is absent from anonymous routes and web assets
+PASS first visitor cannot claim owner
+PASS owner enrolls with one-use operator code and verified passkey
+PASS guest enrolls own passkey and has no access initially
+PASS owner issues read access after passkey confirmation
+PASS share link opens recipient account without a bearer credential
+PASS document opens only after recipient passkey and grant verification
+PASS fresh ceremony prepared before revocation cannot survive it
+PASS stale recipient page cannot fetch document after revocation
+PASS reload and recipient login preserve revocation
