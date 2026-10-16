@@ -19,6 +19,7 @@ const origin = `http://localhost:${port}`;
 let server, browser;
 const cases = [];
 const actors = [];
+const protectionFiles = new Set();
 let fatalError;
 const started = performance.now();
 async function test(name, action) {
@@ -33,7 +34,11 @@ async function startServer() {
   try { await stat(binary); }
   catch (error) { throw new Error(`server spawn failed: ${error.message}`); }
   const serverPath = process.env.HEAVENKEY_WINDOWS_PATHS === "1" ? `Z:${serverData.replaceAll("/", "\\")}` : serverData;
-  server = spawn(prefix[0] || binary, prefix.length ? [...prefix.slice(1),binary] : [], { cwd:process.env.HEAVENKEY_SERVER_CWD || root, env:{ ...process.env,UAC_PORT:String(port),UAC_DATA:serverPath }, stdio:["ignore","pipe","pipe"] });
+  const protectionPath = join(tmpdir(), `heavenkey-protection-${serverData.split("/").pop()}.key`);
+  try { await stat(protectionPath); } catch { await writeFile(protectionPath, randomBytes(32), { mode: 0o600 }); }
+  protectionFiles.add(protectionPath);
+  const keyPath = process.env.HEAVENKEY_WINDOWS_PATHS === "1" ? `Z:${protectionPath.replaceAll("/", "\\")}` : protectionPath;
+  server = spawn(prefix[0] || binary, prefix.length ? [...prefix.slice(1),binary] : [], { cwd:process.env.HEAVENKEY_SERVER_CWD || root, env:{ ...process.env,UAC_PORT:String(port),UAC_DATA:serverPath,HEAVENKEY_KEY_FILE:keyPath,HEAVENKEY_ORIGIN:origin,HEAVENKEY_RP_ID:"localhost" }, stdio:["ignore","pipe","pipe"] });
   let output = "";
   let spawnError;
   server.on("error", error => { spawnError=error; });
@@ -712,6 +717,7 @@ try {
 }
 finally {
   await browser?.close();await stopServer();
+  for (const path of protectionFiles) await rm(path, { force: true });
   const report={completed:!fatalError,fatal_error:fatalError,mode:"virtual CTAP2 authenticators; real navigator.credentials + Rust verification",binary:process.env.HEAVENKEY_BINARY || "target/debug/uac-api",windows_compatibility:process.env.HEAVENKEY_WINDOWS_PATHS === "1",storage_permission_oracle:process.env.HEAVENKEY_WINDOWS_PATHS === "1" ? "private POSIX parent of Wine data; native Windows ACL unverified" : "POSIX bootstrap file permissions",hardware:"deferred by user",total:cases.length,passed:cases.filter(x=>x.pass).length,failed:cases.filter(x=>!x.pass).length,cases,elapsed_seconds:Math.round((performance.now()-started)/100)/10};
   await writeFile(join(evidence,"e2e.json"),JSON.stringify(report,null,2)+"\n");
   await rm(data,{recursive:true,force:true});

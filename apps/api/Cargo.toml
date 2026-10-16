@@ -7,6 +7,8 @@ publish.workspace = true
 
 [dependencies]
 openssl = { workspace = true, optional = true }
+uac-keystore = { path = "../../crates/keystore" }
+uac-recovery = { path = "../../crates/recovery" }
 uac-verifier = { path = "../../crates/verifier" }
 axum.workspace = true
 tokio.workspace = true

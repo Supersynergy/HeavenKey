@@ -1,4 +1,6 @@
-# HeavenKey 0.6 starten
+# HeavenKey-Pakete und Browser-Erweiterungen
+
+Die bisher veröffentlichten Pakete sind 0.6. Der neue 0.7-Quellstand ergänzt Funktionen und Schlüsselverwahrung; siehe [bebilderte Installation](INSTALLATION.md). Neue Desktop-Binärpakete und ihre Plattformabnahme sind separat ausstehend.
 
 Die Pakete enthalten den Server, die Weboberfläche und Lizenzhinweise. Du brauchst einen aktuellen Browser mit WebAuthn, aber kein Rust, Bun, Python oder Docker. HeavenKey ist eine lokale Vorschau mit einem Demo-Dokument. Die Datenbank ist unverschlüsselt; physische Passkeys sind noch nicht abgenommen.
 
@@ -36,7 +38,7 @@ Chrome und Edge verwenden dasselbe Chromium-Paket. Entpacke `extension-chromium.
 
 Firefox: Entpacke `extension-firefox.zip`; öffne `about:debugging#/runtime/this-firefox` und lade `manifest.json` über „Temporäres Add-on laden“. Diese Installation endet beim Browser-Neustart. Eine dauerhafte Installation im normalen Firefox braucht Mozilla-Signierung; das Paket ist noch unsigniert.
 
-Klicke auf HeavenKey in der Browserleiste und dann auf „HeavenKey öffnen“. Die Erweiterung öffnet einen localhost-Tab. Sie startet keinen Server und liest keine besuchten Seiten. Anmeldung, Schlüsselverwaltung und Freigaben bleiben auf der geprüften WebAuthn-Origin. Sie fordert keine Webseiten-, Speicher- oder Native-Messaging-Berechtigung an.
+Klicke auf HeavenKey in der Browserleiste, wähle den gewünschten Bereich und dann „HeavenKey öffnen“. Im 0.7-Quellstand öffnet die Erweiterung wahlweise localhost oder eine ausdrücklich eingerichtete HTTPS-Installation; sie speichert nur die Verbindungseinstellung. Sie startet keinen Server und liest keine besuchten Seiten. Anmeldung, Schlüsselverwaltung und Freigaben bleiben auf der geprüften WebAuthn-Origin. Sie fordert keine Webseiten-, Speicher- oder Native-Messaging-Berechtigung an.
 
 Safari verwendet die Weboberfläche direkt; eine Safari-Erweiterung ist nicht enthalten. iOS und Android erhalten hier keine native App. Für den lokalen Dienst auf dem Computer ersetzt ein Mobilbrowser keine spätere HTTPS- und Netzwerkbereitstellung.
 

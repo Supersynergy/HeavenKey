@@ -1,36 +1,26 @@
 # HeavenKey Roadmap
 
-## Verfügbar in der lokalen Vorschau
+## Implementiert in der lokalen Vorschau
 
-| Version | Funktionen |
+| Stand | Funktionsumfang |
 | --- | --- |
-| 0.1 | Passkey-Anmeldung, signierte Zugänge, gebundene Aufrufe und Widerruf |
-| 0.2 | Einmaliger Einrichtungscode für den Eigentümer |
-| 0.3 | Benannte Passkeys pro Konto mit Schutz des letzten aktiven Schlüssels |
-| 0.4 | Frische Passkey-Zustimmung für konkrete Änderungen, Abbruch und erneuter Versuch |
-| 0.5 | Begrenzte Weitergabe, bis zu fünf Kettenglieder und Widerruf aller abhängigen Nachfolger |
+| 0.1–0.5 | Passkey-Anmeldung, Bootstrap für Eigentümer, mehrere Schlüssel, genaue Aktionsbestätigung, begrenzte Weitergabe und vererbter Widerruf. |
+| 0.6 | Desktop-Pakete und minimale Erweiterungen; die veröffentlichten Pakete entsprechen diesem älteren Stand. |
+| 0.7 · Quellstand | Konto-Recovery, verschlüsselter Signierschlüssel mit separater Verwahrung, optionaler PRF-Tresor, Sitzungslesen, Agenten-Schlüsselbesitznachweis, lokaler CRM-Pilot, Bereichsauswahl in Erweiterungen und bebilderte Installation. |
 
-Der aktuelle Stand ist lokal mit virtuellen Passkeys auf macOS und Ubuntu geprüft. Physische Passkeys und der gehostete GitHub-CI-Lauf sind noch offen; siehe [Prüfstatus](VERIFICATION.md).
+Der aktuelle Nachweis steht in [0.7-Verifikation](V07-VERIFICATION.md). Physische Passkeys, echte Betriebssystem-Keystores und neue Browserläufe sind dort ausdrücklich separat ausgewiesen.
 
-## Nächste Funktionen
+## Nächste Abnahmen und Integrationen
 
-| Bereich | Geplanter Nutzen | Erforderliche Prüfung |
+| Priorität | Nächster Schritt | Erfolgskriterium |
 | --- | --- | --- |
-| Physische Passkeys | Passkeys auf eigenen Geräten einsetzen | Prüfung auf echten Geräten einschließlich abgebrochener Anmeldung |
-| Recovery | Zugang bei Verlust aller Passkeys wiederherstellen | Missbrauchsschutz und vollständiger Wiederherstellungsablauf |
-| Geschützter Speicher | Lokale Daten und Signierschlüssel absichern | Geprüfte Schlüsselverwahrung und Datenmigration; ein falscher Schlüssel darf keine Daten freigeben |
-| HTTPS und Betrieb | Außerhalb der lokalen Demo nutzbar werden | Geprüfte HTTPS-Konfiguration und Fehlerabläufe im Betrieb |
-| Mandanten | Mehrere getrennte Organisationen verwalten | Keine Zugriffe zwischen Organisationen |
-| Externe Integrationen | Berechtigungen in einem konkreten Softwaretool einsetzen | Autorisierung am tatsächlichen Ausführungspunkt |
-| Protokollkompatibilität | Zugänge mit einer externen Implementierung prüfen | Erfolgreiche Prüfung mit einer zweiten Implementierung |
-| Offline-Ziele | Ein kontrolliertes Gerät ohne dauernde Verbindung nutzen | Kontrollierter Umgang mit veralteten Widerrufen und Ablaufzeiten |
+| 1 | Chrome und Firefox auf geeigneter Testmaschine | Komplette Passkey-, Recovery- und Erweiterungsabläufe einschließlich Abbruch; Screenshots des realen Ablaufs. |
+| 1 | Physische Geräte und native Keystores | macOS, Windows, Linux; gesperrter Keystore, Geräteverlust und Neustart tatsächlich prüfen. |
+| 1 | Neue 0.7-Desktop-Pakete | Plattform-Builds, überprüfte Startdateien, Prüfsummen, anschließende Signierung/Notarisierung. |
+| 2 | Dauerhafte Firefox-Verteilung | Mozilla-Signierung und Installation nach Browser-Neustart. |
+| 2 | HTTPS-Betrieb | Eigenständiger Pilot mit fixer RP-ID, Reverse-Proxy und geprüftem Fehlerverhalten; PR #23 abstimmen. |
+| 2 | Geschützter kompletter Datenbestand | SQLCipher-Vorschlag PR #15 prüfen und mit der neuen Schlüsselverwahrung integrieren. |
+| 2 | Reale Next-Office-Anbindung | Rechte am tatsächlichen Connector prüfen; echte Tenant-Zuordnung, Wiederholungen, Fehler und Widerruf testen. |
+| 3 | Mandanten, externe Protokolle, Offline | Zugehörige Entwürfe/PRs unabhängig prüfen; keine interoperablen oder verteilten Garantien aus dem lokalen Pilot ableiten. |
 
-## Vorläufige Zeitplanung
-
-| Umfang | Planungsspanne |
-| --- | --- |
-| Verbleibender Softwarepilot | 20–37 Personentage, etwa 4–8 Wochen mit einem Entwickler |
-| Webprodukt für produktiven Betrieb | 3–5 Monate |
-| Mobile Clients mit einem Offline-Ziel sowie einem Wallet-Adapter | 6–12 Monate mit 2–3 Entwicklern |
-
-Die Umfänge sind verschachtelt und werden nicht addiert. Es sind Schätzungen; Die konkreten Zielsysteme und reale Gerätetests bestimmen den tatsächlichen Aufwand. Ohne den erforderlichen API-Zugang ist kein verbindlicher Integrationstermin möglich. Nach dem Hardwaretest und der ersten konkreten Anbindung lässt sich die Planung enger fassen.
+Eine neue verbindliche Zeitplanung folgt aus den konkreten Plattform- und Integrationsabnahmen. Frühere Schätzungen sind keine Zusage für diesen erweiterten Umfang.

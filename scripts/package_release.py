@@ -106,6 +106,8 @@ def dependency_notices(destination):
         ]
         if package["name"] == "openssl-src":
             license_files.append(source / "openssl/LICENSE.txt")
+        if package["name"] == "libdbus-sys":
+            license_files.append(source / "vendor/dbus/COPYING")
         for path in license_files:
             target = destination / "licenses" / name / path.name
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -117,7 +119,7 @@ def dependency_notices(destination):
                 "source": f"https://crates.io/crates/{package['name']}/{package['version']}",
             }
         )
-        if "MPL-2.0" in (package["license"] or ""):
+        if "MPL-2.0" in (package["license"] or "") or package["name"] == "libdbus-sys":
             target = destination / "third-party-source"
             target.mkdir(exist_ok=True)
             with tarfile.open(target / f"{name}.tar.gz", "w:gz") as archive:
@@ -220,13 +222,13 @@ def extensions():
     for browser in ("chromium", "firefox"):
         directory = OUT / f"extension-{browser}"
         directory.mkdir(exist_ok=True)
-        for name in ("popup.html", "popup.css", "popup.js"):
+        for name in ("popup.html", "popup.css", "popup.js", "settings.js"):
             shutil.copyfile(ROOT / "apps/extension" / name, directory / name)
         manifest = {
             "manifest_version": 3,
             "name": "HeavenKey",
             "version": VERSION,
-            "description": "Öffnet dein lokales HeavenKey-Zugangslabor ohne Zugriff auf Webseiten oder Schlüssel.",
+            "description": "Passkeys, Freigaben, Recovery und Agenten in deinem HeavenKey-Dienst öffnen.",
             "action": {
                 "default_title": "HeavenKey öffnen",
                 "default_popup": "popup.html",

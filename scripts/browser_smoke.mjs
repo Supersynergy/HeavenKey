@@ -3,11 +3,14 @@ import { spawn } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
+import { randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
 
 const temporary = await mkdtemp(join(tmpdir(), "heavenkey-browser-smoke-"));
 const binary = resolve(process.env.HEAVENKEY_BINARY || "target/aarch64-apple-darwin/release/uac-api");
-const server = spawn(binary, ["--data-dir", join(temporary, "data"), "--port", "18240"], { cwd: temporary, stdio: ["ignore", "pipe", "pipe"] });
+const protection = join(temporary, "synthetic-protection.key");
+await writeFile(protection, randomBytes(32), { mode: 0o600 });
+const server = spawn(binary, ["--data-dir", join(temporary, "data"), "--port", "18240"], { cwd: temporary, env: { ...process.env, HEAVENKEY_KEY_FILE: protection, HEAVENKEY_ORIGIN: "http://localhost:18240", HEAVENKEY_RP_ID: "localhost" }, stdio: ["ignore", "pipe", "pipe"] });
 let output = "";
 server.stdout.on("data", bytes => output += bytes);
 server.stderr.on("data", bytes => output += bytes);

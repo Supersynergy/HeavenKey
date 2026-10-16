@@ -7,6 +7,8 @@
 | `apps/api/` | Rust-API mit Passkey-Verwaltung und SQLite-Zustand |
 | `apps/web/` | TypeScript-Oberfläche und WebAuthn-Dialoge |
 | `apps/extension/` | Erweiterung zum Öffnen des lokalen Dienstes, ohne Webseitenberechtigungen |
+| `crates/keystore/` | Verschlüsselter Dienst-Signierschlüssel und OS-Keystore-Anbindung |
+| `crates/recovery/` | Erzeugung und konto-/zweckgebundene Digests von Einmalcodes |
 | `crates/verifier/` | Signierte Zugänge und Prüfung der Delegationsketten |
 | `scripts/` | Build, Browsertests und CI |
 | `docs/vectors/` | Testvektoren zum Delegationsformat |
@@ -70,3 +72,14 @@ Nutze ausschließlich synthetische Testdaten. Einrichtungscodes, Sitzungen, Sign
 Der [CI-Ablauf](CI-REPAIR.md) führt Source-, Sicherheits- und Browserprüfungen aus. Der [Prüfstatus](VERIFICATION.md) trennt lokale Simulation, Ubuntu-CI und Hardwaretests.
 
 `just github-ci` benötigt Docker und ein für dieses private Repository authentifiziertes `gh` mit Adminrechten. Der Befehl erstellt eine lokale Runner-Umgebung, verarbeitet einen Job im Vordergrund und räumt die Registrierung auf. Die Grenzen, lokalen Nachweise und der Start nach einer Unterbrechung stehen im [CI-Ablauf](CI-REPAIR.md). Er installiert keinen Hintergrunddienst.
+
+
+## Neue Prüfungen in 0.7
+
+`bun test apps/web/src/vault.test.ts` prüft die Browser-Kryptografie, `bun test apps/web/src/interface.test.ts` die echte Oberfläche in einer simulierten DOM-Umgebung mit gemockter WebAuthn-API. Das ist keine Browser-Abnahme.
+
+Nach einem Build prüft `bun scripts/protocol_e2e.mjs` komplette Abläufe mit synthetischen P-256-Softwareauthentikatoren gegen die laufende Rust-API. Der Test erzeugt eine explizite, getrennte Schutzdatei und räumt Daten und Prozess danach auf. Er verändert keine Keystore-Einstellungen des Benutzers. `scripts/ci.sh source` enthält DOM-/Kryptografietests; `scripts/ci.sh build` führt nach dem Build die Protokollintegration aus. `just e2e` bleibt die separate Browserprüfung.
+
+`python3 scripts/illustrate_guides.py` erzeugt die sieben Bedienillustrationen reproduzierbar aus SVG-Bausteinen. [Prüfstatus 0.7](V07-VERIFICATION.md) trennt bestandene Softwarechecks von hier blockierten Browserprüfungen und offener Hardware-Abnahme.
+
+Der optionale Firefox-UI-Lauf `python3 scripts/firefox_e2e.py` benötigt Firefox, Geckodriver 0.37.1+ und `FIREFOX_PATH`/`GECKODRIVER_PATH`, falls die Programme nicht auf dem Standardpfad liegen. Er verwendet ausschließlich ein wegwerfbares Profil und virtuelle CTAP2-Geräte. Er kann Screenshots unter `docs/images/screenshots/` erzeugen; der aktuelle Lauf scheitert vor der ersten Seite an den Systembeschränkungen für Content-Prozesse. Der separate `scripts/extension_firefox.py`-Test bestätigt nur die temporäre Add-on-Installation.

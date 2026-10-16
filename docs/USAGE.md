@@ -22,7 +22,7 @@ Melde dich mit deinem Kontonamen und einem aktiven Passkey an. Die Anmeldung gil
 
 - **Hinzufügen:** Gib dem neuen Schlüssel einen Namen, bestätige die Änderung mit einem vorhandenen Passkey und erstelle den neuen Passkey.
 - **Widerrufen:** Wähle den betroffenen Schlüssel, prüfe den Bestätigungsdialog und bestätige mit einem aktiven Passkey. Der Widerruf beendet offene Sitzungen des Kontos.
-- **Letzter Schlüssel:** Der letzte aktive Passkey lässt sich nicht widerrufen. Automatische Wiederherstellung nach Verlust aller Schlüssel ist noch nicht verfügbar.
+- **Letzter Schlüssel:** Der letzte aktive Passkey lässt sich nicht widerrufen. Für den Verlust aller Schlüssel steht im 0.7-Quellstand die vorbereitete [Einmalcode-Wiederherstellung](PASSKEY-GUIDE.md#alle-passkeys-verloren) zur Verfügung.
 
 Du kannst bis zu acht aktive Passkeys speichern. Ein anderer aktiver Passkey desselben Kontos kann vorhandene Zugänge weiter nutzen. Um einen Zugang zu entziehen, widerrufe den Zugang selbst.
 
@@ -55,4 +55,9 @@ Der Eigentümer oder das tatsächlich ausstellende Konto kann einen Delegationsz
 | Nach Neustart abgemeldet | Melde dich erneut an; gespeicherte Schlüssel und Widerrufe bleiben erhalten. |
 | Chrome wird beim Test nicht gefunden | Setze `CHROME_PATH` auf die ausführbare Chrome-Datei. |
 
-Die Datenbank ist derzeit kein verschlüsselter Tresor. Die API und ihr Signierschlüssel müssen vertrauenswürdig bleiben. Eine Passkey-Bestätigung bietet keine unabhängige Anzeige der Transaktionsdaten auf dem Authentikator. Weitere technische Grenzen stehen in der [Spezifikation](SPEC.md).
+Die Kontodatenbank ist weiterhin unverschlüsselt. Der 0.7-Quellstand ergänzt einen getrennten, im Browser verschlüsselten [PRF-Notiztresor](PASSKEY-GUIDE.md#optionalen-tresor-einrichten). Die API und ihr Signierschlüssel müssen vertrauenswürdig bleiben. Eine Passkey-Bestätigung bietet keine unabhängige Anzeige der Transaktionsdaten auf dem Authentikator. Weitere technische Grenzen stehen in der [Spezifikation](SPEC.md).
+
+
+## Erweiterte Funktionen in 0.7
+
+[Bebilderte Installation](INSTALLATION.md), [Recovery und Tresor](PASSKEY-GUIDE.md), [Agentenfreigaben](AGENT-GUIDE.md) und [technische Grenzen](PASSKEY-PLATFORM.md) beschreiben die neuen Abläufe. Verfügbare 0.6-Pakete enthalten diese Erweiterungen noch nicht.

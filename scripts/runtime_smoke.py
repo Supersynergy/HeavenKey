@@ -29,7 +29,13 @@ def main():
         data_path = str(data)
         if args.windows_paths:
             data_path = "Z:" + data_path.replace("/", "\\")
-        env.update(UAC_DATA=data_path, UAC_PORT="18244")
+        protection = root / "synthetic-protection.key"
+        protection.write_bytes(os.urandom(32))
+        protection.chmod(0o600)
+        protection_path = str(protection)
+        if args.windows_paths:
+            protection_path = "Z:" + protection_path.replace("/", "\\")
+        env.update(UAC_DATA=data_path, UAC_PORT="18244", HEAVENKEY_KEY_FILE=protection_path, HEAVENKEY_ORIGIN="http://localhost:18244", HEAVENKEY_RP_ID="localhost")
         for arguments, expected in (
             (["--version"], 0),
             (["--help"], 0),
@@ -50,7 +56,7 @@ def main():
                 result.stderr,
             )
             if arguments == ["--version"]:
-                assert "0.6.0" in result.stdout, result.stdout
+                assert "0.7.0" in result.stdout, result.stdout
             cases.append({"arguments": arguments, "pass": True})
         assert not data.exists(), (
             "Informational or invalid options must not initialize storage"
@@ -103,7 +109,7 @@ def main():
                             "challenge" in json.load(response)["options"]["publicKey"]
                         )
                     current = hashlib.sha256(
-                        (data / "issuer.key").read_bytes()
+                        (data / "issuer.enc").read_bytes()
                     ).hexdigest()
                     if fingerprint is not None:
                         assert current == fingerprint, (

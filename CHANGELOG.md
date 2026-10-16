@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0 · 2026-10-16 · Quellstand
+
+- Konto-Recovery mit einmaligem 256-Bit-Code, frischer Einrichtungsgenehmigung und atomarer Sperrung alter Schlüssel/Sitzungen/Agenten.
+- AES-GCM-geschützter Dienst-Signierschlüssel mit OS-Keystore oder expliziter externer Schutzdatei; bestehender Seed wird erhalten.
+- Optionaler PRF-Notiztresor mit getrennten Passkey-Umschlägen, Offline-Wiederherstellung und Versionsprüfung.
+- Begrenzte Agentenaufträge mit eigenem Ed25519-Schlüssel, einmaligem Aufrufnachweis und ausführbarem synthetischem CRM-Ziel.
+- Sitzungsgebundenes Lesen mit erneuter aktueller Berechtigungsprüfung, Abmeldung und Pilot-Audit.
+- Chrome-/Firefox-Popup mit Bereichsauswahl, lokaler/HTTPS-Verbindung und gespeicherten Verbindungseinstellungen ohne zusätzliche Berechtigungen.
+- Einfacher Quellstarter und sieben reproduzierbare Bedienillustrationen; Installations- und Benutzeranleitungen.
+- Software-Protokollintegration, DOM- und Kryptografietests ergänzt. Browserstarts sind in der aktuellen Ausführungsumgebung blockiert; Hardware, native Keystores, neue Desktop-Pakete und Firefox-Signierung bleiben offen.
+
+
 ## Unreleased: Browserdemo
 
 - Teilen, Öffnen und Widerrufen eines Beispieldokuments ohne Anmeldung oder Installation.

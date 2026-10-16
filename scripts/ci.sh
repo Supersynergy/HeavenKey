@@ -14,6 +14,10 @@ source_checks() {
   bun run build
   cargo fmt --check
   bun run node_modules/typescript/bin/tsc --noEmit
+  bun test apps/web/src/vault.test.ts
+  bun test apps/web/src/interface.test.ts
+  bun test apps/extension/popup.test.ts
+  bun scripts/test_extension.mjs
   bun scripts/delegation-reference.mjs
   cargo clippy --locked --offline --all-targets -- -D warnings
   cargo test --locked --offline
@@ -34,6 +38,7 @@ security_checks() {
 build() {
   bun run build
   cargo build --locked --offline
+  bun scripts/protocol_e2e.mjs
 }
 
 case ${1:-all} in

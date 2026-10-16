@@ -1,24 +1,10 @@
 <!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>HeavenKey</title>
-  <link rel="stylesheet" href="popup.css">
-  <script src="popup.js" defer></script>
-</head>
-<body>
-  <header>HeavenKey <span>Zugang beginnt mit Zustimmung.</span></header>
-  <main>
-    <h1>Deine lokalen Zugänge.</h1>
-    <p>Starte zuerst HeavenKey auf diesem Computer. Anmeldung und Freigaben bestätigst du in der Weboberfläche.</p>
-    <form id="open-form">
-      <label for="port">Lokaler Port</label>
-      <input id="port" type="number" min="1" max="65535" value="18240" required>
-      <button type="submit">HeavenKey öffnen</button>
-    </form>
-    <output id="status" role="status" aria-live="polite"></output>
-    <p class="note">Die Erweiterung öffnet nur localhost. Sie liest keine Webseiten, Passkeys oder Einrichtungscodes.</p>
-  </main>
-</body>
-</html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HeavenKey</title><link rel="stylesheet" href="popup.css"><script src="popup.js" type="module"></script></head>
+<body><header><span class="key" aria-hidden="true">⌘</span><div>HeavenKey<span>Zugang beginnt mit Zustimmung.</span></div></header><main>
+<h1>Dein Zugang. Deine Freigabe.</h1><p>Öffne HeavenKey und bestätige mit deinem eigenen Passkey.</p>
+<form id="open-form"><label for="mode">Verbindung</label><select id="mode"><option value="local">Auf diesem Computer</option><option value="https">Eigener HTTPS-Dienst</option></select>
+<div id="local-settings"><label for="port">Lokaler Port</label><input id="port" type="number" min="1" max="65535" value="18240" required></div>
+<div id="remote-settings" hidden><label for="endpoint">Adresse deines HeavenKey-Dienstes</label><input id="endpoint" type="url" placeholder="https://dein-dienst.example" autocomplete="off"><p class="note">Nur eine selbst eingerichtete HeavenKey-Adresse verwenden.</p></div>
+<label for="destination">Öffnen</label><select id="destination"><option value="overview">Übersicht und Anmeldung</option><option value="keys">Meine Passkeys</option><option value="access">Zugänge teilen</option><option value="recovery">Wiederherstellung</option><option value="agents">Agentenfreigaben</option><option value="vault">Privater Tresor</option><option value="help">Installation und Hilfe</option></select><button type="submit">HeavenKey öffnen</button></form>
+<output id="status" role="status" aria-live="polite"></output><div class="hint"><strong>Noch nicht gestartet?</strong><p>Starte zuerst das HeavenKey-Programm. Die Erweiterung öffnet die passende Oberfläche.</p></div><p class="note">Gespeichert wird nur deine Verbindungseinstellung. Passkeys, Sitzungen und Webseiteninhalte bleiben außerhalb der Erweiterung.</p>
+</main></body></html>

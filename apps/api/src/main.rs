@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod desktop;
+mod platform;
 
 use axum::{
     Json, Router,
@@ -53,6 +54,7 @@ struct Inner {
     authentications: HashMap<String, Authentication>,
     approvals: HashMap<String, Approval>,
     sessions: HashMap<String, Session>,
+    platform: platform::Platform,
 }
 struct Registration {
     name: String,
@@ -162,7 +164,7 @@ struct AuthFinish {
     management: Option<Management>,
     delegation_invocation: Option<DelegationInvocation>,
 }
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 enum Management {
     CredentialAdd {
@@ -191,6 +193,18 @@ enum Management {
     },
     DelegationRevoke {
         id: String,
+    },
+    RecoveryRotate,
+    RecoveryDisable,
+    AgentCreate {
+        spec: platform::AgentSpec,
+    },
+    AgentRevoke {
+        id: String,
+    },
+    VaultWrite {
+        expected_revision: u64,
+        digest: String,
     },
 }
 #[derive(Deserialize)]
@@ -291,6 +305,7 @@ fn binding<T: Serialize>(invocation: &Option<T>) -> ApiResult<[u8; 32]> {
 impl Inner {
     fn prune(&mut self) {
         let time = now();
+        self.platform.prune();
         self.registrations.retain(|_, v| v.expires > time);
         self.enrollments.retain(|_, v| v.expires > time);
         self.authentications.retain(|_, v| v.expires > time);
@@ -446,6 +461,11 @@ impl Inner {
             Management::DelegationRevoke { id } => {
                 self.delegation_revoke_allowed(user, id)?;
             }
+            Management::RecoveryRotate
+            | Management::RecoveryDisable
+            | Management::AgentCreate { .. }
+            | Management::AgentRevoke { .. }
+            | Management::VaultWrite { .. } => platform::management_allowed(self, user, operation)?,
         }
         Ok(())
     }
@@ -725,6 +745,10 @@ async fn origin_guard(State(app): State<App>, req: Request, next: Next) -> Respo
     let mut response = next.run(req).await;
     let headers = response.headers_mut();
     headers.insert("cache-control", "no-store".parse().expect("static header"));
+    headers.insert(
+        "referrer-policy",
+        "no-referrer".parse().expect("static header"),
+    );
     headers.insert(
         "x-content-type-options",
         "nosniff".parse().expect("static header"),
@@ -1073,13 +1097,13 @@ async fn auth_finish(
         inner.sessions.insert(
             session.clone(),
             Session {
-                user_id: user.id,
+                user_id: user.id.clone(),
                 credential_id: id,
                 expires: now() + 300,
             },
         );
         Ok(Json(
-            json!({"session":session,"name":user.name,"owner":user.owner}),
+            json!({"session":session,"name":user.name,"owner":user.owner,"account_id":user.id,"expires_in":300}),
         ))
     }
 }
@@ -1590,6 +1614,7 @@ fn initialize_database(db: &mut Connection) -> rusqlite::Result<()> {
         [i64::try_from(now())
             .map_err(|error| rusqlite::Error::ToSqlConversionFailure(error.into()))?],
     )?;
+    platform::initialize(&tx)?;
     tx.commit()
 }
 
@@ -1606,35 +1631,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     };
     let port = options.port;
-    let origin = format!("http://localhost:{port}");
+    let origin = std::env::var("HEAVENKEY_ORIGIN")
+        .or_else(|_| std::env::var("HEAVENKEY_PUBLIC_ORIGIN"))
+        .unwrap_or_else(|_| format!("http://localhost:{port}"));
+    let rp_id = std::env::var("HEAVENKEY_RP_ID").unwrap_or_else(|_| "localhost".into());
+    let parsed_origin = platform::identity(&origin, &rp_id)?;
+    let origin = parsed_origin.origin().ascii_serialization();
     let data = options.data;
     desktop::prepare_data(&data)?;
     let bootstrap_hash = bootstrap_hash(&data)?;
-    let key_path = data.join("issuer.key");
-    let bytes = if key_path.exists() {
-        fs::read(&key_path)?
-    } else {
-        let mut bytes = [0; 32];
-        rand::rng().fill_bytes(&mut bytes);
-        let mut options = fs::OpenOptions::new();
-        options.write(true).create_new(true);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::OpenOptionsExt;
-            options.mode(0o600);
-        }
-        let mut f = options.open(&key_path)?;
-        f.write_all(&bytes)?;
-        f.sync_all()?;
-        bytes.to_vec()
-    };
-    let issuer = SigningKey::from_bytes(&bytes.try_into().map_err(|_| "invalid issuer key")?);
+    let key_file = std::env::var_os("HEAVENKEY_KEY_FILE").map(std::path::PathBuf::from);
+    let bytes = uac_keystore::load_issuer(&data, key_file.as_deref())?;
+    let issuer = SigningKey::from_bytes(&bytes);
     let mut db = Connection::open(data.join("uac.sqlite"))?;
     db.busy_timeout(Duration::from_secs(2))?;
     initialize_database(&mut db)?;
-    let webauthn = WebauthnBuilder::new("localhost", &Url::parse(&origin)?)?
+    let webauthn = WebauthnBuilder::new(&rp_id, &Url::parse(&origin)?)?
         .rp_name("HeavenKey access lab")
         .build()?;
+    platform::pin_identity(&db, &rp_id)?;
     let app = App {
         inner: Arc::new(Mutex::new(Inner {
             db,
@@ -1646,9 +1661,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             authentications: HashMap::new(),
             approvals: HashMap::new(),
             sessions: HashMap::new(),
+            platform: platform::Platform::default(),
         })),
         origin: origin.clone(),
-        host: format!("localhost:{port}"),
+        host: origin
+            .split("://")
+            .nth(1)
+            .ok_or("invalid origin")?
+            .to_string(),
     };
     let router = Router::new()
         .route("/", get(index))
@@ -1675,6 +1695,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/delegations", get(delegations).post(create_delegation))
         .route("/api/delegations/delegate", post(delegate_delegation))
         .route("/api/delegations/revoke", post(revoke_delegation))
+        .route("/api/config", get(platform::config))
+        .route("/api/session", get(platform::session))
+        .route("/api/logout", post(platform::logout))
+        .route("/api/audit", get(platform::events))
+        .route("/api/read", post(platform::read))
+        .route("/api/recovery", get(platform::recovery_status))
+        .route("/api/recovery/rotate", post(platform::recovery_rotate))
+        .route("/api/recovery/disable", post(platform::recovery_disable))
+        .route("/api/recovery/start", post(platform::recovery_start))
+        .route("/api/recovery/finish", post(platform::recovery_finish))
+        .route(
+            "/api/agents",
+            get(platform::agents).post(platform::agent_create),
+        )
+        .route("/api/agents/revoke", post(platform::agent_revoke))
+        .route("/api/agents/challenge", post(platform::agent_challenge))
+        .route("/api/agents/invoke", post(platform::agent_invoke))
+        .route(
+            "/api/vault",
+            get(platform::vault).post(platform::vault_write),
+        )
+        .route("/api/vault/prepare", post(platform::vault_prepare))
         .layer(DefaultBodyLimit::max(32 * 1024))
         .layer(middleware::from_fn_with_state(app.clone(), origin_guard))
         .with_state(app);
@@ -1703,7 +1745,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 mod tests {
     use super::*;
 
-    fn app() -> App {
+    pub(super) fn app() -> App {
         let mut db = Connection::open_in_memory().expect("synthetic database");
         initialize_database(&mut db).expect("schema");
         let origin = "http://localhost:18240";
@@ -1721,6 +1763,7 @@ mod tests {
                 authentications: HashMap::new(),
                 approvals: HashMap::new(),
                 sessions: HashMap::new(),
+                platform: platform::Platform::default(),
             })),
             origin: origin.into(),
             host: "localhost:18240".into(),
@@ -1761,7 +1804,7 @@ mod tests {
         token
     }
 
-    fn headers(token: &str) -> HeaderMap {
+    pub(super) fn headers(token: &str) -> HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(
             "authorization",
@@ -1793,7 +1836,7 @@ mod tests {
         );
     }
 
-    fn add_approval(app: &App, token: &str, operation: Management) -> String {
+    pub(super) fn add_approval(app: &App, token: &str, operation: Management) -> String {
         let mut inner = app.inner.lock().expect("inner");
         let session = inner.sessions.get(token).expect("synthetic session");
         let approval = Approval {
@@ -1808,7 +1851,7 @@ mod tests {
         id
     }
 
-    fn management_app() -> (App, String, String, String) {
+    pub(super) fn management_app() -> (App, String, String, String) {
         let app = app();
         let (owner_token, guest_token, guest_id) = {
             let mut inner = app.inner.lock().expect("inner");
@@ -2574,7 +2617,7 @@ mod tests {
         );
     }
 
-    fn delegation_app() -> (App, HashMap<&'static str, String>) {
+    pub(super) fn delegation_app() -> (App, HashMap<&'static str, String>) {
         let app = app();
         let mut tokens = HashMap::new();
         {
@@ -2587,7 +2630,7 @@ mod tests {
         (app, tokens)
     }
 
-    async fn root_delegation(
+    pub(super) async fn root_delegation(
         app: &App,
         token: &str,
         guest: &str,
