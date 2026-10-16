@@ -15,6 +15,7 @@ source_checks() {
   cargo fmt --check
   bun run node_modules/typescript/bin/tsc --noEmit
   bun scripts/delegation-reference.mjs
+  bun scripts/grant-reference.mjs
   cargo clippy --locked --offline --all-targets -- -D warnings
   cargo test --locked --offline
   python3 scripts/startup_probe.py
