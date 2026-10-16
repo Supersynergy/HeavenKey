@@ -48,7 +48,7 @@ def main():
                 return json.load(response)
 
         version = subprocess.run([*command, "--version"], cwd=root, env=env, capture_output=True, text=True, timeout=45)
-        assert version.returncode == 0 and "0.8.0" in version.stdout, version.stderr
+        assert version.returncode == 0 and "0.9.0" in version.stdout, version.stderr
         cases.append("version")
         previous_token = None
         for iteration in range(2):

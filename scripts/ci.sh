@@ -42,7 +42,7 @@ build() {
   cargo build --locked --offline
   HEAVENKEY_INTEGRATION_BINARY=target/debug/uac-api python3 -m unittest scripts.test_workstream_integration
   HEAVENKEY_INTEGRATION_BINARY=target/debug/uac-api python3 -m unittest scripts.test_password_manager
-  bun scripts/password_manager_e2e.mjs
+  HEAVENKEY_PM_DESIGN=1 bun scripts/password_manager_e2e.mjs
   bun scripts/password_manager_ui_test.ts
   bun scripts/protocol_e2e.mjs
 }

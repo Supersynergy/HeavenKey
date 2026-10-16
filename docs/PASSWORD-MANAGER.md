@@ -1,10 +1,16 @@
-# Lokaler Passwortmanager · 0.8 Vorschau
+# Lokaler Passwortmanager · 0.9 Vorschau
 
 Entpacke dein Plattformpaket und starte den enthaltenen Starter. Er öffnet `http://localhost:18240/passwords/`. Dafür sind weder Internet, ein HeavenKey-Konto noch ein Passkey erforderlich. Das Terminal bleibt geöffnet; `Ctrl+C` beendet den Dienst.
 
 Beim ersten Start legst du ein Masterpasswort mit mindestens 14 Zeichen fest. Verwende eine eigene lange Passphrase. HeavenKey kann dieses Passwort nicht zurücksetzen. Sichere deshalb das Masterpasswort getrennt vom verschlüsselten Backup.
 
 ## Einträge und Sicherungen
+
+Die App zeigt links Navigation und Tags, in der Mitte die Eintragsliste und rechts den ausgewählten Login. Suche und „Neuer Eintrag“ bleiben oben erreichbar. Die Feldaktionen im Detail kopieren Benutzername oder Passwort; Anzeigen und Kopieren sind getrennt. Favoriten und Tags filtern die Liste, die Sortierung wechselt zwischen A–Z und Z–A. Im schmalen Fenster öffnest du einen Eintrag aus der Liste und kehrst mit „Zurück“ zur erhaltenen Suche zurück.
+
+„Einstellungen“ öffnet Import, verschlüsselte Sicherungen, Wiederherstellung und Masterpasswortwechsel. Das Hell-/Dunkel-Design lässt sich umschalten; gespeichert wird nur die Darstellungswahl. Zugangsdaten bleiben im verschlüsselten Tresor. Mit Strg/⌘ K erreichst du die Suche. Tastaturfokus und die aktive Auswahl sind sichtbar.
+
+Der lokale Sicherheitscheck zeigt Einträge mit weniger als 14 Passwortzeichen und wiederverwendeten, nicht leeren Passwörtern. Von einem Hinweis gelangst du direkt zum betroffenen Login. Die Länge ist nur ein einfacher Anhaltspunkt und keine vollständige Stärkebewertung. Es werden keine Passwörter an einen Datenleckdienst gesendet.
 
 Ein Login enthält Titel, Benutzername, Passwort, Website, Notiz, Tags, Favoritenstatus und optional ein TOTP-Geheimnis. Suche und Bearbeitung laufen im entsperrten Browser. Der Generator verwendet die Zufallsquelle des Browsers. TOTP wird lokal berechnet.
 

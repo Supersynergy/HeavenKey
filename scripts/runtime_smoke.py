@@ -64,7 +64,7 @@ def main():
                 result.stderr,
             )
             if arguments == ["--version"]:
-                assert "0.8.0" in result.stdout, result.stdout
+                assert "0.9.0" in result.stdout, result.stdout
             cases.append({"arguments": arguments, "pass": True})
         assert not data.exists(), (
             "Informational or invalid options must not initialize storage"

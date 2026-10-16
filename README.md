@@ -6,7 +6,7 @@
 
 Passwörter lokal verschlüsseln und offline verwalten. Zusätzlich: mit Passkeys anmelden, zeitlich begrenzte Zugänge teilen und Weitergaben kontrollieren.
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) ![Version](https://img.shields.io/badge/version-0.8_preview-c5a36a)
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) ![Version](https://img.shields.io/badge/version-0.9_preview-c5a36a)
 
 <p align="center">
   <img src="docs/assets/heavenkey-hero-square.png" alt="HeavenKey: ein schwebender Schlüssel vor dem Himmelstor" width="560">
@@ -20,7 +20,7 @@ Passwörter lokal verschlüsseln und offline verwalten. Zusätzlich: mit Passkey
 
 ![HeavenKey in drei Schritten starten](docs/images/01-installation.svg)
 
-**Version 0.8.0, lokale Vorschau.** Wähle dein Paket unter [Releases](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.8.0-preview.1), entpacke es und starte den enthaltenen Starter. Er öffnet den lokalen Passwortmanager. Du brauchst einen aktuellen Browser; Rust, Bun, Konto und Internet sind für diesen Modus nicht erforderlich. Siehe [Passwortmanager](docs/PASSWORD-MANAGER.md), [Plattformpakete](docs/DISTRIBUTION.md) und [Enpass plus 20 Kandidaten: Gap-Analyse](docs/PASSWORD-MANAGER-GAPS.md).
+**Version 0.9.0, lokale Vorschau.** Wähle dein Paket unter [Releases](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.9.0-preview.1), entpacke es und starte den enthaltenen Starter. Er öffnet den lokalen Passwortmanager. Du brauchst einen aktuellen Browser; Rust, Bun, Konto und Internet sind für diesen Modus nicht erforderlich. Siehe [Passwortmanager](docs/PASSWORD-MANAGER.md), [Plattformpakete](docs/DISTRIBUTION.md) und [Enpass plus 20 Kandidaten: Gap-Analyse](docs/PASSWORD-MANAGER-GAPS.md).
 
 Für die Entwicklung aus dem Quellcode:
 
@@ -86,7 +86,7 @@ Den Passwortmanager startest du mit `cargo run --locked --offline -p uac-api -- 
 
 ## Stand und Grenzen
 
-**Version 0.8 ist eine lokale Vorschau.** Die [Release-Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) bindet Prüfungen an Quelle und Pakete. Desktop-Pakete enthalten die Weboberfläche und ihre nativen Bibliotheken. Kompatibilitätsprüfungen ersetzen keine Abnahme von Windows Hello oder physischen Passkeys. Firefox-Erweiterungen sind vorerst temporär installierbar. Kostenpflichtige Runner werden nicht verwendet. Ältere Nachweise stehen unter [0.7-Verifikation](docs/V07-VERIFICATION.md) und [Verifikation](docs/VERIFICATION.md).
+**Version 0.9 ist eine lokale Vorschau.** Die [Release-Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) bindet Prüfungen an Quelle und Pakete. Desktop-Pakete enthalten die Weboberfläche und ihre nativen Bibliotheken. Kompatibilitätsprüfungen ersetzen keine Abnahme von Windows Hello oder physischen Passkeys. Firefox-Erweiterungen sind vorerst temporär installierbar. Kostenpflichtige Runner werden nicht verwendet. Ältere Nachweise stehen unter [0.7-Verifikation](docs/V07-VERIFICATION.md) und [Verifikation](docs/VERIFICATION.md).
 
 Der Passwortmanager schließt die lokale Kernlücke, übertrifft Enpass aber noch nicht im gesamten Funktionsumfang. Browser-Autofill, mobile Apps, Synchronisation, verwaltete Website-Passkeys und ein externes Sicherheits-Audit fehlen. Die Gap-Analyse unterscheidet Herstellerangaben, eigenen Quellstand und ausgeführte Tests.
 

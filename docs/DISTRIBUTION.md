@@ -1,6 +1,6 @@
 # HeavenKey-Pakete und Browser-Erweiterungen
 
-Version 0.8.0 startet über den enthaltenen Starter den lokalen Passwortmanager. Sie enthält außerdem die zusammengeführten Zugangslabor-Funktionen aus 0.7. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Verbindliche Build- und Laufzeitnachweise stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md).
+Version 0.9.0 startet über den enthaltenen Starter den lokalen Passwortmanager. Sie enthält außerdem die zusammengeführten Zugangslabor-Funktionen aus 0.7. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Verbindliche Build- und Laufzeitnachweise stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md).
 
 Die Pakete enthalten Server, Weboberfläche und Lizenzhinweise. Für den Passwortmanager brauchst du einen aktuellen Browser, aber kein Rust, Bun, Python, Docker oder Passkey. Das optionale Zugangslabor verwendet WebAuthn, SQLCipher und eine geschützte Signierschlüsselhülle. Physische Passkeys sind noch nicht abgenommen.
 

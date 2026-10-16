@@ -216,7 +216,7 @@ Plattformangabe: Apple-Geräte; iCloud-Windows-Integration hier nicht separat ge
 
 ## HeavenKey: Ausgangslage und Release-Grenzen
 
-### Integrierte 0.8-Vorschau
+### Integrierte 0.9-Vorschau
 
 Die nachstehende Recherche beschreibt den Ausgangspunkt. Die neue Version ergänzt einen eigenständigen lokalen Passwortmanager; die ausgeführten Prüfungen und Paketgrenzen stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md).
 
@@ -226,7 +226,7 @@ Die nachstehende Recherche beschreibt den Ausgangspunkt. Die neue Version ergän
 | Offline | Kein Konto und keine WAN-Verbindung für den lokalen Modus erforderlich. Der lokale Dienst muss zum Speichern laufen. TOTP funktioniert im entsperrten Browser auch bei gestopptem Netzwerkzugriff. |
 | Sicherungen | Authentifizierte verschlüsselte Backups; bestätigter Restore im entsperrten und gesperrten Zustand. Kein Passwortreset ohne bekanntes Backup-Passwort. |
 | Migration | Begrenzter Login-CSV-Import für gemeinsame Enpass-/Bitwarden-Spalten; ungültige Dateien werden atomar abgewiesen. Erneuter Import erzeugt dokumentiert Duplikate. Keine Mapping-Vorschau oder Passkey-Übernahme. |
-| Generator/TOTP | CSPRNG-Generator und RFC-6238-Codes implementiert. Health-/Breach-Prüfung fehlt. |
+| Generator/TOTP | CSPRNG-Generator und RFC-6238-Codes implementiert. Lokaler Sicherheitscheck erkennt Wiederverwendung und Länge unter 14 Zeichen; keine vollständige Stärkebewertung oder Datenleckprüfung. |
 | Sperre/Clipboard | Inaktivitäts-, Hintergrund- und Seitenwechsel-Sperre; Clipboard-Bereinigung mit Browserberechtigung. Native biometrische Entsperrung fehlt. |
 | Autofill/Mobil/Sync | Offen. Erweiterungen sind Launcher. Keine mobile Credential-Provider-App oder Gerätesynchronisation. |
 | Agenten und Passkeys | Bestehendes Zugangslabor separat integriert; noch kein Zugriff auf echte Passwortmanager-Einträge und keine Website-Passkey-Verwaltung. |

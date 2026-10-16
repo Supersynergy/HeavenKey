@@ -42,7 +42,13 @@ const check = (name, condition = true) => { assert(condition, name); cases.push(
 async function ready() { await page.locator("#unlock").waitFor({ state: "visible" }); await page.waitForFunction(() => !document.querySelector("#unlock").disabled); }
 async function status(text) { await page.waitForFunction(text => document.querySelector("#status").textContent.includes(text), text); }
 async function unlock(password, create = false) { await ready(); await page.locator("#master").fill(password); if (create) await page.locator("#master-confirm").fill(password); await page.locator("#unlock").click(); }
-async function count(expected) { await page.waitForFunction(expected => document.querySelectorAll("#entries > li").length === expected && document.querySelector("#workspace").getAttribute("aria-busy") === "false", expected); }
+async function entries() { if (await page.locator("#settings-view").isVisible()) await page.locator("#close-settings").click(); }
+async function settingsSection(text) {
+  if (!(await page.locator("#settings-view").isVisible())) await page.locator("#nav-settings").click();
+  if (text) { const summary = page.locator("#settings-view summary").filter({ hasText: text }); if (!(await summary.evaluate(el => el.parentElement.open))) await summary.click(); }
+}
+async function recovery() { if (!(await page.locator("#locked-recovery").evaluate(el => el.open))) await page.locator("#locked-recovery > summary").click(); await page.locator("#locked-restore-form").waitFor({ state: "visible", timeout: 1500 }); }
+async function count(expected) { await page.waitForFunction(expected => document.querySelectorAll("#entries > li").length === expected && document.querySelector("#workspace").getAttribute("aria-busy") === "false", expected); await entries(); }
 async function snapshot() { return page.evaluate(async () => { const headers = { "X-HeavenKey-Client": "password-manager" }; const { token } = await (await fetch("/api/password-vault/config", { headers })).json(); return (await fetch("/api/password-vault", { headers: { ...headers, "X-HeavenKey-Token": token } })).json(); }); }
 try {
   await mkdir("docs/evidence/password-manager", { recursive: true });
@@ -65,13 +71,16 @@ try {
   check("structured credential saved and title is rendered as text", await page.locator("#entries img").count() === 0);
   await page.locator("[data-testid=show-totp]").click(); await page.locator("[data-testid=totp-code]").waitFor();
   check("TOTP displayed", /^\d{6} /.test(await page.locator("[data-testid=totp-code]").textContent()));
+  const { designChecks } = await import("./password_manager_design_test.ts");
+  await designChecks(page, master, check);
   await page.locator("#search").fill("missing"); await count(0); await page.locator("#search").fill("lokal"); await count(1); check("search includes encrypted tags after unlock");
   await page.locator("#search").fill(""); await page.locator("[data-testid=edit-entry]").click();
   check("edit restores secret only inside unlocked editor", await page.locator("#entry-password").inputValue() === secret);
   await page.locator("#entry-notes").fill("Updated synthetic note"); await page.locator("#save-entry").click(); await status("Login verschlüsselt gespeichert");
-  const downloadEvent = page.waitForEvent("download"); await page.locator("#export-backup").click(); const download = await downloadEvent;
+  await settingsSection(); const downloadEvent = page.waitForEvent("download"); await page.locator("#export-backup").click(); const download = await downloadEvent;
   const backup = join(temporary, "backup.json"); await download.saveAs(backup); const backupBytes = await readFile(backup, "utf8");
   check("backup contains ciphertext and no credential plaintext", !backupBytes.includes(secret) && !backupBytes.includes("synthetic@example.invalid") && JSON.parse(backupBytes).iterations === 600000);
+  await entries();
   await page.screenshot({ path: "docs/evidence/password-manager/unlocked.png", fullPage: true });
   await page.locator("#lock").click(); await ready();
   check("lock clears credentials and form state", await page.locator("#entries").textContent() === "" && await page.locator("#entry-password").inputValue() === "");
@@ -83,43 +92,46 @@ try {
   await second.locator("#new-entry").click(); await second.locator("#entry-title").fill("stale write"); await second.locator("#save-entry").click();
   await second.waitForFunction(() => document.querySelector("#status").textContent.includes("Speicherkonflikt")); check("stale tab cannot overwrite current revision"); await second.close();
   await page.locator("[data-testid=delete-entry]").click(); await page.locator("#delete-confirm").click(); await count(0); check("delete persists with confirmation");
-  await page.getByText("Verschlüsselte Sicherung wiederherstellen", { exact: true }).click();
+  await settingsSection("Verschlüsselte Sicherung wiederherstellen");
   await page.locator("#restore-file").setInputFiles(backup); await page.locator("#restore-master").fill(master); await page.locator("#restore-confirm").check(); await page.locator("#restore-backup").click(); await count(1); check("encrypted backup restored");
   const before = await snapshot();
   const tampered = JSON.parse(backupBytes); tampered.ciphertext = (tampered.ciphertext[0] === "A" ? "B" : "A") + tampered.ciphertext.slice(1);
+  await settingsSection("Verschlüsselte Sicherung wiederherstellen");
   await page.locator("#restore-file").setInputFiles({ name: "tampered.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(tampered)) });
   await page.locator("#restore-master").fill(master); await page.locator("#restore-confirm").check(); await page.locator("#restore-backup").click(); await status("Passwort falsch");
   check("tampered restore leaves stored vault unchanged", JSON.stringify(await snapshot()) === JSON.stringify(before));
-  await page.getByText("CSV aus Enpass / Bitwarden importieren", { exact: true }).click();
+  await settingsSection("CSV aus Enpass / Bitwarden importieren");
   await page.locator("#import-file").setInputFiles({ name: "valid.csv", mimeType: "text/csv", buffer: Buffer.from('name,login_username,login_password,login_uri,notes\nCSV test,csv@example.invalid,SyntheticCSVSecret,https://example.invalid,"quoted, note"\n') });
   await page.locator("#import-csv").click(); await count(2); check("quoted synthetic Bitwarden CSV imports atomically");
   const beforeInvalid = await snapshot();
+  await settingsSection("CSV aus Enpass / Bitwarden importieren");
   await page.locator("#import-file").setInputFiles({ name: "invalid.csv", mimeType: "text/csv", buffer: Buffer.from('title,password,url\nValid row,test,https://example.invalid\nInvalid row,test,javascript:alert(1)\n') });
   await page.locator("#import-csv").click(); await page.waitForFunction(() => document.querySelector("#status").dataset.error === "true");
   check("invalid later CSV row imports nothing", JSON.stringify(await snapshot()) === JSON.stringify(beforeInvalid));
-  await page.getByText("Masterpasswort ändern", { exact: true }).click(); await page.locator("#new-master").fill(newMaster); await page.locator("#new-master-confirm").fill(newMaster); await page.locator("#rekey").click(); await status("Masterpasswort geändert");
+  await settingsSection("Masterpasswort ändern"); await page.locator("#new-master").fill(newMaster); await page.locator("#new-master-confirm").fill(newMaster); await page.locator("#rekey").click(); await status("Masterpasswort geändert");
   await page.locator("#lock").click(); await ready(); await unlock(master); await status("Passwort falsch"); await unlock(newMaster); await count(2); check("master password change retires old key");
   await page.locator("[data-testid=edit-entry]").first().click(); await page.locator("#generate").click(); check("generator fills a fresh 24-character password", (await page.locator("#entry-password").inputValue()).length === 24);
   await page.locator("#cancel-entry").click();
   await stop(); await start(); await page.reload(); await unlock(newMaster); await count(2); check("real process restart preserves encrypted vault");
   const requestsBefore = posts.length;
+  await page.locator("[data-testid=select-entry]").filter({ hasText: "Synthetic <img" }).click();
   await context.setOffline(true); await page.locator("[data-testid=show-totp]").click(); await page.locator("[data-testid=totp-code]").waitFor(); check("TOTP needs no network after unlock");
   await context.setOffline(false); check("no plaintext secret or master sent to API", posts.every(post => !post.includes(secret) && !post.includes(master) && !post.includes(newMaster)) && requestsBefore > 0);
   await page.setViewportSize({ width: 390, height: 844 }); check("mobile-width layout has no horizontal overflow", await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   await page.screenshot({ path: "docs/evidence/password-manager/mobile.png", fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1000 });
-  while (await page.locator("[data-testid=delete-entry]").count()) {
-    const remaining = await page.locator("[data-testid=delete-entry]").count();
+  while (await page.locator("#entries > li").count()) {
+    const remaining = await page.locator("#entries > li").count(); await page.locator("[data-testid=select-entry]").first().click();
     await page.locator("[data-testid=delete-entry]").first().click(); await page.locator("#delete-confirm").click(); await count(remaining - 1);
   }
-  await page.getByText("CSV aus Enpass / Bitwarden importieren", { exact: true }).click();
+  await settingsSection("CSV aus Enpass / Bitwarden importieren");
   const largeCsv = "Title,Username,Password,URL,Notes\n" + Array.from({ length: 1000 }, (_, i) => `Synthetic ${i},user${i}@example.invalid,SyntheticLarge${i},https://example.invalid,Unicode Schlüssel ${i}`).join("\n");
   await page.locator("#import-file").setInputFiles({ name: "1000-synthetic.csv", mimeType: "text/csv", buffer: Buffer.from(largeCsv) });
   await page.locator("#import-csv").click(); await count(1000); check("1000 synthetic logins imported with external web requests blocked");
   await page.locator("#lock").click(); await unlock(newMaster); await count(1000); check("1000-entry vault lock and decrypt roundtrip");
-  const largeDownloadEvent = page.waitForEvent("download"); await page.locator("#export-backup").click(); const largeDownload = await largeDownloadEvent;
+  await settingsSection(); const largeDownloadEvent = page.waitForEvent("download"); await page.locator("#export-backup").click(); const largeDownload = await largeDownloadEvent;
   const largeBackup = join(temporary, "1000-backup.json"); await largeDownload.saveAs(largeBackup);
-  await page.getByText("Verschlüsselte Sicherung wiederherstellen", { exact: true }).click();
+  await settingsSection("Verschlüsselte Sicherung wiederherstellen");
   await page.locator("#restore-file").setInputFiles(largeBackup); await page.locator("#restore-master").fill(newMaster); await page.locator("#restore-confirm").check(); await page.locator("#restore-backup").click(); await status("1000 Logins wiederhergestellt");
   await stop(); await start(); await page.reload(); await unlock(newMaster); await count(1000); check("1000-entry backup restore and cold process restart");
   await page.evaluate(async () => {
@@ -131,7 +143,7 @@ try {
     if (!response.ok) throw new Error("corruption fixture rejected");
   });
   await page.locator("#lock").click(); await unlock(newMaster); await status("Passwort falsch");
-  await page.locator("#locked-restore-form").waitFor({ state: "visible", timeout: 1500 });
+  await recovery(); check("locked recovery is reachable without successful unlock");
   await page.locator("#locked-restore-file").setInputFiles(largeBackup); await page.locator("#locked-restore-master").fill("synthetic-wrong-backup-password"); await page.locator("#locked-restore-confirm").check();
   const corruptSnapshot = await snapshot(); await page.locator("#locked-restore-submit").click(); await status("Passwort falsch");
   await page.waitForFunction(() => document.querySelector("#workspace").getAttribute("aria-busy") === "false");
@@ -147,6 +159,7 @@ try {
     await start(); await page.reload();
     await page.waitForFunction(() => document.querySelector("#status").dataset.error === "true" && document.querySelector("#workspace").getAttribute("aria-busy") === "false");
     check(`${corruption} prevents ordinary unlock`, await page.locator("#unlock").isDisabled());
+    await recovery();
     await page.locator("#locked-restore-file").setInputFiles(largeBackup); await page.locator("#locked-restore-master").fill(newMaster); await page.locator("#locked-restore-confirm").check();
     await page.locator("#locked-restore-submit").click(); await status("Sicherung wiederhergestellt"); await unlock(newMaster); await count(1000);
     check(`${corruption} can be replaced by validated encrypted backup`);
