@@ -10,7 +10,7 @@ let context;
 try {
   context = await chromium.launchPersistentContext(profile, {
     headless: true,
-    executablePath: chromium.executablePath(),
+    executablePath: process.env.CHROME_PATH || chromium.executablePath(),
     args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`],
   });
   const manager = await context.newPage();

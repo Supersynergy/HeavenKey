@@ -6,15 +6,29 @@
 
 Mit Passkeys anmelden, zeitlich begrenzte Zugänge teilen und jede Weitergabe kontrollieren.
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) ![Version](https://img.shields.io/badge/version-0.6_preview-c5a36a)
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) ![Version](https://img.shields.io/badge/version-0.7_preview-c5a36a)
 
 <p align="center">
   <img src="docs/assets/heavenkey-hero-square.png" alt="HeavenKey: ein schwebender Schlüssel vor dem Himmelstor" width="560">
 </p>
 
-[Funktionen](#funktionen) · [Browserdemo](docs/BROWSER-DEMO.md) · [Ausprobieren](#ausprobieren) · [Benutzung](docs/USAGE.md) · [Roadmap](docs/ROADMAP.md)
+[Bebilderte Installation](docs/INSTALLATION.md) · [Passkey-Anleitung](docs/PASSKEY-GUIDE.md) · [Agenten](docs/AGENT-GUIDE.md) · [Funktionen](#funktionen) · [Browserdemo](docs/BROWSER-DEMO.md) · [Ausprobieren](#ausprobieren) · [Benutzung](docs/USAGE.md) · [Roadmap](docs/ROADMAP.md)
 
 </div>
+
+## Schnellstart
+
+![HeavenKey in drei Schritten starten](docs/images/01-installation.svg)
+
+**Aktueller Quellstand: 0.7.0, lokale Vorschau.** Die veröffentlichten 0.6-Pakete enthalten die neuen Funktionen noch nicht. Die [bebilderte Installationsanleitung](docs/INSTALLATION.md) erklärt beide Wege und die Erweiterungen für Chrome, Edge und Firefox.
+
+Nach Installation von Rustup, Bun **1.4.2** und Python 3.11+ im Projektordner starten:
+
+```sh
+python3 scripts/first_run.py
+```
+
+Windows: `py -3 scripts/first_run.py`. Der Assistent baut und öffnet HeavenKey; `just` und Docker sind dafür nicht nötig. Neue vorkompilierte 0.7-Pakete für alle Plattformen und die Browser-/Hardware-Abnahme sind noch offen.
 
 ## Funktionen
 
@@ -28,6 +42,12 @@ Mit Passkeys anmelden, zeitlich begrenzte Zugänge teilen und jede Weitergabe ko
 | Zugang entziehen | Einen Zugang widerrufen und damit auch seine abhängigen Nachfolger sperren. |
 | Änderungen bestätigen | Die Details einer Änderung vor der frischen Passkey-Bestätigung prüfen. |
 | Zustände behalten | Den Kontozustand lokal speichern; ein Neustart hebt Sperren nicht auf. |
+| Einfach lesen | Innerhalb einer aktiven Sitzung mit laufend geprüften Berechtigungen lesen; sensible Änderungen weiterhin frisch bestätigen. |
+| Konto wiederherstellen | Gesicherten Einmalcode verbrauchen, neuen Passkey erstellen und alte Schlüssel, Sitzungen und Agenten sperren. |
+| Signierschlüssel schützen | Schlüssel verschlüsselt speichern; Schutzschlüssel im Betriebssystem-Keystore oder in einer expliziten externen Datei verwahren. |
+| Agenten begrenzen | Eigene Maschinenschlüssel, genaue Rechte, Laufzeiten, Schlüsselbesitznachweis und Widerruf; ausführbarer lokaler CRM-Pilot mit synthetischen Daten. |
+| Privaten Tresor nutzen | Optional mit PRF-fähigem Passkey lokal entschlüsseln, mehrere Passkeys berechtigen und unabhängigen Offline-Schlüssel sichern. |
+| Browser-Erweiterung öffnen | Direkt zu Passkeys, Freigaben, Recovery, Agenten, Tresor und Hilfe; in Chrome, Edge oder Firefox. |
 
 ### Ein Beispiel
 
@@ -60,9 +80,9 @@ Die Oberfläche startest du mit `cargo run --locked --offline -p uac-api -- --op
 
 ## Stand und Grenzen
 
-**Version 0.6 ist eine lokale Vorschau.** Desktop-Pakete enthalten die Weboberfläche und ihre nativen Bibliotheken. Windows wird zusätzlich über Wine geprüft; das ersetzt keine Abnahme von Windows Hello oder physischen Passkeys. Firefox-Erweiterungen sind vorerst temporär installierbar. Der kostenlose GitHub-Runner läuft lokal; gehostete kostenpflichtige Runner werden nicht verwendet. Nachweise und offene Grenzen stehen unter [Verifikation](docs/VERIFICATION.md).
+**Version 0.7 ist eine lokale Vorschau im Quellstand.** Verfügbare 0.6-Desktop-Pakete haben den älteren Funktionsumfang. Desktop-Pakete enthalten die Weboberfläche und ihre nativen Bibliotheken. Windows wird zusätzlich über Wine geprüft; das ersetzt keine Abnahme von Windows Hello oder physischen Passkeys. Firefox-Erweiterungen sind vorerst temporär installierbar. Der kostenlose GitHub-Runner läuft lokal; gehostete kostenpflichtige Runner werden nicht verwendet. Neue Prüfungen und offene Browser-/Hardware-Grenzen stehen unter [0.7-Verifikation](docs/V07-VERIFICATION.md); ältere Nachweise unter [Verifikation](docs/VERIFICATION.md).
 
-Die Demo arbeitet mit einem Testdokument. Der Dienst signiert Zugänge und prüft sie online. Die lokale Datenbank ist seit 0.7 verschlüsselt. Recovery, Mandanten, externe Integrationen und Offline-Nutzung sind geplant. Das Delegationsprofil ist ein eigenes Format; UCAN-/DID-Kompatibilität ist noch offen.
+Die Demo arbeitet mit einem Testdokument. Der Dienst signiert Zugänge und prüft sie online. Recovery, geschützte Signierschlüssel, ein optionaler PRF-Notiztresor und ein lokaler Agenten-/CRM-Adapter sind implementiert. Vollständige Datenbankverschlüsselung, echte Mandanten, reale externe Integrationen und Offline-Nutzung bleiben gesonderte Vorhaben. Das Delegationsprofil ist ein eigenes Format; UCAN-/DID-Kompatibilität ist noch offen.
 
 ## Aufbau
 
@@ -79,6 +99,10 @@ Der Passkey bestätigt dein Konto und die konkrete Aktion. Ein signierter Zugang
 
 ## Dokumentation
 
+- [Bebilderte Installation](docs/INSTALLATION.md)
+- [Passkeys, Recovery und Tresor](docs/PASSKEY-GUIDE.md)
+- [Agentenprogramm und CRM-Pilot](docs/AGENT-GUIDE.md)
+- [Implementierung, APIs und Grenzen](docs/PASSKEY-PLATFORM.md)
 - [Benutzung: Einrichten, teilen und widerrufen](docs/USAGE.md)
 - [Neu in 0.5: begrenzte Weitergabe](docs/V05-RESULT.md)
 - [Roadmap und Zeitplanung](docs/ROADMAP.md)

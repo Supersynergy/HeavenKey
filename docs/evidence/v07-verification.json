@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-16",
+  "version": "0.7.0",
+  "base_commit": "1aa9accabcbde3469e6ed4d3fe15c43ca5c04141",
+  "underlying_check_command": "HEAVENKEY_ADVISORIES_OFFLINE=1 bash scripts/ci.sh check",
+  "underlying_checks_pass": true,
+  "rust_tests_passed": 59,
+  "python_tests_passed": 22,
+  "bun_tests_passed": 4,
+  "protocol_scenarios_passed": 13,
+  "typecheck_pass": true,
+  "clippy_warnings_denied_pass": true,
+  "cargo_deny_pass": true,
+  "cargo_audit_pass": true,
+  "bun_audit_pass": true,
+  "illustrations": 7,
+  "illustrations_visually_reviewed": true,
+  "browser_status": {
+    "chrome": "launch blocked: required AF_UNIX socket creation denied",
+    "firefox_addon": "temporary installation verified without manifest warnings",
+    "firefox_popup_click": "not verified",
+    "firefox_full_ui": "WebDriver startup blocked by content-process namespace restrictions",
+    "webauthn_physical_hardware": "deferred",
+    "prf_physical_devices": "unverified",
+    "native_os_keystore": "unverified; tests use explicit external protection files"
+  },
+  "wrappers": {
+    "just_check": {
+      "exit_code": 125,
+      "reason": "process tree preflight blocked: ps cannot read process state",
+      "application_tests_started": false
+    },
+    "just_e2e": {
+      "exit_code": 125,
+      "reason": "same process tree preflight block",
+      "browser_tests_started": false
+    }
+  },
+  "release": {
+    "new_desktop_packages_published": false,
+    "firefox_signed": false,
+    "production_deployed": false,
+    "real_next_office_connected": false
+  }
+}

@@ -6,3 +6,11 @@ rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
+openssl.workspace = true
+rand.workspace = true
+sha2.workspace = true
+base64.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+zeroize = "=1.9.1"
+keyring = { version = "=3.6.3", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust", "vendored"] }

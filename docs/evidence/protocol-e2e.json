@@ -1,0 +1,58 @@
+{
+  "pass": true,
+  "mode": "software P-256 authenticators and real Rust WebAuthn verification over HTTP; browser UI and hardware not covered",
+  "cases": [
+    {
+      "name": "operator bootstrap provisions owner; guest enrolls without ownership",
+      "pass": true
+    },
+    {
+      "name": "real Rust verifier rejects correctly signed assertions for a foreign origin",
+      "pass": true
+    },
+    {
+      "name": "cross-origin writes fail before reaching application handlers",
+      "pass": true
+    },
+    {
+      "name": "passkey-approved delegation enables session reading and checks account binding",
+      "pass": true
+    },
+    {
+      "name": "bearer-only agent issuance denied; approved issuance succeeds exactly once",
+      "pass": true
+    },
+    {
+      "name": "agent proof changes only the scoped synthetic CRM contact",
+      "pass": true
+    },
+    {
+      "name": "the shipped agent CLI validates the origin-bound challenge and executes a read",
+      "pass": true
+    },
+    {
+      "name": "revoking an ancestor blocks session reads immediately",
+      "pass": true
+    },
+    {
+      "name": "recovery code rotates with fresh passkey consent; no code is returned in status",
+      "pass": true
+    },
+    {
+      "name": "failed recovery guesses are throttled without locking out a valid recovery code",
+      "pass": true
+    },
+    {
+      "name": "a valid recovery code enrolls a fresh passkey and invalidates old sessions and agents",
+      "pass": true
+    },
+    {
+      "name": "protected issuer survives restart and recovered identity remains stable",
+      "pass": true
+    },
+    {
+      "name": "logout removes a preapproved sensitive operation",
+      "pass": true
+    }
+  ]
+}

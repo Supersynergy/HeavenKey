@@ -1,0 +1,10 @@
+{
+  "pass": true,
+  "temporary_install": true,
+  "manifest_version": 3,
+  "addon_id": "heavenkey@supersynergy.local",
+  "warnings": [],
+  "popup_click_verified": false,
+  "full_ui_verified": false,
+  "signed": false
+}
