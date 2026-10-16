@@ -18,6 +18,7 @@ const cases = [], errors = [], posts = [];
 let server, browser, output = "";
 const environment = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^(UAC_|HEAVENKEY_(PUBLIC_ORIGIN|ORIGIN|PASSWORD_MANAGER|KEY_FILE|DOCUMENT))/.test(key)));
 async function start() {
+  output = "";
   const data = join(temporary, "data");
   const windows = process.env.HEAVENKEY_WINDOWS_PATHS === "1";
   const dataPath = windows ? "Z:" + data.replaceAll("/", "\\") : data;
@@ -26,7 +27,7 @@ async function start() {
   const deadline = Date.now() + 45000;
   while (true) {
     if (server.exitCode !== null) throw new Error(`Server exited: ${output}`);
-    try { if ((await fetch(origin + "/health", { signal: AbortSignal.timeout(1000) })).ok) return; }
+    try { if (output.includes(origin + "/passwords/") && (await fetch(origin + "/health", { signal: AbortSignal.timeout(1000) })).ok) return; }
     catch (error) { if (Date.now() >= deadline) throw new Error(`Startup timeout: ${error.message}; ${output}`); }
     await new Promise(resolve => setTimeout(resolve, 100));
   }
@@ -73,6 +74,10 @@ try {
   check("TOTP displayed", /^\d{6} /.test(await page.locator("[data-testid=totp-code]").textContent()));
   const { designChecks } = await import("./password_manager_design_test.ts");
   await designChecks(page, master, check);
+  if (process.env.HEAVENKEY_PM_POLISH === "1") {
+    const { polishChecks } = await import("./password_manager_polish_test.ts");
+    await polishChecks(page, master, check);
+  }
   await page.locator("#search").fill("missing"); await count(0); await page.locator("#search").fill("lokal"); await count(1); check("search includes encrypted tags after unlock");
   await page.locator("#search").fill(""); await page.locator("[data-testid=edit-entry]").click();
   check("edit restores secret only inside unlocked editor", await page.locator("#entry-password").inputValue() === secret);

@@ -1,4 +1,4 @@
-# Lokaler Passwortmanager · 0.9 Vorschau
+# Lokaler Passwortmanager · 0.10 Vorschau
 
 Entpacke dein Plattformpaket und starte den enthaltenen Starter. Er öffnet `http://localhost:18240/passwords/`. Dafür sind weder Internet, ein HeavenKey-Konto noch ein Passkey erforderlich. Das Terminal bleibt geöffnet; `Ctrl+C` beendet den Dienst.
 
@@ -19,6 +19,16 @@ Ein Login enthält Titel, Benutzername, Passwort, Website, Notiz, Tags, Favorite
 Auf dem Sperrbildschirm kannst du eine gültige Sicherung auch dann einspielen, wenn der aktuelle Tresor nicht mehr entschlüsselbar ist. Das Backup wird zuerst vollständig entschlüsselt und geprüft. Danach ersetzt es den bisherigen Tresor; anschließend gilt sein damaliges Masterpasswort. Eine falsche Backup-Passphrase oder manipulierte Sicherung verändert den gespeicherten Datensatz nicht. Bei einer Wiederherstellung im bereits entsperrten Tresor bleibt dagegen dessen aktuelles Masterpasswort erhalten.
 
 Sperre den Tresor nach der Benutzung. HeavenKey sperrt zusätzlich nach fünf Minuten ohne Aktivität und nach 30 Sekunden im Hintergrund. Beim Sperren werden Schlüsselreferenz, Einträge und Formularwerte aus der Oberfläche entfernt. JavaScript garantiert keine physische Überschreibung aller früheren Speicherinhalte. Kopieren geschieht nur auf Knopfdruck. Die Bereinigung der Zwischenablage hängt von Browserberechtigungen ab; die Oberfläche nennt diese Grenze.
+
+## Tastenkürzel und Datenschutz
+
+F1 öffnet die Tastenkürzel mit einer eigenen Tastenkappe pro Taste. Die Suchfunktion verwendet Cmd+K unter macOS und Ctrl+K unter Windows/Linux. Ctrl+Alt+L sperrt den Tresor. Cmd+Enter beziehungsweise Ctrl+Enter speichert ausschließlich im geöffneten Editor. Escape schließt den aktuellen Dialog und setzt den Fokus zurück.
+
+Die diskrete Ansicht verdeckt Benutzernamen, Websites und Notizen auch im auslesbaren HTML. Titel und Tags bleiben sichtbar; bewusstes Kopieren bleibt möglich. Bearbeiten, Passwortanzeige und Einmalcodes sind währenddessen gesperrt. Die Ansicht ersetzt keine Tresorsperre.
+
+In den Einstellungen kannst du eine sofortige Hintergrundsperre aktivieren. Sonst gelten weiterhin 30 Sekunden. Angezeigte Passwörter werden nach 15 Sekunden verdeckt; wählbar sind 10 oder 30 Sekunden. Auswahlwechsel, Suche, Bearbeiten und Sperren beenden die Detailanzeige ebenfalls.
+
+Das Sitzungsprotokoll enthält höchstens 40 Vorgänge mit Zeit, Aktion und Ergebnis. Es enthält keine Kontoinhalte oder Fehlertexte und wird beim Sperren gelöscht. Der Diagnoseexport enthält nur diese Metadaten und Datenschutzeinstellungen. Der Export lädt eine lokale Datei herunter. Datenschutzeinstellungen und Designpräferenz dürfen lokal gespeichert werden; entschlüsselte Tresorinhalte bleiben davon ausgeschlossen.
 
 ## Speicher und Verschlüsselung
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.0 preview · 2026-10-16
+
+- Einzelne plattformgerechte Tastenkappen, F1-Hilfe und einheitliche SVG-Symbole.
+- Browser-Adresskürzel bleiben verfügbar; Ctrl+Alt+L sperrt den Tresor.
+- Diskrete Ansicht ohne Benutzernamen, Website oder Notizen im DOM.
+- Begrenzte Detail-Passwortanzeige und optionale sofortige Hintergrundsperre.
+- Sitzungsprotokoll und Diagnoseexport mit festem Metadatenschema; Protokoll wird beim Sperren gelöscht.
+- Kurze Erfolgsmeldungen, dauerhafte Fehlermeldungen und größere Bedienflächen.
+
 ## 0.7.0 · 2026-10-16 · Quellstand
 
 - Konto-Recovery mit einmaligem 256-Bit-Code, frischer Einrichtungsgenehmigung und atomarer Sperrung alter Schlüssel/Sitzungen/Agenten.

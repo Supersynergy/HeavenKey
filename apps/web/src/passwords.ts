@@ -1,4 +1,6 @@
 import { createVault, openVault, sealVault, validateEnvelope, validateVault, generatePassword, parseCsv, totp, MAX_FILE_BYTES, type Envelope, type Login, type Vault } from "./passwords-crypto";
+import { createIcon, initPresentation } from "./passwords-presentation";
+import { getPrivacyPreferences, initPrivacy, recordActivity, clearActivities } from "./passwords-privacy";
 const byId = <T extends HTMLElement = HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
   if (!element) throw new Error(`Fehlendes UI-Element: ${id}`);
@@ -13,6 +15,8 @@ let vault: Vault | null = null, key: CryptoKey | null = null, envelope: Envelope
 let generation = 0, busy = false, ready = false, lastActivity = Date.now(), hiddenTimer: ReturnType<typeof setTimeout> | undefined;
 let deleting: string | null = null;
 let selectedId: string | null = null, activeTag: string | null = null, revealedId: string | null = null;
+let revealTimer: ReturnType<typeof setTimeout> | undefined;
+function cancelReveal() { clearTimeout(revealTimer); revealedId = null; }
 let editorReturnFocus: HTMLElement | null = null;
 function refreshNavigation() {
   const special = !byId("health-view").hidden ? "nav-health" : !byId("settings-view").hidden ? "nav-settings" : null;
@@ -22,7 +26,7 @@ function refreshNavigation() {
 }
 function closeNavigation() { byId("workspace").classList.remove("navigation-open"); byId("menu-toggle").setAttribute("aria-expanded", "false"); }
 function showEntries() { byId("health-view").hidden = true; byId("nav-health").classList.remove("active"); byId("nav-health").removeAttribute("aria-current"); byId("settings-view").hidden = true; byId("workspace").classList.remove("settings-open"); byId("nav-settings").classList.remove("active"); byId("nav-settings").removeAttribute("aria-current"); closeNavigation(); refreshNavigation(); }
-function setFilter(favorites = false, tag: string | null = null) { if (busy || !vault) return; activeTag = tag; input("favorites-only").checked = favorites; selectedId = null; revealedId = null; showEntries(); byId("workspace").classList.remove("show-detail"); render(); }
+function setFilter(favorites = false, tag: string | null = null) { if (busy || !vault) return; activeTag = tag; input("favorites-only").checked = favorites; selectedId = null; cancelReveal(); showEntries(); byId("workspace").classList.remove("show-detail"); render(); }
 function showSettings() { if (busy || !vault) return; clearEditor(); showEntries(); byId("settings-view").hidden = false; byId("workspace").classList.add("settings-open"); byId("nav-settings").classList.add("active"); byId("nav-settings").setAttribute("aria-current", "page"); closeNavigation(); refreshNavigation(); byId("settings-heading").focus(); }
 function setTheme(theme: string) { const dark = theme === "dark"; document.documentElement.dataset.theme = dark ? "dark" : "light"; byId("theme-toggle").setAttribute("aria-pressed", String(dark)); byId("theme-label").textContent = dark ? "Helles Design" : "Dunkles Design"; }
 try { setTheme(localStorage.getItem("heavenkey-theme") || "light"); } catch { setTheme("light"); }
@@ -30,14 +34,24 @@ let pendingFocus: string | null = null;
 function focusAfter(id: string) { if (busy) pendingFocus = id; else byId(id).focus(); }
 let clipboardTimer: ReturnType<typeof setTimeout> | undefined;
 let clipboardValue = "", clipboardEpoch = 0;
-const status = (message: string, error = false) => { byId("status").textContent = message; byId("status").dataset.error = String(error); for (const id of ["editor", "delete-dialog"]) { const output = byId(`${id}-status`); if (byId<HTMLDialogElement>(id).open) { output.textContent = message; output.dataset.error = String(error); output.hidden = false; } } };
+let statusTimer: ReturnType<typeof setTimeout> | undefined;
+const status = (message: string, error = false) => {
+  clearTimeout(statusTimer);
+  const output = byId("status"); output.textContent = message; output.dataset.error = String(error);
+  let inDialog = false;
+  for (const id of ["editor", "delete-dialog"]) if (byId<HTMLDialogElement>(id).open) {
+    const local = byId(`${id}-status`); local.textContent = message; local.dataset.error = String(error); local.hidden = false; inDialog = true;
+  }
+  if (!error && !inDialog) statusTimer = setTimeout(() => { output.textContent = ""; }, 6000);
+};
 function setBusy(next: boolean) {
   busy = next;
-  document.querySelectorAll<HTMLButtonElement>("button").forEach(button => { if (button.id !== "lock") button.disabled = next || (button.id === "unlock" && !ready); });
+  document.querySelectorAll<HTMLButtonElement>("button").forEach(button => { if (button.id !== "lock") button.disabled = next || (button.id === "unlock" && !ready) || (getPrivacyPreferences().discreet && ["reveal-detail-password", "edit-entry", "show-totp"].includes(button.dataset.testid || "")); });
   byId("workspace").setAttribute("aria-busy", String(next));
 }
 function clearEditor() { byId("editor-status").textContent = ""; byId("editor-status").hidden = true; form("entry-form").reset(); input("entry-id").value = ""; input("entry-password").type = "password"; byId("reveal-password").setAttribute("aria-pressed", "false"); byId("reveal-password").textContent = "Anzeigen"; byId<HTMLDialogElement>("editor").close(); }
 function lock(message = "Tresor gesperrt.", refresh = true) {
+  cancelReveal(); clearActivities();
   clearTimeout(clipboardTimer); void cleanupClipboard();
   generation++; pendingFocus = null; selectedId = null; activeTag = null; revealedId = null; editorReturnFocus = null;
   key = null; vault = null; envelope = null; remote = null; ready = false; restoreReady = false; deleting = null;
@@ -47,7 +61,7 @@ function lock(message = "Tresor gesperrt.", refresh = true) {
   byId("health-findings").replaceChildren(); byId("health-summary").replaceChildren(); byId("health-count").textContent = "0"; byId("tag-navigation").replaceChildren(); byId("all-count").textContent = "0"; byId("fav-count").textContent = "0"; byId("logins-heading").textContent = "Alle Einträge"; byId("result-count").textContent = "0 Einträge";
   clearEditor();
   byId("detail").replaceChildren(); showEntries(); byId("workspace").classList.remove("show-detail"); document.body.classList.remove("unlocked"); byId("entries").replaceChildren(); byId("count").textContent = ""; byId("delete-title").textContent = ""; byId("delete-dialog-status").textContent = ""; byId("delete-dialog-status").hidden = true;
-  byId<HTMLDialogElement>("delete-dialog").close();
+  document.querySelectorAll<HTMLDialogElement>("dialog[open]").forEach(dialog => dialog.close());
   byId("workspace").hidden = true; byId("gate").hidden = false; byId("lock").hidden = true;
   setBusy(false); status(message);
   if (document.visibilityState === "visible") input("master").focus();
@@ -97,7 +111,7 @@ async function operation(task: (run: number) => Promise<void>) {
   const run = generation;
   setBusy(true);
   try { await task(run); }
-  catch (error) { if (active(run)) status(error instanceof Error ? error.message : "Vorgang fehlgeschlagen.", true); }
+  catch (error) { if (active(run)) { if (vault) recordActivity("operation", "error"); status(error instanceof Error ? error.message : "Vorgang fehlgeschlagen.", true); } }
   finally { if (active(run)) { setBusy(false); if (pendingFocus) { byId(pendingFocus).focus(); pendingFocus = null; } } }
 }
 async function commit(next: Vault, run: number, nextKey: CryptoKey | null = key, nextSalt = envelope?.salt): Promise<boolean> {
@@ -109,13 +123,13 @@ async function commit(next: Vault, run: number, nextKey: CryptoKey | null = key,
   if (!unlocked(run)) return false;
   if (!saved.record) throw new Error("Server hat keinen Tresor gespeichert.");
   revision = saved.revision; envelope = sealed; remote = sealed; key = nextKey; vault = next;
-  render(); return true;
+  render(); recordActivity("save"); return true;
 }
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string): HTMLElementTagNameMap[K] { const node = document.createElement(tag); if (text !== undefined) node.textContent = text; return node; }
 function action(label: string, testId: string, handler: () => void): HTMLButtonElement { const button = element("button", label); button.className = "secondary"; button.dataset.testid = testId; button.type = "button"; button.disabled = busy; button.addEventListener("click", handler); return button; }
 function selectEntry(id: string, focus = false) {
   if (busy || !vault) return;
-  selectedId = id; revealedId = null;
+  selectedId = id; cancelReveal();
   byId("workspace").classList.add("show-detail"); render();
   if (focus || matchMedia("(max-width: 559px)").matches) byId("detail-title").focus();
   else byId("entries").querySelector<HTMLButtonElement>("[aria-current=true]")?.focus();
@@ -147,8 +161,8 @@ function render() {
     const button = action("", "select-entry", () => selectEntry(entry.id)); button.className = "entry-select"; button.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); selectEntry(entry.id, true); } }); button.tabIndex = entry.id === selectedId ? 0 : -1;
     button.setAttribute("aria-current", String(entry.id === selectedId));
     const icon = element("span", entry.title.slice(0,2).toLocaleUpperCase("de")); icon.className = "entry-icon"; icon.setAttribute("aria-hidden", "true");
-    const text = element("span"); text.className = "entry-label"; text.append(element("strong", entry.title), element("small", entry.username || entry.url || "Login")); button.append(icon,text);
-    if (entry.favorite) { const star = element("span", "★"); star.className = "favorite-star"; star.setAttribute("aria-label", "Favorit"); button.append(star); }
+    const text = element("span"); text.className = "entry-label"; text.append(element("strong", entry.title), element("small", getPrivacyPreferences().discreet ? "Kontodaten ausgeblendet" : entry.username || entry.url || "Login")); button.append(icon,text);
+    if (entry.favorite) { const star = createIcon("star"); star.classList.add("favorite-star"); button.setAttribute("aria-label", `${entry.title}, Favorit`); button.append(star); }
     row.append(button); list.append(row);
   }
   list.scrollTop = scrollTop;
@@ -188,27 +202,39 @@ function detailField(label: string, text: string, buttons: HTMLButtonElement[] =
 }
 function renderDetail(entry?: Login) {
   const detail = byId("detail"); detail.replaceChildren();
-  const back = action("← Zurück zur Liste", "back-to-list", () => { byId("workspace").classList.remove("show-detail"); byId("entries").querySelector<HTMLButtonElement>("[aria-current=true]")?.focus(); }); back.id = "back-to-list"; back.className = "secondary back-to-list"; detail.append(back);
-  if (!entry) { const blank = element("div"); blank.className = "detail-empty"; blank.append(element("span", "▤"),element("h2", "Alles an seinem Platz."),element("p", "Wähle einen Login aus oder erstelle einen neuen Eintrag.")); detail.append(blank); return; }
+  const back = action("Zurück zur Liste", "back-to-list", () => { byId("workspace").classList.remove("show-detail"); byId("entries").querySelector<HTMLButtonElement>("[aria-current=true]")?.focus(); }); back.prepend(createIcon("back")); back.id = "back-to-list"; back.className = "secondary back-to-list"; detail.append(back);
+  if (!entry) { const blank = element("div"); blank.className = "detail-empty"; blank.append(createIcon("vault"),element("h2", "Kein Login ausgewählt"),element("p", "Wähle einen Login aus oder erstelle einen neuen Eintrag.")); detail.append(blank); return; }
+  const discreet = getPrivacyPreferences().discreet;
   const head = element("div"); head.className = "detail-heading";
   const identity = element("div"); identity.className = "detail-identity"; const icon = element("span", entry.title.slice(0,2).toLocaleUpperCase("de")); icon.className = "detail-icon"; icon.setAttribute("aria-hidden", "true");
-  const titleBlock = element("div"); const title = element("h2",entry.title); title.id = "detail-title"; title.dataset.testid = "detail-title"; title.tabIndex = -1; titleBlock.append(title,element("p", "LOGIN · MEIN TRESOR")); identity.append(icon,titleBlock); head.append(identity, action("Bearbeiten", "edit-entry", () => edit(entry.id))); detail.append(head);
+  const titleBlock = element("div"); const title = element("h2",entry.title); title.id = "detail-title"; title.dataset.testid = "detail-title"; title.tabIndex = -1; titleBlock.append(title,element("p", "Login")); identity.append(icon,titleBlock); const editButton = action("Bearbeiten", "edit-entry", () => edit(entry.id)); editButton.disabled = busy || discreet; head.append(identity, editButton); detail.append(head);
   const fields = element("div"); fields.className = "detail-fields";
-  fields.append(detailField("Benutzername", entry.username, [action("Kopieren", "copy-username", () => void copy(entry.username))]));
-  const reveal = action(revealedId === entry.id ? "Verbergen" : "Anzeigen", "reveal-detail-password", () => { revealedId = revealedId === entry.id ? null : entry.id; renderDetail(entry); byId("detail").querySelector<HTMLButtonElement>("[data-testid=reveal-detail-password]")?.focus(); }); reveal.setAttribute("aria-pressed", String(revealedId === entry.id));
+  fields.append(detailField("Benutzername", discreet ? "Verdeckt" : entry.username, [action("Kopieren", "copy-username", () => void copy(entry.username))]));
+  const reveal = action(revealedId === entry.id ? "Verbergen" : "Anzeigen", "reveal-detail-password", () => {
+    if (getPrivacyPreferences().discreet) return;
+    const show = revealedId !== entry.id; cancelReveal();
+    if (show) {
+      revealedId = entry.id; recordActivity("reveal"); const run = generation, id = entry.id;
+      revealTimer = setTimeout(() => { if (unlocked(run) && revealedId === id) { cancelReveal(); renderDetail(vault?.entries.find(item => item.id === selectedId)); } }, getPrivacyPreferences().revealSeconds * 1000);
+    }
+    renderDetail(entry); byId("detail").querySelector<HTMLButtonElement>("[data-testid=reveal-detail-password]")?.focus();
+  }); reveal.disabled = busy || discreet; reveal.setAttribute("aria-pressed", String(revealedId === entry.id));
   fields.append(detailField("Passwort", revealedId === entry.id ? entry.password : entry.password ? "••••••••••••••••" : "—", [reveal,action("Kopieren", "copy-password", () => void copy(entry.password))], true));
-  if (entry.totp) { const field = detailField("Einmalcode · TOTP", "Wird auf diesem Gerät berechnet", [action("Code anzeigen", "show-totp", () => void showTotp(entry.id, field))]); fields.append(field); }
-  if (entry.url) { const field = detailField("Website", ""); const link = element("a", entry.url); link.href = entry.url; link.target = "_blank"; link.rel = "noopener noreferrer"; field.querySelector("p")!.replaceChildren(link); fields.append(field); }
+  if (entry.totp) { const button = action("Code anzeigen", "show-totp", () => void showTotp(entry.id, field)); button.disabled = busy || discreet; const field = detailField("Einmalcode · TOTP", discreet ? "Verdeckt" : "Wird auf diesem Gerät berechnet", [button]); fields.append(field); }
+  if (entry.url) { const field = detailField("Website", discreet ? "Verdeckt" : ""); if (!discreet) { const link = element("a", entry.url); link.href = entry.url; link.target = "_blank"; link.rel = "noopener noreferrer"; field.querySelector("p")!.replaceChildren(link); } fields.append(field); }
   detail.append(fields);
   if (entry.tags.length) { const tags = element("div"); tags.className = "detail-tags"; tags.setAttribute("aria-label", "Tags"); entry.tags.forEach(tag => { const button = action(tag, "detail-tag", () => setFilter(false, tag)); button.className = "tag"; tags.append(button); }); detail.append(tags); }
-  if (entry.notes) { const notes = element("div"); notes.className = "detail-notes"; notes.append(element("h3", "Notizen"),element("p",entry.notes)); detail.append(notes); }
+  if (entry.notes) { const notes = element("div"); notes.className = "detail-notes"; notes.append(element("h3", "Notizen"),element("p",discreet ? "Verdeckt" : entry.notes)); detail.append(notes); }
   const footer = element("div"); footer.className = "detail-footer";
-  const favorite = action(entry.favorite ? "★ Favorit entfernen" : "☆ Als Favorit", "toggle-favorite", () => void operation(async run => { if (!vault) return; if (await commit({ version: 1, entries: vault.entries.map(item => item.id === entry.id ? { ...item, favorite: !item.favorite } : item) }, run)) { status("Favorit gespeichert."); focusAfter(selectedId ? "detail-title" : "new-entry"); } })); favorite.setAttribute("aria-pressed", String(entry.favorite));
+  const favorite = action(entry.favorite ? "Favorit entfernen" : "Als Favorit", "toggle-favorite", () => void operation(async run => { if (!vault) return; if (await commit({ version: 1, entries: vault.entries.map(item => item.id === entry.id ? { ...item, favorite: !item.favorite } : item) }, run)) { status("Favorit gespeichert."); focusAfter(selectedId ? "detail-title" : "new-entry"); } })); favorite.prepend(createIcon("star")); favorite.setAttribute("aria-pressed", String(entry.favorite));
   const remove = action("Login löschen", "delete-entry", () => { deleting = entry.id; byId("delete-title").textContent = entry.title; byId("delete-dialog-status").textContent = ""; byId("delete-dialog-status").hidden = true; byId<HTMLDialogElement>("delete-dialog").showModal(); }); remove.classList.add("danger"); footer.append(favorite,remove); detail.append(footer);
 }
 function edit(id?: string) {
   if (!vault || busy) return;
-  clearEditor(); editorReturnFocus = document.activeElement as HTMLElement; const entry = vault.entries.find(item => item.id === id);
+  if (getPrivacyPreferences().discreet) { status("Beende die diskrete Ansicht, um Einträge zu bearbeiten."); return; }
+  const previous = document.activeElement as HTMLElement;
+  cancelReveal(); renderDetail(vault.entries.find(item => item.id === selectedId));
+  clearEditor(); editorReturnFocus = previous.isConnected ? previous : byId("detail").querySelector<HTMLButtonElement>("[data-testid=edit-entry]"); const entry = vault.entries.find(item => item.id === id);
   byId("editor-heading").textContent = entry ? "Login bearbeiten" : "Login hinzufügen";
   if (entry) {
     for (const name of ["id", "title", "username", "password", "url", "notes", "totp"] as const) (byId(`entry-${name}`) as HTMLInputElement | HTMLTextAreaElement).value = entry[name];
@@ -218,7 +244,7 @@ function edit(id?: string) {
 }
 async function showTotp(id: string, row: HTMLElement) {
   const run = generation, entry = vault?.entries.find(item => item.id === id);
-  if (!entry || busy) return;
+  if (!entry || busy || getPrivacyPreferences().discreet) return;
   try {
     const result = await totp(entry.totp);
     if (!unlocked(run) || !row.isConnected) return;
@@ -241,7 +267,7 @@ async function copy(secret: string) {
     if (!active(run)) { clipboardValue = secret; void cleanupClipboard(); return; }
     clearTimeout(clipboardTimer); clipboardValue = secret;
     clipboardTimer = setTimeout(() => void cleanupClipboard(), 30_000);
-    status("Kopiert. Automatisches Leeren nach 30 Sekunden wird versucht, wenn Lesen erlaubt und der Inhalt unverändert ist. Sonst selbst löschen.");
+    recordActivity("copy"); status("Kopiert.");
   } catch { if (active(run)) status("Kopieren nicht erlaubt. Erlaube die Zwischenablage in diesem sicheren Browserkontext.", true); }
 }
 async function readFile(id: string): Promise<string> {
@@ -260,7 +286,7 @@ form("unlock-form").addEventListener("submit", event => {
     if (!current) { const saved = readSnapshot(await api("/api/password-vault", opened.envelope, revision)); if (!active(run)) return; revision = saved.revision; }
     vault = opened.vault; key = opened.key; envelope = opened.envelope; remote = opened.envelope; lastActivity = Date.now();
     byId("gate").hidden = true; document.body.classList.add("unlocked"); byId("workspace").hidden = false; byId("lock").hidden = false;
-    render(); status(current ? "Tresor entsperrt." : "Tresor angelegt und verschlüsselt gespeichert."); focusAfter("new-entry");
+    render(); recordActivity(current ? "unlock" : "create"); status(current ? "Tresor entsperrt." : "Tresor angelegt und verschlüsselt gespeichert."); focusAfter("new-entry");
   });
 });
 byId("lock").addEventListener("click", () => lock());
@@ -278,7 +304,7 @@ byId("new-entry").addEventListener("click", () => edit());
 function cancelEditor() { clearEditor(); if (editorReturnFocus?.isConnected) editorReturnFocus.focus(); else focusAfter("new-entry"); editorReturnFocus = null; }
 byId("cancel-entry").addEventListener("click", cancelEditor);
 byId<HTMLDialogElement>("editor").addEventListener("cancel", event => { event.preventDefault(); cancelEditor(); });
-input("search").addEventListener("input", () => { revealedId = null; render(); }); input("favorites-only").addEventListener("change", () => { activeTag = null; showEntries(); render(); });
+input("search").addEventListener("input", () => { cancelReveal(); render(); }); input("favorites-only").addEventListener("change", () => { activeTag = null; cancelReveal(); showEntries(); render(); });
 byId("sort").addEventListener("change", render);
 byId("nav-all").addEventListener("click", () => setFilter());
 byId("nav-favorites").addEventListener("click", () => setFilter(true));
@@ -286,13 +312,15 @@ byId("nav-settings").addEventListener("click", showSettings);
 byId("nav-health").addEventListener("click", showHealth);
 byId("close-health").addEventListener("click", () => { showEntries(); input("search").focus(); });
 byId("close-settings").addEventListener("click", () => { showEntries(); input("search").focus(); });
-byId("nav-generator").addEventListener("click", () => { showEntries(); edit(); input("entry-password").value = generatePassword(24); input("entry-password").focus(); status("Neues Passwort generiert. Zum Übernehmen verschlüsselt speichern."); });
+byId("nav-generator").addEventListener("click", () => { if (busy || !vault) return; if (getPrivacyPreferences().discreet) { status("Beende die diskrete Ansicht, um Einträge zu bearbeiten."); return; } showEntries(); edit(); input("entry-password").value = generatePassword(24); input("entry-password").focus(); status("Neues Passwort generiert. Zum Übernehmen verschlüsselt speichern."); });
 byId("menu-toggle").addEventListener("click", () => { const open = byId("workspace").classList.toggle("navigation-open"); byId("menu-toggle").setAttribute("aria-expanded", String(open)); if (open) byId("nav-all").focus(); });
 byId("theme-toggle").addEventListener("click", () => { const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; setTheme(theme); try { localStorage.setItem("heavenkey-theme", theme); } catch { status("Design für diesen Tab geändert. Der Browser erlaubt keine dauerhafte Speicherung."); } });
 document.addEventListener("keydown", event => {
+  if (vault && event.ctrlKey && event.altKey && !event.metaKey && (event.code === "KeyL" || event.key.toLowerCase() === "l")) { event.preventDefault(); lock(); return; }
+  if (byId<HTMLDialogElement>("shortcuts-dialog").open) return;
   if (event.key === "Escape") { if (byId("workspace").classList.contains("navigation-open")) { closeNavigation(); byId("menu-toggle").focus(); } return; }
   if (!vault) return;
-  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "l") { event.preventDefault(); lock(); return; }
+  if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && byId<HTMLDialogElement>("editor").open && !busy) { event.preventDefault(); form("entry-form").requestSubmit(); return; }
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k" && !byId<HTMLDialogElement>("editor").open && !byId<HTMLDialogElement>("delete-dialog").open) { event.preventDefault(); showEntries(); byId("workspace").classList.remove("show-detail"); input("search").focus(); input("search").select(); }
 });
 input("search").addEventListener("keydown", event => { if (event.key === "ArrowDown") { event.preventDefault(); byId("entries").querySelector<HTMLButtonElement>("button")?.focus(); } });
@@ -348,7 +376,9 @@ form("rekey-form").addEventListener("submit", event => { event.preventDefault();
 }); });
 for (const name of ["pointerdown", "keydown", "input"] as const) document.addEventListener(name, () => { lastActivity = Date.now(); }, { passive: true });
 setInterval(() => { if (vault && Date.now() - lastActivity >= 300_000) lock("Nach 5 Minuten ohne Eingabe gesperrt."); }, 1000);
-document.addEventListener("visibilitychange", () => { clearTimeout(hiddenTimer); if (document.visibilityState === "hidden") hiddenTimer = setTimeout(() => { if (vault || busy) lock("Nach 30 Sekunden im Hintergrund gesperrt."); }, 30_000); });
+document.addEventListener("visibilitychange", () => { clearTimeout(hiddenTimer); if (document.visibilityState === "hidden") { if (getPrivacyPreferences().strictBackground) { if (vault || busy) lock("Beim Wechsel in den Hintergrund gesperrt."); } else hiddenTimer = setTimeout(() => { if (vault || busy) lock("Nach 30 Sekunden im Hintergrund gesperrt."); }, 30_000); } });
 window.addEventListener("pagehide", () => { lock("Seite verlassen, Tresor gesperrt.", false); });
+initPrivacy(() => { cancelReveal(); clearEditor(); if (vault) render(); });
+initPresentation();
 void load();
 window.addEventListener("pageshow", event => { if (event.persisted && !vault) void load(); });
