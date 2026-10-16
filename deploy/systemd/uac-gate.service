@@ -1,0 +1,58 @@
+# uac-gate.service — Beispiel-Unit fuer den kuenftigen uac-gate-Dienst
+#
+# uac-gate ist derzeit ein Skeleton (apps/gate/) und hat noch keine
+# Laufzeitfunktion. Diese Unit zeigt das gleiche Haertungsmuster wie
+# uac-api.service und dient als Vorlage: Wenn uac-gate spaeter die
+# TLS-nahe Schicht (Auth-Gate vor uac-api) uebernimmt, laeuft es unter
+# eigener Kennung und eigenem State-Directory.
+#
+# Installation analog zu uac-api.service; Pfad/Port an die
+# tatsaechliche Gate-Implementierung anpassen (siehe docs/OPERATIONS.md).
+
+[Unit]
+Description=HeavenKey uac-gate (Beispiel-Unit, Skeleton)
+Documentation=https://github.com/Supersynergy/HeavenKey
+After=network.target uac-api.service
+# Das Gate wird vor der API liegen; es braucht eine laufende API.
+Requires=uac-api.service
+
+[Service]
+Type=simple
+User=heavenkey
+Group=heavenkey
+# TODO: ExecStart/Port an die fertige Gate-Implementierung anpassen.
+ExecStart=/usr/local/bin/uac-gate
+
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=15s
+
+# --- Haertung (gleiche Basis wie uac-api.service) ------------------------
+StateDirectory=heavenkey-gate
+StateDirectoryMode=0700
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_INET AF_UNIX
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+UMask=0077
+
+LimitNOFILE=1024
+MemoryMax=512M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target
