@@ -1,5 +1,6 @@
 import { createVault, openVault, sealVault, validateEnvelope, validateVault, generatePassword, parseCsv, totp, MAX_FILE_BYTES, type Envelope, type Login, type Vault } from "./passwords-crypto";
 import { createIcon, initPresentation } from "./passwords-presentation";
+import { initBrand } from "./passwords-brand";
 import { getPrivacyPreferences, initPrivacy, recordActivity, clearActivities } from "./passwords-privacy";
 const byId = <T extends HTMLElement = HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
@@ -386,6 +387,7 @@ setInterval(() => { if (vault && Date.now() - lastActivity >= 300_000) lock("Nac
 document.addEventListener("visibilitychange", () => { clearTimeout(hiddenTimer); if (document.visibilityState === "hidden") { if (getPrivacyPreferences().strictBackground) { if (vault || busy) lock("Beim Wechsel in den Hintergrund gesperrt."); } else hiddenTimer = setTimeout(() => { if (vault || busy) lock("Nach 30 Sekunden im Hintergrund gesperrt."); }, 30_000); } });
 window.addEventListener("pagehide", () => { lock("Seite verlassen, Tresor gesperrt.", false); });
 initPrivacy(() => { cancelReveal(); clearEditor(); if (vault) render(); });
+initBrand();
 initPresentation();
 void load();
 window.addEventListener("pageshow", event => { if (event.persisted && !vault) void load(); });
