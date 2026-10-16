@@ -1477,6 +1477,12 @@ version = "0.6.0"
 [[package]]
 name = "uac-tenancy"
 version = "0.6.0"
+dependencies = [
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "uuid",
+]
 
 [[package]]
 name = "uac-ucan-bridge"

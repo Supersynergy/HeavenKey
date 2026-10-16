@@ -1,0 +1,25 @@
+   Compiling uac-tenancy v0.6.0 (/home/ubuntu/repos/HeavenKey/crates/tenancy)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.46s
+     Running unittests src/lib.rs (target/debug/build/uac-tenancy/8c71f5f488f26124/out/uac_tenancy-8c71f5f488f26124)
+
+running 9 tests
+test tests::revoke_then_invoke_fails_closed ... ok
+test tests::ids_roundtrip_through_serde_and_strings ... ok
+test tests::invocation_cannot_cross_tenants ... ok
+test tests::unknown_tenant_and_operator_views ... ok
+test tests::runtime_check_rejects_forged_records ... ok
+test tests::delegation_cannot_cross_tenants ... ok
+test tests::no_shared_sequences_and_per_tenant_names ... ok
+test tests::reads_cannot_cross_tenants ... ok
+test tests::writes_cannot_cross_tenants ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests uac_tenancy
+
+running 2 tests
+test crates/tenancy/src/lib.rs - (line 36) - compile fail ... ok
+test crates/tenancy/src/lib.rs - (line 18) - compile fail ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+

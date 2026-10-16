@@ -1,0 +1,30 @@
+{
+  "workstream": "tenancy",
+  "date": "2026-10-12",
+  "crate": "uac-tenancy",
+  "oracle": {
+    "command": "cargo test --locked --offline -p uac-tenancy",
+    "log": "docs/evidence/tenancy-tests.log",
+    "unit_tests": {"passed": 9, "failed": 0},
+    "compile_fail_doctests": {"passed": 2, "failed": 0},
+    "workspace_test": {"command": "cargo test --locked --offline", "results_ok": 62, "failed": 0},
+    "clippy": "cargo clippy --locked --offline --all-targets -- -D warnings",
+    "fmt": "cargo fmt --check"
+  },
+  "isolation_claims": {
+    "no_cross_tenant_read": "tests::reads_cannot_cross_tenants",
+    "no_cross_tenant_write": "tests::writes_cannot_cross_tenants",
+    "no_cross_tenant_delegation": "tests::delegation_cannot_cross_tenants",
+    "no_cross_tenant_invocation": "tests::invocation_cannot_cross_tenants",
+    "revocation_fails_closed": "tests::revoke_then_invoke_fails_closed",
+    "runtime_check_defense_in_depth": "tests::runtime_check_rejects_forged_records",
+    "no_shared_sequences": "tests::no_shared_sequences_and_per_tenant_names",
+    "compile_time_isolation": "compile_fail doctests in crates/tenancy/src/lib.rs (records cannot cross or escape scopes)"
+  },
+  "layers": [
+    "generativity-branded TenantScope<'s, 't> + Record<'t, T> (compile-time)",
+    "ensure() runtime tenant re-check + uniform Error::NotFound for missing/foreign ids (no existence oracle)",
+    "UNIQUE(tenant_id, id) + composite FOREIGN KEY (tenant_id, ref_id) in SQLite"
+  ],
+  "notes": "All entity ids are UUID v4; tables are WITHOUT ROWID; guessed neighbour-tenant ids are covered. Physical passkey/hardware verification remains deferred. No API wiring in this workstream."
+}
