@@ -12,6 +12,7 @@ let isOwner = false;
 let activeCredentialCount = 0;
 let inFlight = false;
 let confirmationOpen = false;
+const invitedName = new URL(location.href).searchParams.get("guest");
 const el = <T extends HTMLElement>(id: string): T => {
   const value = document.getElementById(id);
   if (!value) throw new Error(`Element fehlt: ${id}`);
@@ -59,6 +60,7 @@ async function register(): Promise<void> {
   status(`Passkey für ${name} eingeschrieben. Jetzt anmelden.`, false);
 }
 async function authenticate(invocation?: object, name = input("name")): Promise<Record<string, unknown>> {
+  if (invocation) el("result").textContent = "—";
   const start = await api<Ceremony<PublicKeyCredentialRequestOptionsJSON>>("/api/auth/start", { name, invocation: invocation || null });
   const credential = await passkeyRequest(() => startAuthentication({ optionsJSON: start.options.publicKey }));
   return api("/api/auth/finish", { request_id: start.request_id, credential, invocation: invocation || null });
@@ -152,10 +154,23 @@ async function refresh(): Promise<void> {
       else { const value = await authenticate({ grant: grant.grant, resource: grant.grant.body.resource, action: "Read", arguments: { document: "overview" } }, sessionName); el("result").textContent = JSON.stringify(value, null, 2); status("Aufruf autorisiert und im Verifier bestätigt.", false); }
       await refresh();
     }));
-    actions.append(button); row.append(text, actions); area.append(row);
+    actions.append(button);
+    if (isOwner && !grant.revoked && !expired) {
+      const link = document.createElement("a");
+      const target = new URL("/", location.origin); target.searchParams.set("guest", grant.guest);
+      link.href = target.href; link.textContent = "Zugangslink öffnen"; link.target = "_blank"; link.rel = "noopener noreferrer";
+      const copy = document.createElement("button"); copy.className = "secondary"; copy.textContent = "Link kopieren";
+      copy.addEventListener("click", () => void perform(copy, async () => {
+        await navigator.clipboard.writeText(target.href);
+        status("Zugangslink kopiert. Der Empfänger benötigt seinen eigenen Passkey.", false);
+      }));
+      actions.append(link, copy);
+    }
+    row.append(text, actions); area.append(row);
   }
 }
 async function invokeDelegation(grant: Delegation): Promise<void> {
+  el("result").textContent = "—";
   const delegation_invocation = { id: grant.id, resource: grant.grant.body.resource, action: "Read", arguments: { document: "overview" } };
   const start = await api<Ceremony<PublicKeyCredentialRequestOptionsJSON>>("/api/auth/start", { name: sessionName, delegation_invocation });
   const credential = await passkeyRequest(() => startAuthentication({ optionsJSON: start.options.publicKey }));
@@ -298,3 +313,8 @@ el<HTMLFormElement>("delegation-form").addEventListener("submit", event => {
   });
 });
 document.documentElement.dataset.ready = "true";
+if (invitedName && /^[a-zA-Z0-9-]{3,32}$/.test(invitedName)) {
+  el<HTMLInputElement>("name").value = invitedName;
+  el("identity").textContent = `Zugangslink für ${invitedName}. Mit dem eigenen Passkey anmelden.`;
+}
+if (location.protocol === "https:") el("mode").textContent = "HTTPS · Passkeys · Serverprüfung";

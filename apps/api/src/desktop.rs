@@ -54,7 +54,7 @@ pub fn options() -> Result<Option<Options>, Box<dyn std::error::Error>> {
             }
             Some("--help" | "-h") => {
                 println!(
-                    "HeavenKey {}\n\n--open             Open the local browser\n--port NUMBER      Local port (default 18240)\n--data-dir PATH    Persistent data directory\n--store-query JSON Run one maintenance query ({{\"sql\":..,\"params\":[..]}}), then exit\n--version          Version\n\nUAC_PORT, UAC_DATA and UAC_STORE_KEY are also supported. Stop with Ctrl+C.",
+                    "HeavenKey {}\n\n--open             Open the browser\n--port NUMBER      Loopback port (default 18240)\n--data-dir PATH    Persistent data directory\n--store-query JSON Run one local maintenance query, then exit\n--version          Version\n\nUAC_PORT, UAC_DATA, UAC_STORE_KEY and UAC_STORE_KEY_FILE are supported.\nHEAVENKEY_PUBLIC_ORIGIN: exact HTTPS origin behind a trusted TLS proxy.\nHEAVENKEY_DOCUMENT: private UTF-8 document (required for HTTPS).\nThe listener stays on loopback. Stop with Ctrl+C.",
                     env!("CARGO_PKG_VERSION")
                 );
                 return Ok(None);

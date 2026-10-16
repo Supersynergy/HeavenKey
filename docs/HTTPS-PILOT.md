@@ -1,0 +1,9 @@
+# HTTPS-Passkey-Pilot
+
+Der Betreiber konfiguriert `HEAVENKEY_PUBLIC_ORIGIN` als exakte HTTPS-Origin und `HEAVENKEY_DOCUMENT` als privaten UTF-8-Dateipfad außerhalb der Webdateien. Das Dokument muss 1 bis 65536 Bytes enthalten. `UAC_DATA` bleibt ein privates persistentes Datenverzeichnis. Der Rust-Dienst lauscht ausschließlich auf Loopback; ein vertrauenswürdiger TLS-Proxy leitet die öffentliche Origin mit unverändertem Host-Header weiter. Weiterleitungsheader bestimmen weder Origin noch RP-ID.
+
+Der Eigentümer benötigt einmalig den lokalen Einrichtungscode und seinen Passkey. Ein Gast erstellt zuerst auf derselben Domain seinen eigenen Passkey. Danach meldet sich der Eigentümer an, vergibt ein befristetes Leserecht und kopiert den Zugangslink. Der Link enthält den Kontonamen und verleiht selbst keine Berechtigung. Der Gast meldet sich mit seinem eigenen Passkey an und öffnet das Dokument. Jede Aktion und jeder Abruf werden vom Rust-Dienst geprüft. Ein Widerruf blockiert neue Abrufe einschließlich bereits begonnener, noch nicht abgeschlossener Authentifizierungen. Bereits erhaltene Dokumentkopien können nicht zurückgeholt werden.
+
+Besucher verwenden nur den Browser. Installation und Konsole sind für sie nicht erforderlich. Ein fester Hostname erhält die RP-ID über Neustarts. Ein Quick-Tunnel-Hostname ist vorübergehend; bei einer neuen Domain sind neue passende Passkeys erforderlich. Der Pilot ist für synthetische Dokumente vorgesehen. Ein dauerhafter Backendbetrieb, Produktionshärtung und die Abnahme physischer Passkeys bleiben eigene Schritte.
+
+`scripts/https_e2e.mjs` prüft ausschließlich eine ausdrücklich angegebene eigene `trycloudflare.com`-Test-Origin mit einem isolierten Datenverzeichnis. Es verwendet virtuelle CTAP2-Authentikatoren und den echten Rust-Verifier; die Belege kennzeichnen das ausdrücklich.
