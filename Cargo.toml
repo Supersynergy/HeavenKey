@@ -23,7 +23,7 @@ webauthn-rs = "=0.5.5"
 serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "=1.0.154"
 uuid = { version = "=1.26.1", features = ["v4", "serde"] }
-rusqlite = { version = "=0.40.2", features = ["bundled"] }
+rusqlite = { version = "=0.40.2", features = ["bundled-sqlcipher"] }
 base64 = "=0.22.1"
 sha2 = "=0.10.9"
 ed25519-dalek = "=2.2.0"

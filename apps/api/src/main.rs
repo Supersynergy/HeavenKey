@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod desktop;
+mod store;
 
 use axum::{
     Json, Router,
@@ -1610,26 +1611,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let data = options.data;
     desktop::prepare_data(&data)?;
     let bootstrap_hash = bootstrap_hash(&data)?;
-    let key_path = data.join("issuer.key");
-    let bytes = if key_path.exists() {
-        fs::read(&key_path)?
-    } else {
-        let mut bytes = [0; 32];
-        rand::rng().fill_bytes(&mut bytes);
-        let mut options = fs::OpenOptions::new();
-        options.write(true).create_new(true);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::OpenOptionsExt;
-            options.mode(0o600);
-        }
-        let mut f = options.open(&key_path)?;
-        f.write_all(&bytes)?;
-        f.sync_all()?;
-        bytes.to_vec()
-    };
-    let issuer = SigningKey::from_bytes(&bytes.try_into().map_err(|_| "invalid issuer key")?);
-    let mut db = Connection::open(data.join("uac.sqlite"))?;
+    let store::Store { mut db, issuer } = store::open(&data)?;
+    if let Some(spec) = options.store_query {
+        let spec: Value = serde_json::from_str(&spec)?;
+        let sql = spec
+            .get("sql")
+            .and_then(Value::as_str)
+            .ok_or("--store-query requires a \"sql\" string")?;
+        let parameters = spec
+            .get("params")
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default();
+        println!("{}", store::query(&db, sql, &parameters)?);
+        return Ok(());
+    }
     db.busy_timeout(Duration::from_secs(2))?;
     initialize_database(&mut db)?;
     let webauthn = WebauthnBuilder::new("localhost", &Url::parse(&origin)?)?

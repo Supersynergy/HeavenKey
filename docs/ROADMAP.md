@@ -9,6 +9,7 @@
 | 0.3 | Benannte Passkeys pro Konto mit Schutz des letzten aktiven Schlüssels |
 | 0.4 | Frische Passkey-Zustimmung für konkrete Änderungen, Abbruch und erneuter Versuch |
 | 0.5 | Begrenzte Weitergabe, bis zu fünf Kettenglieder und Widerruf aller abhängigen Nachfolger |
+| 0.7 | Verschlüsselter lokaler Speicher mit getrennter Schlüsselverwahrung und Plaintext-Migration |
 
 Der aktuelle Stand ist lokal mit virtuellen Passkeys auf macOS und Ubuntu geprüft. Physische Passkeys und der gehostete GitHub-CI-Lauf sind noch offen; siehe [Prüfstatus](VERIFICATION.md).
 
@@ -18,7 +19,7 @@ Der aktuelle Stand ist lokal mit virtuellen Passkeys auf macOS und Ubuntu geprü
 | --- | --- | --- |
 | Physische Passkeys | Passkeys auf eigenen Geräten einsetzen | Prüfung auf echten Geräten einschließlich abgebrochener Anmeldung |
 | Recovery | Zugang bei Verlust aller Passkeys wiederherstellen | Missbrauchsschutz und vollständiger Wiederherstellungsablauf |
-| Geschützter Speicher | Lokale Daten und Signierschlüssel absichern | Geprüfte Schlüsselverwahrung und Datenmigration; ein falscher Schlüssel darf keine Daten freigeben |
+| Geschützter Speicher | **Umgesetzt in 0.7:** SQLCipher-Datenbank, Signierschlüssel in der Meta-Tabelle, Schlüssel via `UAC_STORE_KEY`/Schlüsseldatei außerhalb des Datenordners; Migration und Fehlschlüssel-Verweigerung sind getestet | Verbleibend: Systemschlüsselkette statt Schlüsseldatei |
 | HTTPS und Betrieb | Außerhalb der lokalen Demo nutzbar werden | Geprüfte HTTPS-Konfiguration und Fehlerabläufe im Betrieb |
 | Mandanten | Mehrere getrennte Organisationen verwalten | Keine Zugriffe zwischen Organisationen |
 | Externe Integrationen | Berechtigungen in einem konkreten Softwaretool einsetzen | Autorisierung am tatsächlichen Ausführungspunkt |

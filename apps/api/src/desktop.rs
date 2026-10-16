@@ -11,6 +11,7 @@ pub struct Options {
     pub port: u16,
     pub data: PathBuf,
     pub open: bool,
+    pub store_query: Option<String>,
 }
 
 fn default_data(
@@ -44,6 +45,7 @@ pub fn options() -> Result<Option<Options>, Box<dyn std::error::Error>> {
     let mut port = env::var("UAC_PORT").unwrap_or_else(|_| "18240".into());
     let mut data = env::var_os("UAC_DATA").filter(|value| !value.is_empty());
     let mut open = false;
+    let mut store_query = None;
     while let Some(arg) = args.next() {
         match arg.to_str() {
             Some("--version") => {
@@ -52,7 +54,7 @@ pub fn options() -> Result<Option<Options>, Box<dyn std::error::Error>> {
             }
             Some("--help" | "-h") => {
                 println!(
-                    "HeavenKey {}\n\n--open            Open the local browser\n--port NUMBER     Local port (default 18240)\n--data-dir PATH   Persistent data directory\n--version         Version\n\nUAC_PORT and UAC_DATA are also supported. Stop with Ctrl+C.",
+                    "HeavenKey {}\n\n--open             Open the local browser\n--port NUMBER      Local port (default 18240)\n--data-dir PATH    Persistent data directory\n--store-query JSON Run one maintenance query ({{\"sql\":..,\"params\":[..]}}), then exit\n--version          Version\n\nUAC_PORT, UAC_DATA and UAC_STORE_KEY are also supported. Stop with Ctrl+C.",
                     env!("CARGO_PKG_VERSION")
                 );
                 return Ok(None);
@@ -72,6 +74,15 @@ pub fn options() -> Result<Option<Options>, Box<dyn std::error::Error>> {
                         .ok_or("--data-dir requires a path")?,
                 )
             }
+            Some("--store-query") => {
+                store_query = Some(
+                    args.next()
+                        .filter(|value| !value.is_empty())
+                        .ok_or("--store-query requires a JSON argument")?
+                        .into_string()
+                        .map_err(|_| "--store-query requires UTF-8 JSON")?,
+                )
+            }
             _ => {
                 return Err(
                     format!("Unknown option: {}. Use --help.", arg.to_string_lossy()).into(),
@@ -87,7 +98,12 @@ pub fn options() -> Result<Option<Options>, Box<dyn std::error::Error>> {
         Some(path) => PathBuf::from(path),
         None => default_data(env::consts::OS, |name| env::var_os(name))?,
     };
-    Ok(Some(Options { port, data, open }))
+    Ok(Some(Options {
+        port,
+        data,
+        open,
+        store_query,
+    }))
 }
 
 pub fn prepare_data(data: &Path) -> Result<(), Box<dyn std::error::Error>> {

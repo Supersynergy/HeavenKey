@@ -4,7 +4,7 @@ PASS invalid bootstrap cannot claim ownership
 PASS browser owner passkey registration with operator bootstrap
 PASS pending competing enrollment cannot create another owner
 PASS consumed bootstrap cannot start another owner enrollment
-PASS bootstrap file remains operator-only
+PASS bootstrap storage remains operator-only
 PASS browser foreign holder registration
 PASS browser owner authentication
 PASS browser guest authentication
@@ -136,4 +136,4 @@ PASS ancestor tombstones and descendant denial survive restart
 PASS delegation workbench fits a mobile viewport
 PASS legacy single-passkey database migrates and authenticates with the same key
 PASS legacy credential migration is idempotent across a second restart
-{"total":138,"passed":138,"failed":0,"elapsed_seconds":26.4}
+{"total":138,"passed":138,"failed":0,"elapsed_seconds":14.3}

@@ -1,11 +1,14 @@
 # Changelog
 
-## Unreleased: Browserdemo
+## Unreleased
 
 - Teilen, Öffnen und Widerrufen eines Beispieldokuments ohne Anmeldung oder Installation.
 - Eigener Browser-Einstieg unter `/demo/` und direkt nutzbare statische Dateien; keine zusätzliche Laufzeitabhängigkeit.
 - Gespeicherter Demostand, Ablaufzeiten, Gastwechsel, Widerruf über mehrere Tabs und bestätigter Reset.
 - Simulierte Rechte sind sichtbar gekennzeichnet und getrennt von der echten WebAuthn-/Serverprüfung.
+- Encrypted local storage: `uac.sqlite` is a SQLCipher database keyed by `UAC_STORE_KEY` or a `store.key` file outside the data directory; plaintext databases migrate automatically on first start and a wrong key refuses to release any data.
+- The issuer signing key moved from `data/issuer.key` into the database meta table; conflicting custody fails closed.
+- New `--store-query '{"sql":..,"params":[..]}'` maintenance command for local operators, and `scripts/revocation_snapshot.py` exporting the delegation revocation set as a `uac-gate` snapshot (`{"version":1,"generated_at":…,"revoked":[…]}`) via `--store-query`.
 
 ## 0.6.0 preview
 
