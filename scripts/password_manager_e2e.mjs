@@ -27,6 +27,7 @@ async function start() {
   const deadline = Date.now() + 45000;
   while (true) {
     if (server.exitCode !== null) throw new Error(`Server exited: ${output}`);
+    if (Date.now() >= deadline) throw new Error(`Startup timeout: ${output}`);
     try { if (output.includes(origin + "/passwords/") && (await fetch(origin + "/health", { signal: AbortSignal.timeout(1000) })).ok) return; }
     catch (error) { if (Date.now() >= deadline) throw new Error(`Startup timeout: ${error.message}; ${output}`); }
     await new Promise(resolve => setTimeout(resolve, 100));

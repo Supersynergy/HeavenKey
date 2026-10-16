@@ -215,7 +215,14 @@ function renderDetail(entry?: Login) {
     const show = revealedId !== entry.id; cancelReveal();
     if (show) {
       revealedId = entry.id; recordActivity("reveal"); const run = generation, id = entry.id;
-      revealTimer = setTimeout(() => { if (unlocked(run) && revealedId === id) { cancelReveal(); renderDetail(vault?.entries.find(item => item.id === selectedId)); } }, getPrivacyPreferences().revealSeconds * 1000);
+      revealTimer = setTimeout(() => {
+        if (!unlocked(run) || revealedId !== id) return;
+        cancelReveal();
+        const output = byId("detail").querySelector<HTMLElement>(".secret-value");
+        const control = byId("detail").querySelector<HTMLButtonElement>("[data-testid=reveal-detail-password]");
+        if (output) output.textContent = vault?.entries.find(item => item.id === id)?.password ? "••••••••••••••••" : "—";
+        if (control) { control.textContent = "Anzeigen"; control.setAttribute("aria-pressed", "false"); control.setAttribute("aria-label", "Anzeigen: Passwort"); }
+      }, getPrivacyPreferences().revealSeconds * 1000);
     }
     renderDetail(entry); byId("detail").querySelector<HTMLButtonElement>("[data-testid=reveal-detail-password]")?.focus();
   }); reveal.disabled = busy || discreet; reveal.setAttribute("aria-pressed", String(revealedId === entry.id));

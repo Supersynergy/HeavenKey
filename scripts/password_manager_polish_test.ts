@@ -64,7 +64,9 @@ export async function polishChecks(page: Page, master: string, check: Check) {
   await page.locator('[data-testid="reveal-detail-password"]').click();
   assert((await page.locator("#detail").textContent())!.includes(secret));
   await page.clock.fastForward(9999); assert((await page.locator("#detail").textContent())!.includes(secret));
+  await page.locator('[data-testid="copy-password"]').focus();
   await page.clock.fastForward(2); assert(!(await page.locator("#detail").textContent())!.includes(secret));
+  assert(await page.locator('[data-testid="copy-password"]').evaluate(el => el === document.activeElement), "remasking preserves keyboard focus");
   check("polish: selected 10-second reveal remasks at its deadline under a controlled browser clock");
   await page.locator('[data-testid="reveal-detail-password"]').click();
   await page.locator('[data-testid="select-entry"]').click();
