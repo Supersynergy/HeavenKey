@@ -1,0 +1,47 @@
+{
+  "artifact": "apps/gate (uac-gate)",
+  "workstream": "Externe Integrationen — Autorisierung am tatsächlichen Ausführungspunkt",
+  "base_commit": "b59c5b52791dcc19724b96309d1e590fdd24cdbc",
+  "date_utc": "2026-10-12",
+  "scope": "Offline-Prüfung von heavenkey-delegation-v1-Ketten gegen uac-verifier; keine laufende uac-api nötig",
+  "checks": {
+    "cargo fmt --check (workspace)": "passed",
+    "cargo clippy --locked --offline --all-targets -- -D warnings (workspace)": "passed",
+    "cargo test --locked --offline (workspace)": "passed — uac-gate 15, uac-api 19, uac-verifier 29, keystore/recovery/tenancy/ucan-bridge je 1",
+    "cargo build --locked --offline (workspace)": "passed"
+  },
+  "environment_notes": [
+    "pkg-config fehlt in dieser VM; openssl-sys wurde über OPENSSL_DIR/OPENSSL_LIB_DIR/OPENSSL_INCLUDE_DIR/OPENSSL_NO_PKG_CONFIG gegen libssl-dev gebaut",
+    "cargo deny und cargo audit sind in dieser Umgebung nicht installiert; der Diff enthält keine neuen externen Pakete — alle deklarierten Abhängigkeiten waren bereits in Cargo.lock (uac-api/uac-verifier) vertreten, Lockfile-Änderung ist rein additiv",
+    "bun wurde lokal installiert, um das apps/api build.rs-Artefakt apps/web/dist/main.js zu erzeugen (bun run build)"
+  ],
+  "unit_tests": [
+    "valid_chain_is_authorized",
+    "expired_chain_is_denied",
+    "directly_revoked_leaf_is_denied",
+    "revoked_ancestor_denies_descendants",
+    "wrong_holder_is_denied",
+    "tampered_signature_is_denied",
+    "chain_deeper_than_five_links_is_denied",
+    "budget_violation_is_denied",
+    "empty_chain_is_denied",
+    "non_read_action_is_denied",
+    "unreadable_snapshot_denies_closed",
+    "invalid_snapshot_content_denies_closed",
+    "malformed_request_body_is_rejected",
+    "issuer_key_accepts_hex_and_raw_32_bytes",
+    "http_gate_grants_and_denies (echter HTTP-Request gegen laufenden Listener)"
+  ],
+  "fixtures": "docs/vectors/delegation-v1.json (root/child/grandchild, depth_1..depth_6, same_budget) — synthetische Vektoren, Auswertungszeitpunkt now=1700000100 per --now-Fixierung",
+  "live_demo": {
+    "command": "target/debug/uac-gate --listen 127.0.0.1:18242 --resource urn:uac:lab:document --resource-file resource.txt --issuer-key issuer.key --revocations revocations.json --now 1700000100",
+    "results": [
+      {"request": "GET /health", "status": 200, "body": "{\"max_chain\":5,\"profile\":\"heavenkey-delegation-v1\",\"status\":\"ok\"}"},
+      {"request": "POST /access (gültige Kette root/child/grandchild, holder=grandchild.audience, action=Read)", "status": 200, "body": "Rohbytes der geschützten Datei (application/octet-stream)"},
+      {"request": "POST /access (gleiche Kette, root-ID danach im Snapshot widerrufen)", "status": 403, "body": "{\"allowed\":false,\"reason\":\"delegation_denied\"} — Snapshot wird pro Request neu gelesen, kein Neustart nötig; Serverlog: Chain(Revoked)"},
+      {"request": "POST /access (ungültiger JSON-Body)", "status": 400, "body": "{\"allowed\":false,\"reason\":\"invalid_request\"}"}
+    ]
+  },
+  "hardware": "keine Hardware-Prüfung — physische Passkey-/Hardware-Tests bleiben deferred",
+  "secrets": "keine echten Issuer-Keys, Tokens oder Credentials verwendet; alle Fixtures synthetisch"
+}
