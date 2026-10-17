@@ -21,7 +21,7 @@ for (const browser of ['chromium','firefox']) {
     commands: { _execute_action: { suggested_key: { default: 'Ctrl+Shift+Y', mac: 'Command+Shift+Y' }, description: 'HeavenKey öffnen' } },
     content_security_policy: { extension_pages: "default-src 'self'; script-src 'self'; object-src 'none'; connect-src http://localhost:*; img-src 'self' data:; style-src 'self'; base-uri 'none'; form-action 'none'" },
     background: browser === 'chromium' ? { service_worker: 'background.js' } : { scripts: ['background.js'] },
-    ...(browser === 'firefox' ? { browser_specific_settings: { gecko: { id: 'heavenkey@supersynergy.local', strict_min_version: '128.0', data_collection_permissions: { required: ['none'] } } } } : { minimum_chrome_version: '120' }),
+    ...(browser === 'firefox' ? { browser_specific_settings: { gecko: { id: 'heavenkey@supersynergy.local', strict_min_version: '140.0', data_collection_permissions: { required: ['none'] } } } } : { minimum_chrome_version: '120' }),
   };
   await writeFile(join(out,'manifest.json'), JSON.stringify(manifest,null,2)+'\n');
   console.log(`${browser} ${version}: ${out}`);

@@ -26,6 +26,7 @@ for (const browser of ['chromium','firefox']) {
   for(const absent of ['host_permissions','content_scripts','externally_connectable','web_accessible_resources']) assert.equal(manifest[absent],undefined);
   assert.equal(manifest.action.default_popup,'popup.html');
   assert.equal(manifest.commands._execute_action.suggested_key.default,'Ctrl+Shift+Y');
+  if (browser === 'firefox') assert.equal(manifest.browser_specific_settings.gecko.strict_min_version,'140.0');
   assert(manifest.content_security_policy.extension_pages.includes("script-src 'self'"));
   for(const name of ['smart-popup.js','content.js','background.js','LICENSE','THIRD-PARTY-NOTICE.md']) assert(readFileSync(new URL(name,base)).length>0);
 }

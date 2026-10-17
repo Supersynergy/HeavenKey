@@ -41,6 +41,10 @@ async function stop() {
 }
 let page;
 const check = (name, condition = true) => { assert(condition, name); cases.push({ name, pass: true }); console.log(`PASS ${name}`); };
+function observePage(current) {
+  current.on("pageerror", error => errors.push(error.message));
+  current.on("request", request => { if (request.method() === "POST") posts.push(request.postData() || ""); assert.equal(new URL(request.url()).origin, origin); });
+}
 async function ready() { await page.locator("#unlock").waitFor({ state: "visible" }); await page.waitForFunction(() => !document.querySelector("#unlock").disabled); }
 async function status(text) { await page.waitForFunction(text => document.querySelector("#status").textContent.includes(text), text); }
 async function unlock(password, create = false) { await ready(); await page.locator("#master").fill(password); if (create) await page.locator("#master-confirm").fill(password); await page.locator("#unlock").click(); }
@@ -59,8 +63,7 @@ try {
   const context = await browser.newContext({ acceptDownloads: true, viewport: { width: 1440, height: 1000 } });
   await context.route("**/*", route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort("internetdisconnected"));
   page = await context.newPage();
-  page.on("pageerror", error => errors.push(error.message));
-  page.on("request", request => { if (request.method() === "POST") posts.push(request.postData() || ""); assert.equal(new URL(request.url()).origin, origin); });
+  observePage(page);
   await page.goto(origin); await ready();
   check("portable startup redirects to local vault without OS keys", page.url() === origin + "/passwords/");
   await unlock(master, true); await count(0); check("create vault without account or passkey");
@@ -77,7 +80,24 @@ try {
   await designChecks(page, master, check);
   if (process.env.HEAVENKEY_PM_POLISH === "1") {
     const { polishChecks } = await import("./password_manager_polish_test.ts");
-    await polishChecks(page, master, check);
+    const polishContext = await browser.newContext({acceptDownloads:true,viewport:{width:1440,height:1000}});
+    await polishContext.route("**/*", route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort("internetdisconnected"));
+    await polishContext.grantPermissions(["clipboard-read","clipboard-write"],{origin});
+    const polishPage = await polishContext.newPage();
+    observePage(polishPage);
+    try {
+      await polishPage.goto(origin);
+      await polishPage.locator("#unlock:not([disabled])").waitFor();
+      await polishPage.locator("#master").fill(master); await polishPage.locator("#unlock").click();
+      await polishPage.locator("#workspace:not([hidden])[aria-busy=false]").waitFor();
+      await polishChecks(polishPage, master, check);
+    } finally { await polishContext.close(); }
+    await page.bringToFront();
+    await page.reload(); await unlock(master); await count(1);
+    const fixtureState = await page.evaluate(() => ({visibilityOverride:Object.hasOwn(document,"visibilityState"),dateNow:Date.now()}));
+    console.log("POLISH_HANDOFF " + JSON.stringify({...fixtureState,wallNow:Date.now()}));
+    assert.equal(fixtureState.visibilityOverride, false, "polish must return a native browser visibility getter");
+    assert(Math.abs(fixtureState.dateNow-Date.now()) < 5000, "polish must not leave virtual time in the baseline context");
   }
   if (process.env.HEAVENKEY_PM_WORKFLOWS === "1") {
     const { workflowChecks } = await import("./password_manager_workflows_test.ts");
@@ -181,6 +201,12 @@ try {
   const report = { pass: true, binary, binary_sha256: createHash("sha256").update(await readFile(binary)).digest("hex"), cases, errors, online_service_used: false, synthetic_only: true };
   await writeFile(process.env.HEAVENKEY_PM_REPORT || "docs/evidence/password-manager/browser.json", JSON.stringify(report, null, 2) + "\n"); console.log(JSON.stringify(report));
 } catch (error) {
+  const state = await page?.evaluate(() => ({status:document.querySelector("#status")?.textContent,
+    gateHidden:document.querySelector("#gate")?.hidden,workspaceHidden:document.querySelector("#workspace")?.hidden,
+    busy:document.querySelector("#workspace")?.getAttribute("aria-busy"),visibility:document.visibilityState,
+    visibilityOverride:Object.hasOwn(document,"visibilityState"),dateNow:Date.now(),performanceNow:performance.now(),
+    preferences:localStorage.getItem("heavenkey-privacy")})).catch(() => null);
+  console.error("FAILURE_STATE " + JSON.stringify(state));
   await page?.screenshot({ path: "docs/evidence/password-manager/failure.png", fullPage: true }).catch(() => {});
   throw error;
 } finally { await browser?.close(); await stop(); await rm(temporary, { recursive: true, force: true }); }
