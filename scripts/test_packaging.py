@@ -71,6 +71,7 @@ class PackagingTests(unittest.TestCase):
             release.verify_architecture(binary, "x86_64-pc-windows-gnu")
 
     def test_extensions_package_bundles_with_only_explicit_access(self):
+        self.create_build_sources()
         for name in ("chromium", "firefox"):
             source = self.root / f"extension-source-{name}"
             source.mkdir()
@@ -81,7 +82,10 @@ class PackagingTests(unittest.TestCase):
                 "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
                 "optional_host_permissions": ["http://localhost/*"],
             }))
-        with patch.object(release, "OUT", self.root):
+        with (
+            patch.object(release, "OUT", self.root),
+            patch.object(build_portable, "ROOT", self.root),
+        ):
             files = release.extensions()
         self.assertEqual(len(files), 2)
         for name in ("chromium", "firefox"):
