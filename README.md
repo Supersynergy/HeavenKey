@@ -10,6 +10,8 @@ Passwörter und Formularprofile lokal verwalten. HeavenKey verschlüsselt den Tr
 
 [Downloads](https://github.com/Supersynergy/HeavenKey/releases/latest) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
 
+[Bebilderte Installation für Release 0.12.0](docs/INSTALLATION.md): macOS, Windows, Chrome und Firefox, Sicherung, Browserkopplung und bestätigtes Autofill. Die Versionsbindung bleibt auch bei neueren Releases bestehen.
+
 ![HeavenKey mit Navigation, Eintragsliste und Login-Details im hellen Design](docs/screenshots/vault-desktop.png)
 
 *Die Bilder zeigen die echte lokale App mit ausschließlich erfundenen Beispieldaten. Passwörter bleiben verdeckt.*
@@ -113,7 +115,7 @@ Im selben Produkt ist das getrennte Zugangslabor enthalten: WebAuthn-Anmeldung, 
 
 Die erste Zeile startet den Passwortmanager, die zweite das Zugangslabor. Unter Windows heißt das Programm `HeavenKey.exe`.
 
-[Passkey-Anleitung](docs/PASSKEY-GUIDE.md) · [Zugänge und Recovery](docs/USAGE.md) · [Agenten](docs/AGENT-GUIDE.md) · [Integration](docs/INTEGRATION.md)
+[Labor einrichten](docs/LAB-INSTALLATION.md) · [Passkey-Anleitung](docs/PASSKEY-GUIDE.md) · [Zugänge und Recovery](docs/USAGE.md) · [Agenten](docs/AGENT-GUIDE.md) · [Integration](docs/INTEGRATION.md)
 
 ## Entwicklung
 
@@ -138,3 +140,4 @@ Der [Startassistent](scripts/first_run.py) baut den Passwortmanager mit `python3
 HeavenKey ist proprietäre Software. Die [HeavenKey Proprietary License 1.0](LICENSE) erlaubt berechtigten Empfängern offizieller Binärpakete persönliche und interne Nutzung. Weitervertrieb, öffentliche Forks und abgeleitete Produkte benötigen eine gesonderte Erlaubnis. Drittanbieter-Lizenzen und zwingende gesetzliche Rechte bleiben erhalten.
 
 [Einordnung der Lizenz](docs/LICENSING.md) · [Drittanbieterhinweise](NOTICE.md) · [Beiträge](CONTRIBUTING.md)
+

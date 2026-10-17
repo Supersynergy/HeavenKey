@@ -24,4 +24,11 @@ Diese Screenshots wurden am 17. Oktober 2026 aus der laufenden HeavenKey-App mit
 
 Die Bilddateien sind unbearbeitete Browseraufnahmen. Sie belegen die abgebildete Ansicht, aber keine Abnahme echter Passkeys, nativer Windows- oder Mobilgeräte. Ausgeführte Funktionsprüfungen sind getrennt in der Release-Abnahme dokumentiert. Die früheren generierten Markenbilder bleiben unter `docs/assets/` mit ihrer eigenen Herkunftsbeschreibung erhalten.
 
+## Festgelegte Bilder der Installationsanleitung 0.12.0
+
+Die [Installationsanleitung](../INSTALLATION.md) verwendet `onboarding.png`, `onboarding-guide.png` und `timed-share.png` unverändert aus Tag `v0.12.0`. Diese Dateien waren beim Dokumentationsabgleich auch auf `main` bytegleich. `installation-v012-passkey-settings.png` ist eine unveränderte Kopie von `passkey-settings.png` aus diesem Tag, bevor die allgemeine Bilddatei auf `main` für 0.13.0 erneuert wurde. Sie zeigt die Browserkopplung und einen mit virtuellem WebAuthn-Gerät eingerichteten PRF-Passkey.
+
+Diese Bilder wurden für die Dokumentationsänderung **nicht neu aufgenommen**. Dateihashes, Git-Blob-IDs und Quellcommit stehen im [Prüfprotokoll](../INSTALLATION-VERIFICATION.md). Die ergänzenden [SVGs](../images/README.md) sind ausdrücklich schematische Abläufe. Es gibt hier keine neuen Screenshots von Gatekeeper, SmartScreen, Chrome-/Firefox-Installation, dem nativen Berechtigungsdialog oder dem Autofill-Popup.
+
 Der Freigabedialog startet ohne ausgewähltes Konto. Die Zustimmung bleibt zunächst offen.
+

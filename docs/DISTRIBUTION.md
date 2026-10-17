@@ -1,5 +1,7 @@
 # HeavenKey-Pakete und Browser-Erweiterungen
 
+Die [bebilderte Schritt-für-Schritt-Anleitung für Release 0.12.0](INSTALLATION.md) erklärt Downloadberechtigung, SHA-256, macOS/Windows, Sicherung und bestätigtes Browser-Autofill. Sie bleibt auf diesen Release festgelegt; diese Paketübersicht folgt dem aktuellen Quellstand. Das [Zugangslabor wird separat eingerichtet](LAB-INSTALLATION.md).
+
 Der [lokale Agenten-Broker](AGENT-BROKER.md) benötigt zusätzlich einen installierten Chromium-Browser. `--broker-agent` ist im Programm enthalten; `broker.rs` ist ein optionales Cargo-`-Zscript`-Hilfsskript für die Entwicklung.
 
 Version 0.13.0 startet über den enthaltenen Starter den lokalen Passwortmanager. Sie enthält außerdem die zusammengeführten Zugangslabor-Funktionen aus 0.7. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Verbindliche Build- und Laufzeitnachweise stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md).
@@ -34,7 +36,7 @@ Das getrennte Zugangslabor startest du mit dem Programm ohne `--password-manager
 
 Für das Zugangslabor bewahrst du den gesamten Datenordner und beide Schutzschlüssel auf: den Datenbankschlüssel (`UAC_STORE_KEY` oder `UAC_STORE_KEY_FILE`, sonst private Konfigurationsdatei) sowie den Schutzschlüssel für `issuer.enc` (Betriebssystem-Keystore oder `HEAVENKEY_KEY_FILE`). Ohne sie sind die Labordaten beziehungsweise der Signierschlüssel nicht verwendbar. Der Passwortmanager verwendet ausschließlich sein Masterpasswort. Ein Update des entpackten Programms behält den Datenordner. Mehrere Instanzen mit demselben Port können nicht gleichzeitig starten. Die Meldung „address already in use“ verlangt, die laufende Instanz zu beenden oder einen anderen Port zu wählen. Bestehende Entwicklerdaten unter `data/` verwendest du ausdrücklich mit `--data-dir data`; sie werden nicht automatisch verschoben.
 
-Optional: `HeavenKey.exe --port 18245 --data-dir "C:\Users\Name\HeavenKey-Test"` beziehungsweise `./heavenkey --port 18245 --data-dir /eigener/pfad`. Der Standardordner liegt im Benutzerprofil; verwende keinen gemeinsam beschreibbaren Ordner. Unix-Ordner erhalten Modus 0700, Schlüsseldateien 0600. Windows nutzt die geerbten Zugriffsrechte des Benutzerprofils. Der Port in der Browser-Erweiterung muss mit dem Server übereinstimmen.
+Optional für den Passwortmanager: `HeavenKey.exe --password-manager --port 18245 --data-dir "C:\Users\Name\HeavenKey-Test"` beziehungsweise `./heavenkey --password-manager --port 18245 --data-dir /eigener/pfad`. Der Standardordner liegt im Benutzerprofil; verwende keinen gemeinsam beschreibbaren Ordner. Unix-Ordner erhalten Modus 0700, Schlüsseldateien 0600. Windows nutzt die geerbten Zugriffsrechte des Benutzerprofils. Der Port in der Browser-Erweiterung muss mit dem Server übereinstimmen.
 
 ## Browser-Erweiterung
 
@@ -57,3 +59,4 @@ Quellen: [Rust OpenSSL: vendored](https://docs.rs/openssl/0.10.81/openssl/#vendo
 ## Nutzungsrechte
 
 Offizielle Binärpakete dürfen nach der beiliegenden `LICENSE` persönlich und intern genutzt werden. Weitervertrieb und abgeleitete Produkte brauchen eine gesonderte Erlaubnis. Drittanbieter-Lizenzen und zwingende gesetzliche Rechte bleiben erhalten. Details stehen in `LICENSING.md`.
+

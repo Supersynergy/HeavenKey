@@ -1,4 +1,6 @@
-# Passkeys und Freigaben benutzen
+# Zugangslabor: Passkeys und Freigaben benutzen
+
+Diese Anleitung beschreibt das **getrennte Zugangslabor** und seinen optionalen PRF-Notiztresor. [Labor einrichten](LAB-INSTALLATION.md). Für den lokalen Passwortmanager gelten die [0.12.0-Installation](INSTALLATION.md) und [Passkey-Entsperren und Feldfreigaben](ACCESS-AND-SHARING.md). Die folgenden SVGs sind schematische Illustrationen des Laborstands 0.7, keine Screenshots oder Hardware-Nachweise.
 
 ## Anmelden und Ersatzschlüssel hinterlegen
 
@@ -50,3 +52,4 @@ Ein zufälliger 256-Bit-Tresorschlüssel verschlüsselt die Notiz mit AES-256-GC
 **Nach Geräteverlust:** Zuerst das Konto per Einmalcode wiederherstellen. Danach unter **„Tresor nach Geräteverlust öffnen“** den separaten Tresorschlüssel aus der Sicherung eingeben. Den entsperrten Tresor anschließend dem neuen Passkey zuordnen.
 
 Die API schützt vor überholten parallelen Schreibvorgängen durch eine Versionsprüfung. Bei Konflikt den aktuellen Stand neu laden und Änderungen erneut anwenden. Ein Browser mit kompromittiertem Code oder ein Gerät mit Schadsoftware kann auf bereits entschlüsselte Inhalte zugreifen. Ein bereits kopierter alter Schlüsselumschlag oder Klartext wird durch Widerruf nicht rückwirkend unlesbar. Der Pilot bietet keine hardwareseitige unabhängige Anzeige von Transaktionsdetails.
+

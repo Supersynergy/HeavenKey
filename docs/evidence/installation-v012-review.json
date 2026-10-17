@@ -1,0 +1,636 @@
+{
+  "scope": "Static documentation review; not release/runtime/hardware acceptance",
+  "date": "2026-10-17",
+  "pass": true,
+  "release": {
+    "tag": "v0.12.0",
+    "source_commit": "dfcd8b025dc05cb692c8ce843701a552a614d40a",
+    "id": 415818054,
+    "published_at": "2026-10-17T13:27:17Z"
+  },
+  "main_reviewed": "7773b0e0d6e3d57047f9dd42ea795dd264dcf0ea",
+  "checks": {
+    "relative_links_and_anchors": 115,
+    "archive_filenames": 7,
+    "verified_release_pngs": 4,
+    "well_formed_and_deterministic_svgs": 9,
+    "python_compile": true,
+    "git_diff_check": true,
+    "source_starter_help_exit": 0,
+    "source_starter_check_only_exit": 1,
+    "source_starter_check_only_output": "Install these tools first: cargo, bun\nRust: https://rustup.rs/\nBun 1.4.2: https://bun.sh/docs/installation"
+  },
+  "screenshots": [
+    {
+      "path": "docs/screenshots/onboarding.png",
+      "source_path": "docs/screenshots/onboarding.png",
+      "git_blob": "f0e0e2583bad3af601e22e42bebc7b9d028649b2",
+      "sha256": "13be667371cfc61b32d6834784b02d3ae7bab8e218233faa02499a91434f2799",
+      "matches_main_original": true
+    },
+    {
+      "path": "docs/screenshots/onboarding-guide.png",
+      "source_path": "docs/screenshots/onboarding-guide.png",
+      "git_blob": "fb3db64d6480716d1938f58130f05ca86bd21638",
+      "sha256": "cba7aa641136b355c11d79be5285819bb34bb1fa96efdf7f8e15066a8308bdde",
+      "matches_main_original": true
+    },
+    {
+      "path": "docs/screenshots/installation-v012-passkey-settings.png",
+      "source_path": "docs/screenshots/passkey-settings.png",
+      "git_blob": "b5ddcfcf8595acaf1b0f54349a5b7febbc26a0ab",
+      "sha256": "b5758a2d1889e26d83a147035ba063ff5b97560a14e9b8a8bae710d22c826c77",
+      "matches_main_original": false
+    },
+    {
+      "path": "docs/screenshots/timed-share.png",
+      "source_path": "docs/screenshots/timed-share.png",
+      "git_blob": "df4020de8bdf4ce6ee9e81de09e2f1c9a06a0ae2",
+      "sha256": "dcbfc5d4959d9188d4d5c8de388e723796ce92bba7ba66f7ec36f54681eeb750",
+      "matches_main_original": true
+    }
+  ],
+  "release_asset_metadata": [
+    {
+      "name": "ACCEPTANCE.json",
+      "digest": "sha256:47d8f1e9383cb7d556394b3783787ec3bb9f8c48e4a64c6d3006d30236a49dfd",
+      "size": 75615,
+      "browser_download_url": "https://github.com/Supersynergy/HeavenKey/releases/download/v0.12.0/ACCEPTANCE.json"
+    },
+    {
+      "name": "HeavenKey-0.12.0-extension-chromium.zip",
+      "digest": "sha256:adba5e01de33df351043fe6bb256f6b65d1e28ee278c00674fb5e5ab5059638e",
+      "size": 42956,
+      "browser_download_url": "https://github.com/Supersynergy/HeavenKey/releases/download/v0.12.0/HeavenKey-0.12.0-extension-chromium.zip"
+    },
+    {
+      "name": "HeavenKey-0.12.0-extension-firefox.zip",
+      "digest": "sha256:5eea8db75ef950048a3d54e199b43202f17794941ca2bca89906674a8af23945",
+      "size": 43031,
+      "browser_download_url": "https://github.com/Supersynergy/HeavenKey/releases/download/v0.12.0/HeavenKey-0.12.0-extension-firefox.zip"
+    },
+    {
+      "name": "HeavenKey-0.12.0-linux-arm64.tar.gz",
+      "digest": "sha256:3053c3f675e0c6bc66352499ffa96ec7454b9377c2fa9720b307b54b745e10e4",
+      "size": 9296661,
+      "browser_download_url": "https://github.com/Supersynergy/HeavenKey/releases/download/v0.12.0/HeavenKey-0.12.0-linux-arm64.tar.gz"
+    },
+    {
+      "name": "HeavenKey-0.12.0-linux-x64.tar.gz",
+      "digest": "sha256:8d707b1c0524c45f42112279bd557bb308a0fd0a72912c5b5c41b66de0bbd81a",
+      "size": 9262386,
+      "browser_download_url": "https://github.com/Supersynergy/HeavenKey/releases/download/v0.12.0/HeavenKey-0.12.0-linux-x64.tar.gz"
+    },
+    {
+      "name": "HeavenKey-0.12.0-macos-arm64.zip",
+      "digest": "sha256:5ffd7ebf07b4925c5f8308947fc5dab46a6ea2013f2d32f1e842e23826c6ed78",
+      "size": 9463524,
+      "browser_download_url": "https://github.com/Supersynergy/HeavenKey/releases/download/v0.12.0/HeavenKey-0.12.0-macos-arm64.zip"
+    },
+    {
+      "name": "HeavenKey-0.12.0-macos-x64.zip",
+      "digest": "sha256:3a7badb9f31132784c41678feb9dc7385470afcaf31d8620a8f1275febcaf0ac",
+      "size": 9213545,
+      "browser_download_url": "https://github.com/Supersynergy/HeavenKey/releases/download/v0.12.0/HeavenKey-0.12.0-macos-x64.zip"
+    },
+    {
+      "name": "HeavenKey-0.12.0-windows-x64.zip",
+      "digest": "sha256:513a2ba27cfd25bc5dfd0d1927e8249025ad6e829ca2acd337246b2b59f33216",
+      "size": 10176709,
+      "browser_download_url": "https://github.com/Supersynergy/HeavenKey/releases/download/v0.12.0/HeavenKey-0.12.0-windows-x64.zip"
+    },
+    {
+      "name": "SHA256SUMS",
+      "digest": "sha256:27f9070648e1a9e7eb28b034ea05242bb72fcc214db14a59fe127640d81c0c4a",
+      "size": 790,
+      "browser_download_url": "https://github.com/Supersynergy/HeavenKey/releases/download/v0.12.0/SHA256SUMS"
+    }
+  ],
+  "file_sha256": {
+    "README.md": "2107ea594518c808d1d0101702d45dc89b96cdbdfebf3e0e841513f5b72cc62c",
+    "docs/INSTALLATION.md": "df51a9213786027fb2d7ecc7f6e9908e3f2ce8a5848aa232fbb85464d05d7c5f",
+    "docs/LAB-INSTALLATION.md": "507beecd31d2cfa8bf58aab9b8e71322a62ec6ed758137db4af38f17884698c8",
+    "docs/INSTALLATION-VERIFICATION.md": "7056d5fa72c99d99befa6f1b596e69e8ecbecc8ff1f9e23acf26f0a8049de638",
+    "docs/DISTRIBUTION.md": "0aef48845381f0ec26330ab1b000c800ee9b6da6b4b07c85f4a8c84ab19e6cc6",
+    "docs/USAGE.md": "5f5b9af056bcfed1213623cb7fbfe8ab79ee823f80fbb67a5c36e9bcd9d3572e",
+    "docs/PASSKEY-GUIDE.md": "d3f8a367672fa8ea11b6df5b58455948d22cd4aba4c21f0b94688e501748e136",
+    "docs/screenshots/README.md": "29601105f4956b55daf35375f90dd959a9236a39d252110385105e220c0155e7",
+    "docs/images/README.md": "832471ab5c0dba06a6a58181fdd888c9c63d74f243e51df996ac5d3a2db30e34",
+    "scripts/illustrate_guides.py": "cda2d6427acbce36000798b010121818893afeee17a0cacb5b2a46b8a8f37336",
+    "docs/images/01-installation.svg": "7ede8c9cfaa8065458130344c4c28118ee6854b76ff6a3402c2fc62111ed263b",
+    "docs/images/02-erster-passkey.svg": "13f63b8975a0811e932637b353491912785a5ca0ae8845e0a028b0087a710afb",
+    "docs/images/03-chrome.svg": "d814200ea8bb3b9e98a11b787723dc4b4f8008adf922db5039ce36e85c9d4a95",
+    "docs/images/04-firefox.svg": "1b5554508adb688a96e72640227380e755638857a9c60b2c39c8204e131a2bbf",
+    "docs/images/05-zugaenge.svg": "dd3e8bde5144151b3136ba0b90d4a9599f37dd2a53b26becd4783214c4d25395",
+    "docs/images/06-recovery.svg": "6d9216a36bf9f0c163374cb123ca086ad0e5e5c759a3ca9b4500daf8c7fe3531",
+    "docs/images/07-agenten.svg": "6ceec7533949ab45d24589f6f84bcc689e8ec814821565b68ae872f6ea759137",
+    "docs/images/08-browserkopplung.svg": "1d8616416814e42f7712b9164b43708aba1e93861aa368496187ff664afb1528",
+    "docs/images/09-autofill.svg": "e0806427f10497457d8939fe34e7a7813cede3d6204d723963155dfb7ebbf4aa"
+  },
+  "relative_links": [
+    {
+      "source": "README.md",
+      "target": "docs/assets/heavenkey-hero.png"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/DISTRIBUTION.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/PASSWORD-MANAGER.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/PASSWORD-MANAGER-VERIFICATION.md"
+    },
+    {
+      "source": "README.md",
+      "target": "LICENSE"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/INSTALLATION.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/screenshots/vault-desktop.png"
+    },
+    {
+      "source": "README.md",
+      "target": "#passkey-zugangslabor"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/DISTRIBUTION.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/AGENT-BROKER.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/ACCESS-AND-SHARING.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/DISTRIBUTION.md#browser-erweiterung"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/screenshots/broker-approval-dark.png"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/screenshots/vault-dark.png"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/screenshots/import-preview.png"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/screenshots/onboarding.png"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/screenshots/timed-share.png"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/screenshots/quick-access.png"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/screenshots/form-profile.png"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/screenshots/vault-locked.png"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/screenshots/vault-locked-dark.png"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/screenshots/README.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/PASSWORD-MANAGER.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/PASSWORD-MANAGER-VERIFICATION.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/PASSWORD-MANAGER-GAPS.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/LAB-INSTALLATION.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/PASSKEY-GUIDE.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/USAGE.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/AGENT-GUIDE.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/INTEGRATION.md"
+    },
+    {
+      "source": "README.md",
+      "target": "scripts/first_run.py"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/DEVELOPMENT.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/SPEC.md"
+    },
+    {
+      "source": "README.md",
+      "target": "CHANGELOG.md"
+    },
+    {
+      "source": "README.md",
+      "target": "SECURITY.md"
+    },
+    {
+      "source": "README.md",
+      "target": "LICENSE"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/LICENSING.md"
+    },
+    {
+      "source": "README.md",
+      "target": "NOTICE.md"
+    },
+    {
+      "source": "README.md",
+      "target": "CONTRIBUTING.md"
+    },
+    {
+      "source": "README.md",
+      "target": "docs/screenshots/vault-mobile.png"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "DISTRIBUTION.md"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "LAB-INSTALLATION.md"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "INSTALLATION-VERIFICATION.md"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#1--download-und-sha-256-prüfen"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#2--macos-starten"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#3--windows-starten"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#4--ersten-tresor-anlegen"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#5--verschlüsselte-sicherung-erstellen-und-prüfen"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#6--chrome-und-edge-installieren"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#7--firefox-temporär-installieren"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#8--browser-koppeln-und-berechtigung-bestätigen"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#9--autofill-bewusst-ausführen"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#10--optional-mit-passkey-entsperren"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#11--befristete-freigaben-und-andere-geräte"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "DISTRIBUTION.md"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "images/01-installation.svg"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "screenshots/onboarding.png"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "LAB-INSTALLATION.md"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "screenshots/onboarding-guide.png"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "PASSWORD-MANAGER.md"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "images/03-chrome.svg"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#8--browser-koppeln-und-berechtigung-bestätigen"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "images/04-firefox.svg"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "#8--browser-koppeln-und-berechtigung-bestätigen"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "screenshots/installation-v012-passkey-settings.png"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "images/08-browserkopplung.svg"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "images/09-autofill.svg"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "ACCESS-AND-SHARING.md"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "screenshots/timed-share.png"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "ACCESS-AND-SHARING.md#lokaler-betrieb-und-andere-geräte"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "LAB-INSTALLATION.md"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "DEVELOPMENT.md"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "INSTALLATION-VERIFICATION.md"
+    },
+    {
+      "source": "docs/INSTALLATION.md",
+      "target": "LAB-INSTALLATION.md"
+    },
+    {
+      "source": "docs/LAB-INSTALLATION.md",
+      "target": "INSTALLATION.md"
+    },
+    {
+      "source": "docs/LAB-INSTALLATION.md",
+      "target": "USAGE.md"
+    },
+    {
+      "source": "docs/LAB-INSTALLATION.md",
+      "target": "PASSKEY-GUIDE.md"
+    },
+    {
+      "source": "docs/LAB-INSTALLATION.md",
+      "target": "AGENT-GUIDE.md"
+    },
+    {
+      "source": "docs/LAB-INSTALLATION.md",
+      "target": "PASSKEY-PLATFORM.md"
+    },
+    {
+      "source": "docs/LAB-INSTALLATION.md",
+      "target": "INSTALLATION.md#1--download-und-sha-256-prüfen"
+    },
+    {
+      "source": "docs/LAB-INSTALLATION.md",
+      "target": "images/02-erster-passkey.svg"
+    },
+    {
+      "source": "docs/LAB-INSTALLATION.md",
+      "target": "INSTALLATION.md#6--chrome-und-edge-installieren"
+    },
+    {
+      "source": "docs/LAB-INSTALLATION.md",
+      "target": "HTTPS-PILOT.md"
+    },
+    {
+      "source": "docs/LAB-INSTALLATION.md",
+      "target": "V07-VERIFICATION.md"
+    },
+    {
+      "source": "docs/LAB-INSTALLATION.md",
+      "target": "INSTALLATION-VERIFICATION.md"
+    },
+    {
+      "source": "docs/INSTALLATION-VERIFICATION.md",
+      "target": "INSTALLATION.md"
+    },
+    {
+      "source": "docs/INSTALLATION-VERIFICATION.md",
+      "target": "images/README.md"
+    },
+    {
+      "source": "docs/INSTALLATION-VERIFICATION.md",
+      "target": "evidence/installation-v012-review.json"
+    },
+    {
+      "source": "docs/DISTRIBUTION.md",
+      "target": "INSTALLATION.md"
+    },
+    {
+      "source": "docs/DISTRIBUTION.md",
+      "target": "LAB-INSTALLATION.md"
+    },
+    {
+      "source": "docs/DISTRIBUTION.md",
+      "target": "AGENT-BROKER.md"
+    },
+    {
+      "source": "docs/DISTRIBUTION.md",
+      "target": "PASSWORD-MANAGER.md"
+    },
+    {
+      "source": "docs/DISTRIBUTION.md",
+      "target": "PASSWORD-MANAGER-VERIFICATION.md"
+    },
+    {
+      "source": "docs/USAGE.md",
+      "target": "INSTALLATION.md"
+    },
+    {
+      "source": "docs/USAGE.md",
+      "target": "LAB-INSTALLATION.md"
+    },
+    {
+      "source": "docs/USAGE.md",
+      "target": "../README.md#entwicklung"
+    },
+    {
+      "source": "docs/USAGE.md",
+      "target": "DISTRIBUTION.md"
+    },
+    {
+      "source": "docs/USAGE.md",
+      "target": "PASSKEY-GUIDE.md#alle-passkeys-verloren"
+    },
+    {
+      "source": "docs/USAGE.md",
+      "target": "PASSKEY-GUIDE.md#optionalen-tresor-einrichten"
+    },
+    {
+      "source": "docs/USAGE.md",
+      "target": "SPEC.md"
+    },
+    {
+      "source": "docs/USAGE.md",
+      "target": "LAB-INSTALLATION.md"
+    },
+    {
+      "source": "docs/USAGE.md",
+      "target": "PASSKEY-GUIDE.md"
+    },
+    {
+      "source": "docs/USAGE.md",
+      "target": "AGENT-GUIDE.md"
+    },
+    {
+      "source": "docs/USAGE.md",
+      "target": "PASSKEY-PLATFORM.md"
+    },
+    {
+      "source": "docs/PASSKEY-GUIDE.md",
+      "target": "LAB-INSTALLATION.md"
+    },
+    {
+      "source": "docs/PASSKEY-GUIDE.md",
+      "target": "INSTALLATION.md"
+    },
+    {
+      "source": "docs/PASSKEY-GUIDE.md",
+      "target": "ACCESS-AND-SHARING.md"
+    },
+    {
+      "source": "docs/PASSKEY-GUIDE.md",
+      "target": "images/02-erster-passkey.svg"
+    },
+    {
+      "source": "docs/PASSKEY-GUIDE.md",
+      "target": "images/05-zugaenge.svg"
+    },
+    {
+      "source": "docs/PASSKEY-GUIDE.md",
+      "target": "images/06-recovery.svg"
+    },
+    {
+      "source": "docs/screenshots/README.md",
+      "target": "../INSTALLATION.md"
+    },
+    {
+      "source": "docs/screenshots/README.md",
+      "target": "../INSTALLATION-VERIFICATION.md"
+    },
+    {
+      "source": "docs/screenshots/README.md",
+      "target": "../images/README.md"
+    },
+    {
+      "source": "docs/images/README.md",
+      "target": "../INSTALLATION.md"
+    },
+    {
+      "source": "docs/images/README.md",
+      "target": "../screenshots/README.md"
+    }
+  ],
+  "external_links": [
+    "https://bun.sh/docs/installation",
+    "https://developer.chrome.com/docs/extensions/develop/concepts/activeTab",
+    "https://developer.chrome.com/docs/extensions/reference/api/permissions",
+    "https://developer.chrome.com/docs/extensions/reference/api/tabs",
+    "https://docs.rs/openssl/0.10.81/openssl/#vendored",
+    "https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/",
+    "https://extensionworkshop.com/documentation/publish/signing-and-distribution-overview/",
+    "https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/apps/api/src/desktop.rs",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/apps/extension/popup.html",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/apps/extension/smart-popup.ts",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/apps/web/passwords.html",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/apps/web/src/passwords-access.ts",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/apps/web/src/passwords-onboarding.ts",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/apps/web/src/passwords-sharing.ts",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/apps/web/src/passwords-workflows.ts",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/docs/ACCESS-AND-SHARING.md",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/docs/PASSWORD-MANAGER-VERIFICATION.md",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/docs/screenshots/README.md",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/scripts/build_extension.ts",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/scripts/first_run.py",
+    "https://github.com/Supersynergy/HeavenKey/blob/v0.12.0/scripts/package_release.py",
+    "https://github.com/Supersynergy/HeavenKey/releases/latest",
+    "https://github.com/Supersynergy/HeavenKey/releases/tag/v0.12.0",
+    "https://github.com/Supersynergy/HeavenKey/tree/7773b0e0d6e3d57047f9dd42ea795dd264dcf0ea",
+    "https://github.com/Supersynergy/HeavenKey/tree/dfcd8b025dc05cb692c8ce843701a552a614d40a",
+    "https://img.shields.io/badge/version-0.13.0-b38b3e",
+    "https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation",
+    "https://rustup.rs/",
+    "https://support.apple.com/en-us/102445",
+    "https://www.python.org/downloads/",
+    "https://www.winehq.org/"
+  ],
+  "deferred": [
+    "Release archive binary downloads and fresh SHA-256 verification",
+    "Native macOS Finder/Gatekeeper installation (Apple Silicon and Intel)",
+    "Native Windows Explorer/SmartScreen/Smart App Control installation",
+    "Chrome/Edge native optional localhost permission prompt and real autofill",
+    "Firefox temporary install, permissions, pairing, autofill and restart",
+    "Physical PRF passkeys, Touch ID and Windows Hello",
+    "Public HTTPS reverse proxy, second-device recipient and origin isolation",
+    "Rust/Bun build, just check and just e2e"
+  ]
+}
