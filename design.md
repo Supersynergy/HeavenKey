@@ -13,9 +13,9 @@ The local password manager uses the approved 16 October 2026 app concept. Keep i
 
 Use system sans-serif type, cool neutral surfaces and one blue accent. Use shared CSS tokens for light and dark themes, spacing, borders and focus. Keep long content scrollable within its owning region. Settings and lock remain available in short windows. Use restrained borders and no decorative artwork in app views.
 
-The HeavenKey brand uses a custom sculpted gold key. Its larger lock-screen treatment and compact navigation mark share the same silhouette and metallic facets. This requested brand artwork is the exception to the workbench's restrained decoration. Gold identifies the brand; primary app controls retain their established readable accent. The illustration must not move focus, obstruct controls or load remote resources.
+The HeavenKey brand uses a custom sculpted gold key. Its larger lock-screen treatment and compact navigation mark share the same silhouette and metallic facets. The original key-and-portal artwork also appears on the lock screen, with its caption on a solid navy surface. Both requested brand artworks are the exceptions to the workbench's restrained decoration. Gold identifies the brand; primary app controls retain their established readable accent. The illustration must not move focus, obstruct controls or load remote resources.
 
-Buttons have clear names, consistent shapes and visible keyboard focus. Primary touch actions need 44-pixel targets. Reduced-motion preferences apply. Theme may persist locally; credentials, search queries and decrypted contents may not.
+Buttons have clear names, consistent shapes and visible keyboard focus. Primary touch actions need 44-pixel targets. Reduced-motion preferences apply. Theme changes are immediate: background interpolation must not leave new text colors on old button surfaces. Text and placeholders use explicit theme colors; control boundaries use a separate higher-contrast token. The lock screen also offers the theme switch. Theme may persist locally; credentials, search queries and decrypted contents may not.
 
 ## Product truth
 

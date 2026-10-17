@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import type { Page } from "playwright-core";
+import { appearanceChecks } from "./password_manager_appearance_test";
 
 // Runs inside the real encrypted-API acceptance, with one persisted synthetic login.
 export async function designChecks(page: Page, master: string, check: (name: string, pass?: boolean) => void) {
@@ -72,6 +73,7 @@ export async function designChecks(page: Page, master: string, check: (name: str
   assert.equal(await page.locator("html").getAttribute("data-theme"), theme);
   await page.locator("#master").fill(master); await page.locator("#unlock").click(); await page.locator("#workspace:not([hidden])").waitFor();
   check("design: theme survives reload and encrypted vault unlock");
+  await appearanceChecks(page, master, check);
 
   for (const width of [320, 375, 414, 768, 1000, 1440]) {
     await page.setViewportSize({ width, height: 900 });

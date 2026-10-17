@@ -35,6 +35,7 @@ def source_fingerprint():
             "apps/web/dist/passwords.js",
             "apps/web/index.html",
             "apps/web/passwords.html",
+            "docs/assets/heavenkey-hero-square.png",
             "scripts/build_openssl.py",
             "scripts/build_portable.py",
             "scripts/build_extension.ts",

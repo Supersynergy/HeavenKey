@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.2 — 2026-10-17
+
+- Restore the original HeavenKey cover to the README and embed the original square artwork in the local lock screen.
+- Keep the consent-first product idea visible in the entry screen and browser connection settings, with the access lab's status explicit.
+- Remove the theme-switch contrast flash; refine dark surfaces, placeholders, keycaps and control borders.
+- Add a keyboard-accessible theme switch before unlock and clearer guidance for an empty vault.
+- Check actual rendered text and control contrast in both themes, dialogs and locked responsive views.
+
 ## 0.11.1 — 2026-10-17
 
 - Synchronize all existing feature PRs into main; close already-integrated stacked PRs by verified commit ancestry.

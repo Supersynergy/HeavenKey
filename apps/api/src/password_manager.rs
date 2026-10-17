@@ -320,6 +320,14 @@ pub async fn style() -> Response {
         .into_response()
 }
 
+async fn cover() -> Response {
+    (
+        [("content-type", "image/png")],
+        include_bytes!("../../../docs/assets/heavenkey-hero-square.png").as_slice(),
+    )
+        .into_response()
+}
+
 async fn guard(State(app): State<VaultApp>, req: Request, next: Next) -> Response {
     use axum::http::Method;
     let origin = req.headers().get("origin").and_then(|v| v.to_str().ok());
@@ -435,6 +443,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         .route("/passwords/", get(page))
         .route("/passwords.js", get(script))
         .route("/passwords.css", get(style))
+        .route("/heavenkey-cover.png", get(cover))
         .route(
             "/health",
             get(|| async { Json(json!({"status":"ok","mode":"local-password-manager"})) }),

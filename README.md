@@ -1,14 +1,24 @@
 # HeavenKey
 
+**Zugang beginnt mit Zustimmung.**
+
+![Das ursprüngliche HeavenKey-Motiv: ein Schlüssel vor einem leuchtenden Himmelstor](docs/assets/heavenkey-hero.png)
+
 Passwörter und Formularprofile lokal verwalten. HeavenKey verschlüsselt den Tresor im Browser und speichert ihn auf deinem Computer. Für den Passwortmanager brauchst du weder ein Cloudkonto noch eine Internetverbindung.
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.11.1](https://img.shields.io/badge/version-0.11.1-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/latest)
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.11.2](https://img.shields.io/badge/version-0.11.2-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/latest)
 
 [Downloads](https://github.com/Supersynergy/HeavenKey/releases/latest) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
 
 ![HeavenKey mit Navigation, Eintragsliste und Login-Details im hellen Design](docs/screenshots/vault-desktop.png)
 
 *Die Bilder zeigen die echte lokale App mit ausschließlich erfundenen Beispieldaten. Passwörter bleiben verdeckt.*
+
+## Die Idee hinter HeavenKey
+
+Deine digitalen Türen sollen unter deiner Kontrolle bleiben. Der lokale Tresor bewahrt Passwörter und Formularprofile auf. Beim Ausfüllen entscheidest du, welche Angaben auf welche Seite gelangen. Browser-Verbindungen kannst du im Tresor widerrufen.
+
+Die ursprüngliche Idee reicht weiter: mit Passkeys anmelden, Zugänge zeitlich begrenzen und Weitergaben gezielt entziehen. Dafür enthält HeavenKey ein getrenntes [Zugangslabor](#passkey-zugangslabor). Es wird weiterhin als Erprobung mit eigenen Grenzen geführt. Der Passwortmanager teilt keine Logins automatisch und ist kein Passkey-Anbieter für beliebige Websites. Das Titelbild ist das ursprüngliche Markenmotiv, keine Aufnahme einer Funktion.
 
 ## Starten
 
@@ -18,11 +28,11 @@ Passwörter und Formularprofile lokal verwalten. HeavenKey verschlüsselt den Tr
 
 | Computer | Paket | Starter |
 | --- | --- | --- |
-| Windows x64 | `HeavenKey-0.11.1-windows-x64.zip` | `Start HeavenKey.cmd` |
-| macOS mit Apple Silicon | `HeavenKey-0.11.1-macos-arm64.zip` | `Start HeavenKey.command` |
-| macOS mit Intel-Prozessor | `HeavenKey-0.11.1-macos-x64.zip` | `Start HeavenKey.command` |
-| Linux x64 | `HeavenKey-0.11.1-linux-x64.tar.gz` | `./start.sh` |
-| Linux ARM64 | `HeavenKey-0.11.1-linux-arm64.tar.gz` | `./start.sh` |
+| Windows x64 | `HeavenKey-0.11.2-windows-x64.zip` | `Start HeavenKey.cmd` |
+| macOS mit Apple Silicon | `HeavenKey-0.11.2-macos-arm64.zip` | `Start HeavenKey.command` |
+| macOS mit Intel-Prozessor | `HeavenKey-0.11.2-macos-x64.zip` | `Start HeavenKey.command` |
+| Linux x64 | `HeavenKey-0.11.2-linux-x64.tar.gz` | `./start.sh` |
+| Linux ARM64 | `HeavenKey-0.11.2-linux-arm64.tar.gz` | `./start.sh` |
 
 Ein aktueller Browser genügt. Rust, Bun und Docker werden nur für die Entwicklung benötigt. Das Terminal des Starters bleibt geöffnet; `Ctrl+C` beendet den Dienst. Die Pakete sind unsigniert und nicht Apple-notarisiert. [Installation und Datenordner](docs/DISTRIBUTION.md) erklären die Betriebssystemhinweise und den Updateablauf.
 
@@ -58,7 +68,9 @@ Die Erweiterung hat keinen dauerhaften Zugriff auf alle Websites. Der Browser sp
 
 <img src="docs/screenshots/vault-mobile.png" width="390" alt="Responsive Browseransicht bei 390 Pixeln Breite; keine native mobile App">
 
-![Gesperrter Tresor mit goldenem HeavenKey-Schlüssel](docs/screenshots/vault-locked.png)
+![Gesperrter Tresor mit dem ursprünglichen HeavenKey-Motiv](docs/screenshots/vault-locked.png)
+
+![Dunkler Sperrbildschirm mit dem ursprünglichen HeavenKey-Motiv](docs/screenshots/vault-locked-dark.png)
 
 </details>
 
