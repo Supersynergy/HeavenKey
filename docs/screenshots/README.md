@@ -19,5 +19,9 @@ Diese Screenshots wurden am 17. Oktober 2026 aus der laufenden HeavenKey-App mit
 | `timed-share-dark.png` | Dieselbe Freigabemaske im dunklen Design. |
 | `recipient.png` | Empfängeransicht nach WebAuthn-Verifikation; ausschließlich freigegebenes Beispielfeld. |
 | `recipient-dark.png` | Empfängeransicht im dunklen Design. |
+| `broker-approval-dark.png` | Echte Broker-Anfrage mit ausdrücklicher Login-Auswahl und Zustimmung. |
+| `broker-approval-mobile.png` | Dieselbe Freigabe bei 390 Pixeln, mit sichtbarer Schutzgrenze. |
 
 Die Bilddateien sind unbearbeitete Browseraufnahmen. Sie belegen die abgebildete Ansicht, aber keine Abnahme echter Passkeys, nativer Windows- oder Mobilgeräte. Ausgeführte Funktionsprüfungen sind getrennt in der Release-Abnahme dokumentiert. Die früheren generierten Markenbilder bleiben unter `docs/assets/` mit ihrer eigenen Herkunftsbeschreibung erhalten.
+
+Der Freigabedialog startet ohne ausgewähltes Konto. Die Zustimmung bleibt zunächst offen.

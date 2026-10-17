@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+mod broker_agent;
 mod desktop;
 mod hosting;
 mod password_manager;
@@ -1636,6 +1637,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "Portable builds require the pinned OpenSSL 3.6.5; use scripts/build_portable.py"
                 .into(),
         );
+    }
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().is_some_and(|v| v == "--broker-agent") {
+        return broker_agent::run(&args);
     }
     let Some(options) = desktop::options()? else {
         return Ok(());

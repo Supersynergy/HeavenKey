@@ -20,7 +20,7 @@ source_checks() {
   bun test apps/web/src/passwords-crypto.test.ts
   bun test apps/web/src/passwords-privacy.test.ts
   bun test apps/web/src/passwords-profiles.test.ts packages/forms/import-plan.test.ts
-  bun test apps/web/src/passwords-access.test.ts apps/web/src/passwords-sharing.test.ts
+  bun test apps/web/src/passwords-access.test.ts apps/web/src/passwords-sharing.test.ts apps/web/src/passwords-broker.test.ts
   bun test apps/web/src/interface.test.ts
   bun test apps/extension/popup.test.ts
   bun scripts/test_extension.mjs
@@ -50,6 +50,11 @@ build() {
   HEAVENKEY_INTEGRATION_BINARY=target/debug/uac-api python3 -m unittest scripts.test_extension_pairing
   HEAVENKEY_PM_DESIGN=1 HEAVENKEY_PM_POLISH=1 HEAVENKEY_PM_WORKFLOWS=1 bun scripts/password_manager_e2e.mjs
   bun scripts/password_access_e2e.ts
+  if [[ ${GITHUB_ACTIONS:-false} == true && $(uname -s) == Linux ]]; then
+    HEAVENKEY_BROKER_TEST_NO_SANDBOX=1 bun scripts/password_broker_e2e.ts
+  else
+    bun scripts/password_broker_e2e.ts
+  fi
   bun scripts/extension_autofill_e2e.ts
   bun scripts/password_manager_ui_test.ts
   bun scripts/protocol_e2e.mjs

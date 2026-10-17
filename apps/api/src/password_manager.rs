@@ -1,5 +1,7 @@
 use super::*;
 mod access;
+mod broker;
+mod browser_executor;
 
 pub const MAX_BODY: usize = 2 * 1024 * 1024;
 const PAIRING_TTL: Duration = Duration::from_secs(120);
@@ -14,6 +16,7 @@ pub struct VaultApp {
     token: Arc<str>,
     extensions: Arc<Mutex<Extensions>>,
     access: Arc<access::Access>,
+    broker: Arc<broker::Broker>,
 }
 
 #[derive(Default)]
@@ -316,6 +319,8 @@ pub async fn save(
         params![(revision + 1) as i64, record],
     ).map_err(internal)?;
     tx.commit().map_err(internal)?;
+    drop(db);
+    app.broker.invalidate();
     if salt_changed {
         app.access.invalidate()?;
     }
@@ -421,6 +426,7 @@ async fn guard(State(app): State<VaultApp>, req: Request, next: Next) -> Respons
                 &app.origin
             })
         && cors_origin.is_none()
+        && !broker::agent_transport(req.headers(), req.uri().path())
     {
         forbidden("local_vault_denied").into_response()
     } else {
@@ -454,6 +460,16 @@ async fn guard(State(app): State<VaultApp>, req: Request, next: Next) -> Respons
     );
     headers.insert("content-security-policy", "default-src 'self'; script-src 'self'; style-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'; connect-src 'self'".parse().expect("static header"));
     response
+}
+
+async fn shutdown_signal() {
+    #[cfg(unix)]
+    if let Ok(mut term) = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+    {
+        tokio::select! { _ = tokio::signal::ctrl_c() => {}, _ = term.recv() => {} }
+        return;
+    }
+    let _ = tokio::signal::ctrl_c().await;
 }
 
 pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::error::Error>> {
@@ -494,7 +510,10 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         token: random_secret().into(),
         extensions: Arc::new(Mutex::new(Extensions::default())),
         access,
+        broker: Arc::new(broker::Broker::new()),
     };
+    broker::Broker::supervise(&app.broker, app.db.clone());
+    let shutdown_broker = app.broker.clone();
     let router = Router::new()
         .route(
             "/",
@@ -535,6 +554,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         .route("/api/password-vault", get(read).post(save))
         .route("/api/password-vault/read", axum::routing::post(read_post))
         .merge(access::routes())
+        .merge(broker::routes())
         .layer(DefaultBodyLimit::max(MAX_BODY))
         .layer(middleware::from_fn_with_state(app.clone(), guard))
         .with_state(app);
@@ -551,8 +571,9 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         desktop::open_browser(&format!("{origin}/passwords/"));
     }
     axum::serve(listener, router)
-        .with_graceful_shutdown(async {
-            let _ = tokio::signal::ctrl_c().await;
+        .with_graceful_shutdown(async move {
+            shutdown_signal().await;
+            let _ = tokio::task::spawn_blocking(move || shutdown_broker.shutdown()).await;
         })
         .await?;
     Ok(())

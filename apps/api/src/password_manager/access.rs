@@ -767,6 +767,7 @@ mod tests {
             token: "synthetic-process-token".into(),
             extensions: Arc::new(Mutex::new(Extensions::default())),
             access: Arc::new(Access::new(18240, None).unwrap()),
+            broker: Arc::new(super::broker::Broker::new()),
         }
     }
     fn headers(app: &VaultApp) -> HeaderMap {

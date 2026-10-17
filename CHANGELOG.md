@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.13.0 — 2026-10-17
+
+- Lokaler Agenten-Broker mit einmaliger Kopplung, ausdrücklicher Login-Auswahl und Zustimmung pro Anmeldung.
+- Verschlüsselte Übergabe eines ausgewählten Logins an einen privaten Chromium-Ausführer über anonyme Betriebssystem-Pipes; kein Debug-Port und keine Zwischenablage.
+- Begrenzte Textansicht statt roher Browsersteuerung; eigene Clientrechte, maximal fünf Minuten pro Sitzung, Widerruf und Sperrung bei Tresoränderung oder fehlendem Heartbeat.
+- Ehrliche Trust-Marker zu unsigniertem Herausgeber, internem Review und OS-/Website-Vertrauensgrenze.
+- Enthaltener Agentenclient und optionales Cargo-`-Zscript`-Hilfsskript auf Rust 1.101 nightly.
+- Integrierte Browserprüfungen mit synthetischer Anmeldung, privaten Cookies, Consent, Widerruf und Profilbereinigung.
+
 ## 0.12.0 — 2026-10-17
 
 - Optionales PRF-Passkey-Entsperren direkt im lokalen Passwortmanager; verifizierte Anmeldung, verschlüsselter Masterpasswort-Umschlag und unveränderter Masterpasswort-Rückweg.

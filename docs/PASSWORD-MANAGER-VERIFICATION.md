@@ -1,4 +1,4 @@
-# Passwortmanager 0.12.0 · Abnahme und Grenzen
+# Passwortmanager 0.13.0 · Abnahme und Grenzen
 
 Die Ausgabe integriert optionales PRF-Passkey-Entsperren, befristete verschlüsselte Feldkopien mit Empfänger-Passkey und einen Einrichtungsassistenten in den bestehenden lokalen Passwortmanager. Browser-Autofill, Formularprofile, Schnellzugriff und Importvorschau bleiben erhalten. Ein allgemeiner Vorsprung gegenüber Enpass ist nicht nachgewiesen.
 
@@ -17,6 +17,14 @@ Zwischenablagebereinigung, vorgerückte Inaktivitätszeit und verzögerte Krypto
 Die ausgeführten Fälle, Resultate und Binärhashes stehen in `ACCEPTANCE.json` beim Release. Frühere Nachweise gelten nur für ihre damaligen Quellen. Die unabhängige interne Quellprüfung ist an Dateihashes gebunden und ersetzt kein externes Kryptografie-Audit.
 
 `scripts/password_access_e2e.ts` verwendet die echte Rust-API und virtuelle CTAP2-Geräte des Browsers einschließlich echter PRF-Ergebnisse. Es prüft Einrichtung, verschlüsselte Speicherung, Entsperren nach Dienstneustart, Abbruch während nativer Registrierung, fehlende PRF-Unterstützung und Masterpasswort-Rückweg. Für Freigaben prüft es die ausdrückliche Feldauswahl, einen unabhängigen Empfänger mit eigenem Passkey, erneute Anmeldung, Widerruf, tatsächlichen Zeitablauf sowie die gemeinsame Ungültigmachung bei einem Passwortwechsel. Der kurze Ablauf-Test erzeugt über die echte API eine Zwei-Sekunden-Kopie; die Oberfläche bietet mindestens fünf Minuten. Keine physische Hardware und keine öffentliche Bereitstellung werden damit simuliert als abgenommen ausgegeben.
+
+## Agenten-Broker
+
+`scripts/password_broker_e2e.ts` startet die echte App und einen privaten Chromium-Browser gegen eine synthetische Login-Website. Es prüft menschliche Auswahl und Zustimmung, verschlüsselte Übergabe, begrenzte Agentenantworten, getrennte Clientrechte, unbekannte Befehle sowie Widerruf, Sperren und Tresorrevisionen. Zwischenablageaufrufe der Besitzeroberfläche werden erfasst. Ein eigener Ausführertest prüft Pipe-Anmeldung und Bereinigung. Die Prüfungen verwenden keine echten Zugangsdaten. Vollständige Falllisten und Quell-/Binärhashes stehen im Releasebericht.
+
+Im gehärteten Linux-CI-Container läuft ausschließlich die synthetische Browserfixture mit einem ausdrücklich benannten Sandbox-Testoverride. Diese Prüfung belegt keine Chromium-Sandbox. Das Produkt selbst setzt keinen solchen Override; der native macOS-Brokerlauf verwendet den unveränderten Browser.
+
+Der Broker ist kein externer Sicherheitsnachweis und keine OS-Sandbox für uneingeschränkte Agenten. Seine [Schutzgrenze](AGENT-BROKER.md#schutzgrenze-und-trust-marker) umfasst die vertrauenswürdige Zielwebsite und den lokalen Rechner. Native Windows-/Linux-Browserintegration benötigt eigene Plattformabnahme; Paketstart und Cross-Compile sind davon getrennt.
 
 ## Paketbindung und Laufzeitumgebungen
 

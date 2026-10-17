@@ -41,6 +41,7 @@ def source_fingerprint():
             "scripts/build_openssl.py",
             "scripts/build_portable.py",
             "scripts/build_extension.ts",
+            "scripts/broker.rs",
         )
     ]
     for name in ("apps/api", "crates", "apps/web/src", "apps/demo", "apps/extension", "packages/forms"):

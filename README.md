@@ -6,7 +6,7 @@
 
 Passwörter und Formularprofile lokal verwalten. HeavenKey verschlüsselt den Tresor im Browser und speichert ihn auf deinem Computer. Für den Passwortmanager brauchst du weder ein Cloudkonto noch eine Internetverbindung.
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.12.0](https://img.shields.io/badge/version-0.12.0-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/latest)
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.13.0](https://img.shields.io/badge/version-0.13.0-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/latest)
 
 [Downloads](https://github.com/Supersynergy/HeavenKey/releases/latest) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
 
@@ -28,11 +28,11 @@ Die ursprüngliche Idee steckt jetzt im Passwortmanager: den lokalen Tresor mit 
 
 | Computer | Paket | Starter |
 | --- | --- | --- |
-| Windows x64 | `HeavenKey-0.12.0-windows-x64.zip` | `Start HeavenKey.cmd` |
-| macOS mit Apple Silicon | `HeavenKey-0.12.0-macos-arm64.zip` | `Start HeavenKey.command` |
-| macOS mit Intel-Prozessor | `HeavenKey-0.12.0-macos-x64.zip` | `Start HeavenKey.command` |
-| Linux x64 | `HeavenKey-0.12.0-linux-x64.tar.gz` | `./start.sh` |
-| Linux ARM64 | `HeavenKey-0.12.0-linux-arm64.tar.gz` | `./start.sh` |
+| Windows x64 | `HeavenKey-0.13.0-windows-x64.zip` | `Start HeavenKey.cmd` |
+| macOS mit Apple Silicon | `HeavenKey-0.13.0-macos-arm64.zip` | `Start HeavenKey.command` |
+| macOS mit Intel-Prozessor | `HeavenKey-0.13.0-macos-x64.zip` | `Start HeavenKey.command` |
+| Linux x64 | `HeavenKey-0.13.0-linux-x64.tar.gz` | `./start.sh` |
+| Linux ARM64 | `HeavenKey-0.13.0-linux-arm64.tar.gz` | `./start.sh` |
 
 Ein aktueller Browser genügt. Rust, Bun und Docker werden nur für die Entwicklung benötigt. Das Terminal des Starters bleibt geöffnet; `Ctrl+C` beendet den Dienst. Die Pakete sind unsigniert und nicht Apple-notarisiert. [Installation und Datenordner](docs/DISTRIBUTION.md) erklären die Betriebssystemhinweise und den Updateablauf.
 
@@ -46,6 +46,7 @@ Ein aktueller Browser genügt. Rust, Bun und Docker werden nur für die Entwickl
 - **Diskrete Ansicht:** private Detailfelder verdecken; bei Bedarf sofort beim Wechsel in den Hintergrund sperren. Ein lokaler Check zeigt kurze oder wiederverwendete Passwörter, ohne einen Datenleckdienst anzufragen.
 - **Passkey-Entsperren:** unter Einstellungen einen PRF-fähigen Passkey hinzufügen und den bestehenden Tresor damit öffnen. Das Masterpasswort bleibt für Sicherungen, Wiederherstellung und den Rückweg erforderlich.
 - **Befristete Freigaben:** einzelne Login- oder Profilfelder ausdrücklich auswählen und als verschlüsselte Kopie für fünf Minuten bis sieben Tage freigeben. Der erste Empfänger bindet seinen eigenen Passkey an die Freigabe. Weitere Abrufe erfordern denselben Passkey.
+- **Agent-Zugriff:** pro Anmeldung einen Login und die genaue Website freigeben. Der lokale Broker nutzt einen eigenen Browser ohne Zwischenablage; Agenten erhalten eine begrenzte Textansicht. [Einrichtung und Schutzgrenze](docs/AGENT-BROKER.md).
 - **Erste Schritte:** der Einrichtungsassistent führt zu erstem Login, Import, Sicherung und optionalem Passkey. Vorhandene Sicherungen lassen sich direkt vom Sperrbildschirm wiederherstellen.
 
 Ohne zusätzliche Konfiguration funktionieren Freigabelinks nur auf demselben Computer. Für andere Geräte braucht der laufende Dienst eine erreichbare HTTPS-Adresse mit `HEAVENKEY_SHARE_ORIGIN` und einen korrekt eingerichteten Reverse-Proxy. Die Oberfläche weist vor der Erstellung darauf hin. [Einrichtung und Sicherheitsgrenzen](docs/ACCESS-AND-SHARING.md) erklären Empfängerbindung, Widerruf und Betrieb.
@@ -57,6 +58,12 @@ Installiere das separate Chromium-Paket für Chrome oder Edge. Erzeuge unter Ein
 Zum Füllen wählst du einen Login oder ein Profil, prüfst die Zielseite und bestätigst die ausgewählten Felder. Logins benötigen genau die gespeicherte Website-Origin. Finanz- und Identitätsdaten sowie Passwörter und Einmalcodes haben eigene Freigaben. Bestehende Werte bleiben standardmäßig erhalten; Formulare werden nicht abgesendet. Rückgängig ist für die unveränderte Zielseite zeitlich begrenzt möglich.
 
 Die Erweiterung hat keinen dauerhaften Zugriff auf alle Websites. Der Browser speichert nur Verbindungseinstellungen und das Kopplungstoken. Sperren, Trennen oder Schließen entfernt die entschlüsselte Sitzung. Eine bereits an die Seite übergebene Eingabe kann diese wie eine manuelle Eingabe lesen.
+
+### Anmeldung für einen Agenten
+
+Unter Einstellungen koppeln, die Anfrage prüfen und einen passenden Login ausdrücklich auswählen. Die Sitzung endet nach höchstens fünf Minuten; Sperren und Widerruf beenden den Zugriff. Der Broker bietet keine rohe Browser-API. Die Zielwebsite sowie Programme desselben OS-Benutzers gehören zur Vertrauensgrenze. Er benötigt installiertes Chrome, Chromium oder Edge; der normale Tresor bleibt offline nutzbar.
+
+![Ausdrückliche Agentenfreigabe mit Website, Kontoauswahl und Zustimmung](docs/screenshots/broker-approval-dark.png)
 
 ## Ansichten
 

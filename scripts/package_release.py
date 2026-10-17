@@ -190,10 +190,11 @@ def desktop(target):
         for name in (
             "PASSWORD-MANAGER.md", "PASSWORD-MANAGER-GAPS.md",
             "PASSWORD-MANAGER-VERIFICATION.md", "PASSWORD-MANAGER-RESEARCH-TOOLS.md",
-            "ACCESS-AND-SHARING.md",
+            "ACCESS-AND-SHARING.md", "AGENT-BROKER.md",
             "password-manager-matrix.json", "LICENSING.md",
         ):
             shutil.copyfile(ROOT / "docs" / name, directory / name)
+        shutil.copyfile(ROOT / "scripts/broker.rs", directory / "broker.rs")
         dependency_notices(directory)
         openssl_source = ROOT / ".platform-tools" / f"openssl-{build_openssl.VERSION}"
         shutil.copyfile(

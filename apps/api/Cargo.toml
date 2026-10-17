@@ -6,7 +6,9 @@ rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
-openssl = { workspace = true, optional = true }
+openssl.workspace = true
+zeroize.workspace = true
+uac-browser-pipe = { path = "../../crates/browser-pipe" }
 uac-keystore = { path = "../../crates/keystore" }
 uac-recovery = { path = "../../crates/recovery" }
 uac-verifier = { path = "../../crates/verifier" }
@@ -23,4 +25,4 @@ ed25519-dalek.workspace = true
 rand.workspace = true
 
 [features]
-portable = ["dep:openssl", "rusqlite/bundled-sqlcipher-vendored-openssl"]
+portable = ["rusqlite/bundled-sqlcipher-vendored-openssl"]
