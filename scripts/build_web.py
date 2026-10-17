@@ -12,4 +12,5 @@ subprocess.run(
     ['bun', 'build', 'apps/web/src/passwords.ts', '--outdir', 'apps/web/dist', '--target', 'browser'],
     cwd=root, check=True,
 )
+subprocess.run(['bun', 'build', 'apps/web/src/share.ts', '--outdir', 'apps/web/dist', '--target', 'browser'], cwd=root, check=True)
 subprocess.run(['bun', 'scripts/build_extension.ts'], cwd=root, check=True)

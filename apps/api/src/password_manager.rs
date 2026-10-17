@@ -1,4 +1,5 @@
 use super::*;
+mod access;
 
 pub const MAX_BODY: usize = 2 * 1024 * 1024;
 const PAIRING_TTL: Duration = Duration::from_secs(120);
@@ -12,6 +13,7 @@ pub struct VaultApp {
     host: String,
     token: Arc<str>,
     extensions: Arc<Mutex<Extensions>>,
+    access: Arc<access::Access>,
 }
 
 #[derive(Default)]
@@ -217,7 +219,7 @@ pub async fn config(State(app): State<VaultApp>, headers: HeaderMap) -> ApiResul
     access(&app, &headers, false)?;
     let db = app.db.lock().map_err(internal)?;
     Ok(Json(
-        json!({"token": app.token.as_ref(), "revision": revision(&db)?}),
+        json!({"token": app.token.as_ref(), "revision": revision(&db)?, "share_origin": app.access.share_origin}),
     ))
 }
 
@@ -290,11 +292,33 @@ pub async fn save(
     if revision != input.expected_revision {
         return Err(ApiError(StatusCode::CONFLICT, "password_vault_changed"));
     }
+    let previous: Option<String> = tx
+        .query_row(
+            "SELECT record FROM password_manager WHERE id=1",
+            [],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(internal)?;
+    let salt_changed = previous
+        .as_deref()
+        .and_then(|record| serde_json::from_str::<Envelope>(record).ok())
+        .filter(Envelope::valid)
+        .is_none_or(|record| record.salt != input.record.salt);
+    if salt_changed {
+        tx.execute("DELETE FROM password_passkeys", [])
+            .map_err(internal)?;
+        tx.execute("UPDATE password_shares SET revoked=1", [])
+            .map_err(internal)?;
+    }
     tx.execute(
         "INSERT INTO password_manager(id,revision,record) VALUES(1,?1,?2) ON CONFLICT(id) DO UPDATE SET revision=excluded.revision,record=excluded.record",
         params![(revision + 1) as i64, record],
     ).map_err(internal)?;
     tx.commit().map_err(internal)?;
+    if salt_changed {
+        app.access.invalidate()?;
+    }
     Ok(Json(
         json!({"revision": revision + 1, "record": input.record}),
     ))
@@ -328,6 +352,25 @@ async fn cover() -> Response {
         .into_response()
 }
 
+fn recipient_route(path: &str) -> bool {
+    matches!(
+        path,
+        "/api/password-shares/recipient/start"
+            | "/api/password-shares/recipient/verify"
+            | "/api/password-shares/recipient/finish"
+    )
+}
+
+fn host_allowed(app: &VaultApp, host: Option<&str>, path: &str) -> bool {
+    host == Some(&app.host)
+        || (host == Some(&app.access.share_host)
+            && (recipient_route(path)
+                || matches!(
+                    path,
+                    "/share/" | "/share.js" | "/passwords.css" | "/heavenkey-cover.png"
+                )))
+}
+
 async fn guard(State(app): State<VaultApp>, req: Request, next: Next) -> Response {
     use axum::http::Method;
     let origin = req.headers().get("origin").and_then(|v| v.to_str().ok());
@@ -340,7 +383,9 @@ async fn guard(State(app): State<VaultApp>, req: Request, next: Next) -> Respons
     let cors_origin = origin
         .filter(|value| extension_route && extension_origin(value))
         .map(str::to_owned);
-    if req.headers().get("host").and_then(|v| v.to_str().ok()) != Some(&app.host) {
+    let recipient_route = recipient_route(req.uri().path());
+    let host = req.headers().get("host").and_then(|v| v.to_str().ok());
+    if !host_allowed(&app, host, req.uri().path()) {
         return forbidden("local_vault_denied").into_response();
     }
     let mut response = if req.method() == Method::OPTIONS {
@@ -368,7 +413,15 @@ async fn guard(State(app): State<VaultApp>, req: Request, next: Next) -> Respons
         } else {
             forbidden("local_vault_denied").into_response()
         }
-    } else if req.method() != Method::GET && origin != Some(&app.origin) && cors_origin.is_none() {
+    } else if req.method() != Method::GET
+        && origin
+            != Some(if recipient_route {
+                &app.access.share_origin
+            } else {
+                &app.origin
+            })
+        && cors_origin.is_none()
+    {
         forbidden("local_vault_denied").into_response()
     } else {
         next.run(req).await
@@ -427,6 +480,12 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
     let db = Connection::open(&path)?;
     db.busy_timeout(Duration::from_secs(2))?;
     db.execute_batch("PRAGMA synchronous=FULL; CREATE TABLE IF NOT EXISTS password_manager(id INTEGER PRIMARY KEY CHECK(id=1),revision INTEGER NOT NULL CHECK(revision>0),record TEXT NOT NULL);")?;
+    access::schema(&db)?;
+    let share_origin = std::env::var_os("HEAVENKEY_SHARE_ORIGIN")
+        .map(|value| value.into_string())
+        .transpose()
+        .map_err(|_| "HEAVENKEY_SHARE_ORIGIN must be valid UTF-8")?;
+    let access = Arc::new(access::Access::new(port, share_origin.as_deref())?);
     let origin = format!("http://localhost:{port}");
     let app = VaultApp {
         db: Arc::new(Mutex::new(db)),
@@ -434,6 +493,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         host: format!("localhost:{port}"),
         token: random_secret().into(),
         extensions: Arc::new(Mutex::new(Extensions::default())),
+        access,
     };
     let router = Router::new()
         .route(
@@ -443,6 +503,19 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         .route("/passwords/", get(page))
         .route("/passwords.js", get(script))
         .route("/passwords.css", get(style))
+        .route(
+            "/share/",
+            get(|| async { Html(include_str!("../../web/share.html")) }),
+        )
+        .route(
+            "/share.js",
+            get(|| async {
+                (
+                    [("content-type", "text/javascript")],
+                    include_bytes!("../../web/dist/share.js").as_slice(),
+                )
+            }),
+        )
         .route("/heavenkey-cover.png", get(cover))
         .route(
             "/health",
@@ -461,6 +534,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         )
         .route("/api/password-vault", get(read).post(save))
         .route("/api/password-vault/read", axum::routing::post(read_post))
+        .merge(access::routes())
         .layer(DefaultBodyLimit::max(MAX_BODY))
         .layer(middleware::from_fn_with_state(app.clone(), guard))
         .with_state(app);

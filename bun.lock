@@ -13,7 +13,7 @@
     },
     "apps/web": {
       "name": "heavenkey-web",
-      "version": "0.11.2",
+      "version": "0.12.0",
       "dependencies": {
         "@simplewebauthn/browser": "14.0.0",
       },

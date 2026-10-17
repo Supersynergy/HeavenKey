@@ -1,6 +1,6 @@
-# Passwortmanager 0.11.2 · Abnahme und Grenzen
+# Passwortmanager 0.12.0 · Abnahme und Grenzen
 
-Die Ausgabe ergänzt bestätigtes Browser-Autofill, verschlüsselte Formularprofile, den Schnellzugriff mit F2 und eine CSV-Importvorschau mit Duplikatprüfung. Ein allgemeiner Vorsprung gegenüber Enpass ist nicht nachgewiesen.
+Die Ausgabe integriert optionales PRF-Passkey-Entsperren, befristete verschlüsselte Feldkopien mit Empfänger-Passkey und einen Einrichtungsassistenten in den bestehenden lokalen Passwortmanager. Browser-Autofill, Formularprofile, Schnellzugriff und Importvorschau bleiben erhalten. Ein allgemeiner Vorsprung gegenüber Enpass ist nicht nachgewiesen.
 
 ## Prüfumfang
 
@@ -15,6 +15,8 @@ Die headless Prüfung verwendet eine ausdrücklich im Testmanifest freigegebene 
 Zwischenablagebereinigung, vorgerückte Inaktivitätszeit und verzögerte Kryptovorgänge verwenden zusätzliche benannte Testdoubles. Diese beweisen keine physische Speicherlöschung oder garantierte Bereinigung der Betriebssystem-Zwischenablage. Sämtliche Testdaten sind synthetisch.
 
 Die ausgeführten Fälle, Resultate und Binärhashes stehen in `ACCEPTANCE.json` beim Release. Frühere Nachweise gelten nur für ihre damaligen Quellen. Die unabhängige interne Quellprüfung ist an Dateihashes gebunden und ersetzt kein externes Kryptografie-Audit.
+
+`scripts/password_access_e2e.ts` verwendet die echte Rust-API und virtuelle CTAP2-Geräte des Browsers einschließlich echter PRF-Ergebnisse. Es prüft Einrichtung, verschlüsselte Speicherung, Entsperren nach Dienstneustart, Abbruch während nativer Registrierung, fehlende PRF-Unterstützung und Masterpasswort-Rückweg. Für Freigaben prüft es die ausdrückliche Feldauswahl, einen unabhängigen Empfänger mit eigenem Passkey, erneute Anmeldung, Widerruf, tatsächlichen Zeitablauf sowie die gemeinsame Ungültigmachung bei einem Passwortwechsel. Der kurze Ablauf-Test erzeugt über die echte API eine Zwei-Sekunden-Kopie; die Oberfläche bietet mindestens fünf Minuten. Keine physische Hardware und keine öffentliche Bereitstellung werden damit simuliert als abgenommen ausgegeben.
 
 ## Paketbindung und Laufzeitumgebungen
 
@@ -32,6 +34,6 @@ Für jedes Paket werden Start ohne Quelldateien, eingebettete Assets, Speichern 
 
 ## Offene Grenzen
 
-Die Pakete sind nicht vom Herausgeber signiert oder Apple-notarisiert. Physische Passkeys, native Biometrie, mobile Credential-Provider, Gerätesynchronisation, verwaltete Website-Passkeys, Anhänge und Eintragsfreigaben sind nicht abgenommen. Die Agenten des Zugangslabors erhalten keinen Zugriff auf den Passworttresor.
+Die Pakete sind nicht vom Herausgeber signiert oder Apple-notarisiert. Physische Passkeys, native Biometrie, mobile Credential-Provider, Gerätesynchronisation, verwaltete Website-Passkeys, Anhänge und öffentlich betriebenes Freigabe-Hosting sind nicht abgenommen. Die Agenten des Zugangslabors erhalten keinen Zugriff auf den Passworttresor. Bereits vom Empfänger gespeicherte Angaben können nicht zurückgerufen werden.
 
 Eine beschädigte SQLite-Dateistruktur benötigt eine gültige Sicherung in einem neuen Datenordner. Bei beschädigtem Tresor-JSON oder Ciphertext kann dagegen eine vollständig geprüfte Sicherung vom Sperrbildschirm aus den bisherigen Datensatz ersetzen.

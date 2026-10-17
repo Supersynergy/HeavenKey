@@ -2,6 +2,9 @@ import { createVault, openVault, sealVault, validateEnvelope, validateVault, gen
 import { createIcon, initPresentation } from "./passwords-presentation";
 import { initBrand } from "./passwords-brand";
 import { initWorkflows } from "./passwords-workflows";
+import { initPasswordAccess } from "./passwords-access";
+import { initPasswordSharing } from "./passwords-sharing";
+import { initOnboarding } from "./passwords-onboarding";
 import { getPrivacyPreferences, initPrivacy, recordActivity, clearActivities } from "./passwords-privacy";
 const byId = <T extends HTMLElement = HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
@@ -11,6 +14,7 @@ const byId = <T extends HTMLElement = HTMLElement>(id: string): T => {
 const input = (id: string) => byId<HTMLInputElement>(id);
 const value = (id: string) => (byId(id) as HTMLInputElement | HTMLTextAreaElement).value;
 const form = (id: string) => byId<HTMLFormElement>(id);
+let shareOrigin = location.origin;
 let token = "", revision = 0, remote: Envelope | null = null;
 let restoreReady = false;
 let vault: Vault | null = null, key: CryptoKey | null = null, envelope: Envelope | null = null;
@@ -21,6 +25,9 @@ let revealTimer: ReturnType<typeof setTimeout> | undefined;
 function cancelReveal() { clearTimeout(revealTimer); revealedId = null; }
 let editorReturnFocus: HTMLElement | null = null;
 let workflows: ReturnType<typeof initWorkflows> | undefined;
+let passwordAccess: ReturnType<typeof initPasswordAccess> | undefined;
+let passwordSharing: ReturnType<typeof initPasswordSharing> | undefined;
+let onboarding: ReturnType<typeof initOnboarding> | undefined;
 function refreshNavigation() {
   const special = !byId("health-view").hidden ? "nav-health" : !byId("settings-view").hidden ? "nav-settings" : null;
   const selected = special || (activeTag ? null : input("favorites-only").checked ? "nav-favorites" : "nav-all");
@@ -30,7 +37,7 @@ function refreshNavigation() {
 function closeNavigation() { byId("workspace").classList.remove("navigation-open"); byId("menu-toggle").setAttribute("aria-expanded", "false"); }
 function showEntries() { byId("health-view").hidden = true; byId("nav-health").classList.remove("active"); byId("nav-health").removeAttribute("aria-current"); byId("settings-view").hidden = true; byId("workspace").classList.remove("settings-open"); byId("nav-settings").classList.remove("active"); byId("nav-settings").removeAttribute("aria-current"); closeNavigation(); refreshNavigation(); }
 function setFilter(favorites = false, tag: string | null = null) { if (busy || !vault) return; activeTag = tag; input("favorites-only").checked = favorites; selectedId = null; cancelReveal(); showEntries(); byId("workspace").classList.remove("show-detail"); render(); }
-function showSettings() { if (busy || !vault) return; clearEditor(); showEntries(); byId("settings-view").hidden = false; byId("workspace").classList.add("settings-open"); byId("nav-settings").classList.add("active"); byId("nav-settings").setAttribute("aria-current", "page"); closeNavigation(); refreshNavigation(); byId("settings-heading").focus(); }
+function showSettings() { if (busy || !vault) return; clearEditor(); showEntries(); byId("settings-view").hidden = false; byId("workspace").classList.add("settings-open"); byId("nav-settings").classList.add("active"); byId("nav-settings").setAttribute("aria-current", "page"); closeNavigation(); refreshNavigation(); byId("settings-heading").focus(); void passwordAccess?.refresh(); void passwordSharing?.refresh(); onboarding?.refresh(); }
 function setTheme(theme: string) { const dark = theme === "dark"; document.documentElement.dataset.theme = dark ? "dark" : "light"; byId("theme-toggle").setAttribute("aria-pressed", String(dark)); byId("theme-label").textContent = dark ? "Helles Design" : "Dunkles Design"; byId("gate-theme-toggle").textContent = dark ? "Helles Design" : "Dunkles Design"; byId("gate-theme-toggle").setAttribute("aria-pressed", String(dark)); }
 try { setTheme(localStorage.getItem("heavenkey-theme") || "light"); } catch { setTheme("light"); }
 let pendingFocus: string | null = null;
@@ -49,12 +56,13 @@ const status = (message: string, error = false) => {
 };
 function setBusy(next: boolean) {
   busy = next;
-  document.querySelectorAll<HTMLButtonElement>("button").forEach(button => { if (button.id !== "lock") button.disabled = next || (button.id === "unlock" && !ready) || (getPrivacyPreferences().discreet && ["reveal-detail-password", "edit-entry", "show-totp"].includes(button.dataset.testid || "")); });
+  document.querySelectorAll<HTMLButtonElement>("button").forEach(button => { if (button.id !== "lock") button.disabled = next || (button.id === "unlock" && !ready) || (getPrivacyPreferences().discreet && ["reveal-detail-password", "edit-entry", "show-totp", "share-entry", "share-profile"].includes(button.dataset.testid || "")); });
   byId("workspace").setAttribute("aria-busy", String(next));
+  passwordAccess?.setBusy(next); passwordSharing?.setBusy(next); onboarding?.refresh();
 }
 function clearEditor() { byId("editor-status").textContent = ""; byId("editor-status").hidden = true; form("entry-form").reset(); input("entry-id").value = ""; input("entry-password").type = "password"; byId("reveal-password").setAttribute("aria-pressed", "false"); byId("reveal-password").textContent = "Anzeigen"; byId<HTMLDialogElement>("editor").close(); }
 function lock(message = "Tresor gesperrt.", refresh = true) {
-  workflows?.clear();
+  workflows?.clear(); passwordAccess?.clear(); passwordSharing?.clear(); onboarding?.clear();
   cancelReveal(); clearActivities();
   clearTimeout(clipboardTimer); void cleanupClipboard();
   generation++; pendingFocus = null; selectedId = null; activeTag = null; revealedId = null; editorReturnFocus = null;
@@ -98,10 +106,11 @@ async function load(announce = true) {
   const run = generation;
   ready = false; restoreReady = false; setBusy(true);
   try {
-    const config = await api("/api/password-vault/config") as { token?: unknown; revision?: unknown };
+    const config = await api("/api/password-vault/config") as { token?: unknown; revision?: unknown; share_origin?: unknown };
     if (!active(run)) return;
     if (typeof config.token !== "string" || !config.token || config.token.length > 1024) throw new Error("Ungültige lokale Zugriffskonfiguration.");
     if (!Number.isSafeInteger(config.revision) || Number(config.revision) < 0) throw new Error("Ungültige lokale Tresorrevision.");
+    if (typeof config.share_origin === "string") { const configured = new URL(config.share_origin); if (configured.origin !== config.share_origin || (configured.protocol !== "https:" && configured.origin !== location.origin)) throw new Error("Ungültige Freigabeadresse."); shareOrigin = configured.origin; }
     token = config.token; revision = Number(config.revision); restoreReady = true;
     const snapshot = readSnapshot(await api("/api/password-vault"));
     if (!active(run)) return;
@@ -113,7 +122,7 @@ async function load(announce = true) {
     input("master").autocomplete = remote ? "current-password" : "new-password";
     if (announce) status(remote ? "Verschlüsselter Tresor bereit." : "Noch kein Tresor vorhanden. Wähle ein langes, einmaliges Masterpasswort.");
   } catch (error) { if (active(run)) status(error instanceof Error ? error.message : "Laden fehlgeschlagen.", true); }
-  finally { if (active(run)) setBusy(false); }
+  finally { if (active(run)) { setBusy(false); onboarding?.refresh(); void passwordAccess?.refresh(); } }
 }
 async function operation(task: (run: number) => Promise<void>) {
   if (busy) return;
@@ -132,7 +141,7 @@ async function commit(next: Vault, run: number, nextKey: CryptoKey | null = key,
   if (!unlocked(run)) return false;
   if (!saved.record) throw new Error("Server hat keinen Tresor gespeichert.");
   revision = saved.revision; envelope = sealed; remote = sealed; key = nextKey; vault = next;
-  render(); recordActivity("save"); return true;
+  render(); void passwordAccess?.refresh(); void passwordSharing?.refresh(); recordActivity("save"); return true;
 }
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string): HTMLElementTagNameMap[K] { const node = document.createElement(tag); if (text !== undefined) node.textContent = text; return node; }
 function action(label: string, testId: string, handler: () => void): HTMLButtonElement { const button = element("button", label); button.className = "secondary"; button.dataset.testid = testId; button.type = "button"; button.disabled = busy; button.addEventListener("click", handler); return button; }
@@ -176,7 +185,7 @@ function render() {
   }
   list.scrollTop = scrollTop;
   renderDetail(vault.entries.find(entry => entry.id === selectedId));
-  byId("health-count").textContent = String(healthFindings().length); if (!byId("health-view").hidden) renderHealth(); refreshNavigation(); workflows?.refresh();
+  byId("health-count").textContent = String(healthFindings().length); if (!byId("health-view").hidden) renderHealth(); refreshNavigation(); workflows?.refresh(); onboarding?.refresh();
 }
 function healthFindings(): { entry: Login; short: boolean; reused: boolean }[] {
   if (!vault) return [];
@@ -212,7 +221,7 @@ function detailField(label: string, text: string, buttons: HTMLButtonElement[] =
 function renderDetail(entry?: Login) {
   const detail = byId("detail"); detail.replaceChildren();
   const back = action("Zurück zur Liste", "back-to-list", () => { byId("workspace").classList.remove("show-detail"); byId("entries").querySelector<HTMLButtonElement>("[aria-current=true]")?.focus(); }); back.prepend(createIcon("back")); back.id = "back-to-list"; back.className = "secondary back-to-list"; detail.append(back);
-  if (!entry) { const blank = element("div"); blank.className = "detail-empty"; blank.append(createIcon("vault"),element("h2", vault?.entries.length ? "Kein Login ausgewählt" : "Dein Tresor ist bereit"),element("p", vault?.entries.length ? "Wähle einen Login aus oder erstelle einen neuen Eintrag." : "Mit „Neuer Eintrag“ speicherst du deinen ersten Login. Eine vorhandene Sammlung importierst du in den Einstellungen.")); detail.append(blank); return; }
+  if (!entry) { const blank = element("div"); blank.className = "detail-empty"; blank.append(createIcon("vault"),element("h2", vault?.entries.length ? "Kein Login ausgewählt" : "Dein Tresor ist bereit"),element("p", vault?.entries.length ? "Wähle einen Login aus oder erstelle einen neuen Eintrag." : "Mit „Neuer Eintrag“ speicherst du deinen ersten Login. Eine vorhandene Sammlung importierst du in den Einstellungen.")); if (!vault?.entries.length) { const actions = element("div"); actions.className = "actions setup-actions"; const first = action("Ersten Login anlegen", "setup-first-login", () => edit()); first.classList.remove("secondary"); const guide = action("Einrichtung ansehen", "setup-guide", () => onboarding?.open()); actions.append(first, guide); blank.append(actions); } detail.append(blank); return; }
   const discreet = getPrivacyPreferences().discreet;
   const head = element("div"); head.className = "detail-heading";
   const identity = element("div"); identity.className = "detail-identity"; const icon = element("span", entry.title.slice(0,2).toLocaleUpperCase("de")); icon.className = "detail-icon"; icon.setAttribute("aria-hidden", "true");
@@ -242,6 +251,7 @@ function renderDetail(entry?: Login) {
   if (entry.tags.length) { const tags = element("div"); tags.className = "detail-tags"; tags.setAttribute("aria-label", "Tags"); entry.tags.forEach(tag => { const button = action(tag, "detail-tag", () => setFilter(false, tag)); button.className = "tag"; tags.append(button); }); detail.append(tags); }
   if (entry.notes) { const notes = element("div"); notes.className = "detail-notes"; notes.append(element("h3", "Notizen"),element("p",discreet ? "Verdeckt" : entry.notes)); detail.append(notes); }
   const footer = element("div"); footer.className = "detail-footer";
+  const share = action("Befristet teilen", "share-entry", () => { if (!getPrivacyPreferences().discreet) passwordSharing?.shareLogin(entry); }); share.disabled = busy || getPrivacyPreferences().discreet; footer.append(share);
   const favorite = action(entry.favorite ? "Favorit entfernen" : "Als Favorit", "toggle-favorite", () => void operation(async run => { if (!vault) return; if (await commit({ ...vault, version: 1, entries: vault.entries.map(item => item.id === entry.id ? { ...item, favorite: !item.favorite } : item) }, run)) { status("Favorit gespeichert."); focusAfter(selectedId ? "detail-title" : "new-entry"); } })); favorite.prepend(createIcon("star")); favorite.setAttribute("aria-pressed", String(entry.favorite));
   const remove = action("Login löschen", "delete-entry", () => { deleting = entry.id; byId("delete-title").textContent = entry.title; byId("delete-dialog-status").textContent = ""; byId("delete-dialog-status").hidden = true; byId<HTMLDialogElement>("delete-dialog").showModal(); }); remove.classList.add("danger"); footer.append(favorite,remove); detail.append(footer);
 }
@@ -291,6 +301,13 @@ async function readFile(id: string): Promise<string> {
   if (!file || file.size > MAX_FILE_BYTES || file.size === 0) throw new Error("Wähle eine Datei mit 1 Byte bis maximal 2 MB.");
   return file.text();
 }
+function acceptOpened(opened: Awaited<ReturnType<typeof openVault>>, nextRevision: number, run: number, message = "Mit Passkey entsperrt.") {
+  if (!active(run)) return;
+  revision = nextRevision; vault = opened.vault; key = opened.key; envelope = opened.envelope; remote = opened.envelope; lastActivity = Date.now();
+  input("master").value = ""; input("master-confirm").value = "";
+  byId("gate").hidden = true; document.body.classList.add("unlocked"); byId("workspace").hidden = false; byId("lock").hidden = false;
+  render(); void passwordAccess?.refresh(); void passwordSharing?.refresh(); onboarding?.refresh(); status(message); focusAfter("new-entry");
+}
 form("unlock-form").addEventListener("submit", event => {
   event.preventDefault(); if (!ready) return;
   void operation(async run => {
@@ -300,9 +317,7 @@ form("unlock-form").addEventListener("submit", event => {
     const opened = current ? await openVault(current, master) : await createVault(master);
     if (!active(run)) return;
     if (!current) { const saved = readSnapshot(await api("/api/password-vault", opened.envelope, revision)); if (!active(run)) return; revision = saved.revision; }
-    vault = opened.vault; key = opened.key; envelope = opened.envelope; remote = opened.envelope; lastActivity = Date.now();
-    byId("gate").hidden = true; document.body.classList.add("unlocked"); byId("workspace").hidden = false; byId("lock").hidden = false;
-    render(); recordActivity(current ? "unlock" : "create"); status(current ? "Tresor entsperrt." : "Tresor angelegt und verschlüsselt gespeichert."); focusAfter("new-entry");
+    acceptOpened(opened, revision, run, current ? "Tresor entsperrt." : "Tresor angelegt und verschlüsselt gespeichert."); recordActivity(current ? "unlock" : "create");
   });
 });
 byId("lock").addEventListener("click", () => lock());
@@ -389,14 +404,23 @@ form("rekey-form").addEventListener("submit", event => { event.preventDefault();
   if (master !== value("new-master-confirm")) throw new Error("Die neuen Masterpasswörter stimmen nicht überein.");
   form("rekey-form").reset();
   const rekeyed = await createVault(master, vault); if (!unlocked(run)) return;
-  if (await commit(vault!, run, rekeyed.key, rekeyed.envelope.salt)) status("Masterpasswort geändert. Alte Sicherungen brauchen weiterhin ihr damaliges Passwort.");
+  if (await commit(vault!, run, rekeyed.key, rekeyed.envelope.salt)) status("Masterpasswort geändert. Richte deine Passkeys erneut ein; offene Freigaben wurden widerrufen. Alte Sicherungen brauchen ihr damaliges Passwort.");
 }); });
 for (const name of ["pointerdown", "keydown", "input"] as const) document.addEventListener(name, () => { lastActivity = Date.now(); }, { passive: true });
 setInterval(() => { if (vault && Date.now() - lastActivity >= 300_000) lock("Nach 5 Minuten ohne Eingabe gesperrt."); }, 1000);
 document.addEventListener("visibilitychange", () => { clearTimeout(hiddenTimer); if (document.visibilityState === "hidden") { if (getPrivacyPreferences().strictBackground) { if (vault || busy) lock("Beim Wechsel in den Hintergrund gesperrt."); } else hiddenTimer = setTimeout(() => { if (vault || busy) lock("Nach 30 Sekunden im Hintergrund gesperrt."); }, 30_000); } });
 window.addEventListener("pagehide", () => { lock("Seite verlassen, Tresor gesperrt.", false); });
-initPrivacy(() => { cancelReveal(); clearEditor(); workflows?.clear(); if (vault) render(); });
-workflows = initWorkflows({vault:()=>vault,revision:()=>revision,generation:()=>generation,current:unlocked,busy:()=>busy,discreet:()=>getPrivacyPreferences().discreet,run:operation,commit,status,select:id=>{showEntries();selectEntry(id,true);},settings:showSettings,copy,pairing:pairingRequest});
+initPrivacy(() => { cancelReveal(); clearEditor(); workflows?.clear(); passwordAccess?.clear(); passwordSharing?.clear(); if (vault) { render(); void passwordAccess?.refresh(); void passwordSharing?.refresh(); } });
+workflows = initWorkflows({vault:()=>vault,revision:()=>revision,generation:()=>generation,current:unlocked,busy:()=>busy,discreet:()=>getPrivacyPreferences().discreet,run:operation,commit,status,select:id=>{showEntries();selectEntry(id,true);},settings:showSettings,copy,pairing:pairingRequest,shareProfile:profile=>passwordSharing?.shareProfile(profile)});
+const accessContext = {
+  get: () => ({token, revision, record: envelope || remote, vault, generation, shareOrigin, discreet: getPrivacyPreferences().discreet}),
+  current: active, unlocked: () => !!vault && !!key, run: operation,
+  accept: (opened: Awaited<ReturnType<typeof openVault>>, nextRevision: number, run: number) => { acceptOpened(opened, nextRevision, run); },
+  announce: status,
+};
+passwordAccess = initPasswordAccess(accessContext);
+passwordSharing = initPasswordSharing(accessContext);
+onboarding = initOnboarding({vault:()=>vault,hasRecord:()=>!!remote,ready:()=>ready,busy:()=>busy,login:()=>edit(),settings:showSettings,backup:()=>byId("export-backup").click()});
 initBrand();
 initPresentation();
 void load();

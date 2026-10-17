@@ -6,7 +6,7 @@
 
 Passwörter und Formularprofile lokal verwalten. HeavenKey verschlüsselt den Tresor im Browser und speichert ihn auf deinem Computer. Für den Passwortmanager brauchst du weder ein Cloudkonto noch eine Internetverbindung.
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.11.2](https://img.shields.io/badge/version-0.11.2-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/latest)
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.12.0](https://img.shields.io/badge/version-0.12.0-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/latest)
 
 [Downloads](https://github.com/Supersynergy/HeavenKey/releases/latest) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
 
@@ -18,7 +18,7 @@ Passwörter und Formularprofile lokal verwalten. HeavenKey verschlüsselt den Tr
 
 Deine digitalen Türen sollen unter deiner Kontrolle bleiben. Der lokale Tresor bewahrt Passwörter und Formularprofile auf. Beim Ausfüllen entscheidest du, welche Angaben auf welche Seite gelangen. Browser-Verbindungen kannst du im Tresor widerrufen.
 
-Die ursprüngliche Idee reicht weiter: mit Passkeys anmelden, Zugänge zeitlich begrenzen und Weitergaben gezielt entziehen. Dafür enthält HeavenKey ein getrenntes [Zugangslabor](#passkey-zugangslabor). Es wird weiterhin als Erprobung mit eigenen Grenzen geführt. Der Passwortmanager teilt keine Logins automatisch und ist kein Passkey-Anbieter für beliebige Websites. Das Titelbild ist das ursprüngliche Markenmotiv, keine Aufnahme einer Funktion.
+Die ursprüngliche Idee steckt jetzt im Passwortmanager: den lokalen Tresor mit einem Passkey entsperren und einzelne Angaben zeitlich begrenzt an einen Empfänger weitergeben. Du wählst die Felder, die Laufzeit und kannst die Freigabe widerrufen. Das getrennte [Zugangslabor](#passkey-zugangslabor) bleibt für weitergehende Experimente erhalten. HeavenKey ist kein Passkey-Anbieter für beliebige Websites. Das Titelbild ist das ursprüngliche Markenmotiv, keine Aufnahme einer Funktion.
 
 ## Starten
 
@@ -28,11 +28,11 @@ Die ursprüngliche Idee reicht weiter: mit Passkeys anmelden, Zugänge zeitlich 
 
 | Computer | Paket | Starter |
 | --- | --- | --- |
-| Windows x64 | `HeavenKey-0.11.2-windows-x64.zip` | `Start HeavenKey.cmd` |
-| macOS mit Apple Silicon | `HeavenKey-0.11.2-macos-arm64.zip` | `Start HeavenKey.command` |
-| macOS mit Intel-Prozessor | `HeavenKey-0.11.2-macos-x64.zip` | `Start HeavenKey.command` |
-| Linux x64 | `HeavenKey-0.11.2-linux-x64.tar.gz` | `./start.sh` |
-| Linux ARM64 | `HeavenKey-0.11.2-linux-arm64.tar.gz` | `./start.sh` |
+| Windows x64 | `HeavenKey-0.12.0-windows-x64.zip` | `Start HeavenKey.cmd` |
+| macOS mit Apple Silicon | `HeavenKey-0.12.0-macos-arm64.zip` | `Start HeavenKey.command` |
+| macOS mit Intel-Prozessor | `HeavenKey-0.12.0-macos-x64.zip` | `Start HeavenKey.command` |
+| Linux x64 | `HeavenKey-0.12.0-linux-x64.tar.gz` | `./start.sh` |
+| Linux ARM64 | `HeavenKey-0.12.0-linux-arm64.tar.gz` | `./start.sh` |
 
 Ein aktueller Browser genügt. Rust, Bun und Docker werden nur für die Entwicklung benötigt. Das Terminal des Starters bleibt geöffnet; `Ctrl+C` beendet den Dienst. Die Pakete sind unsigniert und nicht Apple-notarisiert. [Installation und Datenordner](docs/DISTRIBUTION.md) erklären die Betriebssystemhinweise und den Updateablauf.
 
@@ -44,6 +44,11 @@ Ein aktueller Browser genügt. Rust, Bun und Docker werden nur für die Entwickl
 - **Importvorschau:** eine CSV lokal einlesen und neue, identische oder abweichende Einträge prüfen. Identische Duplikate werden zunächst übersprungen; einen Konflikt ersetzt du ausdrücklich.
 - **Sicherungen:** den verschlüsselten Tresor exportieren und mit seinem Masterpasswort wiederherstellen. Profile bleiben bei Login-Änderungen und Passwortwechseln erhalten.
 - **Diskrete Ansicht:** private Detailfelder verdecken; bei Bedarf sofort beim Wechsel in den Hintergrund sperren. Ein lokaler Check zeigt kurze oder wiederverwendete Passwörter, ohne einen Datenleckdienst anzufragen.
+- **Passkey-Entsperren:** unter Einstellungen einen PRF-fähigen Passkey hinzufügen und den bestehenden Tresor damit öffnen. Das Masterpasswort bleibt für Sicherungen, Wiederherstellung und den Rückweg erforderlich.
+- **Befristete Freigaben:** einzelne Login- oder Profilfelder ausdrücklich auswählen und als verschlüsselte Kopie für fünf Minuten bis sieben Tage freigeben. Der erste Empfänger bindet seinen eigenen Passkey an die Freigabe. Weitere Abrufe erfordern denselben Passkey.
+- **Erste Schritte:** der Einrichtungsassistent führt zu erstem Login, Import, Sicherung und optionalem Passkey. Vorhandene Sicherungen lassen sich direkt vom Sperrbildschirm wiederherstellen.
+
+Ohne zusätzliche Konfiguration funktionieren Freigabelinks nur auf demselben Computer. Für andere Geräte braucht der laufende Dienst eine erreichbare HTTPS-Adresse mit `HEAVENKEY_SHARE_ORIGIN` und einen korrekt eingerichteten Reverse-Proxy. Die Oberfläche weist vor der Erstellung darauf hin. [Einrichtung und Sicherheitsgrenzen](docs/ACCESS-AND-SHARING.md) erklären Empfängerbindung, Widerruf und Betrieb.
 
 ### Ausfüllen im Browser
 
@@ -58,6 +63,10 @@ Die Erweiterung hat keinen dauerhaften Zugriff auf alle Websites. Der Browser sp
 ![Dunkles Design mit denselben synthetischen Einträgen](docs/screenshots/vault-dark.png)
 
 ![CSV-Importvorschau mit einem neuen Eintrag, einem identischen Duplikat und einem Konflikt](docs/screenshots/import-preview.png)
+
+![Einrichtung mit dem ursprünglichen HeavenKey-Motiv](docs/screenshots/onboarding.png)
+
+![Ausdrückliche Feldauswahl für eine befristete Freigabe](docs/screenshots/timed-share.png)
 
 <details>
 <summary>Schnellzugriff, Formularprofil und schmale Ansicht</summary>
@@ -80,7 +89,7 @@ Die Erweiterung hat keinen dauerhaften Zugriff auf alle Websites. Der Browser sp
 
 Das Masterpasswort und der nicht exportierbare Schlüssel bleiben im entsperrten Browser. Der Dienst speichert die verschlüsselte Tresorhülle mit AES-256-GCM; die Schlüsselableitung verwendet PBKDF2-HMAC-SHA256 mit 600.000 Iterationen. Revisionen verhindern stilles Überschreiben aus veralteten Tabs. Der lokale Dienst bindet an Loopback und prüft Host, Origin und sein Prozess- beziehungsweise Kopplungstoken. Details stehen in der [Passwortmanager-Anleitung](docs/PASSWORD-MANAGER.md).
 
-Verlust des Masterpassworts lässt sich nicht durch HeavenKey zurücksetzen. JavaScript garantiert keine vollständige physische Speicherlöschung; die Bereinigung der Zwischenablage hängt vom Browser ab. Programme im selben Benutzerkonto und ein kompromittierter Browser gehören zur Vertrauensgrenze.
+Verlust des Masterpassworts lässt sich nicht durch HeavenKey zurücksetzen. Ein Passkey hilft nur, solange sein verschlüsselter lokaler Umschlag und das Gerät verfügbar sind. Ein Passwortwechsel oder eine gesperrte Wiederherstellung entfernt Passkey-Umschläge und widerruft bestehende Freigaben. Bereits abgerufene Angaben kann ein Empfänger speichern; Ablauf und Widerruf verhindern weitere Serverabrufe. Der vollständige Freigabelink ist vertraulich: Wer ihn zuerst mit einem Passkey beansprucht, wird zum gebundenen Empfänger. JavaScript garantiert keine vollständige physische Speicherlöschung; die Bereinigung der Zwischenablage hängt vom Browser ab. Programme im selben Benutzerkonto und ein kompromittierter Browser gehören zur Vertrauensgrenze.
 
 Die [Release-Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) unterscheidet natives Apple Silicon von Rosetta, Wine und QEMU. Die Chromium-Tests verwenden eine ausdrückliche Testfreigabe für localhost; der native Berechtigungsdialog ist nicht automatisiert abgenommen. Firefox wurde auf Paketebene geprüft. Physische Passkeys und ein externes Kryptografie-Audit sind nicht abgenommen. Native mobile Apps, Gerätesynchronisation und die Verwaltung von Website-Passkeys sind noch offen. Die responsive Ansicht ersetzt keinen mobilen Credential-Provider.
 

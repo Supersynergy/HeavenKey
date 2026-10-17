@@ -26,6 +26,11 @@ if extension_receipt.exists():
     name = "extension-autofill.json"
     shutil.copyfile(extension_receipt, destination / name)
     files[name] = hashlib.sha256(extension_receipt.read_bytes()).hexdigest()
+access_receipt = source / "password-access/browser.json"
+if access_receipt.exists():
+    name = "password-access.json"
+    shutil.copyfile(access_receipt, destination / name)
+    files[name] = hashlib.sha256(access_receipt.read_bytes()).hexdigest()
 (destination / "manifest.json").write_text(
     json.dumps(
         {

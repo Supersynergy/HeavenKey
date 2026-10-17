@@ -1,4 +1,6 @@
-# Lokaler Passwortmanager · 0.11.2
+# Lokaler Passwortmanager · 0.12.0
+
+Neu: [Passkey-Entsperren und befristete Feldfreigaben](ACCESS-AND-SHARING.md) sind direkt in Einstellungen und Eintragsansicht integriert. **Erste Schritte** führt zu Login, Import, Sicherung und optionalem Passkey. Ohne eigene HTTPS-Konfiguration bleiben Freigabelinks auf denselben Computer begrenzt.
 
 Entpacke dein Plattformpaket und starte den enthaltenen Starter. Er öffnet `http://localhost:18240/passwords/`. Dafür sind weder Internet, ein HeavenKey-Konto noch ein Passkey erforderlich. Das Terminal bleibt geöffnet; `Ctrl+C` beendet den Dienst.
 
@@ -53,11 +55,11 @@ Der ausführbare Programmordner darf beim Update ersetzt werden. Der Datenordner
 ./heavenkey --port 18241 --open
 ```
 
-Die erste Zeile startet den lokalen Passwortmanager, die zweite das bisherige Passkey-Zugangslabor auf einem anderen Port. Unter Windows heißt das Programm `HeavenKey.exe`. Das Labor enthält Passkeys, Recovery und begrenzte Agentenfreigaben; es benötigt weiterhin seinen eigenen Einrichtungscode und seine Schutzschlüssel. Die Datenbestände sind getrennt. Öffentliche HTTPS-Konfiguration ist im Passwortmanager-Modus ausgeschlossen.
+Die erste Zeile startet den lokalen Passwortmanager, die zweite das bisherige Passkey-Zugangslabor auf einem anderen Port. Unter Windows heißt das Programm `HeavenKey.exe`. Das Labor enthält Passkeys, Recovery und begrenzte Agentenfreigaben; es benötigt weiterhin seinen eigenen Einrichtungscode und seine Schutzschlüssel. Die Datenbestände sind getrennt. Der Passwortmanager erlaubt mit `HEAVENKEY_SHARE_ORIGIN` einen getrennten HTTPS-Empfängerzugang; Verwaltungs- und Tresorpfade bleiben lokal.
 
 ## Abnahmegrenzen
 
-Diese Ausgabe ist für den lokalen Betrieb vorgesehen. Automatische Passwortübernahme von Websites, mobile Apps, Cloud-/WLAN-Synchronisation, verwaltete Website-Passkeys, Anhänge und Freigabe echter Tresore sind noch offen. Die Browser-Erweiterungen ergänzen bestätigtes Autofill und Formularprofile; Installation und Browsergrenzen stehen in DISTRIBUTION.md. Desktoppakete sind nicht vom Herausgeber signiert oder notarisiert. Der aktuelle Vergleich und die Reihenfolge der verbleibenden Lücken stehen in [der Gap-Analyse](PASSWORD-MANAGER-GAPS.md).
+Diese Ausgabe ist für den lokalen Betrieb vorgesehen. Automatische Passwortübernahme von Websites, mobile Apps, Cloud-/WLAN-Synchronisation, verwaltete Website-Passkeys, Anhänge und gemeinschaftlich bearbeitete Tresore sind noch offen. Die Browser-Erweiterungen ergänzen bestätigtes Autofill und Formularprofile; Installation und Browsergrenzen stehen in DISTRIBUTION.md. Desktoppakete sind nicht vom Herausgeber signiert oder notarisiert. Der aktuelle Vergleich und die Reihenfolge der verbleibenden Lücken stehen in [der Gap-Analyse](PASSWORD-MANAGER-GAPS.md).
 
 ## Formularprofile und Browserhilfe
 

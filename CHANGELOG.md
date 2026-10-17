@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.0 — 2026-10-17
+
+- Optionales PRF-Passkey-Entsperren direkt im lokalen Passwortmanager; verifizierte Anmeldung, verschlüsselter Masterpasswort-Umschlag und unveränderter Masterpasswort-Rückweg.
+- Befristete, verschlüsselte Kopien ausgewählter Login- und Profilfelder. Eigener Empfänger-Passkey, erneute Verifikation, serverseitiger Ablauf und Widerruf.
+- Passkey-Umschläge und Freigaben werden beim Masterpasswortwechsel oder gesperrten Wiederherstellen gemeinsam ungültig.
+- Einrichtungsassistent mit erstem Login, Import, Sicherung und optionalem Passkey; klare Hinweise auf lokale Freigabelinks und private GitHub-Downloads.
+- Wiederherstellung einer gültigen Sicherung ersetzt weiterhin einen beschädigten alten Tresordatensatz.
+- Integrierte Browserabnahme gegen Rust mit echten virtuellen WebAuthn-/PRF-Zeremonien, Neustart, Abbruch, Ablauf und Widerruf. Physische Geräte und externes HTTPS-Hosting bleiben gesonderte Abnahmen.
+
 ## 0.11.2 — 2026-10-17
 
 - Restore the original HeavenKey cover to the README and embed the original square artwork in the local lock screen.

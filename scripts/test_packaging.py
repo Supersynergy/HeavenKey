@@ -20,6 +20,7 @@ class PackagingTests(unittest.TestCase):
             "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".cargo/config.toml",
             "apps/web/dist/main.js", "apps/web/index.html",
             "apps/web/dist/passwords.js", "apps/web/passwords.html",
+            "apps/web/dist/share.js",
             "docs/assets/heavenkey-hero-square.png",
             "scripts/build_openssl.py", "scripts/build_portable.py", "scripts/build_extension.ts",
             "apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css",
