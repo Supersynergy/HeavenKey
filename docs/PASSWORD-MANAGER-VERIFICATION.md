@@ -1,33 +1,37 @@
-# Passwortmanager 0.9 · Abnahme und Grenzen
+# Passwortmanager 0.11.0 · Abnahme und Grenzen
 
-Stand: 16. Oktober 2026. Diese lokale Vorschau übernimmt die Appgestaltung mit Navigation, Eintragsliste und Details in den echten verschlüsselten Passwortmanager. Die fünf Desktop-Pakete enthalten die Oberfläche. Browser-Erweiterungen bleiben Launcher ohne Autofill. Ein allgemeiner Vorsprung gegenüber Enpass ist nicht nachgewiesen.
+Die Ausgabe ergänzt bestätigtes Browser-Autofill, verschlüsselte Formularprofile, den Schnellzugriff mit F2 und eine CSV-Importvorschau mit Duplikatprüfung. Ein allgemeiner Vorsprung gegenüber Enpass ist nicht nachgewiesen.
 
 ## Prüfumfang
 
-Die Release-Abnahme verwendet `just check` und `just e2e`. Der Check umfasst Rust, Python, TypeScript, Kryptografie, lokale HTTP-Grenzen, Import, Backup, Wiederherstellung, Passwortwechsel und Revisionskonflikte. Die bestehenden virtuellen WebAuthn-Prüfungen des getrennten Zugangslabors bleiben erhalten.
+Die Release-Abnahme verwendet `just check` und `just e2e`. Sie prüft Rust, Python, TypeScript, Kryptografie, lokale HTTP-Grenzen, Import, Backup, Wiederherstellung, Passwortwechsel und Revisionskonflikte. Die virtuellen WebAuthn-Prüfungen des getrennten Zugangslabors bleiben erhalten.
 
-Die neuen Designfälle laufen im selben Browserablauf gegen die echte Rust-API: drei Bereiche, Auswahl, Suche mit Tastatur, Editor mit Fokus und Escape, Filter und Sortierung, Hell/Dunkel mit Neustart, responsive Liste/Details, Verwaltung und vollständige Bereinigung beim Sperren. Die bisherigen 1.000-Eintrags-, beschädigte-Tresor- und Backup-Roundtrips bleiben Teil der Abnahme. Ausschließlich synthetische Zugangsdaten verwenden.
+Der Passwortmanager läuft in Chromium gegen die echte Rust-API. Die Prüfungen umfassen Navigation und responsive Ansichten. Weitere Fälle prüfen Tastaturfokus sowie Datenschutzeinstellungen und die Bereinigung beim Sperren. Sie erhalten die bestehenden 1.000-Eintrags-, Neustart- und beschädigte-Tresor-Roundtrips. Profiltests prüfen verschlüsselte Speicherung und den Erhalt der Profile bei Login-Änderungen, Passwortwechsel und Wiederherstellung. Importtests prüfen Vorschau ohne Schreibzugriff sowie Abbruch. Identische Duplikate und ausdrücklich bestätigter Ersatz werden ebenfalls geprüft.
 
-Zwischenablagebereinigung, kontrolliert vorgerückte Inaktivitätszeit und verzögerte Browser-Kryptovorgänge werden zusätzlich mit ausdrücklich benannten Testdoubles geprüft. Solche Prüfungen beweisen keine physische Speicherlöschung oder zugesicherte Bereinigung der Betriebssystem-Zwischenablage.
+Die entpackte Chromium-Erweiterung koppelt mit dem echten Rust-Dienst. Sie prüft die genaue Login-Origin und die Feldzuordnung. Weitere Fälle behandeln sensible Werte mit gesonderten Freigaben sowie geschützte Frames. Rückgängig und veränderte Seiten erhalten eigene Prüfungen. Ein Browser-Test hält die native Script-Installation gezielt an und prüft, dass Sperren oder Trennen sowie `pagehide` eine wartende Füllung vor dem Klartext-Dispatch abbrechen. Dieser kontrollierte Zeitablauf ersetzt weder die echte API noch den echten Seiten-DOM. Bereits an den Browser übergebene Aktionen lassen sich nicht nachträglich zurückrufen.
 
-Die tatsächlichen ausgeführten Fälle, Resultate und Binärhashes stehen in `ACCEPTANCE.json` beim Release. Alte Belege der [Version 0.8](V08-VERIFICATION.md) sind Ausgangsstand und kein Nachweis für 0.9. Die unabhängige interne Prüfung muss an den veröffentlichten Quellenstand gebunden sein; sie ersetzt kein externes Kryptografie-Audit.
+Die headless Prüfung verwendet eine ausdrücklich im Testmanifest freigegebene localhost-Berechtigung. Der native optionale Berechtigungsdialog wird damit nicht abgenommen. Die ausgelieferten Manifeste enthalten diese feste Host-Freigabe nicht. Firefox wird auf Paketinhalt und Berechtigungen geprüft; eine Firefox-Laufzeitabnahme steht aus.
+
+Zwischenablagebereinigung, vorgerückte Inaktivitätszeit und verzögerte Kryptovorgänge verwenden zusätzliche benannte Testdoubles. Diese beweisen keine physische Speicherlöschung oder garantierte Bereinigung der Betriebssystem-Zwischenablage. Sämtliche Testdaten sind synthetisch.
+
+Die ausgeführten Fälle, Resultate und Binärhashes stehen in `ACCEPTANCE.json` beim Release. Frühere Nachweise gelten nur für ihre damaligen Quellen. Die unabhängige interne Quellprüfung ist an Dateihashes gebunden und ersetzt kein externes Kryptografie-Audit.
 
 ## Paketbindung und Laufzeitumgebungen
 
-Alle fünf Desktop-Pakete müssen denselben Quellfingerprint enthalten. Das Paketmanifest nennt Version, vollständigen Git-Commit und Binärhash. `SHA256SUMS` bindet Archive und Abnahmebericht. Ein veralteter Build wird beim Verpacken abgelehnt. Lizenztexte und erforderliche Drittanbieterquellen liegen bei.
+Alle fünf Desktop-Pakete müssen denselben Quellfingerprint enthalten. Die Manifeste nennen Version, Git-Commit und Binärhash. `SHA256SUMS` bindet Archive und Abnahmebericht. Veraltete Builds werden abgelehnt; Lizenztexte und erforderliche Drittanbieterquellen liegen bei.
 
-| Paket | Vorgesehene Prüfumgebung und Aussagegrenze |
+| Paket | Prüfumgebung und Aussagegrenze |
 | --- | --- |
-| macOS ARM64 | Natives Apple Silicon; Browserfälle gegen die aus dem Paket entnommene Binärdatei. |
+| macOS ARM64 | Natives Apple Silicon; Browserfälle gegen die entpackte Binärdatei. |
 | macOS x64 | Rosetta auf Apple Silicon; kein physischer Intel-Mac. |
 | Windows x64 | Wine; keine native Windows-/Hello-Abnahme. |
 | Linux ARM64 | ARM64-Linux-Container ohne WAN. |
-| Linux x64 | QEMU im Linux-Container ohne WAN; kein physisches x64-Linux-Gerät. |
+| Linux x64 | QEMU im Linux-Container ohne WAN; kein physischer x64-Linux-Rechner. |
 
-Für jedes Paket prüfen wir Start ohne Quelldateien und Betriebssystem-Schlüssel, eingebettete Assets, Speichern und kalten Neustart. Browsernachweise für ein Paket gelten nur für dessen konkreten Binärhash. GitHub-CI verwendet den vorhandenen kurzlebigen lokalen Linux-Runner; kostenpflichtige Runner werden nicht genutzt.
+Für jedes Paket werden Start ohne Quelldateien, eingebettete Assets, Speichern und kalter Neustart geprüft. Browsernachweise gelten nur für den benannten Binärhash. GitHub-CI verwendet einen kurzlebigen lokalen Linux-Runner ohne kostenpflichtige Runner.
 
 ## Offene Grenzen
 
-Die Pakete sind nicht vom Herausgeber signiert oder Apple-notarisiert. Physische Passkeys, native Biometrie, mobile Credential-Provider, Autofill, Gerätesynchronisation, verwaltete Website-Passkeys, Anhänge und Eintragsfreigaben fehlen. Die Agenten des getrennten Zugangslabors erhalten keinen Zugriff auf den Passworttresor. Ein lokal berechneter Passwort-Hinweis wäre kein Online-Datenleckcheck.
+Die Pakete sind nicht vom Herausgeber signiert oder Apple-notarisiert. Physische Passkeys, native Biometrie, mobile Credential-Provider, Gerätesynchronisation, verwaltete Website-Passkeys, Anhänge und Eintragsfreigaben sind nicht abgenommen. Die Agenten des Zugangslabors erhalten keinen Zugriff auf den Passworttresor.
 
-Eine beschädigte SQLite-Dateistruktur selbst lässt sich nicht über die Weboberfläche reparieren. Verwende dafür eine gültige Sicherung in einem neuen Datenordner. Verschlüsselte Datensätze mit beschädigtem altem JSON oder Ciphertext können dagegen nach vollständiger Prüfung einer gültigen Sicherung vom Sperrbildschirm ersetzt werden.
+Eine beschädigte SQLite-Dateistruktur benötigt eine gültige Sicherung in einem neuen Datenordner. Bei beschädigtem Tresor-JSON oder Ciphertext kann dagegen eine vollständig geprüfte Sicherung vom Sperrbildschirm aus den bisherigen Datensatz ersetzen.

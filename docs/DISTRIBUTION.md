@@ -1,6 +1,6 @@
 # HeavenKey-Pakete und Browser-Erweiterungen
 
-Version 0.9.0 startet über den enthaltenen Starter den lokalen Passwortmanager. Sie enthält außerdem die zusammengeführten Zugangslabor-Funktionen aus 0.7. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Verbindliche Build- und Laufzeitnachweise stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md).
+Version 0.11.0 startet über den enthaltenen Starter den lokalen Passwortmanager. Sie enthält außerdem die zusammengeführten Zugangslabor-Funktionen aus 0.7. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Verbindliche Build- und Laufzeitnachweise stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md).
 
 Die Pakete enthalten Server, Weboberfläche und Lizenzhinweise. Für den Passwortmanager brauchst du einen aktuellen Browser, aber kein Rust, Bun, Python, Docker oder Passkey. Das optionale Zugangslabor verwendet WebAuthn, SQLCipher und eine geschützte Signierschlüsselhülle. Physische Passkeys sind noch nicht abgenommen.
 
@@ -16,7 +16,7 @@ Die Pakete enthalten Server, Weboberfläche und Lizenzhinweise. Für den Passwor
 
 Das Terminal bleibt geöffnet. Der Starter öffnet `http://localhost:18240/passwords/`; falls das nicht klappt, öffne die Adresse selbst. `Ctrl+C` beendet HeavenKey. Die API bindet nur an die lokale IPv4-Adresse. Unter Linux braucht das automatische Öffnen `xdg-open`; die manuelle Adresse funktioniert auch ohne Desktop.
 
-Die Vorschau ist nicht vom Herausgeber signiert oder von Apple notarisiert. Windows und macOS können eine Herkunftswarnung anzeigen. Prüfe Quelle und SHA256SUMS vor dem Start. Verändere keine globalen Sicherheitseinstellungen. Auf macOS lässt sich eine geprüfte App über „Datenschutz & Sicherheit“ freigeben. Auf Windows ARM ist das x64-Paket nur ein Kandidat für die Betriebssystem-Emulation; eine native ARM64-Ausgabe fehlt.
+Die Ausgabe ist nicht vom Herausgeber signiert oder von Apple notarisiert. Windows und macOS können eine Herkunftswarnung anzeigen. Prüfe Quelle und SHA256SUMS vor dem Start. Verändere keine globalen Sicherheitseinstellungen. Auf macOS lässt sich eine geprüfte App über „Datenschutz & Sicherheit“ freigeben. Auf Windows ARM ist das x64-Paket nur ein Kandidat für die Betriebssystem-Emulation; eine native ARM64-Ausgabe fehlt.
 
 ## Einrichten und Daten behalten
 
@@ -40,7 +40,7 @@ Chrome und Edge verwenden dasselbe Chromium-Paket. Entpacke `extension-chromium.
 
 Firefox: Entpacke `extension-firefox.zip`; öffne `about:debugging#/runtime/this-firefox` und lade `manifest.json` über „Temporäres Add-on laden“. Diese Installation endet beim Browser-Neustart. Eine dauerhafte Installation im normalen Firefox braucht Mozilla-Signierung; das Paket ist noch unsigniert.
 
-Klicke auf HeavenKey in der Browserleiste, wähle den gewünschten Bereich und dann „HeavenKey öffnen“. Die Erweiterung öffnet den lokalen Passwortmanager oder das separat gestartete Zugangslabor; dessen Port muss zur Auswahl passen. Eine HTTPS-Verbindung ist nur für das Zugangslabor erlaubt. Die Erweiterung speichert nur die Verbindungseinstellung, startet keinen Server und liest keine besuchten Seiten. Sie bietet kein Autofill. Sie fordert keine Webseiten-, Speicher- oder Native-Messaging-Berechtigung an.
+Klicke auf HeavenKey in der Browserleiste, wähle den gewünschten Bereich und dann „HeavenKey öffnen“. Die Erweiterung öffnet den lokalen Passwortmanager oder das separat gestartete Zugangslabor; dessen Port muss zur Auswahl passen. Eine HTTPS-Verbindung ist nur für das Zugangslabor erlaubt. Für die Formularhilfe starte den lokalen Passwortmanager. Erzeuge unter Einstellungen einen Verbindungscode und gib ihn mit dem Dienstport in der Erweiterung ein. Bestätige die optionale Berechtigung für localhost. Gespeichert werden nur Verbindung und eigenes Token. Entsperre den Tresor im Popup; schließe das Popup zum Sperren. Der Dienst muss laufen. Ctrl+Shift+Y beziehungsweise Cmd+Shift+Y öffnet die Erweiterung im Browser. Autofill erfordert eine bewusste Auswahl des Tabs, Profils und der Felder. Die Erweiterung nutzt activeTab, scripting, storage und contextMenus; sie erhält keinen dauerhaften Zugriff auf alle Websites und kein Native Messaging.
 
 Safari verwendet die Weboberfläche direkt; eine Safari-Erweiterung ist nicht enthalten. iOS und Android erhalten hier keine native App. Für den lokalen Dienst auf dem Computer ersetzt ein Mobilbrowser keine spätere HTTPS- und Netzwerkbereitstellung.
 

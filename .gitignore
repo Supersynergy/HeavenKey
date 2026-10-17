@@ -9,3 +9,8 @@ __pycache__/
 /.ci-runner/
 /.platform-tools/
 /dist/
+/apps/extension/TEST-RECEIPT.json
+/apps/extension/ENGINE-RECEIPT.json
+/apps/extension/INTEGRATION-BLOCKER.json
+/apps/extension/WORKER-STATUS.md
+/apps/extension/evidence/

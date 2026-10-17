@@ -1,11 +1,12 @@
 /** Local password vault: only authenticated ciphertext crosses the API boundary. */
+import { validateProfiles, type FormProfile } from "../../../packages/forms/schema";
 export const ITERATIONS = 600_000;
 export const MAX_ITEMS = 1000;
 export const MAX_PLAIN_BYTES = 1_000_000;
 export const MAX_FILE_BYTES = 2_000_000;
 export type Envelope = { version: 1; kdf: "PBKDF2-SHA256"; iterations: 600000; salt: string; iv: string; ciphertext: string };
 export type Login = { id: string; title: string; username: string; password: string; url: string; notes: string; totp: string; tags: string[]; favorite: boolean };
-export type Vault = { version: 1; entries: Login[] };
+export type Vault = { version: 1 | 2; entries: Login[]; profiles?: FormProfile[] };
 const utf8 = new TextEncoder();
 const aad = utf8.encode("HeavenKey password vault v1");
 export const freshBytes = (length: number): Uint8Array<ArrayBuffer> => crypto.getRandomValues(new Uint8Array(length));
@@ -39,7 +40,8 @@ export async function derive(master: string, salt: Uint8Array<ArrayBuffer>): Pro
   } finally { bytes.fill(0); }
 }
 export function validateVault(value: unknown): Vault {
-  if (!object(value) || value.version !== 1 || !Array.isArray(value.entries) || value.entries.length > MAX_ITEMS) throw new Error("Ungültige Tresordaten oder zu viele Einträge (maximal 1000).");
+  if (!object(value) || (value.version !== 1 && value.version !== 2) || !Array.isArray(value.entries) || value.entries.length > MAX_ITEMS || (value.version === 2 && value.profiles === undefined)) throw new Error("Ungültige Tresordaten oder zu viele Einträge (maximal 1000).");
+  if (value.profiles !== undefined) validateProfiles(value.profiles);
   const ids = new Set<string>();
   for (const entry of value.entries) {
     if (!object(entry)) throw new Error("Ungültiger Eintrag.");
@@ -52,10 +54,10 @@ export function validateVault(value: unknown): Vault {
     if (entry.totp) parseTotp(entry.totp as string);
   }
   if (utf8.encode(JSON.stringify(value)).length > MAX_PLAIN_BYTES) throw new Error("Der Tresor überschreitet 1 MB Klartext.");
-  return value as Vault;
+  return (value.profiles !== undefined ? {...value,version:2} : value) as Vault;
 }
 export async function sealVault(vault: Vault, key: CryptoKey, salt: string): Promise<Envelope> {
-  validateVault(vault);
+  vault = validateVault(vault);
   if (decode64(salt, 16).length !== 16) throw new Error("Ungültiges Salt.");
   const plain = utf8.encode(JSON.stringify(vault));
   try {
@@ -76,7 +78,7 @@ export async function openVault(value: unknown, master: string): Promise<{ vault
   finally { bytes?.fill(0); }
 }
 export async function createVault(master: string, vault: Vault = { version: 1, entries: [] }): Promise<{ vault: Vault; key: CryptoKey; envelope: Envelope }> {
-  validateVault(vault);
+  vault = validateVault(vault);
   const salt = freshBytes(16), key = await derive(master, salt);
   return { vault, key, envelope: await sealVault(vault, key, encode64(salt)) };
 }

@@ -1,4 +1,4 @@
-# Lokaler Passwortmanager · 0.10 Vorschau
+# Lokaler Passwortmanager · 0.11.0
 
 Entpacke dein Plattformpaket und starte den enthaltenen Starter. Er öffnet `http://localhost:18240/passwords/`. Dafür sind weder Internet, ein HeavenKey-Konto noch ein Passkey erforderlich. Das Terminal bleibt geöffnet; `Ctrl+C` beendet den Dienst.
 
@@ -8,13 +8,13 @@ Beim ersten Start legst du ein Masterpasswort mit mindestens 14 Zeichen fest. Ve
 
 Die App zeigt links Navigation und Tags, in der Mitte die Eintragsliste und rechts den ausgewählten Login. Suche und „Neuer Eintrag“ bleiben oben erreichbar. Die Feldaktionen im Detail kopieren Benutzername oder Passwort; Anzeigen und Kopieren sind getrennt. Favoriten und Tags filtern die Liste, die Sortierung wechselt zwischen A–Z und Z–A. Im schmalen Fenster öffnest du einen Eintrag aus der Liste und kehrst mit „Zurück“ zur erhaltenen Suche zurück.
 
-„Einstellungen“ öffnet Import, verschlüsselte Sicherungen, Wiederherstellung und Masterpasswortwechsel. Das Hell-/Dunkel-Design lässt sich umschalten; gespeichert wird nur die Darstellungswahl. Zugangsdaten bleiben im verschlüsselten Tresor. Mit Strg/⌘ K erreichst du die Suche. Tastaturfokus und die aktive Auswahl sind sichtbar.
+„Einstellungen“ öffnet Import, verschlüsselte Sicherungen, Wiederherstellung und Masterpasswortwechsel. Das Hell-/Dunkel-Design lässt sich umschalten; gespeichert wird nur die Darstellungswahl. Zugangsdaten bleiben im verschlüsselten Tresor. Mit Strg/⌘ K erreichst du die Suche. F2 öffnet den Schnellzugriff für Logins und Formularprofile. Tastaturfokus und die aktive Auswahl sind sichtbar.
 
 Der lokale Sicherheitscheck zeigt Einträge mit weniger als 14 Passwortzeichen und wiederverwendeten, nicht leeren Passwörtern. Von einem Hinweis gelangst du direkt zum betroffenen Login. Die Länge ist nur ein einfacher Anhaltspunkt und keine vollständige Stärkebewertung. Es werden keine Passwörter an einen Datenleckdienst gesendet.
 
 Ein Login enthält Titel, Benutzername, Passwort, Website, Notiz, Tags, Favoritenstatus und optional ein TOTP-Geheimnis. Suche und Bearbeitung laufen im entsperrten Browser. Der Generator verwendet die Zufallsquelle des Browsers. TOTP wird lokal berechnet.
 
-„Backup“ lädt ausschließlich den verschlüsselten Tresor herunter. Eine Wiederherstellung benötigt dessen Masterpasswort und eine ausdrückliche Bestätigung zum Ersetzen der aktuellen Einträge. Prüfe Wiederherstellung zuerst mit Beispieldaten. Ein CSV-Import liest eine lokale Datei im Browser; die gesamte Datei wird vor dem Speichern geprüft. CSV-Dateien aus anderen Programmen enthalten häufig Klartext. Bewahre solche Dateien nicht in öffentlichen oder synchronisierten Ordnern auf und entferne sie nach erfolgreicher Prüfung.
+„Backup“ lädt ausschließlich den verschlüsselten Tresor herunter. Eine Wiederherstellung benötigt dessen Masterpasswort und eine ausdrückliche Bestätigung zum Ersetzen der aktuellen Einträge. Prüfe Wiederherstellung zuerst mit Beispieldaten. Ein CSV-Import liest eine lokale Datei im Browser; die gesamte Datei wird vor dem Speichern geprüft. Die Vorschau unterscheidet neue, identische und abweichende Logins anhand von Website-Origin und Benutzername. Identische Einträge und Konflikte werden zunächst übersprungen. Du kannst zusätzlich anlegen oder einen eindeutig zugeordneten Eintrag ersetzen. Erst die Bestätigung schreibt den gesamten ausgewählten Import. Ein identischer erneuter Import verändert standardmäßig nichts. CSV-Dateien aus anderen Programmen enthalten häufig Klartext. Bewahre solche Dateien nicht in öffentlichen oder synchronisierten Ordnern auf und entferne sie nach erfolgreicher Prüfung.
 
 Auf dem Sperrbildschirm kannst du eine gültige Sicherung auch dann einspielen, wenn der aktuelle Tresor nicht mehr entschlüsselbar ist. Das Backup wird zuerst vollständig entschlüsselt und geprüft. Danach ersetzt es den bisherigen Tresor; anschließend gilt sein damaliges Masterpasswort. Eine falsche Backup-Passphrase oder manipulierte Sicherung verändert den gespeicherten Datensatz nicht. Bei einer Wiederherstellung im bereits entsperrten Tresor bleibt dagegen dessen aktuelles Masterpasswort erhalten.
 
@@ -57,4 +57,16 @@ Die erste Zeile startet den lokalen Passwortmanager, die zweite das bisherige Pa
 
 ## Abnahmegrenzen
 
-Diese Ausgabe ist eine lokale Vorschau. Browser-Autofill, automatische Passwortübernahme von Websites, mobile Apps, Cloud-/WLAN-Synchronisation, verwaltete Website-Passkeys, Anhänge und Freigabe echter Tresore sind noch offen. Die Browser-Erweiterungen öffnen die Oberfläche; sie füllen keine fremden Webseiten aus. Desktoppakete sind nicht vom Herausgeber signiert oder notarisiert. Der aktuelle Vergleich und die Reihenfolge der verbleibenden Lücken stehen in [der Gap-Analyse](PASSWORD-MANAGER-GAPS.md).
+Diese Ausgabe ist für den lokalen Betrieb vorgesehen. Automatische Passwortübernahme von Websites, mobile Apps, Cloud-/WLAN-Synchronisation, verwaltete Website-Passkeys, Anhänge und Freigabe echter Tresore sind noch offen. Die Browser-Erweiterungen ergänzen bestätigtes Autofill und Formularprofile; Installation und Browsergrenzen stehen in DISTRIBUTION.md. Desktoppakete sind nicht vom Herausgeber signiert oder notarisiert. Der aktuelle Vergleich und die Reihenfolge der verbleibenden Lücken stehen in [der Gap-Analyse](PASSWORD-MANAGER-GAPS.md).
+
+## Formularprofile und Browserhilfe
+
+Unter Einstellungen legst du Kontakt-, Adress- und weitere Formularprofile mit 58 unterstützten Feldtypen an. Werte und Titel werden mit dem Tresor verschlüsselt. Profile bleiben bei Login-Änderungen, Sicherungen und Passwortwechsel erhalten. Ein Tresor mit Profilen benötigt HeavenKey 0.11 oder neuer; ältere Ausgaben lehnen das neue innere Format ab. Die verschlüsselte Hülle bleibt kompatibel mit Version 1.
+
+Die Erweiterung wird mit einem einmaligen, zwei Minuten gültigen Code aus den Einstellungen verbunden. Ihr eigenes Token gilt nur für die konkrete Erweiterungsherkunft und verschlüsselte Tresorzugriffe. Trennen oder Dienstneustart widerruft die Verbindung. Entsperren geschieht im geöffneten Popup; Passwort und Schlüssel werden nicht im Browserspeicher abgelegt.
+
+Für Autofill wählst du den aktuellen Tab, das Profil und die Felder. Logins benötigen dieselbe Origin wie die gespeicherte Website. Allgemeine Profile benötigen eine ausdrückliche Bestätigung der Zielseite. Finanz- und Identitätsangaben sowie Geheimnisse benötigen gesonderte Freigaben. Vorhandene Werte bleiben standardmäßig erhalten. Die Erweiterung sendet keine Formulare ab und füllt keine fremden Frames aus. Die Seite kann bewusst ausgefüllte Werte wie manuelle Eingaben lesen.
+
+Formularerkennung, Textübernahme, Zuordnung, Vorschau, Ausfüllen und Rückgängig laufen lokal. Eine Übernahme von Formulardaten wird erst nach Prüfung als verschlüsseltes Profil gespeichert; Passwörter werden dabei ausgeschlossen. Die Erweiterung braucht keine dauerhafte Berechtigung für alle Websites und keinen Smartfield-Daemon.
+
+Beim Sperren oder Trennen werden wartende Formularaktionen vor der nächsten Browser-Dispatch-Grenze abgebrochen. Eine bereits an den Browser übergebene Füllung kann nachträglich nicht zurückgerufen werden; die Seite hat dann wie bei manueller Eingabe Zugriff auf diese Werte. Während einer Aktion sind Quellwerte und Freigaben gesperrt.

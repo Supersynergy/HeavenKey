@@ -7,6 +7,7 @@ prepare() {
     docs/evidence/e2e.json docs/evidence/heavenkey-missing-binary.json \
     docs/evidence/browser-*.png docs/evidence/failure-*.png \
     docs/evidence/failure-diagnostic.json
+  rm -f apps/extension/TEST-RECEIPT.json apps/extension/INTEGRATION-BLOCKER.json
 }
 
 source_checks() {
@@ -17,6 +18,7 @@ source_checks() {
   bun test apps/web/src/vault.test.ts
   bun test apps/web/src/passwords-crypto.test.ts
   bun test apps/web/src/passwords-privacy.test.ts
+  bun test apps/web/src/passwords-profiles.test.ts packages/forms/import-plan.test.ts
   bun test apps/web/src/interface.test.ts
   bun test apps/extension/popup.test.ts
   bun scripts/test_extension.mjs
@@ -43,7 +45,9 @@ build() {
   cargo build --locked --offline
   HEAVENKEY_INTEGRATION_BINARY=target/debug/uac-api python3 -m unittest scripts.test_workstream_integration
   HEAVENKEY_INTEGRATION_BINARY=target/debug/uac-api python3 -m unittest scripts.test_password_manager
-  HEAVENKEY_PM_DESIGN=1 HEAVENKEY_PM_POLISH=1 bun scripts/password_manager_e2e.mjs
+  HEAVENKEY_INTEGRATION_BINARY=target/debug/uac-api python3 -m unittest scripts.test_extension_pairing
+  HEAVENKEY_PM_DESIGN=1 HEAVENKEY_PM_POLISH=1 HEAVENKEY_PM_WORKFLOWS=1 bun scripts/password_manager_e2e.mjs
+  bun scripts/extension_autofill_e2e.ts
   bun scripts/password_manager_ui_test.ts
   bun scripts/protocol_e2e.mjs
 }

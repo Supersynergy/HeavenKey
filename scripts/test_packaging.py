@@ -15,17 +15,20 @@ class PackagingTests(unittest.TestCase):
         self.addCleanup(directory.cleanup)
         self.root = Path(directory.name)
 
-    def test_each_embedded_demo_asset_invalidates_the_build_fingerprint(self):
+    def create_build_sources(self):
         for name in (
             "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".cargo/config.toml",
             "apps/web/dist/main.js", "apps/web/index.html",
             "apps/web/dist/passwords.js", "apps/web/passwords.html",
-            "scripts/build_openssl.py", "scripts/build_portable.py",
+            "scripts/build_openssl.py", "scripts/build_portable.py", "scripts/build_extension.ts",
             "apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css",
         ):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(name)
+
+    def test_each_embedded_demo_asset_invalidates_the_build_fingerprint(self):
+        self.create_build_sources()
         with patch.object(build_portable, "ROOT", self.root):
             baseline = build_portable.source_fingerprint()
             for name in ("index.html", "main.js", "style.css"):
@@ -35,6 +38,25 @@ class PackagingTests(unittest.TestCase):
                     asset.write_text(original + "changed")
                     self.assertNotEqual(baseline, build_portable.source_fingerprint())
                     asset.write_text(original)
+
+    def test_runtime_evidence_does_not_invalidate_compiled_extension_sources(self):
+        self.create_build_sources()
+        source = self.root / "apps/extension/content.ts"
+        source.parent.mkdir(parents=True)
+        source.write_text("synthetic extension source")
+        with patch.object(build_portable, "ROOT", self.root):
+            baseline = build_portable.source_fingerprint()
+            for name in (
+                "TEST-RECEIPT.json", "ENGINE-RECEIPT.json",
+                "INTEGRATION-BLOCKER.json", "WORKER-STATUS.md", "evidence/popup.png",
+            ):
+                with self.subTest(evidence=name):
+                    evidence = source.parent / name
+                    evidence.parent.mkdir(parents=True, exist_ok=True)
+                    evidence.write_text("new runtime observation")
+                    self.assertEqual(baseline, build_portable.source_fingerprint())
+            source.write_text("changed extension behavior")
+            self.assertNotEqual(baseline, build_portable.source_fingerprint())
 
     def test_wrong_architecture_is_rejected(self):
         binary = self.root / "binary"
@@ -48,7 +70,17 @@ class PackagingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             release.verify_architecture(binary, "x86_64-pc-windows-gnu")
 
-    def test_extensions_request_no_page_or_key_permissions(self):
+    def test_extensions_package_bundles_with_only_explicit_access(self):
+        for name in ("chromium", "firefox"):
+            source = self.root / f"extension-source-{name}"
+            source.mkdir()
+            for filename in ("smart-popup.js", "content.js", "background.js", "LICENSE", "THIRD-PARTY-NOTICE.md"):
+                (source / filename).write_text("synthetic bundle")
+            (source / "manifest.json").write_text(json.dumps({
+                "manifest_version": 3, "version": release.VERSION,
+                "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
+                "optional_host_permissions": ["http://localhost/*"],
+            }))
         with patch.object(release, "OUT", self.root):
             files = release.extensions()
         self.assertEqual(len(files), 2)
@@ -57,14 +89,19 @@ class PackagingTests(unittest.TestCase):
                 (self.root / f"extension-{name}/manifest.json").read_text()
             )
             for permission in (
-                "permissions",
                 "host_permissions",
                 "content_scripts",
-                "background",
                 "externally_connectable",
             ):
                 self.assertNotIn(permission, manifest)
             self.assertEqual(manifest["manifest_version"], 3)
+            self.assertEqual(set(manifest["permissions"]), {"activeTab", "scripting", "storage", "contextMenus"})
+            self.assertTrue((self.root / f"extension-{name}/content.js").is_file())
+        path = self.root / "extension-source-chromium/manifest.json"
+        manifest["host_permissions"] = ["<all_urls>"]
+        path.write_text(json.dumps(manifest))
+        with patch.object(release, "OUT", self.root), self.assertRaisesRegex(ValueError, "persistent extension access"):
+            release.extensions()
 
     def test_truncated_pe_fails_with_a_clear_error(self):
         binary = self.root / "binary"

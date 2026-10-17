@@ -17,6 +17,10 @@ TARGETS = (
     "aarch64-unknown-linux-musl",
     "x86_64-unknown-linux-musl",
 )
+EXTENSION_RUNTIME_EVIDENCE = {
+    "TEST-RECEIPT.json", "ENGINE-RECEIPT.json", "INTEGRATION-BLOCKER.json",
+    "WORKER-STATUS.md",
+}
 
 
 def source_fingerprint():
@@ -33,10 +37,21 @@ def source_fingerprint():
             "apps/web/passwords.html",
             "scripts/build_openssl.py",
             "scripts/build_portable.py",
+            "scripts/build_extension.ts",
         )
     ]
-    for name in ("apps/api", "crates", "apps/web/src", "apps/demo"):
-        paths += [path for path in (ROOT / name).rglob("*") if path.is_file()]
+    for name in ("apps/api", "crates", "apps/web/src", "apps/demo", "apps/extension", "packages/forms"):
+        directory = ROOT / name
+        for path in directory.rglob("*"):
+            if not path.is_file():
+                continue
+            relative = path.relative_to(directory)
+            if name == "apps/extension" and (
+                relative.parts[0] == "evidence"
+                or relative.as_posix() in EXTENSION_RUNTIME_EVIDENCE
+            ):
+                continue
+            paths.append(path)
     digest = hashlib.sha256()
     for path in sorted(set(paths)):
         digest.update(

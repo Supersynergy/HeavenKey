@@ -1,4 +1,4 @@
-"""Create desktop archives and permission-free browser extension archives."""
+"""Create desktop archives and bundled local-autofill browser extensions."""
 
 import argparse
 import hashlib
@@ -227,36 +227,28 @@ def extensions():
     outputs = []
     for browser in ("chromium", "firefox"):
         directory = OUT / f"extension-{browser}"
-        directory.mkdir(exist_ok=True)
-        for name in ("popup.html", "popup.css", "popup.js", "settings.js"):
-            shutil.copyfile(ROOT / "apps/extension" / name, directory / name)
-        manifest = {
-            "manifest_version": 3,
-            "name": "HeavenKey",
-            "version": VERSION,
-            "description": "Passkeys, Freigaben, Recovery und Agenten in deinem HeavenKey-Dienst öffnen.",
-            "action": {
-                "default_title": "HeavenKey öffnen",
-                "default_popup": "popup.html",
-            },
-            "content_security_policy": {
-                "extension_pages": "script-src 'self'; object-src 'none'"
-            },
-        }
-        if browser == "firefox":
-            manifest["browser_specific_settings"] = {
-                "gecko": {
-                    "id": "heavenkey@supersynergy.local",
-                    "strict_min_version": "140.0",
-                    "data_collection_permissions": {"required": ["none"]},
-                }
-            }
-        else:
-            manifest["minimum_chrome_version"] = "120"
-        (directory / "manifest.json").write_text(
-            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
-        )
-        shutil.copyfile(ROOT / "LICENSE", directory / "LICENSE")
+        built = OUT / f"extension-source-{browser}"
+        manifest = json.loads((built / "manifest.json").read_text())
+        if manifest.get("version") != VERSION:
+            raise ValueError("Build browser extensions before packaging this version")
+        if set(manifest.get("permissions", [])) != {"activeTab", "scripting", "storage", "contextMenus"}:
+            raise ValueError("Unexpected extension permissions")
+        if manifest.get("optional_host_permissions") != ["http://localhost/*"] or any(
+            key in manifest for key in ("host_permissions", "externally_connectable", "content_scripts")
+        ):
+            raise ValueError("Unexpected persistent extension access")
+        if directory.exists():
+            shutil.rmtree(directory)
+        shutil.copytree(built, directory)
+        for name in ("smart-popup.js", "content.js", "background.js", "LICENSE", "THIRD-PARTY-NOTICE.md"):
+            if not (directory / name).is_file():
+                raise ValueError(f"Missing extension file: {name}")
+        (directory / "BUILD.json").write_text(json.dumps({
+            "version": VERSION, "source_commit": subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True, timeout=10
+            ).strip(),
+            "source_fingerprint": source_fingerprint(), "browser": browser,
+        }, indent=2) + "\n")
         output = OUT / f"HeavenKey-{VERSION}-extension-{browser}.zip"
         zip_directory(directory, output)
         outputs.append(output)

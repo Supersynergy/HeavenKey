@@ -21,6 +21,11 @@ for pattern in (
     for path in source.glob(pattern):
         shutil.copyfile(path, destination / path.name)
         files[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+extension_receipt = Path("apps/extension/TEST-RECEIPT.json")
+if extension_receipt.exists():
+    name = "extension-autofill.json"
+    shutil.copyfile(extension_receipt, destination / name)
+    files[name] = hashlib.sha256(extension_receipt.read_bytes()).hexdigest()
 (destination / "manifest.json").write_text(
     json.dumps(
         {

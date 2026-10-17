@@ -1,6 +1,7 @@
 import { createVault, openVault, sealVault, validateEnvelope, validateVault, generatePassword, parseCsv, totp, MAX_FILE_BYTES, type Envelope, type Login, type Vault } from "./passwords-crypto";
 import { createIcon, initPresentation } from "./passwords-presentation";
 import { initBrand } from "./passwords-brand";
+import { initWorkflows } from "./passwords-workflows";
 import { getPrivacyPreferences, initPrivacy, recordActivity, clearActivities } from "./passwords-privacy";
 const byId = <T extends HTMLElement = HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
@@ -19,6 +20,7 @@ let selectedId: string | null = null, activeTag: string | null = null, revealedI
 let revealTimer: ReturnType<typeof setTimeout> | undefined;
 function cancelReveal() { clearTimeout(revealTimer); revealedId = null; }
 let editorReturnFocus: HTMLElement | null = null;
+let workflows: ReturnType<typeof initWorkflows> | undefined;
 function refreshNavigation() {
   const special = !byId("health-view").hidden ? "nav-health" : !byId("settings-view").hidden ? "nav-settings" : null;
   const selected = special || (activeTag ? null : input("favorites-only").checked ? "nav-favorites" : "nav-all");
@@ -52,6 +54,7 @@ function setBusy(next: boolean) {
 }
 function clearEditor() { byId("editor-status").textContent = ""; byId("editor-status").hidden = true; form("entry-form").reset(); input("entry-id").value = ""; input("entry-password").type = "password"; byId("reveal-password").setAttribute("aria-pressed", "false"); byId("reveal-password").textContent = "Anzeigen"; byId<HTMLDialogElement>("editor").close(); }
 function lock(message = "Tresor gesperrt.", refresh = true) {
+  workflows?.clear();
   cancelReveal(); clearActivities();
   clearTimeout(clipboardTimer); void cleanupClipboard();
   generation++; pendingFocus = null; selectedId = null; activeTag = null; revealedId = null; editorReturnFocus = null;
@@ -79,6 +82,11 @@ async function api(path: string, record?: Envelope, expected?: number): Promise<
   const text = await response.text();
   if (text.length > MAX_FILE_BYTES) throw new Error("Serverantwort überschreitet die Größenbegrenzung.");
   return JSON.parse(text);
+}
+async function pairingRequest(method: 'GET'|'POST'|'DELETE'): Promise<unknown> {
+  const response = await fetch('/api/password-vault/extension/pairing', {method,cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(15_000),headers:{'X-HeavenKey-Client':'password-manager','X-HeavenKey-Token':token}});
+  if (!response.ok) throw new Error(`Erweiterungsverbindung nicht verfügbar (HTTP ${response.status}).`);
+  return response.json();
 }
 function readSnapshot(value: unknown): { revision: number; record: Envelope | null } {
   if (!value || typeof value !== "object") throw new Error("Ungültige Tresorantwort.");
@@ -117,7 +125,7 @@ async function operation(task: (run: number) => Promise<void>) {
 }
 async function commit(next: Vault, run: number, nextKey: CryptoKey | null = key, nextSalt = envelope?.salt): Promise<boolean> {
   if (!unlocked(run) || !nextKey || !nextSalt) return false;
-  validateVault(next);
+  next = validateVault(next);
   const sealed = await sealVault(next, nextKey, nextSalt);
   if (!unlocked(run)) return false;
   const saved = readSnapshot(await api("/api/password-vault", sealed, revision));
@@ -168,7 +176,7 @@ function render() {
   }
   list.scrollTop = scrollTop;
   renderDetail(vault.entries.find(entry => entry.id === selectedId));
-  byId("health-count").textContent = String(healthFindings().length); if (!byId("health-view").hidden) renderHealth(); refreshNavigation();
+  byId("health-count").textContent = String(healthFindings().length); if (!byId("health-view").hidden) renderHealth(); refreshNavigation(); workflows?.refresh();
 }
 function healthFindings(): { entry: Login; short: boolean; reused: boolean }[] {
   if (!vault) return [];
@@ -234,7 +242,7 @@ function renderDetail(entry?: Login) {
   if (entry.tags.length) { const tags = element("div"); tags.className = "detail-tags"; tags.setAttribute("aria-label", "Tags"); entry.tags.forEach(tag => { const button = action(tag, "detail-tag", () => setFilter(false, tag)); button.className = "tag"; tags.append(button); }); detail.append(tags); }
   if (entry.notes) { const notes = element("div"); notes.className = "detail-notes"; notes.append(element("h3", "Notizen"),element("p",discreet ? "Verdeckt" : entry.notes)); detail.append(notes); }
   const footer = element("div"); footer.className = "detail-footer";
-  const favorite = action(entry.favorite ? "Favorit entfernen" : "Als Favorit", "toggle-favorite", () => void operation(async run => { if (!vault) return; if (await commit({ version: 1, entries: vault.entries.map(item => item.id === entry.id ? { ...item, favorite: !item.favorite } : item) }, run)) { status("Favorit gespeichert."); focusAfter(selectedId ? "detail-title" : "new-entry"); } })); favorite.prepend(createIcon("star")); favorite.setAttribute("aria-pressed", String(entry.favorite));
+  const favorite = action(entry.favorite ? "Favorit entfernen" : "Als Favorit", "toggle-favorite", () => void operation(async run => { if (!vault) return; if (await commit({ ...vault, version: 1, entries: vault.entries.map(item => item.id === entry.id ? { ...item, favorite: !item.favorite } : item) }, run)) { status("Favorit gespeichert."); focusAfter(selectedId ? "detail-title" : "new-entry"); } })); favorite.prepend(createIcon("star")); favorite.setAttribute("aria-pressed", String(entry.favorite));
   const remove = action("Login löschen", "delete-entry", () => { deleting = entry.id; byId("delete-title").textContent = entry.title; byId("delete-dialog-status").textContent = ""; byId("delete-dialog-status").hidden = true; byId<HTMLDialogElement>("delete-dialog").showModal(); }); remove.classList.add("danger"); footer.append(favorite,remove); detail.append(footer);
 }
 function edit(id?: string) {
@@ -326,6 +334,7 @@ byId("theme-toggle").addEventListener("click", () => { const theme = document.do
 document.addEventListener("keydown", event => {
   if (vault && event.ctrlKey && event.altKey && !event.metaKey && (event.code === "KeyL" || event.key.toLowerCase() === "l")) { event.preventDefault(); lock(); return; }
   if (byId<HTMLDialogElement>("shortcuts-dialog").open) return;
+  if (document.querySelector('#quick-access[open],#import-preview[open],#profile-editor[open],#profile-delete[open]')) return;
   if (event.key === "Escape") { if (byId("workspace").classList.contains("navigation-open")) { closeNavigation(); byId("menu-toggle").focus(); } return; }
   if (!vault) return;
   if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && byId<HTMLDialogElement>("editor").open && !busy) { event.preventDefault(); form("entry-form").requestSubmit(); return; }
@@ -347,13 +356,13 @@ form("entry-form").addEventListener("submit", event => {
     const entry: Login = { id: existing || crypto.randomUUID(), title: value("entry-title").trim(), username: value("entry-username"), password: value("entry-password"), url: value("entry-url").trim(), notes: value("entry-notes"), totp: value("entry-totp").trim(), tags: value("entry-tags").split(",").map(tag => tag.trim()).filter(Boolean), favorite: input("entry-favorite").checked };
     const entries = existing ? vault.entries.map(item => item.id === existing ? entry : item) : [...vault.entries, entry];
     selectedId = entry.id; revealedId = null;
-    if (await commit({ version: 1, entries }, run)) { clearEditor(); byId("workspace").classList.add("show-detail"); status("Login verschlüsselt gespeichert."); focusAfter(selectedId ? "detail-title" : "new-entry"); }
+    if (await commit({ ...vault, version: 1, entries }, run)) { clearEditor(); byId("workspace").classList.add("show-detail"); status("Login verschlüsselt gespeichert."); focusAfter(selectedId ? "detail-title" : "new-entry"); }
   });
 });
 byId("delete-cancel").addEventListener("click", () => { deleting = null; byId<HTMLDialogElement>("delete-dialog").close(); });
 byId("delete-confirm").addEventListener("click", () => void operation(async run => {
   if (!vault || !deleting) return;
-  if (await commit({ version: 1, entries: vault.entries.filter(entry => entry.id !== deleting) }, run)) { deleting = null; byId("delete-title").textContent = ""; byId<HTMLDialogElement>("delete-dialog").close(); clearEditor(); status("Login gelöscht und Tresor gespeichert."); focusAfter("new-entry"); }
+  if (await commit({ ...vault, version: 1, entries: vault.entries.filter(entry => entry.id !== deleting) }, run)) { deleting = null; byId("delete-title").textContent = ""; byId<HTMLDialogElement>("delete-dialog").close(); clearEditor(); status("Login gelöscht und Tresor gespeichert."); focusAfter("new-entry"); }
 }));
 byId("export-backup").addEventListener("click", () => {
   if (!envelope || busy) return;
@@ -365,7 +374,7 @@ form("import-form").addEventListener("submit", event => { event.preventDefault()
   if (!vault) return;
   const text = await readFile("import-file"); if (!unlocked(run)) return;
   const imported = parseCsv(text);
-  if (await commit({ version: 1, entries: [...vault!.entries, ...imported] }, run)) { form("import-form").reset(); status(`${imported.length} Logins vollständig importiert und verschlüsselt gespeichert.`); }
+  if (unlocked(run)) workflows?.previewImport(imported);
 }); });
 form("restore-form").addEventListener("submit", event => { event.preventDefault(); void operation(async run => {
   if (!vault || !input("restore-confirm").checked) throw new Error("Bestätige ausdrücklich das Ersetzen aller Logins.");
@@ -386,7 +395,8 @@ for (const name of ["pointerdown", "keydown", "input"] as const) document.addEve
 setInterval(() => { if (vault && Date.now() - lastActivity >= 300_000) lock("Nach 5 Minuten ohne Eingabe gesperrt."); }, 1000);
 document.addEventListener("visibilitychange", () => { clearTimeout(hiddenTimer); if (document.visibilityState === "hidden") { if (getPrivacyPreferences().strictBackground) { if (vault || busy) lock("Beim Wechsel in den Hintergrund gesperrt."); } else hiddenTimer = setTimeout(() => { if (vault || busy) lock("Nach 30 Sekunden im Hintergrund gesperrt."); }, 30_000); } });
 window.addEventListener("pagehide", () => { lock("Seite verlassen, Tresor gesperrt.", false); });
-initPrivacy(() => { cancelReveal(); clearEditor(); if (vault) render(); });
+initPrivacy(() => { cancelReveal(); clearEditor(); workflows?.clear(); if (vault) render(); });
+workflows = initWorkflows({vault:()=>vault,revision:()=>revision,generation:()=>generation,current:unlocked,busy:()=>busy,discreet:()=>getPrivacyPreferences().discreet,run:operation,commit,status,select:id=>{showEntries();selectEntry(id,true);},settings:showSettings,copy,pairing:pairingRequest});
 initBrand();
 initPresentation();
 void load();

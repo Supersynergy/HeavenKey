@@ -79,6 +79,10 @@ try {
     const { polishChecks } = await import("./password_manager_polish_test.ts");
     await polishChecks(page, master, check);
   }
+  if (process.env.HEAVENKEY_PM_WORKFLOWS === "1") {
+    const { workflowChecks } = await import("./password_manager_workflows_test.ts");
+    await workflowChecks(page, master, check, snapshot);
+  }
   await page.locator("#search").fill("missing"); await count(0); await page.locator("#search").fill("lokal"); await count(1); check("search includes encrypted tags after unlock");
   await page.locator("#search").fill(""); await page.locator("[data-testid=edit-entry]").click();
   check("edit restores secret only inside unlocked editor", await page.locator("#entry-password").inputValue() === secret);
@@ -108,7 +112,7 @@ try {
   check("tampered restore leaves stored vault unchanged", JSON.stringify(await snapshot()) === JSON.stringify(before));
   await settingsSection("CSV aus Enpass / Bitwarden importieren");
   await page.locator("#import-file").setInputFiles({ name: "valid.csv", mimeType: "text/csv", buffer: Buffer.from('name,login_username,login_password,login_uri,notes\nCSV test,csv@example.invalid,SyntheticCSVSecret,https://example.invalid,"quoted, note"\n') });
-  await page.locator("#import-csv").click(); await count(2); check("quoted synthetic Bitwarden CSV imports atomically");
+  await page.locator("#import-csv").click(); await page.locator("#confirm-import").click(); await count(2); check("quoted synthetic Bitwarden CSV imports atomically");
   const beforeInvalid = await snapshot();
   await settingsSection("CSV aus Enpass / Bitwarden importieren");
   await page.locator("#import-file").setInputFiles({ name: "invalid.csv", mimeType: "text/csv", buffer: Buffer.from('title,password,url\nValid row,test,https://example.invalid\nInvalid row,test,javascript:alert(1)\n') });
@@ -133,7 +137,7 @@ try {
   await settingsSection("CSV aus Enpass / Bitwarden importieren");
   const largeCsv = "Title,Username,Password,URL,Notes\n" + Array.from({ length: 1000 }, (_, i) => `Synthetic ${i},user${i}@example.invalid,SyntheticLarge${i},https://example.invalid,Unicode Schlüssel ${i}`).join("\n");
   await page.locator("#import-file").setInputFiles({ name: "1000-synthetic.csv", mimeType: "text/csv", buffer: Buffer.from(largeCsv) });
-  await page.locator("#import-csv").click(); await count(1000); check("1000 synthetic logins imported with external web requests blocked");
+  await page.locator("#import-csv").click(); await page.locator("#confirm-import").click(); await count(1000); check("1000 synthetic logins imported with external web requests blocked");
   await page.locator("#lock").click(); await unlock(newMaster); await count(1000); check("1000-entry vault lock and decrypt roundtrip");
   await settingsSection(); const largeDownloadEvent = page.waitForEvent("download"); await page.locator("#export-backup").click(); const largeDownload = await largeDownloadEvent;
   const largeBackup = join(temporary, "1000-backup.json"); await largeDownload.saveAs(largeBackup);
