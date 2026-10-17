@@ -36,6 +36,7 @@ try {
   const testManifest=JSON.parse(await readFile(join(extension,'manifest.json'),'utf8'));testManifest.host_permissions=['http://localhost/*'];
   await writeFile(join(grantedExtension,'manifest.json'),JSON.stringify(testManifest));
   browser = await chromium.launchPersistentContext(join(temporary,'profile'),{headless:true,executablePath:browserPath,args:[`--disable-extensions-except=${grantedExtension}`,`--load-extension=${grantedExtension}`,'--disable-background-networking','--no-first-run'],viewport:{width:1200,height:1000},timeout:30000});
+  browser.setDefaultTimeout(10000);
   const manager = await browser.newPage(); await manager.goto('chrome://extensions');
   const item = manager.locator('extensions-item').filter({hasText:'HeavenKey'});await item.waitFor(); const id = await item.getAttribute('id');assert.match(id,/^[a-p]{32}$/);
   const target = await browser.newPage();await target.goto('http://localhost:18258/');
@@ -45,6 +46,8 @@ try {
   const targetId = await popup.evaluate(async () => { const ext=(globalThis as any).chrome;return (await ext.tabs.query({active:true,currentWindow:true}))[0].id; });
   await popup.goto(`chrome-extension://${id}/popup.html?target=${targetId}`);
   const app = await browser.newPage();await app.goto(origin+'/passwords/');
+  await popup.bringToFront();
+  assert.equal(await popup.evaluate(()=>document.visibilityState),'visible','Extension fixture must keep the interaction page visible');
   const appApi = async (path:string,body?:any,method?:string) => app.evaluate(async ({path,body,method})=>{const headers:any={'X-HeavenKey-Client':'password-manager'};const {token}=await(await fetch('/api/password-vault/config',{headers})).json();headers['X-HeavenKey-Token']=token;if(body)headers['Content-Type']='application/json';const response=await fetch('/api/password-vault'+path,{method:method||(body?'POST':'GET'),headers,...(body?{body:JSON.stringify(body)}:{})});if(!response.ok)throw Error(`App API ${response.status}`);return response.json();},{path,body,method});
   if(!process.argv.includes('--engine-only')) {
   const generated = await createVault(master,{version:1,entries:[{id:'synthetic-login',title:'Synthetic login',username:'alex@example.invalid',password:'Synthetic-login-only#42',url:'http://localhost:18258/login',notes:'',totp:'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ',tags:[],favorite:false},{id:'wrong-origin',title:'Other origin login',username:'wrong',password:'SyntheticWrongOrigin',url:'https://other.invalid',notes:'',totp:'',tags:[],favorite:false}],profiles:[{id:'synthetic-profile',title:'Synthetic contact',entities:{firstName:'Alex',lastName:'Muster',email:'alex@example.invalid',name:'Alex Muster',country:'Deutschland',birthdate:'1990-03-14',amount:'1.234,56 EUR',message:'Synthetic message',subject:'Synthetic subject',iban:'DE89370400440532013000',bankName:'Synthetic Bank',company:'Acme',salutation:'Herr'},updatedAt:new Date().toISOString()}]} as any);
@@ -79,6 +82,7 @@ try {
   await popup.locator('#extension-master').fill(master);await popup.locator('#unlock-extension').click();await popup.locator('#smart-workspace').waitFor({state:'visible'});
 
   for (const cancel of ['lock', 'pagehide', 'disconnect']) {
+    console.log(`Cancellation fixture: ${cancel} scan`);
     await popup.locator('[data-id="synthetic-profile"]').click();await popup.locator('#scan-page').click();await popup.locator('#fill-confirmation').waitFor({state:'visible'});
     for (const box of await popup.locator('#field-map [data-field]').all()) await box.uncheck();
     await popup.getByRole('checkbox',{name:/^Vorname ·/}).check();await popup.locator('#confirm-origin').check();
@@ -95,7 +99,8 @@ try {
       };
       (globalThis as any).__cancellationTest=state;
     });
-    await popup.locator('#fill-selected').click();await popup.waitForFunction(()=>(globalThis as any).__cancellationTest.waiting);
+    console.log(`Cancellation fixture: ${cancel} dispatch`);
+    await popup.locator('#fill-selected').click();await popup.waitForFunction(()=>(globalThis as any).__cancellationTest.waiting).catch(async error=>{console.log('Cancellation diagnostic',await popup.evaluate(()=>({status:document.querySelector('#smart-status')?.textContent,busy:document.querySelector('#smart')?.getAttribute('aria-busy'),waiting:(globalThis as any).__cancellationTest?.waiting,fills:(globalThis as any).__cancellationTest?.fills})));throw error;});
     check(`${cancel} keeps source and consent controls disabled during pending fill`,await popup.locator('#include-secrets').isDisabled()&&await popup.locator('[data-entity="firstName"]').isDisabled()&&await popup.locator('[data-id="synthetic-profile"]').isDisabled());
     if(cancel==='lock')await popup.locator('#lock-extension').click();
     else if(cancel==='disconnect')await popup.locator('#disconnect').click();
