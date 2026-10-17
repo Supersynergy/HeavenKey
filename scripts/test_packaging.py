@@ -20,7 +20,7 @@ class PackagingTests(unittest.TestCase):
             "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".cargo/config.toml",
             "apps/web/dist/main.js", "apps/web/index.html",
             "apps/web/dist/passwords.js", "apps/web/passwords.html",
-            "apps/web/dist/share.js",
+            "apps/web/dist/share.js", "apps/web/share.html",
             "docs/assets/heavenkey-hero-square.png",
             "scripts/build_openssl.py", "scripts/build_portable.py", "scripts/build_extension.ts",
             "apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css",
@@ -33,7 +33,7 @@ class PackagingTests(unittest.TestCase):
         self.create_build_sources()
         with patch.object(build_portable, "ROOT", self.root):
             baseline = build_portable.source_fingerprint()
-            for name in ("apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css", "docs/assets/heavenkey-hero-square.png"):
+            for name in ("apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css", "docs/assets/heavenkey-hero-square.png", "apps/web/share.html"):
                 with self.subTest(asset=name):
                     asset = self.root / name
                     original = asset.read_text()
