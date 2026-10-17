@@ -1,4 +1,4 @@
-# Lokaler Passwortmanager · 0.11.0
+# Lokaler Passwortmanager · 0.11.1
 
 Entpacke dein Plattformpaket und starte den enthaltenen Starter. Er öffnet `http://localhost:18240/passwords/`. Dafür sind weder Internet, ein HeavenKey-Konto noch ein Passkey erforderlich. Das Terminal bleibt geöffnet; `Ctrl+C` beendet den Dienst.
 

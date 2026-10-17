@@ -1,6 +1,69 @@
-Copyright (c) 2026 Supersynergy. All rights reserved.
+HeavenKey Proprietary License 1.0
+Effective for releases containing this license, from 17 October 2026.
+Copyright (c) 2026 Supersynergy and the respective copyright holders.
+All rights reserved, except as expressly granted below.
 
-This repository is a private research project. No open-source license or
-permission to redistribute the original project source is granted here.
-Third-party components retain their respective licenses and rights.
-See NOTICE.md for dependency and asset information.
+1. Scope and ownership
+This license covers only original HeavenKey code, documentation and artwork
+for which the distributing rights holder is entitled to grant these rights.
+"Licensor" means that rights holder distributing HeavenKey under the
+Supersynergy name. Access to this repository does not transfer ownership.
+This is a proprietary license, not an open-source license.
+
+2. Authorized use
+A recipient who lawfully obtains an official HeavenKey binary release from
+Licensor may install and run it for the recipient's personal use or internal
+business use. Necessary installation copies and backups are permitted.
+This permission is non-exclusive and does not grant a right to sublicense,
+resell, publish modified versions or offer HeavenKey as a hosted service.
+Separate written agreements may grant additional rights and take precedence
+for their agreed scope. Source access alone grants no general development,
+redistribution or commercial exploitation rights.
+
+3. Reserved rights
+Except with Licensor's prior written permission or where applicable law or
+a third-party license permits it, you may not distribute, sublicense, sell,
+rent or make the original HeavenKey source or binaries available to others;
+create or distribute derivative products from the original HeavenKey work;
+or remove ownership, attribution or license notices. Public forks and
+incorporating protected HeavenKey code into another product require separate
+permission. No trademark license is granted beyond truthful identification
+of the unmodified product; do not imply endorsement or ownership.
+
+4. Mandatory rights and third-party software
+Restrictions in this license do not limit non-waivable statutory rights,
+including applicable rights to necessary backups, observation and testing,
+and decompilation for interoperability under the conditions required by law.
+Third-party components remain exclusively subject to their own applicable
+licenses. Those licenses and their source-code rights take precedence for
+those components. Required notices, licenses and corresponding source are
+provided in NOTICE.md and the release's licenses/, THIRD-PARTY.json and
+third-party-source/ materials where applicable. No third-party component is
+relicensed as proprietary merely by inclusion in HeavenKey.
+
+5. Your data and confidentiality
+You retain your rights in your passwords, profiles and other data. This
+license grants Licensor no right to use that data. Repository access is not
+by itself a confidentiality agreement; any confidentiality obligations must
+arise from an applicable separate agreement or law.
+
+6. Warranty, liability and support
+To the extent permitted by applicable law and subject to any binding separate
+agreement, the software is provided as available without an additional
+contractual guarantee of uninterrupted operation or fitness for a particular
+purpose. No support, maintenance or update commitment is created by this
+license alone. Nothing excludes or limits liability where that would be
+unlawful, including applicable liability for intent, gross negligence,
+injury to life, body or health, fraud, mandatory product liability, or rights
+arising from an expressly assumed guarantee. Mandatory consumer rights and
+other non-excludable rights remain unaffected.
+
+7. Breach and other agreements
+Licensor may terminate the permissions granted here for a material breach
+in accordance with applicable law. Statutory remedies and any mandatory
+notice or cure requirements remain unaffected. This license does not apply
+retroactively to rights validly granted under an earlier license and does
+not replace a separate agreement that expressly governs the same use.
+
+Permission requests: contact the repository owner through the private
+GitHub repository or the existing channel through which access was granted.

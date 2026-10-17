@@ -6,4 +6,4 @@ The image is branding, not a screenshot, hardware proof or performance evidence.
 
 social-preview.jpg, when present, is an encoded copy of the generated artwork for GitHub packaging. Committing it does not configure GitHub's separate social-preview setting; that setting requires a UI upload.
 
-The square hero heavenkey-hero-square.png was created on 2026-10-12 by editing the original through the image-generation tool. It recomposes the key and portal on the central axis with a 1:1 canvas; it is not a cropped screenshot. The original wide artwork is retained. The README uses a centered image with width 560 and its intrinsic square aspect ratio.
+The square hero heavenkey-hero-square.png was created on 2026-10-12 by editing the original through the image-generation tool. It recomposes the key and portal on the central axis with a 1:1 canvas; it is not a cropped screenshot. The original wide artwork is retained. The current README uses real application screenshots instead; see ../screenshots/README.md.

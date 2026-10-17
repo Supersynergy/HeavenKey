@@ -1,75 +1,95 @@
-<div align="center">
-
 # HeavenKey
 
-**Zugang beginnt mit Zustimmung.**
+Passwörter und Formularprofile lokal verwalten. HeavenKey verschlüsselt den Tresor im Browser und speichert ihn auf deinem Computer. Für den Passwortmanager brauchst du weder ein Cloudkonto noch eine Internetverbindung.
 
-Passwörter lokal verschlüsseln und offline verwalten. Zusätzlich: mit Passkeys anmelden, zeitlich begrenzte Zugänge teilen und Weitergaben kontrollieren.
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.11.1](https://img.shields.io/badge/version-0.11.1-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/latest)
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) ![Version](https://img.shields.io/badge/version-0.9_preview-c5a36a)
+[Downloads](https://github.com/Supersynergy/HeavenKey/releases/latest) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
 
-<p align="center">
-  <img src="docs/assets/heavenkey-hero-square.png" alt="HeavenKey: ein schwebender Schlüssel vor dem Himmelstor" width="560">
-</p>
+![HeavenKey mit Navigation, Eintragsliste und Login-Details im hellen Design](docs/screenshots/vault-desktop.png)
 
-[Bebilderte Installation](docs/INSTALLATION.md) · [Passkey-Anleitung](docs/PASSKEY-GUIDE.md) · [Agenten](docs/AGENT-GUIDE.md) · [Funktionen](#funktionen) · [Browserdemo](docs/BROWSER-DEMO.md) · [Ausprobieren](#ausprobieren) · [Benutzung](docs/USAGE.md) · [Roadmap](docs/ROADMAP.md)
+*Die Bilder zeigen die echte lokale App mit ausschließlich erfundenen Beispieldaten. Passwörter bleiben verdeckt.*
 
-</div>
+## Starten
 
-## Schnellstart
+1. Lade das Paket für deinen Computer aus dem [aktuellen Release](https://github.com/Supersynergy/HeavenKey/releases/latest). Prüfe es mit der dortigen `SHA256SUMS` und entpacke es.
+2. Öffne den enthaltenen Starter. Er startet den lokalen Dienst und öffnet `http://localhost:18240/passwords/` im Browser.
+3. Lege ein Masterpasswort mit mindestens 14 Zeichen fest. Exportiere anschließend eine verschlüsselte Sicherung und prüfe ihre Wiederherstellung.
 
-![HeavenKey in drei Schritten starten](docs/images/01-installation.svg)
+| Computer | Paket | Starter |
+| --- | --- | --- |
+| Windows x64 | `HeavenKey-0.11.1-windows-x64.zip` | `Start HeavenKey.cmd` |
+| macOS mit Apple Silicon | `HeavenKey-0.11.1-macos-arm64.zip` | `Start HeavenKey.command` |
+| macOS mit Intel-Prozessor | `HeavenKey-0.11.1-macos-x64.zip` | `Start HeavenKey.command` |
+| Linux x64 | `HeavenKey-0.11.1-linux-x64.tar.gz` | `./start.sh` |
+| Linux ARM64 | `HeavenKey-0.11.1-linux-arm64.tar.gz` | `./start.sh` |
 
-**Version 0.9.0, lokale Vorschau.** Wähle dein Paket unter [Releases](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.9.0-preview.1), entpacke es und starte den enthaltenen Starter. Er öffnet den lokalen Passwortmanager. Du brauchst einen aktuellen Browser; Rust, Bun, Konto und Internet sind für diesen Modus nicht erforderlich. Siehe [Passwortmanager](docs/PASSWORD-MANAGER.md), [Plattformpakete](docs/DISTRIBUTION.md) und [Enpass plus 20 Kandidaten: Gap-Analyse](docs/PASSWORD-MANAGER-GAPS.md).
+Ein aktueller Browser genügt. Rust, Bun und Docker werden nur für die Entwicklung benötigt. Das Terminal des Starters bleibt geöffnet; `Ctrl+C` beendet den Dienst. Die Pakete sind unsigniert und nicht Apple-notarisiert. [Installation und Datenordner](docs/DISTRIBUTION.md) erklären die Betriebssystemhinweise und den Updateablauf.
 
-Für die Entwicklung aus dem Quellcode:
+## Im Alltag
 
-Installiere Rustup und Python 3.11+ sowie Bun **1.4.2**. Starte danach im Projektordner:
+- **Logins:** anlegen und bearbeiten, nach Titel oder Kontodaten suchen, mit Tags ordnen und als Favoriten markieren. Der Generator erstellt zufällige Passwörter; TOTP-Codes werden lokal berechnet.
+- **Schnellzugriff:** F2 öffnet die Suche nach Logins und Formularprofilen. F1 zeigt die Tastenkürzel mit einzelnen Tastenkappen.
+- **Formularprofile:** Kontakt- und Adressangaben im selben verschlüsselten Tresor speichern. Die Erweiterung zeigt die erkannten Felder vor dem Ausfüllen zur Auswahl.
+- **Importvorschau:** eine CSV lokal einlesen und neue, identische oder abweichende Einträge prüfen. Identische Duplikate werden zunächst übersprungen; einen Konflikt ersetzt du ausdrücklich.
+- **Sicherungen:** den verschlüsselten Tresor exportieren und mit seinem Masterpasswort wiederherstellen. Profile bleiben bei Login-Änderungen und Passwortwechseln erhalten.
+- **Diskrete Ansicht:** private Detailfelder verdecken; bei Bedarf sofort beim Wechsel in den Hintergrund sperren. Ein lokaler Check zeigt kurze oder wiederverwendete Passwörter, ohne einen Datenleckdienst anzufragen.
+
+### Ausfüllen im Browser
+
+Installiere das separate Chromium-Paket für Chrome oder Edge. Erzeuge unter Einstellungen einen einmaligen Kopplungscode und gib ihn mit dem lokalen Port in der Erweiterung ein. Der Dienst muss laufen. Die [Installationsanleitung](docs/DISTRIBUTION.md#browser-erweiterung) beschreibt auch das temporäre Laden unter Firefox ab Version 140.
+
+Zum Füllen wählst du einen Login oder ein Profil, prüfst die Zielseite und bestätigst die ausgewählten Felder. Logins benötigen genau die gespeicherte Website-Origin. Finanz- und Identitätsdaten sowie Passwörter und Einmalcodes haben eigene Freigaben. Bestehende Werte bleiben standardmäßig erhalten; Formulare werden nicht abgesendet. Rückgängig ist für die unveränderte Zielseite zeitlich begrenzt möglich.
+
+Die Erweiterung hat keinen dauerhaften Zugriff auf alle Websites. Der Browser speichert nur Verbindungseinstellungen und das Kopplungstoken. Sperren, Trennen oder Schließen entfernt die entschlüsselte Sitzung. Eine bereits an die Seite übergebene Eingabe kann diese wie eine manuelle Eingabe lesen.
+
+## Ansichten
+
+![Dunkles Design mit denselben synthetischen Einträgen](docs/screenshots/vault-dark.png)
+
+![CSV-Importvorschau mit einem neuen Eintrag, einem identischen Duplikat und einem Konflikt](docs/screenshots/import-preview.png)
+
+<details>
+<summary>Schnellzugriff, Formularprofil und schmale Ansicht</summary>
+
+![F2-Schnellzugriff der echten App](docs/screenshots/quick-access.png)
+
+![Formularprofil mit erfundenen Kontaktangaben](docs/screenshots/form-profile.png)
+
+<img src="docs/screenshots/vault-mobile.png" width="390" alt="Responsive Browseransicht bei 390 Pixeln Breite; keine native mobile App">
+
+![Gesperrter Tresor mit goldenem HeavenKey-Schlüssel](docs/screenshots/vault-locked.png)
+
+</details>
+
+[Herkunft der Bilder](docs/screenshots/README.md)
+
+## Sicherheit und Grenzen
+
+Das Masterpasswort und der nicht exportierbare Schlüssel bleiben im entsperrten Browser. Der Dienst speichert die verschlüsselte Tresorhülle mit AES-256-GCM; die Schlüsselableitung verwendet PBKDF2-HMAC-SHA256 mit 600.000 Iterationen. Revisionen verhindern stilles Überschreiben aus veralteten Tabs. Der lokale Dienst bindet an Loopback und prüft Host, Origin und sein Prozess- beziehungsweise Kopplungstoken. Details stehen in der [Passwortmanager-Anleitung](docs/PASSWORD-MANAGER.md).
+
+Verlust des Masterpassworts lässt sich nicht durch HeavenKey zurücksetzen. JavaScript garantiert keine vollständige physische Speicherlöschung; die Bereinigung der Zwischenablage hängt vom Browser ab. Programme im selben Benutzerkonto und ein kompromittierter Browser gehören zur Vertrauensgrenze.
+
+Die [Release-Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) unterscheidet natives Apple Silicon von Rosetta, Wine und QEMU. Die Chromium-Tests verwenden eine ausdrückliche Testfreigabe für localhost; der native Berechtigungsdialog ist nicht automatisiert abgenommen. Firefox wurde auf Paketebene geprüft. Physische Passkeys und ein externes Kryptografie-Audit sind nicht abgenommen. Native mobile Apps, Gerätesynchronisation und die Verwaltung von Website-Passkeys sind noch offen. Die responsive Ansicht ersetzt keinen mobilen Credential-Provider.
+
+`ACCEPTANCE.json` und `SHA256SUMS` im jeweiligen Release binden die Nachweise an Quellstand und Dateien. Der [Vergleich mit Enpass und 20 weiteren Produkten](docs/PASSWORD-MANAGER-GAPS.md) dokumentiert den früheren Ausgangsstand; er ist kein aktuelles Gesamtranking oder Nachweis eines allgemeinen Funktionsvorsprungs.
+
+## Passkey-Zugangslabor
+
+Im selben Produkt ist das getrennte Zugangslabor enthalten: WebAuthn-Anmeldung, mehrere Passkeys und Recovery sowie zeitlich begrenzte Freigaben mit kontrollierter Weitergabe. Dazu kommen ein optionaler PRF-Notiztresor und begrenzte Agentenrechte. Es verwendet eigene Daten und Schutzschlüssel. Der experimentelle Grant-Codec ist kein UCAN-Interoperabilitätsnachweis.
 
 ```sh
-python3 scripts/first_run.py
+./heavenkey --password-manager --open
+./heavenkey --port 18241 --open
 ```
 
-Windows: `py -3 scripts/first_run.py`. Der Assistent baut und öffnet den Passwortmanager. `--lab` startet stattdessen das bisherige Passkey-Zugangslabor.
+Die erste Zeile startet den Passwortmanager, die zweite das Zugangslabor. Unter Windows heißt das Programm `HeavenKey.exe`.
 
-## Funktionen
+[Passkey-Anleitung](docs/PASSKEY-GUIDE.md) · [Zugänge und Recovery](docs/USAGE.md) · [Agenten](docs/AGENT-GUIDE.md) · [Integration](docs/INTEGRATION.md)
 
-| Funktion | Was du damit machen kannst |
-| --- | --- |
-| Lokaler Passwortmanager | Logins mit Masterpasswort anlegen, bearbeiten, suchen und löschen; Tags und Favoriten verwenden. Kein Onlinekonto erforderlich. |
-| Passwörter und TOTP erzeugen | Zufällige Passwörter erzeugen und zeitbasierte Einmalcodes lokal berechnen. |
-| Tresor sichern | Verschlüsseltes Backup herunterladen und wiederherstellen; Login-CSV lokal prüfen und importieren. |
-| Tresor sperren | Manuell und nach Inaktivität sperren; Schlüssel und Einträge bleiben nur während der Entsperrung im Browser. |
-| Mit Passkey anmelden | Ein Konto über WebAuthn erstellen und dich mit einem aktiven Passkey anmelden. |
-| Mehrere Passkeys verwalten | Bis zu acht aktive Passkeys verwalten, mit Namen und individuellem Widerruf. Der letzte aktive Schlüssel bleibt geschützt. |
-| Zugang teilen | Einem registrierten Gast Leserechte auf das Demo-Dokument geben, gültig für 1–3.600 Sekunden. |
-| Weitergabe begrenzen | Festlegen, ob und wie oft ein Gast seinen Zugang weitergeben darf: bis zu vier Weitergaben, höchstens fünf Kettenglieder. |
-| Rechte eingrenzen | Nachfolger erhalten höchstens die Rechte und Laufzeit ihres Elternzugangs. |
-| Zugang entziehen | Einen Zugang widerrufen und damit auch seine abhängigen Nachfolger sperren. |
-| Änderungen bestätigen | Die Details einer Änderung vor der frischen Passkey-Bestätigung prüfen. |
-| Zustände behalten | Den Kontozustand lokal speichern; ein Neustart hebt Sperren nicht auf. |
-| Einfach lesen | Innerhalb einer aktiven Sitzung mit laufend geprüften Berechtigungen lesen; sensible Änderungen weiterhin frisch bestätigen. |
-| Konto wiederherstellen | Einen neuen Passkey mit dem gesicherten Einmalcode einrichten. Alte Schlüssel und Agenten werden gesperrt; offene Sitzungen enden. |
-| Signierschlüssel schützen | Schlüssel verschlüsselt speichern; Schutzschlüssel im Betriebssystem-Keystore oder in einer expliziten externen Datei verwahren. |
-| Agenten begrenzen | Eigene Maschinenschlüssel, genaue Rechte, Laufzeiten, Schlüsselbesitznachweis und Widerruf; ausführbarer lokaler CRM-Pilot mit synthetischen Daten. |
-| Privaten Tresor nutzen | Optional mit PRF-fähigem Passkey lokal entschlüsseln, mehrere Passkeys berechtigen und unabhängigen Offline-Schlüssel sichern. |
-| Browser-Erweiterung öffnen | Direkt zu Passkeys, Freigaben, Recovery, Agenten, Tresor und Hilfe; in Chrome, Edge oder Firefox. |
+## Entwicklung
 
-### Ein Beispiel
-
-Du gibst Anna für 30 Minuten Zugang und erlaubst eine Weitergabe. Anna kann Ben Zugang für zehn Minuten geben. Ben kann ihn nicht weitergeben. Widerrufst du Annas Zugang, endet auch Bens Zugriff. Vor der Nutzung prüft HeavenKey die aktuelle Berechtigungskette.
-
-![HeavenKey: Übersicht geteilter Zugänge](docs/evidence/browser-delegation-chain.png)
-
-## Ausprobieren
-
-Die [Browserdemo](docs/BROWSER-DEMO.md) zeigt Teilen, Öffnen und Widerrufen mit Beispieldaten. Sie braucht keine Anmeldung oder Installation. Im Zugangslabor liegt sie unter `/demo/`; der Ordner `apps/demo` funktioniert auch direkt im Browser.
-
-Fertige Pakete für **Windows x64, macOS ARM64/Intel und Linux ARM64/x64** stehen in den [Vorschau-Releases](https://github.com/Supersynergy/HeavenKey/releases). Entpacken und den enthaltenen Starter ausführen; ein aktueller Browser genügt. Rust, Bun und Docker brauchst du nur für die Entwicklung. Die [Paket-Anleitung](docs/DISTRIBUTION.md) erklärt Einrichtung, Datenordner und die Erweiterungen für Chrome, Edge und Firefox.
-
-### Aus dem Quellcode bauen
-
-Voraussetzungen: Rustup, Bun **1.4.2**, `just`, Python 3 und Google Chrome. Auf macOS müssen die Xcode Command Line Tools für den nativen Build installiert sein. Die Rust-Version ist in `rust-toolchain.toml` festgelegt. Das private Repository benötigt GitHub-Zugriff.
+Voraussetzungen: Rustup mit dem in `rust-toolchain.toml` festgelegten Toolchain, Bun **1.4.2**, Python 3 und `just`. Browserprüfungen benötigen Chrome oder einen passenden `CHROME_PATH`; native Builds benötigen die jeweiligen Plattformwerkzeuge.
 
 ```sh
 git clone https://github.com/Supersynergy/HeavenKey.git
@@ -77,51 +97,16 @@ cd HeavenKey
 bun install --frozen-lockfile --ignore-scripts
 cargo fetch --locked
 just build
+just check
 just e2e
 ```
 
-`just e2e` testet den vollständigen Ablauf mit virtuellen Passkeys in einem isolierten Chrome-Browser. Browser, Server und Testdaten werden anschließend entfernt. Ein anderer Chrome-Pfad lässt sich mit `CHROME_PATH=/pfad/zu/chrome just e2e` angeben.
+Der [Startassistent](scripts/first_run.py) baut den Passwortmanager mit `python3 scripts/first_run.py`; `--lab` startet das Zugangslabor. Verwende in Tests ausschließlich synthetische Daten. Das private Repository benötigt eine Zugriffsberechtigung.
 
-Den Passwortmanager startest du mit `cargo run --locked --offline -p uac-api -- --password-manager --open`. Ohne `--password-manager` startet das separate Zugangslabor. Die [Anleitung](docs/USAGE.md) beschreibt dessen Einrichtung, Schlüsselverwaltung und Zugangsteilung.
+[Entwicklung](docs/DEVELOPMENT.md) · [API und Sicherheitsverhalten](docs/SPEC.md) · [Änderungen](CHANGELOG.md) · [Sicherheitsmeldungen](SECURITY.md)
 
-## Stand und Grenzen
+## Lizenz und Rechte
 
-**Version 0.9 ist eine lokale Vorschau.** Die [Release-Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) bindet Prüfungen an Quelle und Pakete. Desktop-Pakete enthalten die Weboberfläche und ihre nativen Bibliotheken. Kompatibilitätsprüfungen ersetzen keine Abnahme von Windows Hello oder physischen Passkeys. Firefox-Erweiterungen sind vorerst temporär installierbar. Kostenpflichtige Runner werden nicht verwendet. Ältere Nachweise stehen unter [0.7-Verifikation](docs/V07-VERIFICATION.md) und [Verifikation](docs/VERIFICATION.md).
+HeavenKey ist proprietäre Software. Die [HeavenKey Proprietary License 1.0](LICENSE) erlaubt berechtigten Empfängern offizieller Binärpakete persönliche und interne Nutzung. Weitervertrieb, öffentliche Forks und abgeleitete Produkte benötigen eine gesonderte Erlaubnis. Drittanbieter-Lizenzen und zwingende gesetzliche Rechte bleiben erhalten.
 
-Der Passwortmanager schließt die lokale Kernlücke, übertrifft Enpass aber noch nicht im gesamten Funktionsumfang. Browser-Autofill, mobile Apps, Synchronisation, verwaltete Website-Passkeys und ein externes Sicherheits-Audit fehlen. Die Gap-Analyse unterscheidet Herstellerangaben, eigenen Quellstand und ausgeführte Tests.
-
-Die Demo arbeitet mit einem Testdokument. Der Dienst signiert Zugänge und prüft sie online. Der integrierte 0.7-Quellstand verbindet HTTPS-Passkeys, SQLCipher-Datenbank, geschützte Signierschlüssel, Recovery, optionalen PRF-Notiztresor und einen lokalen Agenten-/CRM-Adapter. Das Offline-Gate und die Mandantenbibliothek sind enthalten; die API verwendet weiterhin einzelne Konten und keinen externen Mandantenconnector. Reale Next-Office-Anbindung und UCAN-/DID-Kompatibilität bleiben offen. Die zusammengeführten Entwicklungszweige und Abnahmegrenzen stehen in [Integration](docs/INTEGRATION.md).
-
-## Aufbau
-
-```mermaid
-flowchart LR
-    P[Passkey] --> W[Weboberfläche · TypeScript]
-    W --> A[API · Rust / Axum]
-    A --> V[Identität und Zugangsrechte prüfen]
-    A --> D[(SQLite · lokale Daten)]
-    V --> R[Demo-Dokument]
-```
-
-Der Passkey bestätigt dein Konto und die konkrete Aktion. Ein signierter Zugang bestimmt, welche Ressource du nutzen darfst und wie lange. Die API prüft beides vor der Ausführung.
-
-## Dokumentation
-
-- [Bebilderte Installation](docs/INSTALLATION.md)
-- [Passkeys, Recovery und Tresor](docs/PASSKEY-GUIDE.md)
-- [Agentenprogramm und CRM-Pilot](docs/AGENT-GUIDE.md)
-- [Implementierung, APIs und Grenzen](docs/PASSKEY-PLATFORM.md)
-- [Benutzung: Einrichten, teilen und widerrufen](docs/USAGE.md)
-- [Neu in 0.5: begrenzte Weitergabe](docs/V05-RESULT.md)
-- [Roadmap und Zeitplanung](docs/ROADMAP.md)
-- [Entwicklung und Tests](docs/DEVELOPMENT.md)
-- [API- und Sicherheitsverhalten](docs/SPEC.md)
-- [Delegationsformat](docs/DELEGATION-CONTRACT.md)
-- [Abhängigkeiten und Lizenzen](docs/DONORS.md)
-- [Änderungen](CHANGELOG.md)
-
-## Mitwirken und Rechte
-
-[Beiträge](CONTRIBUTING.md) · [Sicherheitsmeldungen](SECURITY.md) · [Lizenzhinweise](NOTICE.md)
-
-HeavenKey ist ein privates Supersynergy-Projekt mit vorbehaltenen Rechten. Eine Open-Source-Lizenz wurde nicht vergeben. Abhängigkeiten behalten ihre Lizenzen.
+[Einordnung der Lizenz](docs/LICENSING.md) · [Drittanbieterhinweise](NOTICE.md) · [Beiträge](CONTRIBUTING.md)

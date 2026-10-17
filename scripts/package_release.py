@@ -190,7 +190,7 @@ def desktop(target):
         for name in (
             "PASSWORD-MANAGER.md", "PASSWORD-MANAGER-GAPS.md",
             "PASSWORD-MANAGER-VERIFICATION.md", "PASSWORD-MANAGER-RESEARCH-TOOLS.md",
-            "password-manager-matrix.json",
+            "password-manager-matrix.json", "LICENSING.md",
         ):
             shutil.copyfile(ROOT / "docs" / name, directory / name)
         dependency_notices(directory)

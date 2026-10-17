@@ -216,6 +216,10 @@ Plattformangabe: Apple-Geräte; iCloud-Windows-Integration hier nicht separat ge
 
 ## HeavenKey: Ausgangslage und Release-Grenzen
 
+### Aktueller Produktstand 0.11.1
+
+Die unten folgende 0.9-Tabelle ist der historische Ausgangsstand. Inzwischen sind bestätigtes Chromium-Autofill, verschlüsselte Formularprofile, F2-Schnellzugriff und die CSV-Importvorschau mit Duplikat- und Konfliktprüfung integriert. Die aktuelle [Bedienung](PASSWORD-MANAGER.md) und [Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md) nennen die Funktionen und Plattformgrenzen. Automatische Übernahme neuer Website-Logins, Firefox-Laufzeit, mobile Provider und Gerätesynchronisation bleiben getrennte offene Punkte. Die Anforderungen im hinteren Teil sind weiterhin der Zielkatalog; eine Teilfunktion ist keine vollständige Abnahme dieses Katalogs.
+
 ### Integrierte 0.9-Vorschau
 
 Die nachstehende Recherche beschreibt den Ausgangspunkt. Die neue Version ergänzt einen eigenständigen lokalen Passwortmanager; die ausgeführten Prüfungen und Paketgrenzen stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md).

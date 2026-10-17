@@ -1,6 +1,6 @@
 # HeavenKey-Pakete und Browser-Erweiterungen
 
-Version 0.11.0 startet über den enthaltenen Starter den lokalen Passwortmanager. Sie enthält außerdem die zusammengeführten Zugangslabor-Funktionen aus 0.7. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Verbindliche Build- und Laufzeitnachweise stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md).
+Version 0.11.1 startet über den enthaltenen Starter den lokalen Passwortmanager. Sie enthält außerdem die zusammengeführten Zugangslabor-Funktionen aus 0.7. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Verbindliche Build- und Laufzeitnachweise stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md).
 
 Die Pakete enthalten Server, Weboberfläche und Lizenzhinweise. Für den Passwortmanager brauchst du einen aktuellen Browser, aber kein Rust, Bun, Python, Docker oder Passkey. Das optionale Zugangslabor verwendet WebAuthn, SQLCipher und eine geschützte Signierschlüsselhülle. Physische Passkeys sind noch nicht abgenommen.
 
@@ -51,3 +51,7 @@ Safari verwendet die Weboberfläche direkt; eine Safari-Erweiterung ist nicht en
 Die Windows-Prüfung mit Wine ist ein Laufzeittest einer Windows-EXE in einer Kompatibilitätsumgebung. Sie ersetzt weder Windows Hello noch eine Abnahme auf einem echten Windows-System. GitHub-CI verwendet den lokalen, kurzlebigen Linux-Runner; Windows- und macOS-Builds werden lokal erzeugt.
 
 Quellen: [Rust OpenSSL: vendored](https://docs.rs/openssl/0.10.81/openssl/#vendored), [Wine](https://www.winehq.org/), [Chrome Tabs API](https://developer.chrome.com/docs/extensions/reference/api/tabs), [Firefox temporär laden](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/), [Firefox-Signierung](https://extensionworkshop.com/documentation/publish/signing-and-distribution-overview/).
+
+## Nutzungsrechte
+
+Offizielle Binärpakete dürfen nach der beiliegenden `LICENSE` persönlich und intern genutzt werden. Weitervertrieb und abgeleitete Produkte brauchen eine gesonderte Erlaubnis. Drittanbieter-Lizenzen und zwingende gesetzliche Rechte bleiben erhalten. Details stehen in `LICENSING.md`.

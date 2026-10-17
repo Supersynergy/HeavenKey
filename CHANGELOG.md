@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.1 — 2026-10-17
+
+- Synchronize all existing feature PRs into main; close already-integrated stacked PRs by verified commit ancestry.
+- Replace the old 0.9 README with current setup, features and tested platform limits.
+- Add seven new real-app screenshots using only synthetic data.
+- Publish the HeavenKey Proprietary License 1.0, retaining mandatory and third-party rights.
+- Include the licensing guide in portable desktop archives.
+
 ## 0.10.0 preview · 2026-10-16
 
 - Einzelne plattformgerechte Tastenkappen, F1-Hilfe und einheitliche SVG-Symbole.

@@ -1,4 +1,4 @@
-# Passwortmanager 0.11.0 · Abnahme und Grenzen
+# Passwortmanager 0.11.1 · Abnahme und Grenzen
 
 Die Ausgabe ergänzt bestätigtes Browser-Autofill, verschlüsselte Formularprofile, den Schnellzugriff mit F2 und eine CSV-Importvorschau mit Duplikatprüfung. Ein allgemeiner Vorsprung gegenüber Enpass ist nicht nachgewiesen.
 

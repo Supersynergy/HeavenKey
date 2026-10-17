@@ -1,6 +1,6 @@
 # Security
 
-HeavenKey is a research preview. Production deployment is not supported yet. Hardware, recovery, multiple credentials, key rotation, distributed concurrency, rate limits and external security review remain open.
+HeavenKey provides a local encrypted password manager and a separate experimental passkey/access lab. The current release verification is documented in docs/PASSWORD-MANAGER-VERIFICATION.md and the release ACCEPTANCE.json. Automated tests cover implemented recovery, multiple credentials, key rotation and bounded pairing attempts; these features do not establish an external security audit or physical-device acceptance. Publisher signing, notarization, physical passkeys and Firefox extension runtime remain unaccepted.
 
 Collaborators should report vulnerabilities privately to the repository owner through their existing private contact channel. Do not post credentials or exploitable details in a public issue. A dedicated disclosure address and response SLA have not been configured.
 
