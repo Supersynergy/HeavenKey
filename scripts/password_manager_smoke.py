@@ -10,9 +10,12 @@ import socket
 import subprocess
 import tempfile
 import time
+import tomllib
 import urllib.error
 import urllib.request
 
+
+VERSION = tomllib.loads((Path(__file__).resolve().parent.parent / "Cargo.toml").read_text())["workspace"]["package"]["version"]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -48,7 +51,7 @@ def main():
                 return json.load(response)
 
         version = subprocess.run([*command, "--version"], cwd=root, env=env, capture_output=True, text=True, timeout=45)
-        assert version.returncode == 0 and "0.12.0" in version.stdout, version.stderr
+        assert version.returncode == 0 and version.stdout.strip() == f"HeavenKey {VERSION}", version.stderr
         cases.append("version")
         previous_token = None
         for iteration in range(2):
