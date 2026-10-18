@@ -6,9 +6,9 @@
 
 Passwörter und Formularprofile lokal verwalten. HeavenKey verschlüsselt den Tresor im Browser und speichert ihn auf deinem Computer. Für den Passwortmanager brauchst du weder ein Cloudkonto noch eine Internetverbindung.
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.14.0](https://img.shields.io/badge/version-0.14.0-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.14.0-rc.1)
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.15.0](https://img.shields.io/badge/version-0.15.0-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.15.0-rc.1)
 
-[Downloads](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.14.0-rc.1) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
+[Downloads](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.15.0-rc.1) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
 
 ![HeavenKey mit Navigation, Eintragsliste und Login-Details im hellen Design](docs/screenshots/vault-desktop.png)
 
@@ -22,17 +22,17 @@ Die ursprüngliche Idee steckt jetzt im Passwortmanager: den lokalen Tresor mit 
 
 ## Starten
 
-1. Lade das Paket für deinen Computer aus dem [aktuellen Release](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.14.0-rc.1). Prüfe es mit der dortigen `SHA256SUMS` und entpacke es.
+1. Lade das Paket für deinen Computer aus dem [aktuellen Release](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.15.0-rc.1). Prüfe es mit der dortigen `SHA256SUMS` und entpacke es.
 2. Öffne den enthaltenen Starter. Er startet den lokalen Dienst und öffnet `http://localhost:18240/passwords/` im Browser.
 3. Lege ein Masterpasswort mit mindestens 14 Zeichen fest. Exportiere anschließend eine verschlüsselte Sicherung und prüfe ihre Wiederherstellung.
 
 | Computer | Paket | Starter |
 | --- | --- | --- |
-| Windows x64 | `HeavenKey-0.14.0-windows-x64.zip` | `Start HeavenKey.cmd` |
-| macOS mit Apple Silicon | `HeavenKey-0.14.0-macos-arm64.zip` | `Start HeavenKey.command` |
-| macOS mit Intel-Prozessor | `HeavenKey-0.14.0-macos-x64.zip` | `Start HeavenKey.command` |
-| Linux x64 | `HeavenKey-0.14.0-linux-x64.tar.gz` | `./start.sh` |
-| Linux ARM64 | `HeavenKey-0.14.0-linux-arm64.tar.gz` | `./start.sh` |
+| Windows x64 | `HeavenKey-0.15.0-windows-x64.zip` | `Start HeavenKey.cmd` |
+| macOS mit Apple Silicon | `HeavenKey-0.15.0-macos-arm64.zip` | `Start HeavenKey.command` |
+| macOS mit Intel-Prozessor | `HeavenKey-0.15.0-macos-x64.zip` | `Start HeavenKey.command` |
+| Linux x64 | `HeavenKey-0.15.0-linux-x64.tar.gz` | `./start.sh` |
+| Linux ARM64 | `HeavenKey-0.15.0-linux-arm64.tar.gz` | `./start.sh` |
 
 Ein aktueller Browser genügt. Rust, Bun und Docker werden nur für die Entwicklung benötigt. Das Terminal des Starters bleibt geöffnet; `Ctrl+C` beendet den Dienst. Die Pakete sind unsigniert und nicht Apple-notarisiert. [Installation und Datenordner](docs/DISTRIBUTION.md) erklären die Betriebssystemhinweise und den Updateablauf.
 
@@ -96,7 +96,7 @@ Die OS-Sandbox-Erweiterung ist ein Release-Kandidat. Linux-Kernel-Isolation und 
 
 ## Sicherheit und Grenzen
 
-Das Masterpasswort und der nicht exportierbare Schlüssel bleiben im entsperrten Browser. Der Dienst speichert die verschlüsselte Tresorhülle mit AES-256-GCM; die Schlüsselableitung verwendet PBKDF2-HMAC-SHA256 mit 600.000 Iterationen. Revisionen verhindern stilles Überschreiben aus veralteten Tabs. Der lokale Dienst bindet an Loopback und prüft Host, Origin und sein Prozess- beziehungsweise Kopplungstoken. Details stehen in der [Passwortmanager-Anleitung](docs/PASSWORD-MANAGER.md).
+Das Masterpasswort und der nicht exportierbare Schlüssel bleiben im entsperrten Browser. Der Dienst speichert die verschlüsselte Tresorhülle mit AES-256-GCM; neue Tresore verwenden Argon2id mit 64 MiB Speicher, drei Durchläufen und einer Lane. Bestehende PBKDF2-HMAC-SHA256-Tresore mit 600.000 Iterationen bleiben lesbar. Unter „Masterpasswort ändern“ kannst du sie nach einer Sicherung bewusst neu verschlüsseln; dabei werden Passkeys und Freigaben widerrufen. Alte Sicherungen bleiben im alten Format. Revisionen verhindern stilles Überschreiben aus veralteten Tabs. Der lokale Dienst bindet an Loopback und prüft Host, Origin und sein Prozess- beziehungsweise Kopplungstoken. Details stehen in der [Passwortmanager-Anleitung](docs/PASSWORD-MANAGER.md).
 
 Verlust des Masterpassworts lässt sich nicht durch HeavenKey zurücksetzen. Ein Passkey hilft nur, solange sein verschlüsselter lokaler Umschlag und das Gerät verfügbar sind. Ein Passwortwechsel oder eine gesperrte Wiederherstellung entfernt Passkey-Umschläge und widerruft bestehende Freigaben. Bereits abgerufene Angaben kann ein Empfänger speichern; Ablauf und Widerruf verhindern weitere Serverabrufe. Der vollständige Freigabelink ist vertraulich: Wer ihn zuerst mit einem Passkey beansprucht, wird zum gebundenen Empfänger. JavaScript garantiert keine vollständige physische Speicherlöschung; die Bereinigung der Zwischenablage hängt vom Browser ab. Programme im selben Benutzerkonto und ein kompromittierter Browser gehören zur Vertrauensgrenze.
 

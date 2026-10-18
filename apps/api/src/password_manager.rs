@@ -172,9 +172,25 @@ pub struct Envelope {
     version: u8,
     kdf: String,
     iterations: u32,
+    #[serde(
+        default,
+        deserialize_with = "present_u32",
+        skip_serializing_if = "Option::is_none"
+    )]
+    memory_kib: Option<u32>,
+    #[serde(
+        default,
+        deserialize_with = "present_u32",
+        skip_serializing_if = "Option::is_none"
+    )]
+    parallelism: Option<u32>,
     salt: String,
     iv: String,
     ciphertext: String,
+}
+
+fn present_u32<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<u32>, D::Error> {
+    u32::deserialize(deserializer).map(Some)
 }
 
 #[derive(Deserialize)]
@@ -195,9 +211,22 @@ fn decoded(value: &str, min: usize, max: usize) -> bool {
 
 impl Envelope {
     fn valid(&self) -> bool {
-        self.version == 1
-            && self.kdf == "PBKDF2-SHA256"
-            && self.iterations == 600_000
+        let scheme = match self.version {
+            1 => {
+                self.kdf == "PBKDF2-SHA256"
+                    && self.iterations == 600_000
+                    && self.memory_kib.is_none()
+                    && self.parallelism.is_none()
+            }
+            2 => {
+                self.kdf == "Argon2id"
+                    && self.iterations == 3
+                    && self.memory_kib == Some(65536)
+                    && self.parallelism == Some(1)
+            }
+            _ => false,
+        };
+        scheme
             && decoded(&self.salt, 16, 16)
             && decoded(&self.iv, 12, 12)
             && decoded(&self.ciphertext, 16, 1024 * 1024 + 16)
@@ -307,7 +336,14 @@ pub async fn save(
         .as_deref()
         .and_then(|record| serde_json::from_str::<Envelope>(record).ok())
         .filter(Envelope::valid)
-        .is_none_or(|record| record.salt != input.record.salt);
+        .is_none_or(|record| {
+            record.salt != input.record.salt
+                || record.version != input.record.version
+                || record.kdf != input.record.kdf
+                || record.iterations != input.record.iterations
+                || record.memory_kib != input.record.memory_kib
+                || record.parallelism != input.record.parallelism
+        });
     if salt_changed {
         tx.execute("DELETE FROM password_passkeys", [])
             .map_err(internal)?;
@@ -615,11 +651,37 @@ mod tests {
     }
 
     #[test]
+    fn versioned_argon2_envelope_is_strict() {
+        let value = json!({"version":2,"kdf":"Argon2id","iterations":3,"memory_kib":65536,"parallelism":1,
+            "salt":URL_SAFE_NO_PAD.encode([0;16]),"iv":URL_SAFE_NO_PAD.encode([0;12]),"ciphertext":URL_SAFE_NO_PAD.encode([0;16])});
+        let record: Envelope = serde_json::from_value(value.clone()).expect("Argon2id envelope");
+        assert!(record.valid());
+        assert_eq!(serde_json::to_value(record).unwrap(), value);
+        for (field, invalid) in [
+            ("memory_kib", json!(u32::MAX)),
+            ("parallelism", json!(32)),
+            ("iterations", json!(1)),
+            ("memory_kib", json!(null)),
+            ("extra", json!(true)),
+            ("version", json!(1)),
+        ] {
+            let mut bad = value.clone();
+            bad[field] = invalid;
+            assert!(
+                !serde_json::from_value::<Envelope>(bad).is_ok_and(|r| r.valid()),
+                "{field}"
+            );
+        }
+    }
+
+    #[test]
     fn strict_envelope_bounds_before_storage() {
         let mut value = Envelope {
             version: 1,
             kdf: "PBKDF2-SHA256".into(),
             iterations: 600_000,
+            memory_kib: None,
+            parallelism: None,
             salt: URL_SAFE_NO_PAD.encode([0; 16]),
             iv: URL_SAFE_NO_PAD.encode([0; 12]),
             ciphertext: URL_SAFE_NO_PAD.encode([0; 16]),

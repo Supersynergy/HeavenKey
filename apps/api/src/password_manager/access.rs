@@ -876,7 +876,12 @@ mod tests {
         let mut record: Envelope =
             serde_json::from_value(current(&app.db.lock().unwrap()).unwrap()["record"].clone())
                 .unwrap();
-        record.salt = URL_SAFE_NO_PAD.encode([1u8; 16]);
+        // A KDF change must revoke capabilities even when a caller reuses the salt.
+        record.version = 2;
+        record.kdf = "Argon2id".into();
+        record.iterations = 3;
+        record.memory_kib = Some(65536);
+        record.parallelism = Some(1);
         let stale: Envelope =
             serde_json::from_value(serde_json::to_value(&record).unwrap()).unwrap();
         assert!(

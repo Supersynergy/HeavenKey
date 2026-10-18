@@ -57,3 +57,7 @@ Die [CI-Härtung](evidence/ci-hardening.json) wurde mit dem integrierten Prozess
 Nach der neuen Prozesslistenprüfung wurden `just check` und alle 138 Browserfälle auf macOS erneut ausgeführt. Der geänderte Wrapper wurde zusätzlich in einem Ubuntu-ARM64-Container geprüft. Der vollständige Ubuntu-amd64-Lauf stammt vom Stand davor; der Anwendungsquellcode ist unverändert. Die Wrapper-Prüfung umfasst je elf Schutzfälle und zwei Fehler-Reproduktionen. Sie bestätigt auch die verbleibende Grenze: Fällt `ps` erst beim Aufräumen aus, ist die vollständige Bereinigung abgetrennter Kinder nicht garantiert.
 
 Die Referenz prüft das HeavenKey-Profil und seine Testvektoren. Vollständige Kompatibilität mit fremden JSON-/Ed25519-Implementierungen, externe Protokolle, Hardware, Recovery und verteilte Ausführung sind zusätzliche Prüfziele. Eine bestandene lokale Simulation ist keine Produktionsfreigabe.
+
+## Argon2id-Kandidat 0.15
+
+[Format und Migration](VAULT-KDF.md) beschreiben den neuen KDF-Pfad. Der Release enthält eine frische `ACCEPTANCE.json` mit Quell- und Binärbindung. Neue Tresore, Altformat-Entsperren, normale Speicherung, explizite Migration, Sicherungen, Erweiterung, Passkeys und befristete Freigaben werden getrennt geprüft. Herausgebersignaturen, ein externes Audit und native Windows-Sandbox-Abnahme bleiben ausstehend.

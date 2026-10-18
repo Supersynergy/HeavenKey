@@ -134,10 +134,10 @@ async function operation(task: (run: number) => Promise<void>) {
   catch (error) { if (active(run)) { if (vault) recordActivity("operation", "error"); status(error instanceof Error ? error.message : "Vorgang fehlgeschlagen.", true); } }
   finally { if (active(run)) { setBusy(false); if (pendingFocus) { byId(pendingFocus).focus(); pendingFocus = null; } } }
 }
-async function commit(next: Vault, run: number, nextKey: CryptoKey | null = key, nextSalt = envelope?.salt): Promise<boolean> {
-  if (!unlocked(run) || !nextKey || !nextSalt) return false;
+async function commit(next: Vault, run: number, nextKey: CryptoKey | null = key, nextEnvelope = envelope): Promise<boolean> {
+  if (!unlocked(run) || !nextKey || !nextEnvelope) return false;
   next = validateVault(next);
-  const sealed = await sealVault(next, nextKey, nextSalt);
+  const sealed = await sealVault(next, nextKey, nextEnvelope);
   if (!unlocked(run)) return false;
   const saved = readSnapshot(await api("/api/password-vault", sealed, revision));
   if (!unlocked(run)) return false;
@@ -157,6 +157,7 @@ function selectEntry(id: string, focus = false) {
 function render() {
   const list = byId("entries"); const scrollTop = list.scrollTop; list.replaceChildren();
   if (!vault) return;
+  byId("vault-kdf").textContent = envelope?.version === 2 ? "Argon2id · 64 MiB · 3 Durchläufe · AES-256-GCM" : "PBKDF2-SHA256 · 600.000 Durchläufe · AES-256-GCM. Unter „Masterpasswort ändern“ auf Argon2id umstellen.";
   const favorites = input("favorites-only").checked;
   byId("count").textContent = `${vault.entries.length} Einträge`;
   byId("all-count").textContent = String(vault.entries.length);
@@ -406,7 +407,7 @@ form("rekey-form").addEventListener("submit", event => { event.preventDefault();
   if (master !== value("new-master-confirm")) throw new Error("Die neuen Masterpasswörter stimmen nicht überein.");
   form("rekey-form").reset();
   const rekeyed = await createVault(master, vault); if (!unlocked(run)) return;
-  if (await commit(vault!, run, rekeyed.key, rekeyed.envelope.salt)) status("Masterpasswort geändert. Richte deine Passkeys erneut ein; offene Freigaben wurden widerrufen. Alte Sicherungen brauchen ihr damaliges Passwort.");
+  if (await commit(vault!, run, rekeyed.key, rekeyed.envelope)) status("Masterpasswort geändert. Richte deine Passkeys erneut ein; offene Freigaben wurden widerrufen. Alte Sicherungen brauchen ihr damaliges Passwort.");
 }); });
 for (const name of ["pointerdown", "keydown", "input"] as const) document.addEventListener(name, () => { lastActivity = Date.now(); }, { passive: true });
 setInterval(() => { if (vault && Date.now() - lastActivity >= 300_000) lock("Nach 5 Minuten ohne Eingabe gesperrt."); }, 1000);

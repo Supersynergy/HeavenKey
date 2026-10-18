@@ -13,6 +13,7 @@ for (const browser of ['chromium','firefox']) {
   }
   for (const name of ['popup.html','popup.css','popup.js','settings.js','THIRD-PARTY-NOTICE.md','EXTENSION-CONTRACT.md','FEATURE-MAP.md']) await copyFile(join(source, name), join(out, name));
   await copyFile(join(root, 'LICENSE'), join(out, 'LICENSE'));
+  await copyFile(join(root, 'docs/licenses/noble-hashes-MIT.txt'), join(out, 'noble-hashes-MIT.txt'));
   const manifest: any = {
     manifest_version: 3, name: 'HeavenKey', version,
     description: 'Lokaler verschlüsselter Tresor und Formularhilfe mit deiner Freigabe.',

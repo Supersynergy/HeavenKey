@@ -199,7 +199,7 @@ $('save-profile').addEventListener('click', () => void run(async generation => {
   if (!Object.keys(values).length) throw new Error('Keine Profilwerte vorhanden.');
   const profile: FormProfile = { id: sourceProfile?.id || crypto.randomUUID(), title, entities: values, updatedAt: new Date().toISOString() };
   const profiles = [...(vault.profiles || []).filter(p => p.id !== profile.id), profile]; validateProfiles(profiles);
-  const next: ExtendedVault = { ...vault, profiles }, sealed = await sealVault(next,key,envelope.salt); active(generation);
+  const next: ExtendedVault = { ...vault, profiles }, sealed = await sealVault(next,key,envelope); active(generation);
   const saved = snapshot(await api('/api/password-vault',{ expected_revision: revision, record: sealed })); active(generation);
   vault = next; envelope = sealed; revision = saved.revision; sourceProfile = profile; renderSources(); status('Profil verschlüsselt gespeichert.');
 }));

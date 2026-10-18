@@ -1,14 +1,18 @@
 /** Local password vault: only authenticated ciphertext crosses the API boundary. */
 import { validateProfiles, type FormProfile } from "../../../packages/forms/schema";
+import { argon2idAsync } from "@noble/hashes/argon2.js";
 export const ITERATIONS = 600_000;
 export const MAX_ITEMS = 1000;
 export const MAX_PLAIN_BYTES = 1_000_000;
 export const MAX_FILE_BYTES = 2_000_000;
-export type Envelope = { version: 1; kdf: "PBKDF2-SHA256"; iterations: 600000; salt: string; iv: string; ciphertext: string };
+type Ciphertext = { salt: string; iv: string; ciphertext: string };
+export type Envelope = Ciphertext & ({ version: 1; kdf: "PBKDF2-SHA256"; iterations: 600000 } | { version: 2; kdf: "Argon2id"; iterations: 3; memory_kib: 65536; parallelism: 1 });
 export type Login = { id: string; title: string; username: string; password: string; url: string; notes: string; totp: string; tags: string[]; favorite: boolean };
 export type Vault = { version: 1 | 2; entries: Login[]; profiles?: FormProfile[] };
 const utf8 = new TextEncoder();
 const aad = utf8.encode("HeavenKey password vault v1");
+const argon2Scheme = { version: 2, kdf: "Argon2id", iterations: 3, memory_kib: 65536, parallelism: 1 } as const;
+const authenticationData = (envelope: Envelope) => envelope.version === 1 ? aad : utf8.encode(`HeavenKey password vault v2|Argon2id|v=19|m=65536|t=3|p=1|dkLen=32|salt=${envelope.salt}`);
 export const freshBytes = (length: number): Uint8Array<ArrayBuffer> => crypto.getRandomValues(new Uint8Array(length));
 export function encode64(bytes: Uint8Array): string {
   let raw = "";
@@ -23,7 +27,11 @@ export function decode64(value: unknown, max: number): Uint8Array<ArrayBuffer> {
 }
 const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value);
 export function validateEnvelope(value: unknown): Envelope {
-  if (!object(value) || Object.keys(value).sort().join() !== "ciphertext,iterations,iv,kdf,salt,version" || value.version !== 1 || value.kdf !== "PBKDF2-SHA256" || value.iterations !== ITERATIONS) throw new Error("Unbekanntes Tresorformat oder unzulässige KDF-Parameter.");
+  if (!object(value)) throw new Error("Unbekanntes Tresorformat oder unzulässige KDF-Parameter.");
+  const keys = Object.keys(value).sort().join();
+  const legacy = keys === "ciphertext,iterations,iv,kdf,salt,version" && value.version === 1 && value.kdf === "PBKDF2-SHA256" && value.iterations === ITERATIONS;
+  const argon2 = keys === "ciphertext,iterations,iv,kdf,memory_kib,parallelism,salt,version" && value.version === 2 && value.kdf === "Argon2id" && value.iterations === 3 && value.memory_kib === 65536 && value.parallelism === 1;
+  if (!legacy && !argon2) throw new Error("Unbekanntes Tresorformat oder unzulässige KDF-Parameter.");
   if (decode64(value.salt, 16).length !== 16 || decode64(value.iv, 12).length !== 12 || decode64(value.ciphertext, MAX_PLAIN_BYTES + 16).length < 16) throw new Error("Ungültige Tresorlänge.");
   return value as Envelope;
 }
@@ -45,6 +53,27 @@ export async function derive(master: string, salt: Uint8Array<ArrayBuffer>): Pro
     return await crypto.subtle.deriveKey({ name: "PBKDF2", hash: "SHA-256", iterations: ITERATIONS, salt }, source, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
   } finally { bytes.fill(0); }
 }
+let derivationTail: Promise<void> = Promise.resolve();
+let pendingDerivations = 0;
+async function deriveArgon2(master: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
+  validateMaster(master);
+  if (salt.length !== 16) throw new Error("Ungültiges Salt.");
+  if (pendingDerivations >= 3) throw new Error("Zu viele gleichzeitige Entsperrversuche. Bitte kurz warten.");
+  pendingDerivations++;
+  const previous = derivationTail;
+  let release!: () => void;
+  derivationTail = new Promise<void>(resolve => { release = resolve; });
+  let bytes: Uint8Array<ArrayBuffer> | undefined, derived: Uint8Array | undefined;
+  try {
+    await previous;
+    bytes = utf8.encode(master);
+    derived = await argon2idAsync(bytes, salt, { m: 65536, t: 3, p: 1, version: 19, dkLen: 32, maxmem: 65536 * 1024, asyncTick: 10 });
+    return await crypto.subtle.importKey("raw", derived as Uint8Array<ArrayBuffer>, "AES-GCM", false, ["encrypt", "decrypt"]);
+  } finally {
+    bytes?.fill(0); derived?.fill(0); salt.fill(0);
+    pendingDerivations--; release();
+  }
+}
 export function validateVault(value: unknown): Vault {
   if (!object(value) || (value.version !== 1 && value.version !== 2) || !Array.isArray(value.entries) || value.entries.length > MAX_ITEMS || (value.version === 2 && value.profiles === undefined)) throw new Error("Ungültige Tresordaten oder zu viele Einträge (maximal 1000).");
   if (value.profiles !== undefined) validateProfiles(value.profiles);
@@ -62,22 +91,28 @@ export function validateVault(value: unknown): Vault {
   if (utf8.encode(JSON.stringify(value)).length > MAX_PLAIN_BYTES) throw new Error("Der Tresor überschreitet 1 MB Klartext.");
   return (value.profiles !== undefined ? {...value,version:2} : value) as Vault;
 }
-export async function sealVault(vault: Vault, key: CryptoKey, salt: string): Promise<Envelope> {
+export async function sealVault(vault: Vault, key: CryptoKey, source: Envelope | string): Promise<Envelope> {
   vault = validateVault(vault);
-  if (decode64(salt, 16).length !== 16) throw new Error("Ungültiges Salt.");
+  const envelope: Envelope = typeof source === "string"
+    ? { version: 1, kdf: "PBKDF2-SHA256", iterations: ITERATIONS, salt: source, iv: encode64(new Uint8Array(12)), ciphertext: encode64(new Uint8Array(16)) }
+    : validateEnvelope(source);
+  if (decode64(envelope.salt, 16).length !== 16) throw new Error("Ungültiges Salt.");
   const plain = utf8.encode(JSON.stringify(vault));
   try {
     const iv = freshBytes(12);
-    const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: aad }, key, plain);
-    return { version: 1, kdf: "PBKDF2-SHA256", iterations: ITERATIONS, salt, iv: encode64(iv), ciphertext: encode64(new Uint8Array(cipher)) };
+    const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: authenticationData(envelope) }, key, plain);
+    return { ...envelope, iv: encode64(iv), ciphertext: encode64(new Uint8Array(cipher)) };
   } finally { plain.fill(0); }
 }
 export async function openVault(value: unknown, master: string): Promise<{ vault: Vault; key: CryptoKey; envelope: Envelope }> {
   const envelope = validateEnvelope(value);
-  const key = await derive(master, decode64(envelope.salt, 16));
+  const salt = decode64(envelope.salt, 16);
+  let key: CryptoKey;
+  try { key = await (envelope.version === 1 ? derive(master, salt) : deriveArgon2(master, salt)); }
+  finally { salt.fill(0); }
   let bytes: Uint8Array<ArrayBuffer> | undefined;
   try {
-    bytes = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: decode64(envelope.iv, 12), additionalData: aad }, key, decode64(envelope.ciphertext, MAX_PLAIN_BYTES + 16)));
+    bytes = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: decode64(envelope.iv, 12), additionalData: authenticationData(envelope) }, key, decode64(envelope.ciphertext, MAX_PLAIN_BYTES + 16)));
     const vault = validateVault(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
     return { vault, key, envelope };
   } catch { throw new Error("Entsperren fehlgeschlagen: Passwort falsch, Datei beschädigt oder Format ungültig."); }
@@ -86,8 +121,12 @@ export async function openVault(value: unknown, master: string): Promise<{ vault
 export async function createVault(master: string, vault: Vault = { version: 1, entries: [] }): Promise<{ vault: Vault; key: CryptoKey; envelope: Envelope }> {
   validateNewMaster(master);
   vault = validateVault(vault);
-  const salt = freshBytes(16), key = await derive(master, salt);
-  return { vault, key, envelope: await sealVault(vault, key, encode64(salt)) };
+  const salt = freshBytes(16), encodedSalt = encode64(salt);
+  try {
+    const key = await deriveArgon2(master, salt);
+    const source: Envelope = { ...argon2Scheme, salt: encodedSalt, iv: encode64(new Uint8Array(12)), ciphertext: encode64(new Uint8Array(16)) };
+    return { vault, key, envelope: await sealVault(vault, key, source) };
+  } finally { salt.fill(0); }
 }
 export function generatePassword(length = 24, alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!#$%&()*+,-./:;<=>?@[]^_{|}~"): string {
   if (!Number.isInteger(length) || length < 14 || length > 128 || alphabet.length < 2 || alphabet.length > 256 || new Set(alphabet).size !== alphabet.length || [...alphabet].length !== alphabet.length) throw new Error("Ungültige Generatorparameter.");

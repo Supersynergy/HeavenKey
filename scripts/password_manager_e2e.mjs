@@ -109,7 +109,7 @@ try {
   await page.locator("#entry-notes").fill("Updated synthetic note"); await page.locator("#save-entry").click(); await status("Login verschlüsselt gespeichert");
   await settingsSection(); const downloadEvent = page.waitForEvent("download"); await page.locator("#export-backup").click(); const download = await downloadEvent;
   const backup = join(temporary, "backup.json"); await download.saveAs(backup); const backupBytes = await readFile(backup, "utf8");
-  check("backup contains ciphertext and no credential plaintext", !backupBytes.includes(secret) && !backupBytes.includes("synthetic@example.invalid") && JSON.parse(backupBytes).iterations === 600000);
+  check("backup contains ciphertext and no credential plaintext", !backupBytes.includes(secret) && !backupBytes.includes("synthetic@example.invalid") && JSON.parse(backupBytes).version === 2 && JSON.parse(backupBytes).kdf === "Argon2id" && JSON.parse(backupBytes).memory_kib === 65536);
   await entries();
   await page.screenshot({ path: "docs/evidence/password-manager/unlocked.png", fullPage: true });
   await page.locator("#lock").click(); await ready();
@@ -194,6 +194,31 @@ try {
     await page.locator("#locked-restore-submit").click(); await status("Sicherung wiederhergestellt"); await unlock(newMaster); await count(1000);
     check(`${corruption} can be replaced by validated encrypted backup`);
   }
+  // Exercise a pre-Argon2 backup through the real legacy unlock and migration controls.
+  const { derive, sealVault, freshBytes, encode64 } = await import("../apps/web/src/passwords-crypto.ts");
+  const legacySalt = freshBytes(16), legacyKey = await derive(newMaster, legacySalt);
+  const legacy = await sealVault({version:1,entries:[{id:"legacy",title:"Legacy migration",username:"old@example.invalid",password:secret,url:"https://example.invalid",notes:"",totp:"",tags:[],favorite:false}]}, legacyKey, encode64(legacySalt));
+  await page.evaluate(async record => {
+    const headers = {"X-HeavenKey-Client":"password-manager","Content-Type":"application/json"};
+    const {token} = await (await fetch("/api/password-vault/config",{headers})).json(); headers["X-HeavenKey-Token"]=token;
+    const {revision} = await (await fetch("/api/password-vault",{headers})).json();
+    const saved = await fetch("/api/password-vault",{method:"POST",headers,body:JSON.stringify({record,expected_revision:revision})});
+    if(!saved.ok) throw Error("Legacy fixture rejected");
+  }, legacy);
+  await page.reload(); await unlock(newMaster); await count(1);
+  check("legacy PBKDF2 backup unlocks without automatic rewrite", (await snapshot()).record.version === 1);
+  await page.locator("[data-testid=toggle-favorite]").click(); await status("Favorit gespeichert");
+  check("ordinary legacy save preserves PBKDF2 metadata", (await snapshot()).record.kdf === "PBKDF2-SHA256");
+  await settingsSection("Masterpasswort ändern");
+  check("legacy trust marker explains explicit upgrade", (await page.locator("#vault-kdf").textContent()).includes("PBKDF2-SHA256"));
+  await page.locator("#new-master").fill(newMaster); await page.locator("#new-master-confirm").fill(newMaster); await page.locator("#rekey").click(); await status("Masterpasswort geändert");
+  const migrated = (await snapshot()).record;
+  check("explicit same-password migration replaces KDF and salt atomically", migrated.version === 2 && migrated.kdf === "Argon2id" && migrated.salt !== legacy.salt);
+  check("trust marker reports actual Argon2id parameters", (await page.locator("#vault-kdf").textContent()).includes("64 MiB"));
+  await stop(); await start(); await page.reload(); await unlock(newMaster); await count(1);
+  await page.locator("[data-testid=edit-entry]").click();
+  check("legacy credential survives Argon2 migration and process restart", await page.locator("#entry-password").inputValue() === secret);
+  await page.locator("#cancel-entry").click();
   await page.locator("#lock").click(); await ready(); check("lock returns focus to master", await page.locator("#master").evaluate(element => element === document.activeElement));
   await page.screenshot({ path: "docs/evidence/password-manager/locked.png", fullPage: true });
   check("no uncaught browser errors", errors.length === 0);

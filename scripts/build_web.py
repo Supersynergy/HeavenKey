@@ -9,7 +9,7 @@ subprocess.run(
     cwd=root, check=True,
 )
 subprocess.run(
-    ['bun', 'build', 'apps/web/src/passwords.ts', '--outdir', 'apps/web/dist', '--target', 'browser'],
+    ['bun', 'build', 'apps/web/src/passwords.ts', '--outdir', 'apps/web/dist', '--target', 'browser', '--banner', '/*! @noble/hashes 2.4.0\n'+(root/'docs/licenses/noble-hashes-MIT.txt').read_text()+'*/'],
     cwd=root, check=True,
 )
 subprocess.run(['bun', 'build', 'apps/web/src/share.ts', '--outdir', 'apps/web/dist', '--target', 'browser'], cwd=root, check=True)

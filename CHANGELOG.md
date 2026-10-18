@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.15.0 (Release candidate)
+
+- New vaults and explicit rekeys use bounded Argon2id (64 MiB, three passes, one lane) with AES-256-GCM. Legacy PBKDF2 vaults and backups remain readable.
+- Normal saves and extension profile edits preserve the unlocked KDF. The settings marker displays the actual stored scheme.
+- KDF changes and salt changes revoke passkey wrappers and existing shares atomically; stale revisions cannot overwrite a migration.
+- This remains a prerelease: native Windows isolation, trusted publisher signing and an independent external audit are pending.
+
 ## 0.14.0 — 2026-10-18
 
 - Eingeschlossener Agentenstart mit geprüftem Linux-Container, unveränderlicher Image-ID und fest begrenztem Brokerkanal. Agenten erhalten weder Host-Dateien noch Clienttoken oder direkten Netzwerkzugang.

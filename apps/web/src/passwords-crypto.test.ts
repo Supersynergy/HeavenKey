@@ -4,9 +4,12 @@ const sample: Vault = { version: 1, entries: [{ id: "synthetic-1", title: "Beisp
 describe("authenticated encrypted password vault", () => {
   test("roundtrip, nonextractable key, fresh IV and salt", async () => {
     const first = await createVault("synthetic master password", sample);
+    expect(first.envelope.version).toBe(2);
     expect(first.key.extractable).toBe(false);
     expect((await openVault(first.envelope, "synthetic master password")).vault).toEqual(sample);
-    expect((await sealVault(sample, first.key, first.envelope.salt)).iv).not.toBe(first.envelope.iv);
+    const saved = await sealVault(sample, first.key, first.envelope);
+    expect(saved.iv).not.toBe(first.envelope.iv);
+    expect((await openVault(saved, "synthetic master password")).vault).toEqual(sample);
     expect((await createVault("synthetic master password", sample)).envelope.salt).not.toBe(first.envelope.salt);
     await expect(crypto.subtle.exportKey("raw", first.key)).rejects.toThrow();
   });
@@ -20,7 +23,7 @@ describe("authenticated encrypted password vault", () => {
   });
   test("strict envelope bounds reject before key derivation", async () => {
     const { envelope } = await createVault("synthetic master password");
-    for (const value of [{ ...envelope, iterations: 1 }, { ...envelope, iterations: 900_000_000 }, { ...envelope, salt: encode64(freshBytes(15)) }, { ...envelope, iv: encode64(freshBytes(13)) }, { ...envelope, version: 2 }, { ...envelope, extra: true }, { ...envelope, ciphertext: "a".repeat(1_333_356) }]) expect(() => validateEnvelope(value)).toThrow();
+    for (const value of [{ ...envelope, iterations: 1 }, { ...envelope, iterations: 900_000_000 }, { ...envelope, salt: encode64(freshBytes(15)) }, { ...envelope, iv: encode64(freshBytes(13)) }, { ...envelope, version: 3 }, { ...envelope, extra: true }, { ...envelope, ciphertext: "a".repeat(1_333_356) }]) expect(() => validateEnvelope(value)).toThrow();
     for (const value of ["AA=", "AB", "A", "AA+", "AA/", ""]) expect(() => decode64(value, 12)).toThrow();
     expect(encode64(decode64("AA", 1))).toBe("AA");
     await expect(createVault("too short")).rejects.toThrow();
