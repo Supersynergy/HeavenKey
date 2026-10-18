@@ -90,7 +90,7 @@ export function initPasswordBroker(ctx: AccessContext) {
 	const requests = make("ul"), clients = make("ul"), sessions = make("ul"), audit = make("ul");
 	requests.id = "broker-requests"; clients.id = "broker-clients"; sessions.id = "broker-sessions"; audit.id = "broker-audit";
 	const trust = make("ul", undefined, "broker-trust");
-	for (const text of ["Tresor: lokal verschlüsselt", "Broker: keine Zwischenablage / keine Klartextausgabe an Agenten", "Herausgeber nicht signiert", "Interner Review; kein externes Audit", "Browser-Ausführer getrennt; gleicher OS-Benutzer/Administrator außerhalb Schutzgrenze"])
+	for (const text of ["Tresor: lokal verschlüsselt", "Broker: keine Zwischenablage / begrenzte Textansicht", "Shell-Agenten: nur über --broker-sandbox einschließen; kein weiterer Host-Zugriff", "Herausgeber nicht signiert", "Interner Review; kein externes Audit", "Zielwebsite, Host und Administrator gehören zur Vertrauensgrenze"])
 		trust.append(make("li", text));
 	card.append(make("h2", "Agent-Zugriff"), make("p", "Kopple einen Agenten und entscheide für jede Anmeldung einzeln. Der Agent darf die freigegebene Website bis zu 5 Minuten lesen. Zugangsdaten verlassen den Tresor nur verschlüsselt für den lokalen Browser-Ausführer.", "note"), status, trust, pairActions, pairResult,
 		make("h3", "Anfragen"), requests, make("h3", "Gekoppelte Agenten"), clients, make("h3", "Aktive Sitzungen"), sessions, make("h3", "Letzte Broker-Ereignisse"), audit);

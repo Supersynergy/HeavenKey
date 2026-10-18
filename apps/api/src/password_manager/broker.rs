@@ -39,6 +39,7 @@ struct Inner {
     requests: HashMap<String, Pending>,
     jobs: HashMap<String, Job>,
     audit: VecDeque<Value>,
+    failures: Window,
 }
 #[derive(Clone)]
 struct Client {
@@ -47,6 +48,7 @@ struct Client {
     token: String,
     until: Instant,
     expires: u64,
+    budget: Window,
 }
 struct Pending {
     id: String,
@@ -107,6 +109,7 @@ fn agent_route(path: &str) -> bool {
             | "/api/password-broker/agent/status"
             | "/api/password-broker/agent/read"
             | "/api/password-broker/agent/close"
+            | "/api/password-broker/agent/disconnect"
     )
 }
 pub(super) fn agent_transport(headers: &HeaderMap, path: &str) -> bool {
@@ -117,7 +120,55 @@ pub(super) fn agent_transport(headers: &HeaderMap, path: &str) -> bool {
             .and_then(|v| v.to_str().ok())
             == Some("password-agent")
 }
+#[derive(Clone)]
+struct Window {
+    start: Instant,
+    used: u16,
+}
+impl Default for Window {
+    fn default() -> Self {
+        Self {
+            start: Instant::now(),
+            used: 0,
+        }
+    }
+}
+impl Window {
+    fn allow(&mut self, limit: u16) -> bool {
+        if self.start.elapsed() >= Duration::from_secs(60) {
+            self.start = Instant::now();
+            self.used = 0;
+        }
+        if self.used >= limit {
+            return false;
+        }
+        self.used += 1;
+        true
+    }
+}
+fn throttled() -> ApiError {
+    ApiError(StatusCode::TOO_MANY_REQUESTS, "broker_rate_limited")
+}
 impl Inner {
+    fn revoke_client(&mut self, id: &str) {
+        self.clients.remove(id);
+        self.jobs.retain(|_, job| {
+            if job.client == id {
+                job.cancel.store(true, Ordering::SeqCst);
+                false
+            } else {
+                true
+            }
+        });
+        for request in self
+            .requests
+            .values_mut()
+            .filter(|request| request.client == id)
+        {
+            request.status = "denied";
+            request.session = None;
+        }
+    }
     fn audit(&mut self, action: &str, result: &str, id: &str) {
         self.audit
             .push_back(json!({"at":now(),"action":action,"result":result,"request_id":id}));
@@ -173,22 +224,31 @@ impl Inner {
             self.pair = None;
         }
     }
-    fn client(&self, h: &HeaderMap) -> ApiResult<Client> {
+    fn client(&mut self, h: &HeaderMap) -> ApiResult<Client> {
+        self.authenticate(h, true)
+    }
+    fn authenticate(&mut self, h: &HeaderMap, charge: bool) -> ApiResult<Client> {
         if !agent_transport(h, "/api/password-broker/agent/request") {
             return Err(denied());
         }
         let token = h
             .get("x-heavenkey-token")
             .and_then(|v| v.to_str().ok())
-            .ok_or_else(denied)?;
-        self.clients
-            .values()
-            .find(|c| {
-                c.token.len() == token.len()
-                    && openssl::memcmp::eq(c.token.as_bytes(), token.as_bytes())
-            })
-            .cloned()
-            .ok_or_else(denied)
+            .unwrap_or("");
+        if let Some(c) = self.clients.values_mut().find(|c| {
+            c.token.len() == token.len()
+                && openssl::memcmp::eq(c.token.as_bytes(), token.as_bytes())
+        }) {
+            if charge && !c.budget.allow(120) {
+                return Err(throttled());
+            }
+            return Ok(c.clone());
+        }
+        if self.failures.allow(32) {
+            Err(denied())
+        } else {
+            Err(throttled())
+        }
     }
 }
 impl Drop for Inner {
@@ -377,7 +437,7 @@ async fn status(State(app): State<VaultApp>, h: HeaderMap) -> ApiResult<Json<Val
     let key = URL_SAFE_NO_PAD.encode(app.broker.key()?.public_key_to_der().map_err(internal)?);
     let s = app.broker.state(&app)?;
     Ok(Json(
-        json!({"version":1,"enabled":true,"unlocked":s.owner.is_some(),"epoch":s.epoch,"public_key":key,"browser_available":browser_executor::available(),"limits":{"session_seconds":SESSION_TTL},"clients":s.clients.values().map(|c|json!({"id":c.id,"label":c.label,"expires_at":c.expires})).collect::<Vec<_>>(),"requests":s.requests.values().map(|p|json!({"id":p.id,"client_id":p.client,"label":p.label,"origin":p.origin,"scope":"login_read","status":p.status,"expires_at":p.expires})).collect::<Vec<_>>(),"sessions":s.jobs.values().map(|j|json!({"id":j.id,"client_id":j.client,"label":j.label,"origin":j.origin,"expires_at":j.expires})).collect::<Vec<_>>(),"audit":s.audit}),
+        json!({"version":1,"enabled":true,"unlocked":s.owner.is_some(),"epoch":s.epoch,"public_key":key,"browser_available":browser_executor::available(),"process_protection":uac_browser_pipe::process_protection(),"limits":{"session_seconds":SESSION_TTL,"client_operations_per_minute":120,"invalid_tokens_per_minute":32},"clients":s.clients.values().map(|c|json!({"id":c.id,"label":c.label,"expires_at":c.expires})).collect::<Vec<_>>(),"requests":s.requests.values().map(|p|json!({"id":p.id,"client_id":p.client,"label":p.label,"origin":p.origin,"scope":"login_read","status":p.status,"expires_at":p.expires})).collect::<Vec<_>>(),"sessions":s.jobs.values().map(|j|json!({"id":j.id,"client_id":j.client,"label":j.label,"origin":j.origin,"expires_at":j.expires})).collect::<Vec<_>>(),"audit":s.audit}),
     ))
 }
 async fn unlock(
@@ -467,6 +527,7 @@ async fn connect(
         token: random_secret(),
         until: Instant::now() + Duration::from_secs(CLIENT_TTL),
         expires: now() + CLIENT_TTL,
+        budget: Window::default(),
     };
     let output = json!({"client_id":c.id,"token":c.token,"expires_in":CLIENT_TTL});
     s.audit("connect", "ok", &c.id);
@@ -715,7 +776,7 @@ async fn read_page(
         return Err(invalid());
     }
     let (rx, cancel) = {
-        let s = app.broker.state(&app)?;
+        let mut s = app.broker.state(&app)?;
         let c = s.client(&h)?;
         if s.owner.is_none() {
             return Err(denied());
@@ -744,8 +805,8 @@ async fn read_page(
     if cancel.load(Ordering::SeqCst) {
         return Err(denied());
     }
-    let s = app.broker.state(&app)?;
-    let c = s.client(&h)?;
+    let mut s = app.broker.state(&app)?;
+    let c = s.authenticate(&h, false)?;
     if s.owner.is_none()
         || !s
             .jobs
@@ -762,7 +823,7 @@ async fn close(
     Json(input): Json<SessionId>,
 ) -> ApiResult<Json<Value>> {
     let mut s = app.broker.state(&app)?;
-    let c = s.client(&h)?;
+    let c = s.authenticate(&h, false)?;
     if s.jobs
         .get(&input.session_id)
         .is_some_and(|j| j.client == c.id)
@@ -776,6 +837,17 @@ async fn close(
     s.audit("close", "ok", &input.session_id);
     Ok(Json(json!({"closed":true})))
 }
+async fn disconnect(
+    State(app): State<VaultApp>,
+    h: HeaderMap,
+    Json(_): Json<Empty>,
+) -> ApiResult<Json<Value>> {
+    let mut s = app.broker.state(&app)?;
+    let client = s.authenticate(&h, false)?;
+    s.revoke_client(&client.id);
+    s.audit("disconnect", "ok", &client.id);
+    Ok(Json(json!({"disconnected":true})))
+}
 async fn revoke(
     State(app): State<VaultApp>,
     h: HeaderMap,
@@ -785,12 +857,7 @@ async fn revoke(
     let mut s = app.broker.state(&app)?;
     match kind.as_str() {
         "clients" => {
-            s.clients.remove(&id);
-            for j in s.jobs.values() {
-                if j.client == id {
-                    j.cancel.store(true, Ordering::SeqCst);
-                }
-            }
+            s.revoke_client(&id);
         }
         "sessions" => {
             if let Some(j) = s.jobs.remove(&id) {
@@ -830,6 +897,7 @@ pub fn routes() -> Router<VaultApp> {
         .route("/api/password-broker/agent/status", post(agent_status))
         .route("/api/password-broker/agent/read", post(read_page))
         .route("/api/password-broker/agent/close", post(close))
+        .route("/api/password-broker/agent/disconnect", post(disconnect))
 }
 
 #[cfg(test)]
@@ -1148,6 +1216,7 @@ mod tests {
                 token: "scoped".into(),
                 until: Instant::now() + Duration::from_secs(60),
                 expires: now() + 60,
+                budget: Window::default(),
             },
         );
         s.jobs.insert(
@@ -1183,5 +1252,126 @@ mod tests {
         s.clients.get_mut("client").unwrap().until = Instant::now() - Duration::from_secs(1);
         s.sweep(0);
         assert!(s.clients.is_empty());
+    }
+    #[tokio::test]
+    async fn revocation_clears_unobserved_jobs_and_pending_requests_atomically() {
+        let a = app();
+        let h = paired(&a).await;
+        let Json(r) = request(
+            State(a.clone()),
+            h.clone(),
+            Json(Ask {
+                origin: "https://example.com".into(),
+                scope: "login_read".into(),
+            }),
+        )
+        .await
+        .unwrap();
+        let cancel = Arc::new(AtomicBool::new(false));
+        let client = {
+            let mut s = a.broker.state(&a).unwrap();
+            let client = s.authenticate(&h, false).unwrap().id;
+            let (tx, _rx) = mpsc::sync_channel(1);
+            s.jobs.insert(
+                "unobserved".into(),
+                Job {
+                    id: "unobserved".into(),
+                    client: client.clone(),
+                    label: "synthetic".into(),
+                    origin: "https://example.com".into(),
+                    until: Instant::now() + Duration::from_secs(60),
+                    expires: now() + 60,
+                    cancel: cancel.clone(),
+                    tx,
+                },
+            );
+            client
+        };
+        let _ = revoke(
+            State(a.clone()),
+            owner(&a),
+            axum::extract::Path(("clients".into(), client.clone())),
+        )
+        .await
+        .unwrap();
+        let s = a.broker.state.lock().unwrap();
+        assert!(!s.clients.contains_key(&client));
+        assert!(
+            s.jobs.is_empty(),
+            "unobserved browser job survives revocation"
+        );
+        assert_eq!(
+            s.requests[r["request_id"].as_str().unwrap()].status,
+            "denied"
+        );
+        assert!(cancel.load(Ordering::SeqCst));
+    }
+    #[tokio::test]
+    async fn disconnect_ignores_exhausted_budget_but_requires_scoped_client() {
+        let a = app();
+        let h = paired(&a).await;
+        {
+            let mut s = a.broker.state(&a).unwrap();
+            let id = s.authenticate(&h, false).unwrap().id;
+            s.clients.get_mut(&id).unwrap().budget.used = 120;
+        }
+        assert!(
+            disconnect(State(a.clone()), owner(&a), Json(Empty {}))
+                .await
+                .is_err()
+        );
+        assert!(
+            disconnect(State(a.clone()), agent("wrong"), Json(Empty {}))
+                .await
+                .is_err()
+        );
+        assert!(
+            disconnect(State(a.clone()), h.clone(), Json(Empty {}))
+                .await
+                .is_ok()
+        );
+        assert!(a.broker.state.lock().unwrap().clients.is_empty());
+        assert!(disconnect(State(a), h, Json(Empty {})).await.is_err());
+    }
+    #[tokio::test]
+    async fn invalid_token_bursts_are_throttled_without_blocking_real_owner_or_client() {
+        let a = app();
+        let valid = paired(&a).await;
+        let mut last = None;
+        for _ in 0..40 {
+            last = Some(
+                a.broker
+                    .state(&a)
+                    .unwrap()
+                    .client(&agent("wrong"))
+                    .err()
+                    .unwrap()
+                    .0,
+            );
+        }
+        assert_eq!(last.unwrap(), StatusCode::TOO_MANY_REQUESTS);
+        assert!(a.broker.state(&a).unwrap().client(&valid).is_ok());
+        assert!(status(State(a.clone()), owner(&a)).await.is_ok());
+    }
+    #[tokio::test]
+    async fn valid_client_operation_flood_has_a_bounded_budget() {
+        let a = app();
+        let valid = paired(&a).await;
+        let mut last = None;
+        for _ in 0..140 {
+            last = a
+                .broker
+                .state(&a)
+                .unwrap()
+                .client(&valid)
+                .err()
+                .map(|e| e.0);
+        }
+        assert_eq!(last, Some(StatusCode::TOO_MANY_REQUESTS));
+        assert!(
+            lock(State(a.clone()), owner(&a), Json(Empty {}))
+                .await
+                .is_ok()
+        );
     }
 }

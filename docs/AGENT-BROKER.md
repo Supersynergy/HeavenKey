@@ -14,6 +14,8 @@ Unter **Gekoppelte Agenten** widerrufst du die Verbindung; unter **Aktive Sitzun
 
 ## Client ohne Zwischenablage
 
+Für Agenten mit Shellzugriff verwende den [eingeschlossenen Startweg](AGENT-SANDBOX.md). Der folgende direkte Client isoliert keine Shell. Ein Agent mit zusätzlichem uneingeschränktem Host-Zugriff bleibt außerhalb der Schutzgrenze.
+
 Das ausgelieferte Programm enthält `--broker-agent PORT BEFEHL`. Es liest JSON von stdin und gibt JSON aus. Der Port gehört ausschließlich zum lokalen HeavenKey-Dienst. Geheimnisse gehören weder in Argumente noch in Shellverläufe. Der Client braucht kein Rust oder Bun.
 
 | Befehl | JSON auf stdin |
@@ -39,7 +41,7 @@ Die festgelegte Toolchain ist Rust 1.101 nightly. `-Zscript` kompiliert das Hilf
 - Der ausgewählte Login wird mit AES-256-GCM und einem RSA-OAEP-SHA256-verpackten Zufallsschlüssel an den lokalen Ausführer übergeben. Die Bindung enthält Anfrage, Entsperr-Epoche und Tresorrevision. Masterpasswort und vollständiger Tresor werden nicht übertragen.
 - Zwischenablage, rohe Browsersteuerung, JavaScript, Screenshots, Cookies und Tresorexport fehlen in der Agentenschnittstelle. Der private Browserkanal verwendet anonyme Betriebssystem-Pipes und keinen Debug-Port.
 - Die Textansicht entfernt Formularwerte und bekannte Zugangsdaten sowie gängige Kodierungen. Das ist zusätzliche Filterung, keine Garantie gegen eine bösartige Zielwebsite. Die Zielwebsite erhält beim Anmelden die Zugangsdaten.
-- Die Trennung schützt diese eingeschränkte Schnittstelle. Beliebige Programme desselben OS-Benutzers, Administratoren, Schadsoftware und ein kompromittierter Browser liegen außerhalb. Ein uneingeschränkter Agent mit Shell- oder Browserzugriff braucht eine zusätzliche OS-Sandbox, wenn diese Grenze durchgesetzt werden soll.
+- Die Trennung schützt diese eingeschränkte Schnittstelle. `--broker-sandbox` schließt eine Agenten-Shell in einen geprüften Linux-Container ein. Beliebige Programme desselben OS-Benutzers außerhalb dieses Containers, Administratoren, Schadsoftware und ein kompromittierter Browser liegen weiterhin außerhalb. Der Agent darf keinen zweiten uneingeschränkten Host-Zugang behalten.
 - Die Oberfläche kennzeichnet den unsignierten Herausgeber und den internen Review. Ein externes Audit, TEE-Nachweis und eine Hardware-Attestierung liegen nicht vor. Prüfsummen belegen Dateiintegrität relativ zur veröffentlichten Prüfsummenliste; sie ersetzen keine Herausgebersignatur.
 
 Unterstützt werden gleichursprüngliche klassische Loginformulare. Externes SSO, CAPTCHA, mehrstufige Anmeldung und Website-Passkeys sind für diesen Broker nicht freigegeben. HTTP ist nur für localhost zulässig. Ungeeignete Formulare und fremde Origins werden abgelehnt. Alle Browserdaten gehören zu einem getrennten temporären Profil, das beim regulären Beenden gelöscht wird. Ein Prozessabsturz oder Stromausfall kann Betriebssystemartefakte zurücklassen; verschlüsselte Datenträger bleiben erforderlich, wenn auch diese geschützt werden sollen.

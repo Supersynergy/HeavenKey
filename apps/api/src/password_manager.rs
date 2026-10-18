@@ -473,6 +473,7 @@ async fn shutdown_signal() {
 }
 
 pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::error::Error>> {
+    uac_browser_pipe::harden_process()?;
     if std::env::var_os("HEAVENKEY_PUBLIC_ORIGIN").is_some()
         || std::env::var_os("HEAVENKEY_ORIGIN").is_some()
     {

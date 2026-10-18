@@ -1,4 +1,4 @@
-# Passwortmanager 0.13.0 · Abnahme und Grenzen
+# Passwortmanager 0.14.0 · Abnahme und Grenzen
 
 Die Ausgabe integriert optionales PRF-Passkey-Entsperren, befristete verschlüsselte Feldkopien mit Empfänger-Passkey und einen Einrichtungsassistenten in den bestehenden lokalen Passwortmanager. Browser-Autofill, Formularprofile, Schnellzugriff und Importvorschau bleiben erhalten. Ein allgemeiner Vorsprung gegenüber Enpass ist nicht nachgewiesen.
 
@@ -24,7 +24,9 @@ Die ausgeführten Fälle, Resultate und Binärhashes stehen in `ACCEPTANCE.json`
 
 Im gehärteten Linux-CI-Container läuft ausschließlich die synthetische Browserfixture mit einem ausdrücklich benannten Sandbox-Testoverride. Diese Prüfung belegt keine Chromium-Sandbox. Das Produkt selbst setzt keinen solchen Override; der native macOS-Brokerlauf verwendet den unveränderten Browser.
 
-Der Broker ist kein externer Sicherheitsnachweis und keine OS-Sandbox für uneingeschränkte Agenten. Seine [Schutzgrenze](AGENT-BROKER.md#schutzgrenze-und-trust-marker) umfasst die vertrauenswürdige Zielwebsite und den lokalen Rechner. Native Windows-/Linux-Browserintegration benötigt eigene Plattformabnahme; Paketstart und Cross-Compile sind davon getrennt.
+Der direkte Broker ist kein externer Sicherheitsnachweis. Der zusätzliche Startweg `--broker-sandbox` isoliert ausschließlich den darin gestarteten Agentenprozess. Ein zweiter uneingeschränkter Host-Zugang bleibt außerhalb des Schutzes. Seine [Schutzgrenze](AGENT-BROKER.md#schutzgrenze-und-trust-marker) umfasst die vertrauenswürdige Zielwebsite und den lokalen Rechner. Native Windows-/Linux-Browserintegration benötigt eigene Plattformabnahme; Paketstart und Cross-Compile sind davon getrennt.
+
+`scripts/broker_sandbox_e2e.ts` prüft zusätzlich einen echten Linux-Container mit einer beliebigen Python-Shell: freigegebene Anmeldung im privaten Hostbrowser, verbotene Host-Datei-/Prozess-/Netzwerkzugriffe, Mount-/Ptrace-/Namespace-Versuche, RPC-Missbrauch, Ratenlimits, gefälschte Ausgabebelege sowie Bereinigung bei Fehler und Abbruch. Der Bericht bindet Quellen, Hostbinärdatei, Image und Kernel. Container-Isolation auf einem macOS-Host belegt keine native Windows-Sandbox. Details und verbleibende Grenzen stehen in [AGENT-SANDBOX.md](AGENT-SANDBOX.md).
 
 ## Paketbindung und Laufzeitumgebungen
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.0 — 2026-10-18
+
+- Eingeschlossener Agentenstart mit geprüftem Linux-Container, unveränderlicher Image-ID und fest begrenztem Brokerkanal. Agenten erhalten weder Host-Dateien noch Clienttoken oder direkten Netzwerkzugang.
+- Begrenzte Ressourcen und Laufzeit, Bereinigung der eigenen Container-ID sowie Linux-Prozessschutz gegen Core-Dumps und gewöhnliche Ptrace-Zugriffe.
+- Ratenlimits für Clientoperationen und ungültige Tokens; Besitzerzugriff und Widerruf bleiben verfügbar.
+- Neue triviale und kurzperiodisch wiederholte Masterpasswörter werden abgewiesen. Bestehende Tresore bleiben zum Passwortwechsel zugänglich.
+- Ausdrückliche Schutzgrenzen und Anleitung für Shell-Agenten. Native Windows-Sandbox-Abnahme und externes Audit stehen aus.
+
 ## 0.13.0 — 2026-10-17
 
 - Lokaler Agenten-Broker mit einmaliger Kopplung, ausdrücklicher Login-Auswahl und Zustimmung pro Anmeldung.

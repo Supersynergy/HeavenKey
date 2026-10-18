@@ -23,6 +23,7 @@ class PackagingTests(unittest.TestCase):
             "apps/web/dist/share.js", "apps/web/share.html",
             "docs/assets/heavenkey-hero-square.png",
             "scripts/build_openssl.py", "scripts/build_portable.py", "scripts/build_extension.ts", "scripts/broker.rs",
+            "scripts/build_agent_sandbox.ts", "scripts/sandbox/Dockerfile",
             "apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css",
         ):
             path = self.root / name

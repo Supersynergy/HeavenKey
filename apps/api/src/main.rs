@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+mod agent_sandbox;
 mod broker_agent;
 mod desktop;
 mod hosting;
@@ -1639,6 +1640,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().is_some_and(|v| v == "--broker-sandbox") {
+        if uac_browser_pipe::harden_process().is_err() {
+            std::process::exit(1);
+        }
+        // This one-shot CLI must exit even if its bounded output worker is blocked downstream.
+        std::process::exit(if agent_sandbox::run(&args).await.is_ok() {
+            0
+        } else {
+            1
+        });
+    }
+    if args.first().is_some_and(|v| v == "--broker-sandbox-guest") {
+        return agent_sandbox::guest(&args);
+    }
     if args.first().is_some_and(|v| v == "--broker-agent") {
         return broker_agent::run(&args);
     }

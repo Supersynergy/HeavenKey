@@ -42,6 +42,8 @@ def source_fingerprint():
             "scripts/build_portable.py",
             "scripts/build_extension.ts",
             "scripts/broker.rs",
+            "scripts/build_agent_sandbox.ts",
+            "scripts/sandbox/Dockerfile",
         )
     ]
     for name in ("apps/api", "crates", "apps/web/src", "apps/demo", "apps/extension", "packages/forms"):

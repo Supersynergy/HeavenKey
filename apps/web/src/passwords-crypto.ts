@@ -30,6 +30,12 @@ export function validateEnvelope(value: unknown): Envelope {
 export function validateMaster(master: string): void {
   if (master.length < 14 || master.length > 1024) throw new Error("Das Masterpasswort braucht 14 bis 1024 Zeichen.");
 }
+export function validateNewMaster(master: string): void {
+  validateMaster(master);
+  const sample = master.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
+  const common = new Set(["12345678901234", "123456789012345", "1234567890123456", "passwordpassword", "passwortpasswort", "qwertyqwertyqwerty", "correcthorsebatterystaple"]);
+  if (common.has(sample) || /^(.{1,4})\1+$/u.test(sample)) throw new Error("Dieses neue Masterpasswort ist ein bekanntes oder wiederholtes Muster. Wähle eine lange, zufällige Passphrase.");
+}
 export async function derive(master: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   validateMaster(master);
   if (salt.length !== 16) throw new Error("Ungültiges Salt.");
@@ -78,6 +84,7 @@ export async function openVault(value: unknown, master: string): Promise<{ vault
   finally { bytes?.fill(0); }
 }
 export async function createVault(master: string, vault: Vault = { version: 1, entries: [] }): Promise<{ vault: Vault; key: CryptoKey; envelope: Envelope }> {
+  validateNewMaster(master);
   vault = validateVault(vault);
   const salt = freshBytes(16), key = await derive(master, salt);
   return { vault, key, envelope: await sealVault(vault, key, encode64(salt)) };

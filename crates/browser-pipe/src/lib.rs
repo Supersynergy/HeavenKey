@@ -4,6 +4,45 @@
 use std::io::{self, PipeReader, PipeWriter};
 use std::process::{Child, Command};
 
+/// Defense in depth for the trusted broker; containment still requires a separate agent sandbox.
+pub fn harden_process() -> io::Result<()> {
+    #[cfg(unix)]
+    {
+        let limit = libc::rlimit {
+            rlim_cur: 0,
+            rlim_max: 0,
+        };
+        // SAFETY: valid initialized rlimit; this changes only the calling process.
+        if unsafe { libc::setrlimit(libc::RLIMIT_CORE, &limit) } != 0 {
+            return Err(io::Error::last_os_error());
+        }
+    }
+    #[cfg(target_os = "linux")]
+    {
+        // SAFETY: PR_SET_DUMPABLE accepts a scalar flag and no borrowed pointers.
+        if unsafe { libc::prctl(libc::PR_SET_DUMPABLE, 0, 0, 0, 0) } != 0 {
+            return Err(io::Error::last_os_error());
+        }
+    }
+    Ok(())
+}
+
+pub fn process_protection() -> &'static str {
+    #[cfg(target_os = "linux")]
+    {
+        // SAFETY: PR_GET_DUMPABLE does not use pointer arguments.
+        if unsafe { libc::prctl(libc::PR_GET_DUMPABLE, 0, 0, 0, 0) } == 0 {
+            "linux-nondumpable"
+        } else {
+            "not-enabled"
+        }
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        "no-linux-ptrace-attestation"
+    }
+}
+
 /// Starts Chromium with private anonymous pipes; never creates a TCP listener.
 pub fn spawn(command: &mut Command) -> io::Result<(Child, PipeReader, PipeWriter)> {
     platform::spawn(command)
