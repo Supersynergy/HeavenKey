@@ -191,7 +191,7 @@ async function stalledStderr() {
 }
 
 const python = String.raw`
-import os,sys,json,socket,ctypes,errno,time,urllib.request,urllib.error,concurrent.futures,subprocess,platform
+import os,sys,json,socket,ctypes,errno,time,urllib.request,urllib.error,http.client,concurrent.futures,subprocess,platform
 checks={}
 def ck(name,condition):
  checks[name]=bool(condition)
@@ -237,7 +237,28 @@ ck('mount_denied',libc.mount(b'none',b'/work/mountpoint',b'tmpfs',0,None)==-1 an
 ck('ptrace_denied',libc.ptrace(16,1,None,None)==-1 and ctypes.get_errno() in [errno.EPERM,errno.EACCES])
 ck('setns_denied',libc.setns(os.open('/proc/1/ns/mnt',os.O_RDONLY),0)==-1 and ctypes.get_errno() in [errno.EPERM,errno.EACCES])
 for op,body in [('execute',{'javascript':'document.cookie'}),('../api/password-vault',{}),('connect',{'code':'no'}),('disconnect',{}),('request',{'origin':DESTINATION,'scope':'login_read','token':'forged'}),('request',{'origin':DESTINATION,'scope':'login_read','url':'file:///etc/passwd'}),('read',{'session_id':'no','path':'/','token':'forged'})]:
- code,value=rpc(op,body);ck('deny_'+op+'_'+str(len(body)),code>=400 or value.get('ok') is False or 'error' in value)
+ try:
+  code,value=rpc(op,body);denied=code>=400 or value.get('ok') is False or 'error' in value
+ except (ConnectionResetError,http.client.RemoteDisconnected): denied=True
+ except urllib.error.URLError as error:
+  if not isinstance(error.reason,ConnectionResetError):raise
+  denied=True
+ ck('deny_'+op+'_'+str(len(body)),denied)
+# Rejection may close before an invalid request body arrives; verify both wire outcomes.
+split_resets=0
+for attempt in range(8):
+ stream=socket.create_connection(('127.0.0.1',18271),timeout=1)
+ try:
+  stream.sendall(b'POST /execute HTTP/1.1\r\nHost: localhost\r\nContent-Length: 2\r\n\r\n')
+  time.sleep(.02);stream.sendall(b'{}');response=b''
+  while True:
+   chunk=stream.recv(4096)
+   if not chunk:break
+   response+=chunk
+  ck('split_forbidden_'+str(attempt),response.startswith(b'HTTP/1.1 400 '))
+ except ConnectionResetError:
+  split_resets+=1;ck('split_forbidden_'+str(attempt),True)
+ finally:stream.close()
 code,request=rpc('request',{'origin':DESTINATION,'scope':'login_read'})
 ck('request_success',code==200 and isinstance(request.get('request_id'),str))
 request_id=request['request_id']; code,state=rpc('status',{'request_id':request_id});ck('pending_before_owner_approval',code==200 and state.get('status')=='pending')
@@ -260,7 +281,7 @@ def flood(i):
  except (OSError,TimeoutError):return True
 with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool: throttled=sum(pool.map(flood,range(160)))
 ck('bounded_flood',time.monotonic()-start<30 and throttled>0)
-print('SANDBOX_RESULT '+json.dumps({'checks':checks,'kernel':platform.release(),'machine':platform.machine(),'namespaces':{name:os.readlink('/proc/self/ns/'+name) for name in ['pid','mnt','net','ipc','user']},'flood_denied':throttled}),flush=True)
+print('SANDBOX_RESULT '+json.dumps({'checks':checks,'kernel':platform.release(),'machine':platform.machine(),'namespaces':{name:os.readlink('/proc/self/ns/'+name) for name in ['pid','mnt','net','ipc','user']},'flood_denied':throttled,'split_forbidden_requests':8,'split_connection_resets':split_resets}),flush=True)
 `;
 const requestAndWait = "import os,json,time,urllib.request\nendpoint=os.environ['HEAVENKEY_AGENT_ENDPOINT'].rstrip('/')\nrequest=urllib.request.Request(endpoint+'/request',data=json.dumps({'origin':" + JSON.stringify(destination) + ",'scope':'login_read'}).encode(),headers={'Content-Type':'application/json'})\nwith urllib.request.urlopen(request,timeout=22) as response: result=json.load(response)\nassert isinstance(result.get('request_id'),str)\nprint('SANDBOX_PENDING '+json.dumps({'request_id':result['request_id']}),flush=True)\ntime.sleep(120)\n";
 async function pendingFrom(run: ReturnType<typeof launch>) {
