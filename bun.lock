@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "uac-spike",
+      "dependencies": {
+        "@noble/hashes": "2.4.0",
+      },
       "devDependencies": {
         "cbor-x": "1.6.0",
         "happy-dom": "21.0.3",
