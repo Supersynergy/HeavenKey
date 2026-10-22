@@ -8,7 +8,7 @@ prepare() {
     docs/evidence/browser-*.png docs/evidence/failure-*.png \
     docs/evidence/failure-diagnostic.json
   rm -f apps/extension/TEST-RECEIPT.json apps/extension/INTEGRATION-BLOCKER.json
-  rm -f docs/evidence/password-access/browser.json
+  rm -f docs/evidence/password-access/browser.json docs/evidence/protected-flow/browser.json
 }
 
 source_checks() {
@@ -23,6 +23,7 @@ source_checks() {
   bun test apps/web/src/passwords-access.test.ts apps/web/src/passwords-sharing.test.ts apps/web/src/passwords-broker.test.ts
   bun test apps/web/src/passwords-transfer.test.ts packages/transfers/import.test.ts packages/transfers/clients.test.ts
   bun test apps/web/src/passwords-ssh.test.ts
+  bun test packages/protected/schema.test.ts apps/web/src/passwords-protected.test.ts
   bun test apps/web/src/interface.test.ts
   bun test apps/extension/popup.test.ts
   bun scripts/test_extension.mjs
@@ -55,8 +56,10 @@ build() {
   bun scripts/transfer_broker_e2e.ts
   if [[ ${GITHUB_ACTIONS:-false} == true && $(uname -s) == Linux ]]; then
     HEAVENKEY_BROKER_TEST_NO_SANDBOX=1 bun scripts/password_broker_e2e.ts
+    HEAVENKEY_BROKER_TEST_NO_SANDBOX=1 bun scripts/protected_flow_e2e.ts
   else
     bun scripts/password_broker_e2e.ts
+    bun scripts/protected_flow_e2e.ts
   fi
   bun scripts/extension_autofill_e2e.ts
   bun scripts/password_manager_ui_test.ts

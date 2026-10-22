@@ -2,6 +2,8 @@
 
 Ab Version 0.13.0 kann ein gekoppelter lokaler Agent eine klassische Formularanmeldung anfragen. Du wählst in HeavenKey den passenden Login für die genaue Website und bestätigst die Anmeldung. Ein eigener kurzlebiger Chromium-Prozess meldet sich an. Der Agent bekommt ausschließlich eine begrenzte Textansicht und interne Links. Jede weitere Anmeldung braucht eine neue Freigabe.
 
+Für Aufgaben ohne Seitenansicht gibt es ab 0.18 einen getrennten [geschützten Zugang mit Composer und Pseudonymen](PROTECTED-FLOW.md). Gewöhnliche Agenten behalten den nachfolgend beschriebenen begrenzten Lesezugriff. Die beiden Berechtigungsarten werden nicht vermischt.
+
 ## Einrichtung
 
 1. Starte den Passwortmanager und entsperre den Tresor.

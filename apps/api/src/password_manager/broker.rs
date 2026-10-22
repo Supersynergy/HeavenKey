@@ -14,6 +14,7 @@ use std::sync::{
     mpsc,
 };
 use zeroize::{Zeroize, Zeroizing};
+mod protected;
 
 const CLIENT_TTL: u64 = 3600;
 const SESSION_TTL: u64 = 300;
@@ -35,14 +36,17 @@ struct Inner {
     owner: Option<Instant>,
     revision: u64,
     pair: Option<Pairing>,
+    protected_pair: bool,
     clients: HashMap<String, Client>,
     requests: HashMap<String, Pending>,
     jobs: HashMap<String, Job>,
+    workspaces: HashMap<String, protected::Workspace>,
     audit: VecDeque<Value>,
     failures: Window,
 }
 #[derive(Clone)]
 struct Client {
+    protected: bool,
     id: String,
     label: String,
     token: String,
@@ -51,6 +55,7 @@ struct Client {
     budget: Window,
 }
 struct Pending {
+    workspace: Option<String>,
     id: String,
     client: String,
     label: String,
@@ -61,6 +66,7 @@ struct Pending {
     session: Option<String>,
 }
 struct Job {
+    protected: bool,
     id: String,
     client: String,
     label: String,
@@ -110,6 +116,10 @@ fn agent_route(path: &str) -> bool {
             | "/api/password-broker/agent/read"
             | "/api/password-broker/agent/close"
             | "/api/password-broker/agent/disconnect"
+            | "/api/password-broker/agent/protected-list"
+            | "/api/password-broker/agent/protected-login"
+            | "/api/password-broker/agent/protected-draft"
+            | "/api/password-broker/agent/protected-close"
     )
 }
 pub(super) fn agent_transport(headers: &HeaderMap, path: &str) -> bool {
@@ -156,6 +166,9 @@ pub(super) fn transfer_client(app: &VaultApp, headers: &HeaderMap) -> ApiResult<
         return Err(denied());
     }
     let client = state.client(headers)?;
+    if client.protected {
+        return Err(denied());
+    }
     Ok((client.id, client.label))
 }
 
@@ -168,12 +181,14 @@ pub(super) fn transfer_owner(app: &VaultApp) -> ApiResult<(u64, u64)> {
 }
 
 pub(super) fn transfer_client_alive(app: &VaultApp, id: &str) -> bool {
-    app.broker
-        .state(app)
-        .is_ok_and(|state| state.owner.is_some() && state.clients.contains_key(id))
+    app.broker.state(app).is_ok_and(|state| {
+        state.owner.is_some() && state.clients.get(id).is_some_and(|c| !c.protected)
+    })
 }
 impl Inner {
     fn revoke_client(&mut self, id: &str) {
+        self.workspaces
+            .retain(|_, workspace| workspace.client != id);
         self.clients.remove(id);
         self.jobs.retain(|_, job| {
             if job.client == id {
@@ -202,6 +217,7 @@ impl Inner {
     fn invalidate(&mut self) {
         self.owner = None;
         self.pair = None;
+        self.workspaces.clear();
         self.epoch = self.epoch.wrapping_add(1);
         for j in self.jobs.values() {
             j.cancel.store(true, Ordering::SeqCst);
@@ -246,6 +262,7 @@ impl Inner {
         if self.pair.as_ref().is_some_and(|p| p.expires <= t) {
             self.pair = None;
         }
+        self.sweep_workspaces();
     }
     fn client(&mut self, h: &HeaderMap) -> ApiResult<Client> {
         self.authenticate(h, true)
@@ -460,7 +477,7 @@ async fn status(State(app): State<VaultApp>, h: HeaderMap) -> ApiResult<Json<Val
     let key = URL_SAFE_NO_PAD.encode(app.broker.key()?.public_key_to_der().map_err(internal)?);
     let s = app.broker.state(&app)?;
     Ok(Json(
-        json!({"version":1,"enabled":true,"unlocked":s.owner.is_some(),"epoch":s.epoch,"public_key":key,"browser_available":browser_executor::available(),"process_protection":uac_browser_pipe::process_protection(),"limits":{"session_seconds":SESSION_TTL,"client_operations_per_minute":120,"invalid_tokens_per_minute":32},"clients":s.clients.values().map(|c|json!({"id":c.id,"label":c.label,"expires_at":c.expires})).collect::<Vec<_>>(),"requests":s.requests.values().map(|p|json!({"id":p.id,"client_id":p.client,"label":p.label,"origin":p.origin,"scope":"login_read","status":p.status,"expires_at":p.expires})).collect::<Vec<_>>(),"sessions":s.jobs.values().map(|j|json!({"id":j.id,"client_id":j.client,"label":j.label,"origin":j.origin,"expires_at":j.expires})).collect::<Vec<_>>(),"audit":s.audit}),
+        json!({"version":1,"enabled":true,"unlocked":s.owner.is_some(),"epoch":s.epoch,"public_key":key,"browser_available":browser_executor::available(),"process_protection":uac_browser_pipe::process_protection(),"limits":{"session_seconds":SESSION_TTL,"client_operations_per_minute":120,"invalid_tokens_per_minute":32},"clients":s.clients.values().map(|c|json!({"id":c.id,"label":c.label,"expires_at":c.expires,"protected":c.protected})).collect::<Vec<_>>(),"requests":s.requests.values().map(|p|json!({"id":p.id,"client_id":p.client,"label":p.label,"origin":p.origin,"scope":if p.workspace.is_some(){"protected"}else{"login_read"},"source_id":p.workspace.as_ref().and_then(|id| s.workspaces.get(id)).map(|w| &w.source),"status":p.status,"expires_at":p.expires})).collect::<Vec<_>>(),"sessions":s.jobs.values().map(|j|json!({"id":j.id,"client_id":j.client,"label":j.label,"origin":j.origin,"expires_at":j.expires})).collect::<Vec<_>>(),"audit":s.audit}),
     ))
 }
 async fn unlock(
@@ -514,6 +531,7 @@ async fn pairing(
         expires: Instant::now() + PAIRING_TTL,
         attempts: 0,
     });
+    s.protected_pair = false;
     Ok(Json(json!({"code":code,"expires_in":120})))
 }
 async fn connect(
@@ -541,11 +559,13 @@ async fn connect(
         }
         return Err(denied());
     }
+    let protected = s.protected_pair;
     s.pair = None;
     if s.clients.len() >= 8 {
         return Err(busy());
     }
     let c = Client {
+        protected,
         id: Uuid::new_v4().to_string(),
         label: input.label,
         token: random_secret(),
@@ -553,7 +573,8 @@ async fn connect(
         expires: now() + CLIENT_TTL,
         budget: Window::default(),
     };
-    let output = json!({"client_id":c.id,"token":c.token,"expires_in":CLIENT_TTL});
+    let output =
+        json!({"client_id":c.id,"token":c.token,"expires_in":CLIENT_TTL,"protected":c.protected});
     s.audit("connect", "ok", &c.id);
     s.clients.insert(c.id.clone(), c);
     Ok(Json(output))
@@ -568,7 +589,7 @@ async fn request(
     }
     let mut s = app.broker.state(&app)?;
     let c = s.client(&h)?;
-    if s.owner.is_none() {
+    if s.owner.is_none() || c.protected {
         return Err(denied());
     }
     if s.requests
@@ -588,6 +609,7 @@ async fn request(
     s.requests.insert(
         id.clone(),
         Pending {
+            workspace: None,
             id: id.clone(),
             client: c.id,
             label: c.label,
@@ -629,7 +651,7 @@ async fn approve(
     if input.source_id.is_empty() || input.source_id.len() > 200 {
         return Err(invalid());
     }
-    let (origin, client, label, cancel, sid, rx) = {
+    let (origin, client, label, cancel, sid, rx, protected) = {
         let mut s = app.broker.state(&app)?;
         if s.owner.is_none()
             || s.epoch != input.epoch
@@ -644,6 +666,17 @@ async fn approve(
             .get(&id)
             .filter(|p| p.status == "pending" && p.until > Instant::now())
             .ok_or_else(denied)?;
+        if let Some(workspace) = &p.workspace {
+            let w = s
+                .workspaces
+                .get(workspace)
+                .filter(|w| w.live(&s))
+                .ok_or_else(denied)?;
+            if w.source != input.source_id || w.origin != p.origin || w.client != p.client {
+                return Err(denied());
+            }
+        }
+        let protected = p.workspace.is_some();
         let (origin, client, label) = (p.origin.clone(), p.client.clone(), p.label.clone());
         let cancel = Arc::new(AtomicBool::new(false));
         let sid = Uuid::new_v4().to_string();
@@ -651,6 +684,7 @@ async fn approve(
         s.jobs.insert(
             sid.clone(),
             Job {
+                protected,
                 id: sid.clone(),
                 client: client.clone(),
                 label: label.clone(),
@@ -667,7 +701,7 @@ async fn approve(
         p.expires = now() + SESSION_TTL;
         p.session = Some(sid.clone());
         s.audit("approve", "running", &id);
-        (origin, client, label, cancel, sid, rx)
+        (origin, client, label, cancel, sid, rx, protected)
     };
     let login = match app
         .broker
@@ -753,7 +787,11 @@ async fn approve(
             while !cancel.load(Ordering::SeqCst) && Instant::now() < deadline {
                 match rx.recv_timeout(Duration::from_millis(100)) {
                     Ok(cmd) => {
-                        let result = browser.read(&cmd.path);
+                        let result = if protected {
+                            Err("broker_denied")
+                        } else {
+                            browser.read(&cmd.path)
+                        };
                         if result.is_err() {
                             cancel.store(true, Ordering::SeqCst);
                         }
@@ -802,13 +840,13 @@ async fn read_page(
     let (rx, cancel) = {
         let mut s = app.broker.state(&app)?;
         let c = s.client(&h)?;
-        if s.owner.is_none() {
+        if s.owner.is_none() || c.protected {
             return Err(denied());
         }
         let j = s
             .jobs
             .get(&input.session_id)
-            .filter(|j| j.client == c.id)
+            .filter(|j| j.client == c.id && !j.protected)
             .ok_or_else(denied)?;
         let (tx, rx) = mpsc::sync_channel(1);
         j.tx.try_send(ReadCommand {
@@ -835,7 +873,7 @@ async fn read_page(
         || !s
             .jobs
             .get(&input.session_id)
-            .is_some_and(|j| j.client == c.id)
+            .is_some_and(|j| j.client == c.id && !j.protected)
     {
         return Err(denied());
     }
@@ -912,6 +950,7 @@ async fn revoke(
 }
 pub fn routes() -> Router<VaultApp> {
     Router::new()
+        .merge(protected::routes())
         .route("/api/password-broker", get(status))
         .route("/api/password-broker/unlock", post(unlock))
         .route("/api/password-broker/heartbeat", post(heartbeat))
@@ -934,7 +973,7 @@ pub fn routes() -> Router<VaultApp> {
 mod tests {
     use super::*;
     use openssl::{encrypt::Encrypter, symm::encrypt_aead};
-    fn app() -> VaultApp {
+    pub(super) fn app() -> VaultApp {
         let db = Connection::open_in_memory().unwrap();
         db.execute_batch("CREATE TABLE password_manager(id INTEGER PRIMARY KEY,revision INTEGER NOT NULL,record TEXT NOT NULL); INSERT INTO password_manager VALUES(1,1,'{}');").unwrap();
         VaultApp {
@@ -948,7 +987,7 @@ mod tests {
             transfer: Arc::new(super::transfer::TransferBroker::new()),
         }
     }
-    fn owner(a: &VaultApp) -> HeaderMap {
+    pub(super) fn owner(a: &VaultApp) -> HeaderMap {
         let mut h = HeaderMap::new();
         for (k, v) in [
             ("host", a.host.as_str()),
@@ -960,7 +999,7 @@ mod tests {
         }
         h
     }
-    fn agent(token: &str) -> HeaderMap {
+    pub(super) fn agent(token: &str) -> HeaderMap {
         let mut h = HeaderMap::new();
         h.insert("x-heavenkey-client", "password-agent".parse().unwrap());
         h.insert("x-heavenkey-token", token.parse().unwrap());
@@ -1021,6 +1060,27 @@ mod tests {
         assert!(!agent_transport(&h, "/api/password-vault"));
         h.insert("origin", "http://localhost:18268".parse().unwrap());
         assert!(!agent_transport(&h, "/api/password-broker/agent/read"));
+    }
+    #[test]
+    fn protected_transport_is_explicit_and_does_not_allow_arbitrary_actions() {
+        let h = agent("x");
+        for action in [
+            "protected-list",
+            "protected-login",
+            "protected-draft",
+            "protected-close",
+        ] {
+            assert!(agent_transport(
+                &h,
+                &format!("/api/password-broker/agent/{action}")
+            ));
+        }
+        for action in ["decrypt", "unmask", "screenshot", "cookies", "storageState"] {
+            assert!(!agent_transport(
+                &h,
+                &format!("/api/password-broker/agent/{action}")
+            ));
+        }
     }
     #[test]
     fn origins_are_exact_secure_and_no_credentials() {
@@ -1242,6 +1302,7 @@ mod tests {
         s.clients.insert(
             "client".into(),
             Client {
+                protected: false,
                 id: "client".into(),
                 label: "synthetic".into(),
                 token: "scoped".into(),
@@ -1253,6 +1314,7 @@ mod tests {
         s.jobs.insert(
             "session".into(),
             Job {
+                protected: false,
                 id: "session".into(),
                 client: "client".into(),
                 label: "synthetic".into(),
@@ -1266,6 +1328,7 @@ mod tests {
         s.requests.insert(
             "request".into(),
             Pending {
+                workspace: None,
                 id: "request".into(),
                 client: "client".into(),
                 label: "synthetic".into(),
@@ -1306,6 +1369,7 @@ mod tests {
             s.jobs.insert(
                 "unobserved".into(),
                 Job {
+                    protected: false,
                     id: "unobserved".into(),
                     client: client.clone(),
                     label: "synthetic".into(),

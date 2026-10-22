@@ -1,10 +1,14 @@
-# Passwortmanager 0.17.0 RC · Abnahme und Grenzen
+# Passwortmanager 0.18.0 RC · Abnahme und Grenzen
 
 Diese Ausgabe ergänzt wiederverwendbare SSH-Identitäten, den Import passender PKCS8-/Public-Key-Dateien, die Duplikatprüfung, eine Verbindungsvorschau und das Benennen vorhandener Passkeys. Die SSH-Identitäten liegen in derselben verschlüsselten Tresorhülle. Der bestehende SFTP-/FTPES-Broker behält ausdrückliche Einzelaufträge und Metadatenexporte für zehn Transferprogramme. Zehn Anbietervorlagen einschließlich netcup erleichtern die Einrichtung. Die Vorlagen sind keine Abnahme echter Kundenkonten oder sämtlicher nativer Fremdprogramme. Der [Transfervertrag](TRANSFER-BROKER.md) verlangt ein serverseitig eingeschränktes Konto; HeavenKey kann dessen Verzeichnisgrenze nicht beweisen.
 
 `scripts/transfer_broker_e2e.ts` prüft echte SFTP- und FTPES-Verbindungen zu synthetischen lokalen Servern: Auflisten, Metadaten, Download, Upload, Schlüsselanmeldung, Host- und Zertifikatsprüfung, Ablehnung ungültiger Aufträge, Zustimmung, Widerruf, Sperren und verschlüsselte Persistenz. Der Releasebericht nennt die tatsächlich ausgeführten Plattformen und bindet Quellen sowie Binärdateien. Ältere Windows-Pakete gehören nicht zum neuen Transfer-Release.
 
 Die Ausgabe integriert optionales PRF-Passkey-Entsperren, befristete verschlüsselte Feldkopien mit Empfänger-Passkey und einen Einrichtungsassistenten in den bestehenden lokalen Passwortmanager. Browser-Autofill, Formularprofile, Schnellzugriff und Importvorschau bleiben erhalten. Ein allgemeiner Vorsprung gegenüber Enpass ist nicht nachgewiesen.
+
+## Geschützter Composer
+
+Die Ausgabe ergänzt einen eigenen geschützten Agentenzugang, drei strukturierte private Felder, zufällige Referenzen und eine lokale Klartextvorschau. Der geschützte Zugang darf keine Website-Inhalte lesen und kann keine gewöhnlichen Lese- oder Transferrechte übernehmen. `scripts/protected_flow_e2e.ts` prüft den Ablauf gegen die echte App; `scripts/protected_sandbox_e2e.ts` prüft zusätzlich die eingeschlossene Linux-Shell. Die 24 geplanten Fälle werden im Releasebericht einzeln zu ausgeführten Nachweisen oder verbleibenden Grenzen zugeordnet. Fall 24 behandelt Nebenkanäle als Restrisiko. Keine beliebige PII-Erkennung, externe Zustellung oder universelle Website-Automation wird behauptet. [Bedienung und Vertrag](PROTECTED-FLOW.md).
 
 ## Prüfumfang
 

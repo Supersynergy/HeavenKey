@@ -113,7 +113,8 @@ export async function polishChecks(page: Page, master: string, check: Check) {
   await settings(page);
   assert((await page.locator("#activity-log").textContent())!.trim().length > 0);
   const requests: string[] = [];
-  const observe = (request: { url(): string }) => requests.push(request.url());
+  const localMetadata = ["/api/password-broker", "/api/password-broker/protected/workspaces", "/api/transfer-broker"].map(path => new URL(path, page.url()).href);
+  const observe = (request: { url(): string; method(): string }) => { if (request.method() !== "GET" || !localMetadata.includes(request.url())) requests.push(request.url()); };
   page.on("request", observe);
   const event = page.waitForEvent("download"); await page.locator("#export-diagnostics").click(); const download = await event;
   page.off("request", observe); assert.deepEqual(requests, [], "diagnostics download is entirely local");

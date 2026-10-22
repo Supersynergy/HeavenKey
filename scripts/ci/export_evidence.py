@@ -41,6 +41,11 @@ if transfer_receipt.exists():
     name = "transfer-broker.json"
     shutil.copyfile(transfer_receipt, destination / name)
     files[name] = hashlib.sha256(transfer_receipt.read_bytes()).hexdigest()
+protected_receipt = source / "protected-flow/browser.json"
+if protected_receipt.exists():
+    name = "protected-flow.json"
+    shutil.copyfile(protected_receipt, destination / name)
+    files[name] = hashlib.sha256(protected_receipt.read_bytes()).hexdigest()
 (destination / "manifest.json").write_text(
     json.dumps(
         {

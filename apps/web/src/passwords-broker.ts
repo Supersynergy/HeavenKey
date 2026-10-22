@@ -1,9 +1,10 @@
 import { localRequest, type AccessContext } from "./passwords-access";
 import { decode64, encode64, freshBytes, totp, type Login } from "./passwords-crypto";
 
-type Client = { id: string; label: string; expires_at: number };
-type Request = Client & { client_id: string; origin: string; scope: "login_read"; status: string };
-type Session = Client & { client_id: string; origin: string };
+type Identity = { id: string; label: string; expires_at: number };
+type Client = Identity & { protected: boolean };
+type Request = Identity & { client_id: string; origin: string; scope: "login_read" | "protected"; source_id?: string; status: string };
+type Session = Identity & { client_id: string; origin: string };
 type Audit = { at: number; action: string; result: string };
 type Broker = {
 	version: 1; enabled: boolean; unlocked: boolean; epoch: number; public_key: string;
@@ -54,8 +55,9 @@ function checkedBroker(value: Broker): Broker {
 		if (!row || typeof row.id !== "string" || !/^[A-Za-z0-9_-]{1,100}$/.test(row.id) || typeof row.label !== "string" || row.label.length > 200 || !Number.isSafeInteger(row.expires_at) || row.expires_at < 0) throw aborted();
 	}
 	for (const row of value.requests) {
-		if (row.scope !== "login_read" || typeof row.status !== "string" || typeof row.client_id !== "string" || exactOrigin(row.origin) !== row.origin) throw aborted();
+		if (!["login_read", "protected"].includes(row.scope) || typeof row.status !== "string" || typeof row.client_id !== "string" || exactOrigin(row.origin) !== row.origin || (row.scope === "protected" && !["denied", "expired", "failed"].includes(row.status) && (typeof row.source_id !== "string" || !row.source_id || row.source_id.length > 100))) throw aborted();
 	}
+	for (const row of value.clients) if (typeof row.protected !== "boolean") throw aborted();
 	for (const row of value.sessions) if (typeof row.client_id !== "string" || exactOrigin(row.origin) !== row.origin) throw aborted();
 	for (const row of value.audit) if (!row || !Number.isSafeInteger(row.at) || typeof row.action !== "string" || typeof row.result !== "string" || row.action.length > 100 || row.result.length > 100) throw aborted();
 	return value;
@@ -71,6 +73,7 @@ export function initPasswordBroker(ctx: AccessContext) {
 		pollTimer: ReturnType<typeof setInterval> | undefined,
 		pairTimer: ReturnType<typeof setTimeout> | undefined,
 		approvalTimer: ReturnType<typeof setTimeout> | undefined;
+	let unlockCompletion: Promise<void> | null = null;
 	const settings = document.getElementById("settings-view")!;
 	const make = <K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, className?: string) => {
 		const node = document.createElement(tag);
@@ -92,7 +95,7 @@ export function initPasswordBroker(ctx: AccessContext) {
 	const trust = make("ul", undefined, "broker-trust");
 	for (const text of ["Tresor: lokal verschlüsselt", "Broker: keine Zwischenablage / begrenzte Textansicht", "Shell-Agenten: nur über --broker-sandbox einschließen; kein weiterer Host-Zugriff", "Herausgeber nicht signiert", "Interner Review; kein externes Audit", "Zielwebsite, Host und Administrator gehören zur Vertrauensgrenze"])
 		trust.append(make("li", text));
-	card.append(make("h2", "Agent-Zugriff"), make("p", "Kopple einen Agenten und entscheide für jede Anmeldung einzeln. Der Agent darf die freigegebene Website bis zu 5 Minuten lesen. Zugangsdaten verlassen den Tresor nur verschlüsselt für den lokalen Browser-Ausführer.", "note"), status, trust, pairActions, pairResult,
+	card.append(make("h2", "Agent-Zugriff"), make("p", "Kopple einen Agenten und entscheide für jede Anmeldung einzeln. Klassische Agenten dürfen die freigegebene Website bis zu 5 Minuten lesen. Geschützte Agenten erhalten keine Website-Inhalte. Zugangsdaten verlassen den Tresor nur verschlüsselt für den lokalen Browser-Ausführer.", "note"), status, trust, pairActions, pairResult,
 		make("h3", "Anfragen"), requests, make("h3", "Gekoppelte Agenten"), clients, make("h3", "Aktive Sitzungen"), sessions, make("h3", "Letzte Broker-Ereignisse"), audit);
 	settings.append(card);
 	const dialog = make("dialog"); dialog.id = "broker-approval-dialog"; dialog.setAttribute("aria-labelledby", "broker-approval-heading");
@@ -102,7 +105,8 @@ export function initPasswordBroker(ctx: AccessContext) {
 	const form = make("form"), accountLabel = make("label", "Login ausdrücklich auswählen"); accountLabel.htmlFor = "broker-account";
 	const account = make("select"); account.id = "broker-account"; account.required = true;
 	const consentLabel = make("label", undefined, "checkbox"), consent = make("input"); consent.type = "checkbox"; consent.id = "broker-consent"; consent.required = true;
-	consentLabel.append(consent, document.createTextNode(" Ich erlaube diesem Agenten einmalig: Anmelden und Seite lesen, höchstens 5 Minuten."));
+	const consentText = document.createTextNode(" Ich erlaube diesem Agenten einmalig: Anmelden und Seite lesen, höchstens 5 Minuten.");
+	consentLabel.append(consent, consentText);
 	const message = make("p"); message.setAttribute("role", "status");
 	const submit = make("button", "Anmelden und Seite lesen"); submit.type = "submit"; submit.id = "broker-approve";
 	const cancel = button("Abbrechen", cancelApproval); cancel.dataset.cancel = "";
@@ -139,7 +143,7 @@ export function initPasswordBroker(ctx: AccessContext) {
 		const disabled = value || working || !usable() || !epoch;
 		for (const control of card.querySelectorAll<HTMLButtonElement>("button")) control.disabled = control.hasAttribute("data-cancel") ? false : disabled;
 		pair.disabled = disabled || !state?.browser_available || !state.enabled;
-		account.disabled = disabled; consent.disabled = disabled;
+		account.disabled = disabled || selectedRequest?.scope === "protected"; consent.disabled = disabled;
 		submit.disabled = disabled || !account.value || !consent.checked;
 		cancel.disabled = false;
 		form.setAttribute("aria-busy", String(working));
@@ -153,11 +157,17 @@ export function initPasswordBroker(ctx: AccessContext) {
 	function clear(notify = true) {
 		if (notify) sendLock(ctx.get().token); lifetime++; controller.abort(); controller = new AbortController();
 		clearInterval(heartbeatTimer); clearInterval(pollTimer); clearPairing(); returnFocus = null; closeApproval();
-		epoch = 0; leaseGeneration = -1; state = null; refreshing = false; unlocking = false; heartbeating = false; working = false;
+		epoch = 0; leaseGeneration = -1; state = null; refreshing = false; unlocking = false; unlockCompletion = null; heartbeating = false; working = false;
 		for (const list of [requests, clients, sessions, audit]) list.replaceChildren();
 		status.textContent = "Broker gesperrt. Alle Anfragen und Sitzungen werden beendet."; setBusy(busy);
 	}
-	async function unlocked() {
+	function unlocked(): Promise<void> {
+		if (unlockCompletion) return unlockCompletion;
+		const task = unlockOnce(); unlockCompletion = task;
+		const finish = () => { if (unlockCompletion === task) unlockCompletion = null; };
+		void task.then(finish, finish); return task;
+	}
+	async function unlockOnce() {
 		if (!usable() || unlocking) return;
 		if (epoch && leaseGeneration === ctx.get().generation) { await refresh(); return; }
 		if (epoch) clear();
@@ -190,7 +200,7 @@ export function initPasswordBroker(ctx: AccessContext) {
 		for (const list of [requests, clients, sessions, audit]) list.replaceChildren();
 		status.textContent = !state.enabled ? "Broker deaktiviert." : !state.browser_available ? "Kein unterstützter Chrome-/Chromium-Browser verfügbar." : "Broker bereit. Jede Anmeldung benötigt deine Freigabe.";
 		for (const request of state.requests) {
-			const row = make("li"), description = make("p", request.origin + " · " + request.label + " (Bezeichnung nicht überprüft) · " + request.status + " · bis " + expiry(request.expires_at));
+			const row = make("li"), description = make("p", request.origin + " · " + request.label + " (Bezeichnung nicht überprüft) · " + (request.scope === "protected" ? "Geschützte Anmeldung ohne Seitenlesen" : "Anmelden und Seite lesen") + " · " + request.status + " · bis " + expiry(request.expires_at));
 			row.append(description);
 			if (request.status === "pending" && request.expires_at * 1000 > Date.now()) {
 				const allow = button("Anfrage prüfen", () => openApproval(request)); allow.id = "broker-review-" + request.id; allow.disabled = !state.browser_available;
@@ -201,7 +211,7 @@ export function initPasswordBroker(ctx: AccessContext) {
 		}
 		for (const client of state.clients) {
 			const row = make("li"), revoke = button("Kopplung widerrufen", () => void remove("clients", client.id)); revoke.id = "broker-revoke-" + client.id;
-			row.append(make("p", client.label + " (Bezeichnung nicht überprüft) · bis " + expiry(client.expires_at)), revoke); clients.append(row);
+			row.append(make("p", client.label + " (Bezeichnung nicht überprüft) · " + (client.protected ? "nur geschützte Aufträge" : "klassischer Agentenzugriff") + " · bis " + expiry(client.expires_at)), revoke); clients.append(row);
 		}
 		for (const session of state.sessions) {
 			const row = make("li"), close = button("Sitzung beenden", () => void remove("sessions", session.id)); close.id = "broker-close-" + session.id;
@@ -223,7 +233,7 @@ export function initPasswordBroker(ctx: AccessContext) {
 			const response = await localRequest<Broker>(ctx, base, controller.signal);
 			guard(run, generation, expected); state = checkedBroker(response);
 			if (!state.unlocked || state.epoch !== expected) { clear(); return; }
-			if (selectedRequest && !state.requests.some(row => row.id === selectedRequest!.id && row.status === "pending" && row.origin === selectedRequest!.origin)) closeApproval();
+			if (selectedRequest && !state.requests.some(row => sameRequest(row, selectedRequest!))) closeApproval();
 			render();
 		} catch { if (run === lifetime) status.textContent = "Broker-Status konnte nicht geladen werden."; }
 		finally { if (run === lifetime) refreshing = false; }
@@ -258,13 +268,18 @@ export function initPasswordBroker(ctx: AccessContext) {
 	function matches(entry: Login, origin: string) {
 		try { const url = new URL(entry.url); return !!entry.password && !url.search && !url.hash && exactOrigin(entry.url) === origin; } catch { return false; }
 	}
+	function sameRequest(row: Request, selected: Request) { return row.id === selected.id && row.status === "pending" && row.origin === selected.origin && row.client_id === selected.client_id && row.scope === selected.scope && row.source_id === selected.source_id; }
 	function openApproval(request: Request) {
 		if (busy || working || !usable() || !epoch || !state?.browser_available || request.status !== "pending" || request.expires_at * 1000 <= Date.now()) return;
 		closeApproval(); returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null; selectedRequest = request;
 		originText.textContent = "Website: " + request.origin;
+		heading.textContent = request.scope === "protected" ? "Geschützte Anmeldung freigeben" : "Anmeldung freigeben";
+		submit.textContent = request.scope === "protected" ? "Geschützte Anmeldung freigeben" : "Anmelden und Seite lesen";
+		consentText.textContent = request.scope === "protected" ? " Ich erlaube diesem geschützten Agenten einmalig die Anmeldung ohne Seitenlesen, höchstens 5 Minuten. Nur der festgelegte Login wird verwendet." : " Ich erlaube diesem Agenten einmalig: Anmelden und Seite lesen, höchstens 5 Minuten.";
 		clientText.textContent = "Agent: " + request.label + " · Bezeichnung nicht überprüft · Anfrage läuft um " + expiry(request.expires_at) + " ab.";
 		const placeholder = make("option", "Bitte einen passenden Login wählen"); placeholder.value = ""; account.append(placeholder);
-		for (const entry of ctx.get().vault!.entries) if (matches(entry, request.origin)) { const option = make("option", entry.title + (entry.username ? " · " + entry.username : "")); option.value = entry.id; account.append(option); }
+		for (const entry of ctx.get().vault!.entries) if (matches(entry, request.origin) && (request.scope !== "protected" || entry.id === request.source_id)) { const option = make("option", entry.title + (entry.username ? " · " + entry.username : "")); option.value = entry.id; account.append(option); }
+		if (request.scope === "protected") account.value = request.source_id!;
 		if (account.options.length === 1) message.textContent = "Kein Login für exakt diese Website im Tresor. Es kann keine Freigabe erfolgen.";
 		consent.checked = false; setBusy(busy); dialog.showModal(); account.focus();
 		approvalTimer = setTimeout(closeApproval, Math.min(2147483647, Math.max(0, request.expires_at * 1000 - Date.now())));
@@ -278,7 +293,7 @@ export function initPasswordBroker(ctx: AccessContext) {
 			{ generation, revision } = ctx.get(), expected = epoch, sourceId = account.value, publicKey = state.public_key;
 		const check = () => {
 			guard(run, generation, expected);
-			if (selection !== approval || !dialog.open || selectedRequest !== request || !consent.checked || account.value !== sourceId || ctx.get().revision !== revision || request.expires_at * 1000 <= Date.now() || !state?.requests.some(row => row.id === request.id && row.status === "pending" && row.origin === request.origin)) throw aborted();
+			if (selection !== approval || !dialog.open || selectedRequest !== request || !consent.checked || account.value !== sourceId || (request.scope === "protected" && sourceId !== request.source_id) || ctx.get().revision !== revision || request.expires_at * 1000 <= Date.now() || !state?.requests.some(row => sameRequest(row, request))) throw aborted();
 		};
 		working = true; message.textContent = "Ausgewählten Login verschlüsseln …"; setBusy(busy);
 		try {

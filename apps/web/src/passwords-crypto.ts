@@ -3,6 +3,7 @@ import { validateProfiles, type FormProfile } from "../../../packages/forms/sche
 import { argon2idAsync } from "@noble/hashes/argon2.js";
 import { validateTransfers, type TransferProfile } from "../../../packages/transfers/schema";
 import { validateSSHIdentities, type SSHIdentity } from "../../../packages/transfers/ssh";
+import { validatePrivateWorkspaces, type PrivateWorkspace } from "../../../packages/protected/schema";
 export const ITERATIONS = 600_000;
 export const MAX_ITEMS = 1000;
 export const MAX_PLAIN_BYTES = 1_000_000;
@@ -10,7 +11,7 @@ export const MAX_FILE_BYTES = 2_000_000;
 type Ciphertext = { salt: string; iv: string; ciphertext: string };
 export type Envelope = Ciphertext & ({ version: 1; kdf: "PBKDF2-SHA256"; iterations: 600000 } | { version: 2; kdf: "Argon2id"; iterations: 3; memory_kib: 65536; parallelism: 1 });
 export type Login = { id: string; title: string; username: string; password: string; url: string; notes: string; totp: string; tags: string[]; favorite: boolean };
-export type Vault = { version: 1 | 2; entries: Login[]; profiles?: FormProfile[]; transfers?: TransferProfile[]; ssh_keys?: SSHIdentity[] };
+export type Vault = { version: 1 | 2; entries: Login[]; profiles?: FormProfile[]; transfers?: TransferProfile[]; ssh_keys?: SSHIdentity[]; protected_workspaces?: PrivateWorkspace[] };
 const utf8 = new TextEncoder();
 const aad = utf8.encode("HeavenKey password vault v1");
 const argon2Scheme = { version: 2, kdf: "Argon2id", iterations: 3, memory_kib: 65536, parallelism: 1 } as const;
@@ -93,6 +94,7 @@ export function validateVault(value: unknown): Vault {
     if (entry.url) { try { if (!["https:", "http:"].includes(new URL(entry.url as string).protocol)) throw new Error(); } catch { throw new Error("URLs müssen mit https:// oder http:// beginnen."); } }
     if (entry.totp) parseTotp(entry.totp as string);
   }
+  if (value.protected_workspaces !== undefined) validatePrivateWorkspaces(value.protected_workspaces, value.entries as Login[]);
   if (utf8.encode(JSON.stringify(value)).length > MAX_PLAIN_BYTES) throw new Error("Der Tresor überschreitet 1 MB Klartext.");
   return (value.profiles !== undefined ? {...value,version:2} : value) as Vault;
 }

@@ -2,7 +2,7 @@
 
 `--broker-sandbox` startet den Agenten in einem separaten Linux-Container. Nur dieser eingeschlossene Prozess gehört zur Schutzgrenze. Ein Agent, der daneben weiterhin eine uneingeschränkte Shell unter deinem Benutzerkonto bedienen darf, kann den Schutz umgehen. Entziehe ihm diesen Zugang, bevor du einen echten Tresor entsperrst.
 
-Der Tresor und der private Anmeldebrowser laufen auf dem vertrauenswürdigen Host. Der eingeschlossene Agent bekommt keine Host-Verzeichnisse, Umgebungsvariablen, Netzwerkverbindung oder Docker-Socket. Ein kleiner Vermittler erlaubt ausschließlich `request`, `status`, `read` und `close`. Kopplungscode und Clienttoken bleiben beim Vermittler. Jede Anmeldung verlangt weiterhin die Auswahl eines Kontos und deine Zustimmung in HeavenKey.
+Der Tresor und der private Anmeldebrowser laufen auf dem vertrauenswürdigen Host. Der eingeschlossene Agent bekommt keine Host-Verzeichnisse, Umgebungsvariablen, Netzwerkverbindung oder Docker-Socket. Ein kleiner Vermittler erlaubt typisierte Login-, Transfer- und geschützte Aufträge. Die gekoppelte Berechtigungsart begrenzt die zulässigen Operationen. Kopplungscode und Clienttoken bleiben beim Vermittler. Jede Anmeldung verlangt weiterhin die Auswahl eines Kontos und deine Zustimmung in HeavenKey.
 
 ## Voraussetzungen
 
@@ -36,6 +36,8 @@ Für x64 lautet die Plattform `linux/amd64`. Der Builder prüft ELF-Architektur,
 | `/status` | `{"request_id":"ANFRAGE_UUID"}` |
 | `/read` | `{"session_id":"SITZUNGS_UUID","path":"/konto"}` |
 | `/close` | `{"session_id":"SITZUNGS_UUID"}` |
+
+Ein über **Geschützte Entwürfe** gekoppelter Agent verwendet stattdessen `/protected/list`, `/protected/login`, `/protected/draft` und `/protected/close` sowie `/status`. Seine Identität darf weder `/request`, `/read` noch Transferoperationen nutzen. Er bekommt keine Seitenansicht. [Composer und lokale Vorschau](PROTECTED-FLOW.md).
 
 Es gibt keinen Token für den Agenten und keinen freien URL-, JavaScript-, Cookie- oder Zwischenablagenzugriff. Prüfe die Anfrage im echten HeavenKey-Fenster und bestätige das gewünschte Konto. Der Agent erhält die gefilterte Textansicht. Die Ausgabe des Agenten wird als `heavenkey_agent_output` verpackt; nur der Vermittler schreibt den abschließenden `heavenkey_sandbox_receipt`. Ein beliebiger Agententext ist kein Sicherheitsnachweis.
 

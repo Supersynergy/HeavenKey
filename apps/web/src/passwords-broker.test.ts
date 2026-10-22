@@ -59,3 +59,32 @@ test('lock during encryption never dispatches approval or retains dialog values'
 test('pairing code appears only explicitly and is wiped on settings close',async()=>{
  const s=setup(),ui=initPasswordBroker(s.ctx);await ui.unlocked();expect(s.win.document.querySelector('#broker-pairing-code')!.textContent).toBe('');s.win.document.querySelector<HTMLButtonElement>('#broker-pair')!.click();await tick();expect(s.win.document.querySelector('#broker-pairing-code')!.textContent).toContain('ABCDEF');s.win.document.querySelector<HTMLElement>('#settings-view')!.hidden=true;await tick();expect(s.win.document.querySelector('#broker-pairing-code')!.textContent).toBe('');ui.clear();
 });
+test('protected approval labels scope, preselects only published source and rejects changed source',async()=>{
+ const s=setup();s.state.requests[0]={...s.state.requests[0],scope:'protected',source_id:'login'} as any;
+ s.ctx.get().vault.entries.push({...login,id:'other-same-origin',title:'Other account'});
+ const ui=initPasswordBroker(s.ctx);await ui.unlocked();s.win.document.querySelector<HTMLButtonElement>('#broker-review-request')!.click();
+ const account=s.win.document.querySelector<HTMLSelectElement>('#broker-account')!,consent=s.win.document.querySelector<HTMLInputElement>('#broker-consent')!,approve=s.win.document.querySelector<HTMLButtonElement>('#broker-approve')!;
+ expect(account.value).toBe('login');expect(account.disabled).toBe(true);expect(Array.from(account.options).map(o=>o.value)).not.toContain('other-same-origin');
+ expect(s.win.document.querySelector('#broker-approval-dialog')!.textContent).toContain('ohne Seitenlesen');expect(approve.textContent).toContain('Geschützte Anmeldung');expect(approve.disabled).toBe(true);
+ consent.checked=true;consent.dispatchEvent(new s.win.Event('change'));expect(approve.disabled).toBe(false);
+ s.state.requests[0]={...s.state.requests[0],source_id:'other-same-origin'} as any;await ui.refresh();
+ expect(s.win.document.querySelector<HTMLDialogElement>('#broker-approval-dialog')!.open).toBe(false);ui.clear();
+});
+test('protected request with missing bound login cannot approve',async()=>{
+ const s=setup();s.state.requests[0]={...s.state.requests[0],scope:'protected',source_id:'missing'} as any;
+ const ui=initPasswordBroker(s.ctx);await ui.unlocked();s.win.document.querySelector<HTMLButtonElement>('#broker-review-request')!.click();
+ const consent=s.win.document.querySelector<HTMLInputElement>('#broker-consent')!;consent.checked=true;consent.dispatchEvent(new s.win.Event('change'));
+ expect(s.win.document.querySelector<HTMLButtonElement>('#broker-approve')!.disabled).toBe(true);expect(s.calls.some(c=>c.path.includes('/approve/'))).toBe(false);ui.clear();
+});
+test('concurrent broker unlock callers wait for the same ready lease',async()=>{
+ const s=setup(),originalFetch=globalThis.fetch;let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});
+ globalThis.fetch=async(url:any,init:any)=>{if(String(url).endsWith('/unlock'))await gate;return originalFetch(url,init);};
+ const ui=initPasswordBroker(s.ctx),first=ui.unlocked();let joined=false;const second=ui.unlocked().then(()=>{joined=true;});await tick();expect(joined).toBe(false);
+ release();await Promise.all([first,second]);expect(joined).toBe(true);expect(s.calls.filter(c=>c.path.endsWith('/unlock')).length).toBe(1);ui.clear();
+});
+test('revoked protected history without source does not hide a fresh approval',async()=>{
+ const s=setup();s.state.requests.push({...s.state.requests[0],id:'revoked',scope:'protected',status:'denied',source_id:null} as any);
+ const ui=initPasswordBroker(s.ctx);
+ try { await ui.unlocked();expect(s.win.document.querySelector('#broker-review-request')).not.toBeNull();expect(s.win.document.querySelector('#broker-review-revoked')).toBeNull(); }
+ finally { ui.clear(); }
+});

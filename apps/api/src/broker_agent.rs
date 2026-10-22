@@ -6,7 +6,7 @@ use std::time::Duration;
 
 pub fn run(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     if args.len() != 3 {
-        return Err("Usage: --broker-agent PORT connect|request|status|read|close|transfer-request|transfer-status < request.json (see TRANSFER-BROKER.md)".into());
+        return Err("Usage: --broker-agent PORT connect|request|status|read|close|transfer-request|transfer-status|protected-list|protected-login|protected-draft|protected-close < request.json".into());
     }
     let port: u16 = args[1].parse().map_err(|_| "Invalid local broker port")?;
     if port == 0 {
@@ -22,6 +22,10 @@ pub fn run(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
             | "close"
             | "transfer-request"
             | "transfer-status"
+            | "protected-list"
+            | "protected-login"
+            | "protected-draft"
+            | "protected-close"
     ) {
         return Err("Unsupported broker command".into());
     }
@@ -88,6 +92,10 @@ pub fn call(
                 | "disconnect"
                 | "transfer-request"
                 | "transfer-status"
+                | "protected-list"
+                | "protected-login"
+                | "protected-draft"
+                | "protected-close"
         )
     {
         return Err("Unsupported broker operation");

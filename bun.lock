@@ -16,7 +16,7 @@
     },
     "apps/web": {
       "name": "heavenkey-web",
-      "version": "0.17.0",
+      "version": "0.18.0",
       "dependencies": {
         "@noble/hashes": "2.4.0",
         "@simplewebauthn/browser": "14.0.0",

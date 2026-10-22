@@ -85,6 +85,21 @@ struct ReadPage {
 
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
+struct ProtectedWorkspace {
+    workspace_id: String,
+}
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct ProtectedDraft {
+    workspace_id: String,
+    text: String,
+}
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct ProtectedList {}
+
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
 struct TransferAsk {
     connection_id: String,
     operation: String,
@@ -108,6 +123,31 @@ fn typed_body(op: &str, body: Value) -> SafeResult<Value> {
         return Err("Sandbox request too large");
     }
     match op {
+        "protected-list" => {
+            let value: ProtectedList =
+                serde_json::from_value(body).map_err(|_| "Invalid protected fields")?;
+            serde_json::to_value(value).map_err(|_| "Invalid protected fields")
+        }
+        "protected-login" | "protected-close" => {
+            let value: ProtectedWorkspace =
+                serde_json::from_value(body).map_err(|_| "Invalid protected fields")?;
+            if !id_valid(&value.workspace_id) {
+                return Err("Invalid protected workspace");
+            }
+            serde_json::to_value(value).map_err(|_| "Invalid protected fields")
+        }
+        "protected-draft" => {
+            let value: ProtectedDraft =
+                serde_json::from_value(body).map_err(|_| "Invalid protected fields")?;
+            if !id_valid(&value.workspace_id)
+                || value.text.is_empty()
+                || value.text.len() > 8000
+                || value.text.chars().any(char::is_control)
+            {
+                return Err("Invalid protected draft");
+            }
+            serde_json::to_value(value).map_err(|_| "Invalid protected fields")
+        }
         "transfer-request" => {
             let v: TransferAsk =
                 serde_json::from_value(body).map_err(|_| "Invalid transfer fields")?;
@@ -1292,6 +1332,10 @@ fn http_request(stream: &mut TcpStream) -> SafeResult<(String, Value)> {
         "/close" => "close",
         "/transfer/request" => "transfer-request",
         "/transfer/status" => "transfer-status",
+        "/protected/list" => "protected-list",
+        "/protected/login" => "protected-login",
+        "/protected/draft" => "protected-draft",
+        "/protected/close" => "protected-close",
         _ => return Err("Unsupported sandbox operation"),
     };
     let mut length = None;
@@ -1708,6 +1752,36 @@ mod tests {
         }
         assert!(typed_body("transfer-status", json!({"request_id":id})).is_ok());
         assert!(typed_body("transfer-status", json!({"request_id":id,"token":"x"})).is_err());
+    }
+
+    #[test]
+    fn protected_relay_scopes_only_workspace_operations() {
+        let id = uuid::Uuid::new_v4().to_string();
+        assert!(typed_body("protected-list", json!({})).is_ok());
+        for operation in ["protected-login", "protected-close"] {
+            assert!(typed_body(operation, json!({"workspace_id":id})).is_ok());
+            for field in ["token", "origin", "cookies", "decrypt", "path", "password"] {
+                let mut body = json!({"workspace_id":id});
+                body[field] = json!("forbidden");
+                assert!(typed_body(operation, body).is_err());
+            }
+        }
+        assert!(
+            typed_body(
+                "protected-draft",
+                json!({"workspace_id":id,"text":"Neutraler Entwurf"})
+            )
+            .is_ok()
+        );
+        assert!(
+            typed_body(
+                "protected-draft",
+                json!({"workspace_id":id,"text":"x".repeat(8001)})
+            )
+            .is_err()
+        );
+        assert!(typed_body("protected-list", json!({"reveal":true})).is_err());
+        assert!(typed_body("protected-read", json!({"workspace_id":id})).is_err());
     }
     #[test]
     fn image_environment_is_closed_allowlist() {
