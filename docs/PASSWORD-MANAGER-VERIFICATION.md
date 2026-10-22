@@ -1,6 +1,6 @@
-# Passwortmanager 0.16.0 RC · Abnahme und Grenzen
+# Passwortmanager 0.17.0 RC · Abnahme und Grenzen
 
-Diese Ausgabe ergänzt den SFTP-/FTPES-Broker mit verschlüsselten Verbindungsprofilen und SSH-Schlüsseln, ausdrücklichen Einzelaufträgen und Metadatenexporten für zehn Transferprogramme. Zehn Anbietervorlagen einschließlich netcup erleichtern die Einrichtung. Die Vorlagen sind keine Abnahme echter Kundenkonten oder sämtlicher nativer Fremdprogramme. Der [Transfervertrag](TRANSFER-BROKER.md) verlangt ein serverseitig eingeschränktes Konto; HeavenKey kann dessen Verzeichnisgrenze nicht beweisen.
+Diese Ausgabe ergänzt wiederverwendbare SSH-Identitäten, den Import passender PKCS8-/Public-Key-Dateien, die Duplikatprüfung, eine Verbindungsvorschau und das Benennen vorhandener Passkeys. Die SSH-Identitäten liegen in derselben verschlüsselten Tresorhülle. Der bestehende SFTP-/FTPES-Broker behält ausdrückliche Einzelaufträge und Metadatenexporte für zehn Transferprogramme. Zehn Anbietervorlagen einschließlich netcup erleichtern die Einrichtung. Die Vorlagen sind keine Abnahme echter Kundenkonten oder sämtlicher nativer Fremdprogramme. Der [Transfervertrag](TRANSFER-BROKER.md) verlangt ein serverseitig eingeschränktes Konto; HeavenKey kann dessen Verzeichnisgrenze nicht beweisen.
 
 `scripts/transfer_broker_e2e.ts` prüft echte SFTP- und FTPES-Verbindungen zu synthetischen lokalen Servern: Auflisten, Metadaten, Download, Upload, Schlüsselanmeldung, Host- und Zertifikatsprüfung, Ablehnung ungültiger Aufträge, Zustimmung, Widerruf, Sperren und verschlüsselte Persistenz. Der Releasebericht nennt die tatsächlich ausgeführten Plattformen und bindet Quellen sowie Binärdateien. Ältere Windows-Pakete gehören nicht zum neuen Transfer-Release.
 

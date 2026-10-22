@@ -22,6 +22,7 @@ source_checks() {
   bun test apps/web/src/passwords-profiles.test.ts packages/forms/import-plan.test.ts
   bun test apps/web/src/passwords-access.test.ts apps/web/src/passwords-sharing.test.ts apps/web/src/passwords-broker.test.ts
   bun test apps/web/src/passwords-transfer.test.ts packages/transfers/import.test.ts packages/transfers/clients.test.ts
+  bun test apps/web/src/passwords-ssh.test.ts
   bun test apps/web/src/interface.test.ts
   bun test apps/extension/popup.test.ts
   bun scripts/test_extension.mjs

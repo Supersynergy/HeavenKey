@@ -192,7 +192,7 @@ def desktop(target):
         for name in (
             "PASSWORD-MANAGER.md", "PASSWORD-MANAGER-GAPS.md",
             "PASSWORD-MANAGER-VERIFICATION.md", "PASSWORD-MANAGER-RESEARCH-TOOLS.md",
-            "ACCESS-AND-SHARING.md", "AGENT-BROKER.md", "AGENT-SANDBOX.md", "VAULT-KDF.md", "TRANSFER-BROKER.md",
+            "ACCESS-AND-SHARING.md", "AGENT-BROKER.md", "AGENT-SANDBOX.md", "VAULT-KDF.md", "TRANSFER-BROKER.md", "SSH-KEYS.md",
             "password-manager-matrix.json", "LICENSING.md",
         ):
             shutil.copyfile(ROOT / "docs" / name, directory / name)

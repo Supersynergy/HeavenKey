@@ -355,6 +355,18 @@ try {
 	check(
 		"passkey: actual PRF creation and verified assertion enroll without exporting master to API",
 	);
+	const credential = (await api(owner.page, "/api/password-passkeys")).value.credentials[0];
+	const beforeRename = (await api(owner.page, "/api/password-vault")).value;
+	const staleRename = await api(owner.page, "/api/password-passkeys/" + encodeURIComponent(credential.id), { label: "Stale label", revision: beforeRename.revision + 1, vault_salt: beforeRename.record.salt });
+	assert.equal(staleRename.status, 409);
+	await owner.page.getByRole("button", { name: "Passkey Synthetic everyday passkey umbenennen", exact: true }).click();
+	await owner.page.locator("#passkey-rename-label").fill("Synthetic renamed passkey");
+	await owner.page.locator("#passkey-rename-dialog button[type=submit]").click();
+	await owner.page.locator("#passkey-rename-dialog").waitFor({ state: "hidden" });
+	await owner.page.locator("#password-passkeys").getByText("Synthetic renamed passkey", { exact: true }).waitFor();
+	assert.equal((await api(owner.page, "/api/password-passkeys")).value.credentials[0].id, credential.id);
+	assert.deepEqual((await api(owner.page, "/api/password-vault")).value, beforeRename);
+	check("passkey: rename rejects stale revisions and changes only the label, preserving credential and encrypted vault");
 	await entries(owner.page);
 	await owner.page.locator("#lock").click();
 	await owner.page.locator("#passkey-unlock:not([disabled])").waitFor();

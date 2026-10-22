@@ -4,6 +4,7 @@ import { initBrand } from "./passwords-brand";
 import { initWorkflows } from "./passwords-workflows";
 import { initPasswordBroker } from "./passwords-broker";
 import { initTransferBroker } from "./passwords-transfer";
+import { initAccessOverview } from "./passwords-access-overview";
 import { initPasswordAccess } from "./passwords-access";
 import { initPasswordSharing } from "./passwords-sharing";
 import { initOnboarding } from "./passwords-onboarding";
@@ -428,12 +429,20 @@ passwordSharing = initPasswordSharing(accessContext);
 passwordBroker = initPasswordBroker(accessContext);
 transferBroker = initTransferBroker(accessContext, {
   get: () => vault?.transfers ?? [],
+  getKeys: () => vault?.ssh_keys ?? [],
+  saveState: async (transfers, ssh_keys, run) => {
+    let saved = false;
+    const save = async (generation: number) => { if (!vault || !await commit({ ...vault, transfers, ssh_keys }, generation)) throw new Error("SSH-Schlüssel und Verbindungen konnten nicht gespeichert werden."); saved = true; };
+    if (run === undefined) await operation(save); else await save(run);
+    if (!saved) throw new Error("Speichern nicht bestätigt. Eingaben prüfen und erneut versuchen.");
+  },
   save: async transfers => {
     await operation(async run => {
       if (!vault || !await commit({ ...vault, transfers }, run)) throw new Error("Verbindungen konnten nicht gespeichert werden.");
     });
   },
 });
+initAccessOverview();
 onboarding = initOnboarding({vault:()=>vault,hasRecord:()=>!!remote,ready:()=>ready,busy:()=>busy,login:()=>edit(),settings:showSettings,backup:()=>byId("export-backup").click()});
 initBrand();
 initPresentation();

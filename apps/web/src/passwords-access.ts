@@ -314,6 +314,8 @@ export function initPasswordAccess(ctx: AccessContext) {
 	document.getElementById("unlock-form")!.after(gate);
 	const card = document.createElement("section");
 	card.className = "settings-card";
+	card.id = "passkey-settings";
+	card.tabIndex = -1;
 	card.innerHTML =
 		'<h2>Mit Passkey entsperren</h2><p class="note">Entsperre diesen Tresor mit deinem Passkey, ohne das Masterpasswort einzutippen. Dein Browser und Passkey müssen die nötige Verschlüsselung unterstützen. Das Masterpasswort bleibt als Rückweg verfügbar.</p><button type="button" id="passkey-enroll">Passkey hinzufügen</button><ul id="password-passkeys"></ul>';
 	document.getElementById("settings-view")!.append(card);
@@ -325,6 +327,37 @@ export function initPasswordAccess(ctx: AccessContext) {
 	dialog.innerHTML =
 		'<h2 id="passkey-heading">Passkey für diesen Tresor</h2><p class="note">Bestätige dein Masterpasswort. Danach werden zwei Passkey-Prüfungen geöffnet. Ohne PRF wird kein Passkey gespeichert.</p><form><label for="passkey-label">Name</label><input id="passkey-label" maxlength="48" required autocomplete="off"><label for="passkey-master">Masterpasswort bestätigen</label><input id="passkey-master" type="password" minlength="14" maxlength="1024" required autocomplete="off"><p role="status"></p><div class="actions"><button type="submit">Passkey einrichten</button><button type="button" class="secondary" data-cancel>Abbrechen</button></div></form>';
 	document.body.append(dialog);
+	const renameDialog = document.createElement("dialog");
+	renameDialog.id = "passkey-rename-dialog";
+	renameDialog.setAttribute("aria-labelledby", "passkey-rename-heading");
+	renameDialog.innerHTML = '<h2 id="passkey-rename-heading">Passkey benennen</h2><form><label for="passkey-rename-label">Name</label><input id="passkey-rename-label" maxlength="48" required autocomplete="off"><p role="status"></p><div class="actions"><button type="submit">Namen speichern</button><button type="button" class="secondary" data-cancel>Abbrechen</button></div></form>';
+	document.body.append(renameDialog);
+	const renameLabel = renameDialog.querySelector<HTMLInputElement>("input")!;
+	const renameMessage = renameDialog.querySelector("[role=status]")!;
+	let renameTarget: CredentialRow | null = null;
+	function closeRename(cancel = true) {
+		if (cancel) { epoch++; controller.abort(); controller = new AbortController(); }
+		renameTarget = null; renameLabel.value = ""; renameMessage.textContent = "";
+		if (renameDialog.open) renameDialog.close();
+		card.focus();
+	}
+	renameDialog.addEventListener("cancel", event => { event.preventDefault(); closeRename(); });
+	renameDialog.querySelector<HTMLButtonElement>("[data-cancel]")!.onclick = () => closeRename();
+	renameDialog.querySelector("form")!.onsubmit = event => {
+		event.preventDefault();
+		if (busy || !renameTarget || !ctx.unlocked() || ctx.get().discreet) return;
+		const id = renameTarget.id, name = renameLabel.value.trim(), snapshot = ctx.get(), op = epoch;
+		if (!name || name.length > 48 || /[\x00-\x1f\x7f]/.test(name)) { renameMessage.textContent = "Einen Namen mit höchstens 48 Zeichen eingeben."; return; }
+		let completed: number | null = null;
+		void ctx.run(async run => {
+			try {
+				guard(run, op); if (!snapshot.record) throw new Error("Tresor nicht verfügbar.");
+				await localRequest(ctx, "/api/password-passkeys/" + encodeURIComponent(id), controller.signal, { label: name, revision: snapshot.revision, vault_salt: snapshot.record.salt });
+				guard(run, op); closeRename(false); await refresh();
+				if (ctx.current(run)) { ctx.announce("Passkey-Name gespeichert."); completed = run; }
+			} catch (error) { if (ctx.current(run) && op === epoch && (error as Error).name !== "AbortError") renameMessage.textContent = (error as Error).message; }
+		}).then(() => { if (completed !== null && ctx.current(completed) && ctx.unlocked()) document.getElementById("passkey-rename-" + id)?.focus(); });
+	};
 	const label = dialog.querySelector<HTMLInputElement>("#passkey-label")!,
 		masterInput = dialog.querySelector<HTMLInputElement>("#passkey-master")!,
 		message = dialog.querySelector("[role=status]")!;
@@ -364,6 +397,7 @@ export function initPasswordAccess(ctx: AccessContext) {
 			button.disabled = busy || !ctx.unlocked() || ctx.get().discreet;
 		for (const button of dialog.querySelectorAll<HTMLButtonElement>("button"))
 			button.disabled = busy && !button.hasAttribute("data-cancel");
+		for (const input of renameDialog.querySelectorAll<HTMLInputElement | HTMLButtonElement>("input,button")) input.disabled = busy && !input.hasAttribute("data-cancel");
 	}
 	async function refresh() {
 		setBusy(busy);
@@ -385,6 +419,10 @@ export function initPasswordAccess(ctx: AccessContext) {
 				const item = document.createElement("li"),
 					text = document.createElement("span"),
 					remove = document.createElement("button");
+				const rename = document.createElement("button");
+				rename.type = "button"; rename.className = "secondary"; rename.textContent = "Umbenennen"; rename.id = "passkey-rename-" + row.id;
+				rename.setAttribute("aria-label", "Passkey " + (ctx.get().discreet ? "" : row.label || "") + " umbenennen");
+				rename.onclick = () => { if (busy || !ctx.unlocked() || ctx.get().discreet) return; renameTarget = row; renameLabel.value = row.label || "Passkey"; renameDialog.showModal(); renameLabel.focus(); };
 				text.textContent = ctx.get().discreet
 					? "Passkey"
 					: row.label || "Passkey";
@@ -410,7 +448,7 @@ export function initPasswordAccess(ctx: AccessContext) {
 						ctx.announce("Passkey entfernt.");
 						void refresh();
 					});
-				item.append(text, remove);
+				item.append(text, rename, remove);
 				list.append(item);
 			}
 		} catch (error) {
@@ -611,6 +649,7 @@ export function initPasswordAccess(ctx: AccessContext) {
 	function clear() {
 		returnFocus = null;
 		close();
+		closeRename(false);
 		rows = [];
 		list.replaceChildren();
 		setBusy(busy);

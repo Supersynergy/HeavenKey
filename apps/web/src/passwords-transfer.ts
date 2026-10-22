@@ -4,6 +4,9 @@ import { clients, providers } from "../../../packages/transfers/catalog";
 import { validateTransferProfile, validateTransfers, validateTransferPath, type TransferProfile } from "../../../packages/transfers/schema";
 import { exportClientProfile } from "../../../packages/transfers/clients";
 import { previewFileZilla, exportFileZilla, type TransferImportRow } from "../../../packages/transfers/import";
+import { checkedSSHIdentity, resolveSSHProfile, sshFingerprint, validateSSHIdentities, type SSHIdentity } from "../../../packages/transfers/ssh";
+import { previewConnection, type ConnectionSuggestion } from "../../../packages/transfers/smart-connection";
+import { initSSHStorage } from "./passwords-ssh";
 
 type Operation = "list" | "stat" | "get" | "put";
 export type TransferRequest = { id: string; client_id: string; label: string; connection_id: string; operation: Operation; path: string; sha256: string; bytes: number; status: string; expires_at: number };
@@ -27,6 +30,7 @@ export async function generateTransferKey(guard = () => {}): Promise<{ private_k
 }
 export async function sealTransferProfile(profile: TransferProfile, request: TransferRequest, publicKey: string, epoch: number, revision: number, discloseContent: boolean, guard = () => {}) {
   guard(); profile = validateTransferProfile(profile); validateTransferPath(request.path, request.operation);
+  if (profile.ssh_key_id) throw new Error("Gespeicherten SSH-Schlüssel vor der Freigabe im Besitzerbrowser auflösen.");
   if (profile.id !== request.connection_id || !["list", "stat", "get", "put"].includes(request.operation) || (request.operation === "get" && !discloseContent) || (request.operation === "put" && !/^[a-f0-9]{64}$/.test(request.sha256))) throw new Error("Freigabe passt nicht zur Anfrage.");
   const raw = freshBytes(32), iv = freshBytes(12);
   const plain = utf8.encode(JSON.stringify({ version: 1, profile, operation: request.operation, path: request.path, sha256: request.operation === "put" ? request.sha256 : null, disclose_content: discloseContent }));
@@ -48,7 +52,7 @@ function checkedBroker(state: Broker): Broker {
   for (const event of state.audit) if (!event || !Number.isSafeInteger(event.at) || typeof event.action !== "string" || event.action.length > 100 || typeof event.result !== "string" || event.result.length > 100) throw new Error("Ungültiges Transferereignis.");
   return state;
 }
-export function initTransferBroker(ctx: AccessContext, persistence: { get: () => TransferProfile[]; save: (profiles: TransferProfile[]) => Promise<void> }) {
+export function initTransferBroker(ctx: AccessContext, persistence: { get: () => TransferProfile[]; save: (profiles: TransferProfile[]) => Promise<void>; getKeys?: () => SSHIdentity[]; saveState?: (profiles: TransferProfile[], keys: SSHIdentity[], generation?: number) => Promise<void> }) {
   let controller = new AbortController(), lifetime = 0, busy = false, working = false, refreshing = false;
   let state: Broker | null = null, selected: TransferRequest | null = null, draft: TransferProfile | null = null, editorOperation = 0, approvalOperation = 0;
   let returnFocus: HTMLElement | null = null, timer: ReturnType<typeof setInterval> | undefined, expiryTimer: ReturnType<typeof setTimeout> | undefined, dispatching: string | null = null;
@@ -79,6 +83,7 @@ export function initTransferBroker(ctx: AccessContext, persistence: { get: () =>
   }
   catalog.append(catalogList, make("p", "Katalogeinträge sind Einrichtungshilfen. Zugangsdaten bleiben im Tresor; externe Programme erhalten sie nicht automatisch.", "note"));
   card.append(make("h2", "Dateitransfer"), make("p", "Verwalte SFTP- und FTPES-Verbindungen. Gekoppelte Agenten dürfen für genau ein Profil und einen Pfad anfragen. Metadaten können vertraulich sein.", "note"), status, trust, actions, make("h3", "Verbindungen"), clientLabel, clientSelect, clientNote, profileList, make("h3", "Anfragen und Freigaben"), requestList, make("h3", "Letzte Ereignisse"), audit, importLabel, file, preview, catalog); settings.append(card);
+  const sshStorage = persistence.getKeys && persistence.saveState ? initSSHStorage(ctx, { getKeys: persistence.getKeys, getProfiles: persistence.get, save: (keys, profiles, generation) => persistence.saveState!(profiles, keys, generation) }, generateTransferKey) : undefined;
   const editor = make("dialog"); editor.id = "transfer-profile-dialog"; editor.setAttribute("aria-labelledby", "transfer-profile-heading");
   const editorHeading = make("h2", "Transferverbindung"); editorHeading.id = "transfer-profile-heading";
   const form = make("form"), inputs = {} as Record<string, HTMLInputElement | HTMLSelectElement>;
@@ -93,6 +98,23 @@ export function initTransferBroker(ctx: AccessContext, persistence: { get: () =>
   const protocolLabel = make("label", "Protokoll"); protocolLabel.htmlFor = "transfer-protocol";
   const protocol = make("select"); protocol.id = "transfer-protocol"; inputs.protocol = protocol;
   for (const value of ["sftp", "ftpes"]) { const option = make("option", value === "sftp" ? "SFTP (SSH)" : "FTPES (explizites TLS)"); option.value = value; protocol.append(option); } form.append(protocolLabel, protocol);
+  const quickLabel = make("label", "Verbindungsdaten einfügen (optional)"); quickLabel.htmlFor = "transfer-smart-input";
+  const quickInput = make("input"); quickInput.id = "transfer-smart-input"; quickInput.type = "text"; quickInput.maxLength = 1000; quickInput.autocomplete = "off"; quickInput.placeholder = "ssh benutzer@server -p 22 oder ftpes://benutzer@server:21";
+  const quickPreview = make("p", undefined, "note"); quickPreview.id = "transfer-smart-preview"; quickPreview.setAttribute("role", "status");
+  let suggestion: ConnectionSuggestion | null = null;
+  const quickApply = button("Geprüfte Felder übernehmen", () => {
+    if (!suggestion || !usable() || busy || working) return;
+    provider.value = "custom"; provider.onchange?.(new Event("change")); protocol.value = suggestion.protocol; protocol.onchange?.(new Event("change"));
+    inputs.host.value = suggestion.host; port.value = String(suggestion.port); inputs.username.value = suggestion.username;
+    if (!inputs.label.value.trim()) inputs.label.value = suggestion.host;
+    quickPreview.textContent = "Server, Benutzer, Port und Protokoll übernommen. Hostidentität und Anmeldung selbst prüfen."; suggestion = null; quickApply.hidden = true; inputs.host.focus();
+  }, "transfer-smart-apply"); quickApply.hidden = true;
+  const quickCheck = button("Vorschau prüfen", () => {
+    const value = quickInput.value; quickInput.value = ""; suggestion = null; quickApply.hidden = true;
+    try { suggestion = previewConnection(value); quickPreview.textContent = `${suggestion.protocol.toUpperCase()} · ${suggestion.host}:${suggestion.port} · Benutzer: ${suggestion.username || "noch ergänzen"}. Keine Anmeldung, keine Befehlsausführung.`; quickApply.hidden = false; }
+    catch (error) { quickPreview.textContent = (error as Error).message; }
+  }, "transfer-smart-check");
+  form.append(quickLabel, quickInput, quickCheck, quickPreview, quickApply);
   field("host", "Servername oder IP (keine URL)", "text", 253).required = true;
   const port = field("port", "Port", "number", 5); port.min = "1"; port.max = "65535"; port.required = true;
   field("username", "Benutzername", "text", 256).required = true;
@@ -101,6 +123,17 @@ export function initTransferBroker(ctx: AccessContext, persistence: { get: () =>
   form.append(make("p", "Verwende einen eigenen, beim Anbieter auf den Zielordner begrenzten Transferbenutzer. / bezeichnet dessen gesamtes Konto. Die Ordnergrenze muss der Server erzwingen; Unterordnerprüfungen allein schützen nicht vor Symlinks und konkurrierenden Änderungen. HeavenKey kann die Serverkonfiguration nicht unabhängig bestätigen.", "note"));
   const hostKey = field("host_key", "SFTP-Hostfingerabdruck (SHA256, beim Anbieter prüfen)", "text", 100);
   const password = field("password", "Passwort (leer bei SSH-Schlüsselpaar)", "password", 4096);
+  const identityLabel = make("label", "Gespeicherter SSH-Schlüssel"); identityLabel.htmlFor = "transfer-ssh-key";
+  const identitySelect = make("select"); identitySelect.id = "transfer-ssh-key"; form.append(identityLabel, identitySelect);
+  identitySelect.onchange = () => {
+    if (!draft) return;
+    delete draft.ssh_key_id;
+    if (identitySelect.value) {
+      const identity = persistence.getKeys?.().find(key => key.id === identitySelect.value); if (!identity) return;
+      draft.ssh_key_id = identity.id; draft.private_key = ""; draft.public_key = ""; password.value = ""; publicKey.value = identity.public_key;
+    } else publicKey.value = draft.public_key;
+  };
+  password.oninput = () => { if (draft && password.value) { delete draft.ssh_key_id; identitySelect.value = ""; publicKey.value = ""; } };
   const keygen = button("Ed25519-Schlüsselpaar im Browser erzeugen", () => void createKey(), "transfer-generate-key");
   const publicLabel = make("label", "Öffentlicher Schlüssel für den Server"); publicLabel.htmlFor = "transfer-public-key";
   const publicKey = make("textarea"); publicKey.id = "transfer-public-key"; publicKey.readOnly = true; publicKey.rows = 3;
@@ -128,11 +161,12 @@ export function initTransferBroker(ctx: AccessContext, persistence: { get: () =>
   const usable = () => ctx.unlocked() && !!ctx.get().vault && !!ctx.get().token && !ctx.get().discreet;
   function guard(run: number, generation: number) { if (run !== lifetime || !ctx.current(generation) || !usable() || controller.signal.aborted) throw aborted(); }
   function focusBack() { if (returnFocus?.isConnected && !(returnFocus instanceof HTMLButtonElement && returnFocus.disabled)) returnFocus.focus(); else card.focus(); returnFocus = null; }
-  function closeEditor() { editorOperation++; draft = null; form.reset(); ca.value = ""; advanced.open = false; publicKey.value = ""; editorStatus.textContent = ""; if (editor.open) editor.close(); focusBack(); }
+  function closeEditor() { editorOperation++; draft = null; form.reset(); ca.value = ""; advanced.open = false; publicKey.value = ""; editorStatus.textContent = ""; quickInput.value = ""; quickPreview.textContent = ""; suggestion = null; quickApply.hidden = true; if (editor.open) editor.close(); focusBack(); }
   function closeApproval() { approvalOperation++; clearTimeout(expiryTimer); selected = null; consent.checked = false; description.textContent = ""; binding.textContent = ""; if (dialog.open) dialog.close(); focusBack(); }
   function cancelApproval() { const id = dispatching; dispatching = null; closeApproval(); if (id && usable()) void removeRequest(id); }
   function setBusy(value: boolean) {
     busy = value; const disabled = busy || working || !usable();
+    sshStorage?.setBusy(value);
     for (const control of card.querySelectorAll<HTMLButtonElement | HTMLInputElement>("button,input")) control.disabled = disabled || control.dataset.unsupported === "true";
     clientSelect.disabled = disabled;
     for (const control of form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLButtonElement>("input,select,button")) control.disabled = control.hasAttribute("data-cancel") ? false : disabled;
@@ -143,7 +177,8 @@ export function initTransferBroker(ctx: AccessContext, persistence: { get: () =>
   function protocolChanged() {
     inputs.root.value = "/";
     const ssh = protocol.value === "sftp"; advanced.hidden = ssh; ca.disabled = ssh || busy || working; if (ssh) { ca.value = ""; if (draft) delete draft.ca_certificate; } hostKey.required = ssh; hostKey.disabled = !ssh; keygen.hidden = !ssh;
-    if (!ssh) { hostKey.value = ""; publicKey.value = ""; if (draft) { draft.private_key = ""; draft.public_key = ""; } }
+    identityLabel.hidden = identitySelect.hidden = !ssh || !persistence.getKeys;
+    if (!ssh) { hostKey.value = ""; publicKey.value = ""; identitySelect.value = ""; if (draft) { draft.private_key = ""; draft.public_key = ""; delete draft.ssh_key_id; } }
   }
   provider.onchange = () => {
     const item = providers.find(p => p.id === provider.value); providerDoc.hidden = !item; if (item) providerDoc.href = item.docs; providerNote.textContent = item?.note ?? "Serverdaten aus deinem Anbieterkonto übernehmen.";
@@ -158,13 +193,16 @@ export function initTransferBroker(ctx: AccessContext, persistence: { get: () =>
     returnFocus = document.activeElement as HTMLElement; editorOperation++;
     draft = existing && "id" in existing ? { ...existing } : { id: crypto.randomUUID(), label: "", provider: "custom", protocol: "sftp", host: "", port: 22, username: "", root: "/", host_key: "", password: "", private_key: "", public_key: "", ...(existing ? { label: existing.label, host: existing.host, port: existing.port, username: existing.username, protocol: existing.protocol, root: existing.root } : {}) };
     for (const [key, input] of Object.entries(inputs)) input.value = String(draft[key as keyof TransferProfile]);
-    ca.value = draft.ca_certificate ?? ""; publicKey.value = draft.public_key; const item = providers.find(p => p.id === draft?.provider); providerDoc.hidden = !item; if (item) providerDoc.href = item.docs; providerNote.textContent = item?.note ?? "Serverdaten aus deinem Anbieterkonto übernehmen."; for (const option of [...protocol.options]) option.disabled = !!item && !item.protocols.includes(option.value as "sftp" | "ftpes"); protocolChanged(); editor.showModal(); inputs.label.focus(); setBusy(busy);
+    identitySelect.replaceChildren(); const blankIdentity = make("option", "Passwort oder neues Schlüsselpaar verwenden"); blankIdentity.value = ""; identitySelect.append(blankIdentity);
+    for (const key of persistence.getKeys?.() ?? []) { const option = make("option", key.label + " · " + sshFingerprint(key.public_key)); option.value = key.id; identitySelect.append(option); }
+    identitySelect.value = draft.ssh_key_id ?? "";
+    ca.value = draft.ca_certificate ?? ""; publicKey.value = (persistence.getKeys?.() ?? []).find(key => key.id === draft?.ssh_key_id)?.public_key ?? draft.public_key; const item = providers.find(p => p.id === draft?.provider); providerDoc.hidden = !item; if (item) providerDoc.href = item.docs; providerNote.textContent = item?.note ?? "Serverdaten aus deinem Anbieterkonto übernehmen."; for (const option of [...protocol.options]) option.disabled = !!item && !item.protocols.includes(option.value as "sftp" | "ftpes"); protocolChanged(); editor.showModal(); inputs.label.focus(); setBusy(busy);
     if (existing && "warnings" in existing) editorStatus.textContent = existing.warnings.join(" ");
   }
   async function createKey() {
     if (!draft || !usable() || busy || working || protocol.value !== "sftp") return;
     const run = lifetime, generation = ctx.get().generation, operation = editorOperation; working = true; setBusy(busy);
-    try { const pair = await generateTransferKey(() => { guard(run, generation); if (operation !== editorOperation || !editor.open || protocol.value !== "sftp") throw aborted(); }); if (!draft) throw aborted(); draft.private_key = pair.private_key; draft.public_key = pair.public_key; publicKey.value = pair.public_key; password.value = ""; editorStatus.textContent = "Schlüsselpaar erzeugt. Öffentlichen Schlüssel beim Anbieter hinterlegen; danach verschlüsselt speichern."; }
+    try { const pair = await generateTransferKey(() => { guard(run, generation); if (operation !== editorOperation || !editor.open || protocol.value !== "sftp") throw aborted(); }); if (!draft) throw aborted(); delete draft.ssh_key_id; identitySelect.value = ""; draft.private_key = pair.private_key; draft.public_key = pair.public_key; publicKey.value = pair.public_key; password.value = ""; editorStatus.textContent = "Schlüsselpaar erzeugt. Öffentlichen Schlüssel beim Anbieter hinterlegen; danach verschlüsselt speichern."; }
     catch (error) { if (run === lifetime && operation === editorOperation && (error as Error).name !== "AbortError") editorStatus.textContent = "Schlüsselerzeugung fehlgeschlagen. Browser muss Ed25519 unterstützen."; }
     finally { if (run === lifetime) { working = false; setBusy(busy); } }
   }
@@ -180,8 +218,14 @@ export function initTransferBroker(ctx: AccessContext, persistence: { get: () =>
     void (async () => {
       try {
         guard(run, generation); if (operation !== editorOperation) throw aborted();
+        const keys = [...(persistence.getKeys?.() ?? [])];
+        if (persistence.saveState && profile.private_key) {
+          let identity = keys.find(key => sshFingerprint(key.public_key) === sshFingerprint(profile.public_key));
+          if (!identity) { identity = await checkedSSHIdentity(profile.label, profile.private_key, profile.public_key, () => { guard(run, generation); if (operation !== editorOperation) throw aborted(); }); keys.push(identity); }
+          profile = { ...profile, private_key: "", public_key: "", ssh_key_id: identity.id };
+        }
         const rows = validateTransfers([...persistence.get().filter(p => p.id !== profile.id), profile]);
-        await persistence.save(rows);
+        if (persistence.saveState) await persistence.saveState(rows, validateSSHIdentities(keys)); else await persistence.save(rows);
         if (run !== lifetime) return;
         guard(run, generation); if (operation !== editorOperation) return;
         closeEditor(); preview.replaceChildren(); renderProfiles(); ctx.announce("Transferprofil verschlüsselt gespeichert.");
@@ -235,7 +279,8 @@ export function initTransferBroker(ctx: AccessContext, persistence: { get: () =>
     void (async () => {
       try {
         assert(); const profile = persistence.get().find(p => p.id === request.connection_id); if (!profile) throw aborted();
-        const sealed = await sealTransferProfile(profile, request, snapshot.public_key, snapshot.epoch, snapshot.revision, request.operation === "get", assert);
+        const resolved = resolveSSHProfile(profile, persistence.getKeys?.() ?? []);
+        const sealed = await sealTransferProfile(resolved, request, snapshot.public_key, snapshot.epoch, snapshot.revision, request.operation === "get", assert);
         assert(); dispatching = request.id;
         await localRequest(ctx, base + "/approve/" + encodeURIComponent(request.id), controller.signal, { epoch: snapshot.epoch, revision: snapshot.revision, sealed });
         assert(); dispatching = null; closeApproval(); status.textContent = "Einmalige Transferfreigabe erteilt. Du kannst sie jederzeit widerrufen."; await refresh();
@@ -289,9 +334,10 @@ export function initTransferBroker(ctx: AccessContext, persistence: { get: () =>
     const token = ctx.get().token;
     if (notify && token) void fetch(base + "/lock", { method: "POST", credentials: "omit", cache: "no-store", keepalive: true, headers: { "Content-Type": "application/json", "X-HeavenKey-Client": "password-manager", "X-HeavenKey-Token": token }, body: "{}" }).catch(() => { ctx.announce("Transfer-Widerruf konnte nicht bestätigt werden. Brokerstatus prüfen.", true); });
     lifetime++; controller.abort(); controller = new AbortController(); clearInterval(timer); timer = undefined; state = null; dispatching = null; working = false; refreshing = false; returnFocus = null;
+    sshStorage?.clear();
     closeEditor(); closeApproval(); preview.replaceChildren(); profileList.replaceChildren(); requestList.replaceChildren(); audit.replaceChildren(); file.value = ""; status.textContent = "Transfer gesperrt; lokale Profildaten ausgeblendet."; setBusy(busy);
   }
-  async function unlocked() { if (!usable()) return; if (!timer) timer = setInterval(() => { if (!usable()) clear(); else if (!settings.hidden && !document.hidden) void refresh(); }, 3000); renderProfiles(); if (!settings.hidden) await refresh(); }
+  async function unlocked() { if (!usable()) return; sshStorage?.refresh(); if (!timer) timer = setInterval(() => { if (!usable()) clear(); else if (!settings.hidden && !document.hidden) void refresh(); }, 3000); renderProfiles(); if (!settings.hidden) await refresh(); }
   const observer = new MutationObserver(() => { if (settings.hidden) { closeEditor(); cancelApproval(); preview.replaceChildren(); } else void refresh(); }); observer.observe(settings, { attributes: true, attributeFilter: ["hidden"] });
   setBusy(false); return { unlocked, clear, setBusy };
 }

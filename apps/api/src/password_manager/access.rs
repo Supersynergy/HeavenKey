@@ -455,6 +455,44 @@ async fn remove(
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+struct RenameCredential {
+    label: String,
+    revision: u64,
+    vault_salt: String,
+}
+async fn rename(
+    State(app): State<VaultApp>,
+    headers: HeaderMap,
+    axum::extract::Path(id): axum::extract::Path<String>,
+    Json(input): Json<RenameCredential>,
+) -> ApiResult<Json<Value>> {
+    access(&app, &headers, true)?;
+    let label = input.label.trim();
+    if label.is_empty()
+        || label.chars().count() > 48
+        || label.chars().any(char::is_control)
+        || !decoded(&id, 1, 1024)
+    {
+        return Err(invalid());
+    }
+    let mut db = app.db.lock().map_err(internal)?;
+    let tx = db.transaction().map_err(internal)?;
+    checked_vault(&tx, input.revision, &input.vault_salt)?;
+    let changed = tx
+        .execute(
+            "UPDATE password_passkeys SET label=?1 WHERE id=?2 AND vault_salt=?3",
+            params![label, id, input.vault_salt],
+        )
+        .map_err(internal)?;
+    if changed != 1 {
+        return Err(ApiError(StatusCode::NOT_FOUND, "credential_removed"));
+    }
+    tx.commit().map_err(internal)?;
+    Ok(Json(json!({"id":id,"label":label})))
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct NewShare {
     id: String,
     source_id: String,
@@ -730,7 +768,10 @@ pub(super) fn routes() -> Router<VaultApp> {
         .route("/api/password-passkeys/enroll/finish", post(enroll_finish))
         .route("/api/password-passkeys/auth/start", post(auth_start))
         .route("/api/password-passkeys/auth/finish", post(auth_finish))
-        .route("/api/password-passkeys/{id}", axum::routing::delete(remove))
+        .route(
+            "/api/password-passkeys/{id}",
+            axum::routing::delete(remove).post(rename),
+        )
         .route("/api/password-shares", get(shares).post(create_share))
         .route("/api/password-shares/{id}", axum::routing::delete(revoke))
         .route(
@@ -788,6 +829,86 @@ mod tests {
             nonce: URL_SAFE_NO_PAD.encode([0u8; 12]),
             ciphertext: URL_SAFE_NO_PAD.encode([0u8; 32]),
         }
+    }
+    #[tokio::test]
+    async fn passkey_rename_binds_owner_revision_and_vault_without_mutating_credentials() {
+        let app = app();
+        let id = URL_SAFE_NO_PAD.encode([7u8; 32]);
+        let salt = URL_SAFE_NO_PAD.encode([0u8; 16]);
+        app.db.lock().unwrap().execute("INSERT INTO password_passkeys(id,label,vault_salt,passkey,wrap,counter) VALUES(?1,'Old',?2,'original-key','original-wrap',7)", params![id, salt]).unwrap();
+        let input = |label: &str, revision: u64, vault_salt: &str| {
+            Json(RenameCredential {
+                label: label.into(),
+                revision,
+                vault_salt: vault_salt.into(),
+            })
+        };
+        let mut bad_headers = headers(&app);
+        bad_headers.insert("x-heavenkey-token", "wrong-owner".parse().unwrap());
+        assert!(
+            rename(
+                State(app.clone()),
+                bad_headers,
+                axum::extract::Path(id.clone()),
+                input("New", 1, &salt)
+            )
+            .await
+            .is_err()
+        );
+        for (label, revision, vault_salt) in [
+            ("New", 2, salt.as_str()),
+            ("New", 1, "other-salt"),
+            ("\n", 1, salt.as_str()),
+        ] {
+            assert!(
+                rename(
+                    State(app.clone()),
+                    headers(&app),
+                    axum::extract::Path(id.clone()),
+                    input(label, revision, vault_salt)
+                )
+                .await
+                .is_err()
+            );
+        }
+        let Json(result) = rename(
+            State(app.clone()),
+            headers(&app),
+            axum::extract::Path(id.clone()),
+            input(" Work Mac ", 1, &salt),
+        )
+        .await
+        .unwrap();
+        assert_eq!(result["label"], "Work Mac");
+        let stored: (String, String, String, i64) = app
+            .db
+            .lock()
+            .unwrap()
+            .query_row(
+                "SELECT label,passkey,wrap,counter FROM password_passkeys WHERE id=?1",
+                [&id],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
+            )
+            .unwrap();
+        assert_eq!(
+            stored,
+            (
+                "Work Mac".into(),
+                "original-key".into(),
+                "original-wrap".into(),
+                7
+            )
+        );
+        assert!(
+            rename(
+                State(app.clone()),
+                headers(&app),
+                axum::extract::Path(URL_SAFE_NO_PAD.encode([8u8; 32])),
+                input("Missing", 1, &salt)
+            )
+            .await
+            .is_err()
+        );
     }
     #[tokio::test]
     async fn owner_share_crud_exposes_only_cipher_and_metadata() {

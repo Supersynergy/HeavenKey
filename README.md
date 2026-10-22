@@ -6,9 +6,9 @@
 
 Passwörter und Formularprofile lokal verwalten. HeavenKey verschlüsselt den Tresor im Browser und speichert ihn auf deinem Computer. Für den Passwortmanager brauchst du weder ein Cloudkonto noch eine Internetverbindung.
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.16.0](https://img.shields.io/badge/version-0.16.0-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.16.0-rc.1)
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.17.0](https://img.shields.io/badge/version-0.17.0-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.17.0-rc.1)
 
-[Downloads](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.16.0-rc.1) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Dateitransfer](docs/TRANSFER-BROKER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
+[Downloads](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.17.0-rc.1) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Dateitransfer](docs/TRANSFER-BROKER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
 
 ![HeavenKey mit Navigation, Eintragsliste und Login-Details im hellen Design](docs/screenshots/vault-desktop.png)
 
@@ -22,16 +22,16 @@ Die ursprüngliche Idee steckt jetzt im Passwortmanager: den lokalen Tresor mit 
 
 ## Starten
 
-1. Lade das Paket für deinen Computer aus dem [aktuellen Release](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.16.0-rc.1). Prüfe es mit der dortigen `SHA256SUMS` und entpacke es.
+1. Lade das Paket für deinen Computer aus dem [aktuellen Release](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.17.0-rc.1). Prüfe es mit der dortigen `SHA256SUMS` und entpacke es.
 2. Öffne den enthaltenen Starter. Er startet den lokalen Dienst und öffnet `http://localhost:18240/passwords/` im Browser.
 3. Lege ein Masterpasswort mit mindestens 14 Zeichen fest. Exportiere anschließend eine verschlüsselte Sicherung und prüfe ihre Wiederherstellung.
 
 | Computer | Paket | Starter |
 | --- | --- | --- |
-| macOS mit Apple Silicon | `HeavenKey-0.16.0-macos-arm64.zip` | `Start HeavenKey.command` |
-| macOS mit Intel-Prozessor | `HeavenKey-0.16.0-macos-x64.zip` | `Start HeavenKey.command` |
-| Linux x64 | `HeavenKey-0.16.0-linux-x64.tar.gz` | `./start.sh` |
-| Linux ARM64 | `HeavenKey-0.16.0-linux-arm64.tar.gz` | `./start.sh` |
+| macOS mit Apple Silicon | `HeavenKey-0.17.0-macos-arm64.zip` | `Start HeavenKey.command` |
+| macOS mit Intel-Prozessor | `HeavenKey-0.17.0-macos-x64.zip` | `Start HeavenKey.command` |
+| Linux x64 | `HeavenKey-0.17.0-linux-x64.tar.gz` | `./start.sh` |
+| Linux ARM64 | `HeavenKey-0.17.0-linux-arm64.tar.gz` | `./start.sh` |
 
 Der neue Transfer-Broker wird für macOS und Linux ausgeliefert. Für Windows steht weiterhin die [vorherige Ausgabe 0.15](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.15.0-rc.1) bereit; eine native Windows-Abnahme des neuen Brokers fehlt.
 
@@ -45,10 +45,11 @@ Für den Tresor genügt ein aktueller Browser. Die optionale Agenten-Sandbox ben
 - **Importvorschau:** eine CSV lokal einlesen und neue, identische oder abweichende Einträge prüfen. Identische Duplikate werden zunächst übersprungen; einen Konflikt ersetzt du ausdrücklich.
 - **Sicherungen:** den verschlüsselten Tresor exportieren und mit seinem Masterpasswort wiederherstellen. Profile bleiben bei Login-Änderungen und Passwortwechseln erhalten.
 - **Diskrete Ansicht:** private Detailfelder verdecken; bei Bedarf sofort beim Wechsel in den Hintergrund sperren. Ein lokaler Check zeigt kurze oder wiederverwendete Passwörter, ohne einen Datenleckdienst anzufragen.
-- **Passkey-Entsperren:** unter Einstellungen einen PRF-fähigen Passkey hinzufügen und den bestehenden Tresor damit öffnen. Das Masterpasswort bleibt für Sicherungen, Wiederherstellung und den Rückweg erforderlich.
+- **Passkey-Entsperren:** unter Einstellungen einen PRF-fähigen Passkey hinzufügen, benennen und den bestehenden Tresor damit öffnen. Das Masterpasswort bleibt für Sicherungen, Wiederherstellung und den Rückweg erforderlich.
 - **Befristete Freigaben:** einzelne Login- oder Profilfelder ausdrücklich auswählen und als verschlüsselte Kopie für fünf Minuten bis sieben Tage freigeben. Der erste Empfänger bindet seinen eigenen Passkey an die Freigabe. Weitere Abrufe erfordern denselben Passkey.
 - **Agent-Zugriff:** pro Anmeldung einen Login und die genaue Website freigeben. Der lokale Broker nutzt einen eigenen Browser ohne Zwischenablage; Agenten erhalten eine begrenzte Textansicht. [Einrichtung und Schutzgrenze](docs/AGENT-BROKER.md).
 - **Dateitransfer:** SFTP-/FTPES-Profile und eigene Ed25519-Schlüssel verschlüsselt verwalten. Jede Agentenaktion benötigt Zustimmung; Downloads legen Dateiinhalt offen, Uploads binden Ziel und Hash. Zehn Client-Übergaben und zehn Anbieterprofile einschließlich netcup erleichtern die Einrichtung. Ein serverseitig beschränktes Transferkonto bleibt Voraussetzung. [Anleitung und Grenzen](docs/TRANSFER-BROKER.md).
+- **SSH-Schlüsselspeicher:** Ed25519-Identitäten einmal erzeugen oder als PKCS8-/Public-Key-Paar importieren und für mehrere SFTP-Verbindungen verwenden. Die Paarprüfung und Duplikatprüfung laufen vor dem Speichern. Eine Verbindungsvorschau übernimmt geprüfte Angaben erst nach Bestätigung. [Formate, Sicherung und Grenzen](docs/SSH-KEYS.md).
 - **Erste Schritte:** der Einrichtungsassistent führt zu erstem Login, Import, Sicherung und optionalem Passkey. Vorhandene Sicherungen lassen sich direkt vom Sperrbildschirm wiederherstellen.
 
 Ohne zusätzliche Konfiguration funktionieren Freigabelinks nur auf demselben Computer. Für andere Geräte braucht der laufende Dienst eine erreichbare HTTPS-Adresse mit `HEAVENKEY_SHARE_ORIGIN` und einen korrekt eingerichteten Reverse-Proxy. Die Oberfläche weist vor der Erstellung darauf hin. [Einrichtung und Sicherheitsgrenzen](docs/ACCESS-AND-SHARING.md) erklären Empfängerbindung, Widerruf und Betrieb.

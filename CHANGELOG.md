@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.17.0 (Release candidate) — 2026-10-22
+
+- Wiederverwendbare Ed25519-Identitäten im verschlüsselten Tresor: erzeugen, öffentlichen Schlüssel herunterladen und vorhandene Verbindungsschlüssel ohne Duplikate übernehmen.
+- Import passender PKCS8-/OpenSSH-Public-Key-Dateien mit kryptografischer Paarprüfung. Referenzierte Schlüssel bleiben vor dem Entfernen geschützt; ungenutzte Schlüssel benötigen eine Bestätigung.
+- Bestehende SSH-Identitäten für mehrere SFTP-Verbindungen auswählen. Der Besitzerbrowser löst Schlüsselreferenzen vor der versiegelten Brokerübergabe auf.
+- Geprüfte Vorschau für Hostnamen, SFTP-/FTPES-Adressen und einfache SSH-Verbindungsangaben. Feldübernahme erfordert Zustimmung und führt keine Befehle aus.
+- Gemeinsamer Einstieg zu Passkeys, SSH-Schlüsseln, Verbindungen und Formularprofilen. Passkey-Namen lassen sich mit Prüfung von Tresor und Revision ändern.
+- Keine zusätzliche Abhängigkeit. Website-Passkey-Verwaltung, OS-SSH-Agent und weitere private Schlüsselformate bleiben offen.
+
 ## 0.16.0 (Release candidate) — 2026-10-22
 
 - SFTP-/FTPES-Broker für macOS und Linux: verschlüsselte Verbindungsprofile, Ed25519-Schlüsselerzeugung im Besitzerbrowser und ausdrückliche Freigabe jeder Dateiaktion.
