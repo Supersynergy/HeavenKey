@@ -6,19 +6,34 @@ use std::time::Duration;
 
 pub fn run(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     if args.len() != 3 {
-        return Err("Usage: --broker-agent PORT connect|request|status|read|close < request.json (see AGENT-BROKER.md)".into());
+        return Err("Usage: --broker-agent PORT connect|request|status|read|close|transfer-request|transfer-status < request.json (see TRANSFER-BROKER.md)".into());
     }
     let port: u16 = args[1].parse().map_err(|_| "Invalid local broker port")?;
     if port == 0 {
         return Err("Invalid local broker port".into());
     }
     let command = args[2].as_str();
-    if !matches!(command, "connect" | "request" | "status" | "read" | "close") {
+    if !matches!(
+        command,
+        "connect"
+            | "request"
+            | "status"
+            | "read"
+            | "close"
+            | "transfer-request"
+            | "transfer-status"
+    ) {
         return Err("Unsupported broker command".into());
     }
     let mut input = zeroize::Zeroizing::new(Vec::new());
-    std::io::stdin().take(17_000).read_to_end(&mut input)?;
-    if input.len() > 16_384 {
+    std::io::stdin().take(1_500_001).read_to_end(&mut input)?;
+    if input.len()
+        > if command.starts_with("transfer-") {
+            1_500_000
+        } else {
+            16_384
+        }
+    {
         return Err("Broker request too large".into());
     }
     let mut body: Value =
@@ -65,7 +80,14 @@ pub fn call(
     if port == 0
         || !matches!(
             action,
-            "connect" | "request" | "status" | "read" | "close" | "disconnect"
+            "connect"
+                | "request"
+                | "status"
+                | "read"
+                | "close"
+                | "disconnect"
+                | "transfer-request"
+                | "transfer-status"
         )
     {
         return Err("Unsupported broker operation");
@@ -83,7 +105,14 @@ pub fn call(
     }
     let body =
         zeroize::Zeroizing::new(serde_json::to_vec(value).map_err(|_| "Invalid broker request")?);
-    if body.len() > 16384 || cancel.load(Ordering::Acquire) {
+    if body.len()
+        > if action.starts_with("transfer-") {
+            1_500_000
+        } else {
+            16_384
+        }
+        || cancel.load(Ordering::Acquire)
+    {
         return Err("Broker request cancelled or too large");
     }
     let mut stream = TcpStream::connect_timeout(
@@ -97,7 +126,12 @@ pub fn call(
     stream
         .set_write_timeout(Some(Duration::from_millis(200)))
         .map_err(|_| "Broker IO failed")?;
-    write!(stream,"POST /api/password-broker/agent/{action} HTTP/1.1\r\nHost: localhost:{port}\r\nX-HeavenKey-Client: password-agent\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n",body.len()).map_err(|_|"Broker IO failed")?;
+    let path = match action {
+        "transfer-request" => "/api/transfer-broker/agent/request".to_owned(),
+        "transfer-status" => "/api/transfer-broker/agent/status".to_owned(),
+        _ => format!("/api/password-broker/agent/{action}"),
+    };
+    write!(stream,"POST {path} HTTP/1.1\r\nHost: localhost:{port}\r\nX-HeavenKey-Client: password-agent\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n",body.len()).map_err(|_|"Broker IO failed")?;
     if let Some(token) = token {
         write!(stream, "X-HeavenKey-Token: {token}\r\n").map_err(|_| "Broker IO failed")?;
     }
@@ -115,7 +149,7 @@ pub fn call(
         match stream.read(&mut chunk) {
             Ok(0) => break,
             Ok(n) => {
-                if response.len() + n > 1_049_600 {
+                if response.len() + n > 1_500_000 {
                     return Err("Broker response too large");
                 }
                 response.extend_from_slice(&chunk[..n]);

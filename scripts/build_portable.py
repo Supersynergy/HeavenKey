@@ -46,7 +46,7 @@ def source_fingerprint():
             "scripts/sandbox/Dockerfile",
         )
     ]
-    for name in ("apps/api", "crates", "apps/web/src", "apps/demo", "apps/extension", "packages/forms"):
+    for name in ("apps/api", "crates", "apps/web/src", "apps/demo", "apps/extension", "packages/forms", "packages/transfers"):
         directory = ROOT / name
         for path in directory.rglob("*"):
             if not path.is_file():

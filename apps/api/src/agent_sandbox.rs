@@ -18,8 +18,8 @@ use std::{
 use zeroize::{Zeroize, Zeroizing};
 
 type SafeResult<T> = Result<T, &'static str>;
-const REQUEST_MAX: usize = 16_384;
-const REPLY_MAX: usize = 1_048_576;
+const REQUEST_MAX: usize = 1_500_000;
+const REPLY_MAX: usize = 1_500_000;
 // Leave room for the fixed host receipt and final static error message.
 const AGENT_OUTPUT_MAX: usize = REPLY_MAX - 4096;
 const PATH_ENV: &str = "PATH=/usr/local/bin:/usr/bin:/bin";
@@ -83,11 +83,60 @@ struct ReadPage {
     path: String,
 }
 
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct TransferAsk {
+    connection_id: String,
+    operation: String,
+    path: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    content: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    sha256: Option<String>,
+}
+
 fn id_valid(id: &str) -> bool {
     uuid::Uuid::parse_str(id).is_ok_and(|v| v.to_string() == id)
 }
 fn typed_body(op: &str, body: Value) -> SafeResult<Value> {
+    if !op.starts_with("transfer-")
+        && serde_json::to_vec(&body)
+            .map_err(|_| "Invalid sandbox JSON")?
+            .len()
+            > 16_384
+    {
+        return Err("Sandbox request too large");
+    }
     match op {
+        "transfer-request" => {
+            let v: TransferAsk =
+                serde_json::from_value(body).map_err(|_| "Invalid transfer fields")?;
+            if !id_valid(&v.connection_id)
+                || !matches!(v.operation.as_str(), "list" | "stat" | "get" | "put")
+                || v.path.len() > 1024
+                || (v.path.is_empty() && v.operation != "list")
+                || v.path.starts_with('/')
+                || v.path.chars().any(|c| c.is_control() || c == '\\')
+                || v.path.split('/').any(|s| matches!(s, "." | ".."))
+                || (v.operation == "put"
+                    && (v.content.is_none()
+                        || v.sha256.as_ref().is_none_or(|s| {
+                            s.len() != 64 || !s.bytes().all(|b| b.is_ascii_hexdigit())
+                        })))
+                || (v.operation != "put" && (v.content.is_some() || v.sha256.is_some()))
+            {
+                return Err("Invalid transfer fields");
+            }
+            serde_json::to_value(v).map_err(|_| "Invalid transfer fields")
+        }
+        "transfer-status" => {
+            let v: RequestId =
+                serde_json::from_value(body).map_err(|_| "Invalid transfer status")?;
+            if !id_valid(&v.request_id) {
+                return Err("Invalid transfer request ID");
+            }
+            serde_json::to_value(v).map_err(|_| "Invalid transfer status")
+        }
         "request" => {
             let v: Ask = serde_json::from_value(body).map_err(|_| "Invalid request fields")?;
             if v.scope != "login_read"
@@ -1241,6 +1290,8 @@ fn http_request(stream: &mut TcpStream) -> SafeResult<(String, Value)> {
         "/status" => "status",
         "/read" => "read",
         "/close" => "close",
+        "/transfer/request" => "transfer-request",
+        "/transfer/status" => "transfer-status",
         _ => return Err("Unsupported sandbox operation"),
     };
     let mut length = None;
@@ -1445,6 +1496,7 @@ mod tests {
                     _ => panic!("Paired client did not disconnect after lifecycle exit"),
                 }
             };
+            stream.set_nonblocking(false).unwrap();
             stream
                 .set_read_timeout(Some(Duration::from_secs(1)))
                 .unwrap();
@@ -1622,6 +1674,40 @@ mod tests {
             assert!(typed_body("read", json!({"session_id":id,"path":path})).is_err());
         }
         assert!(typed_body("read", json!({"session_id":id,"path":"/safe"})).is_ok());
+    }
+
+    #[test]
+    fn transfer_relay_never_accepts_credentials_or_endpoints() {
+        let id = uuid::Uuid::new_v4().to_string();
+        let allowed = json!({"connection_id":id,"operation":"list","path":""});
+        assert!(typed_body("transfer-request", allowed.clone()).is_ok());
+        for field in [
+            "password",
+            "private_key",
+            "token",
+            "host",
+            "url",
+            "protocol",
+            "command",
+            "ca_certificate",
+        ] {
+            let mut body = allowed.clone();
+            body[field] = json!("untrusted");
+            assert!(typed_body("transfer-request", body).is_err());
+        }
+        for path in [
+            "/etc/passwd",
+            "../secret",
+            "a/../../secret",
+            "a\\secret",
+            "a\ncommand",
+        ] {
+            let mut body = allowed.clone();
+            body["path"] = json!(path);
+            assert!(typed_body("transfer-request", body).is_err());
+        }
+        assert!(typed_body("transfer-status", json!({"request_id":id})).is_ok());
+        assert!(typed_body("transfer-status", json!({"request_id":id,"token":"x"})).is_err());
     }
     #[test]
     fn image_environment_is_closed_allowlist() {

@@ -108,6 +108,8 @@ def dependency_notices(destination):
             license_files.append(source / "openssl/LICENSE.txt")
         if package["name"] == "libdbus-sys":
             license_files.append(source / "vendor/dbus/COPYING")
+        if package["name"] == "libssh2-sys":
+            license_files.append(source / "libssh2/COPYING")
         for path in license_files:
             target = destination / "licenses" / name / path.name
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -190,7 +192,7 @@ def desktop(target):
         for name in (
             "PASSWORD-MANAGER.md", "PASSWORD-MANAGER-GAPS.md",
             "PASSWORD-MANAGER-VERIFICATION.md", "PASSWORD-MANAGER-RESEARCH-TOOLS.md",
-            "ACCESS-AND-SHARING.md", "AGENT-BROKER.md", "AGENT-SANDBOX.md", "VAULT-KDF.md",
+            "ACCESS-AND-SHARING.md", "AGENT-BROKER.md", "AGENT-SANDBOX.md", "VAULT-KDF.md", "TRANSFER-BROKER.md",
             "password-manager-matrix.json", "LICENSING.md",
         ):
             shutil.copyfile(ROOT / "docs" / name, directory / name)

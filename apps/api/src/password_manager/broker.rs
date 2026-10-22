@@ -149,6 +149,29 @@ impl Window {
 fn throttled() -> ApiError {
     ApiError(StatusCode::TOO_MANY_REQUESTS, "broker_rate_limited")
 }
+
+pub(super) fn transfer_client(app: &VaultApp, headers: &HeaderMap) -> ApiResult<(String, String)> {
+    let mut state = app.broker.state(app)?;
+    if state.owner.is_none() {
+        return Err(denied());
+    }
+    let client = state.client(headers)?;
+    Ok((client.id, client.label))
+}
+
+pub(super) fn transfer_owner(app: &VaultApp) -> ApiResult<(u64, u64)> {
+    let state = app.broker.state(app)?;
+    if state.owner.is_none() {
+        return Err(denied());
+    }
+    Ok((state.epoch, state.revision))
+}
+
+pub(super) fn transfer_client_alive(app: &VaultApp, id: &str) -> bool {
+    app.broker
+        .state(app)
+        .is_ok_and(|state| state.owner.is_some() && state.clients.contains_key(id))
+}
 impl Inner {
     fn revoke_client(&mut self, id: &str) {
         self.clients.remove(id);
@@ -472,6 +495,7 @@ async fn lock(
 ) -> ApiResult<Json<Value>> {
     access(&app, &h, true)?;
     app.broker.invalidate();
+    app.transfer.invalidate();
     Ok(Json(json!({"locked":true})))
 }
 async fn pairing(
@@ -846,6 +870,8 @@ async fn disconnect(
     let client = s.authenticate(&h, false)?;
     s.revoke_client(&client.id);
     s.audit("disconnect", "ok", &client.id);
+    drop(s);
+    app.transfer.revoke_client(&client.id);
     Ok(Json(json!({"disconnected":true})))
 }
 async fn revoke(
@@ -878,6 +904,10 @@ async fn revoke(
         _ => return Err(invalid()),
     }
     s.audit("revoke", "ok", &id);
+    drop(s);
+    if kind == "clients" {
+        app.transfer.revoke_client(&id);
+    }
     Ok(Json(json!({"revoked":true})))
 }
 pub fn routes() -> Router<VaultApp> {
@@ -915,6 +945,7 @@ mod tests {
             extensions: Arc::new(Mutex::new(Extensions::default())),
             access: Arc::new(access::Access::new(18268, None).unwrap()),
             broker: Arc::new(Broker::new()),
+            transfer: Arc::new(super::transfer::TransferBroker::new()),
         }
     }
     fn owner(a: &VaultApp) -> HeaderMap {

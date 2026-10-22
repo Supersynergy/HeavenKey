@@ -1,6 +1,7 @@
 /** Local password vault: only authenticated ciphertext crosses the API boundary. */
 import { validateProfiles, type FormProfile } from "../../../packages/forms/schema";
 import { argon2idAsync } from "@noble/hashes/argon2.js";
+import { validateTransfers, type TransferProfile } from "../../../packages/transfers/schema";
 export const ITERATIONS = 600_000;
 export const MAX_ITEMS = 1000;
 export const MAX_PLAIN_BYTES = 1_000_000;
@@ -8,7 +9,7 @@ export const MAX_FILE_BYTES = 2_000_000;
 type Ciphertext = { salt: string; iv: string; ciphertext: string };
 export type Envelope = Ciphertext & ({ version: 1; kdf: "PBKDF2-SHA256"; iterations: 600000 } | { version: 2; kdf: "Argon2id"; iterations: 3; memory_kib: 65536; parallelism: 1 });
 export type Login = { id: string; title: string; username: string; password: string; url: string; notes: string; totp: string; tags: string[]; favorite: boolean };
-export type Vault = { version: 1 | 2; entries: Login[]; profiles?: FormProfile[] };
+export type Vault = { version: 1 | 2; entries: Login[]; profiles?: FormProfile[]; transfers?: TransferProfile[] };
 const utf8 = new TextEncoder();
 const aad = utf8.encode("HeavenKey password vault v1");
 const argon2Scheme = { version: 2, kdf: "Argon2id", iterations: 3, memory_kib: 65536, parallelism: 1 } as const;
@@ -77,6 +78,7 @@ async function deriveArgon2(master: string, salt: Uint8Array<ArrayBuffer>): Prom
 export function validateVault(value: unknown): Vault {
   if (!object(value) || (value.version !== 1 && value.version !== 2) || !Array.isArray(value.entries) || value.entries.length > MAX_ITEMS || (value.version === 2 && value.profiles === undefined)) throw new Error("Ungültige Tresordaten oder zu viele Einträge (maximal 1000).");
   if (value.profiles !== undefined) validateProfiles(value.profiles);
+  if (value.transfers !== undefined) validateTransfers(value.transfers);
   const ids = new Set<string>();
   for (const entry of value.entries) {
     if (!object(entry)) throw new Error("Ungültiger Eintrag.");

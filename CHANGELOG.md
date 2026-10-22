@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.16.0 (Release candidate) — 2026-10-22
+
+- SFTP-/FTPES-Broker für macOS und Linux: verschlüsselte Verbindungsprofile, Ed25519-Schlüsselerzeugung im Besitzerbrowser und ausdrückliche Freigabe jeder Dateiaktion.
+- Getrennte Agentenrechte, versiegelte Zugangsdatenübergabe, Host-Key-Pinning beziehungsweise verpflichtende TLS-/Hostnamenprüfung, begrenzte Datei- und Verzeichnisgrößen, Widerruf sowie feste Worker-/DNS-Grenzen.
+- Serverseitig beschränktes Transferkonto mit Kontowurzel `/` erforderlich. Portable Metadatenprüfungen ersetzen keine serverseitige Ordnersperre und beseitigen keine Rennen mit anderen Remote-Schreibern.
+- FileZilla-Importvorschau, Exporte ohne Geheimnisse und Einrichtungshilfen für zehn Transferprogramme sowie zehn Hosting-Anbieter einschließlich netcup. Native Drittprogramm- und Kundenkontoabnahme wird nicht behauptet.
+- Neue Ausgaben für macOS und Linux; Windows verbleibt beim vorherigen Release. Signierung, Apple-Notarisierung und externes Sicherheitsaudit stehen weiterhin aus.
+
 ## 0.15.0 (Release candidate)
 
 - New vaults and explicit rekeys use bounded Argon2id (64 MiB, three passes, one lane) with AES-256-GCM. Legacy PBKDF2 vaults and backups remain readable.

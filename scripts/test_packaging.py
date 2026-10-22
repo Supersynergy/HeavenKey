@@ -73,6 +73,16 @@ class PackagingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             release.verify_architecture(binary, "x86_64-pc-windows-gnu")
 
+    def test_transfer_catalog_changes_invalidate_the_build_fingerprint(self):
+        self.create_build_sources()
+        catalog = self.root / "packages/transfers/catalog.ts"
+        catalog.parent.mkdir(parents=True)
+        catalog.write_text("source catalog")
+        with patch.object(build_portable, "ROOT", self.root):
+            baseline = build_portable.source_fingerprint()
+            catalog.write_text("changed catalog")
+            self.assertNotEqual(baseline, build_portable.source_fingerprint())
+
     def test_extensions_package_bundles_with_only_explicit_access(self):
         self.create_build_sources()
         for name in ("chromium", "firefox"):

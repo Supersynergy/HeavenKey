@@ -1,4 +1,8 @@
-# Passwortmanager 0.14.0 · Abnahme und Grenzen
+# Passwortmanager 0.16.0 RC · Abnahme und Grenzen
+
+Diese Ausgabe ergänzt den SFTP-/FTPES-Broker mit verschlüsselten Verbindungsprofilen und SSH-Schlüsseln, ausdrücklichen Einzelaufträgen und Metadatenexporten für zehn Transferprogramme. Zehn Anbietervorlagen einschließlich netcup erleichtern die Einrichtung. Die Vorlagen sind keine Abnahme echter Kundenkonten oder sämtlicher nativer Fremdprogramme. Der [Transfervertrag](TRANSFER-BROKER.md) verlangt ein serverseitig eingeschränktes Konto; HeavenKey kann dessen Verzeichnisgrenze nicht beweisen.
+
+`scripts/transfer_broker_e2e.ts` prüft echte SFTP- und FTPES-Verbindungen zu synthetischen lokalen Servern: Auflisten, Metadaten, Download, Upload, Schlüsselanmeldung, Host- und Zertifikatsprüfung, Ablehnung ungültiger Aufträge, Zustimmung, Widerruf, Sperren und verschlüsselte Persistenz. Der Releasebericht nennt die tatsächlich ausgeführten Plattformen und bindet Quellen sowie Binärdateien. Ältere Windows-Pakete gehören nicht zum neuen Transfer-Release.
 
 Die Ausgabe integriert optionales PRF-Passkey-Entsperren, befristete verschlüsselte Feldkopien mit Empfänger-Passkey und einen Einrichtungsassistenten in den bestehenden lokalen Passwortmanager. Browser-Autofill, Formularprofile, Schnellzugriff und Importvorschau bleiben erhalten. Ein allgemeiner Vorsprung gegenüber Enpass ist nicht nachgewiesen.
 
@@ -30,13 +34,13 @@ Der direkte Broker ist kein externer Sicherheitsnachweis. Der zusätzliche Start
 
 ## Paketbindung und Laufzeitumgebungen
 
-Alle fünf Desktop-Pakete müssen denselben Quellfingerprint enthalten. Die Manifeste nennen Version, Git-Commit und Binärhash. `SHA256SUMS` bindet Archive und Abnahmebericht. Veraltete Builds werden abgelehnt; Lizenztexte und erforderliche Drittanbieterquellen liegen bei.
+Alle vier Desktop-Pakete dieses Releases müssen denselben Quellfingerprint enthalten. Die Manifeste nennen Version, Git-Commit und Binärhash. `SHA256SUMS` bindet Archive und Abnahmebericht. Veraltete Builds werden abgelehnt; Lizenztexte und erforderliche Drittanbieterquellen liegen bei.
 
 | Paket | Prüfumgebung und Aussagegrenze |
 | --- | --- |
 | macOS ARM64 | Natives Apple Silicon; Browserfälle gegen die entpackte Binärdatei. |
 | macOS x64 | Rosetta auf Apple Silicon; kein physischer Intel-Mac. |
-| Windows x64 | Wine; keine native Windows-/Hello-Abnahme. |
+| Windows x64 (älterer Release) | Wine; keine native Windows-/Hello-Abnahme und keine Abnahme des neuen Transfer-Brokers. |
 | Linux ARM64 | ARM64-Linux-Container ohne WAN. |
 | Linux x64 | QEMU im Linux-Container ohne WAN; kein physischer x64-Linux-Rechner. |
 

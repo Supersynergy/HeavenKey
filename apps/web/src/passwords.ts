@@ -3,6 +3,7 @@ import { createIcon, initPresentation } from "./passwords-presentation";
 import { initBrand } from "./passwords-brand";
 import { initWorkflows } from "./passwords-workflows";
 import { initPasswordBroker } from "./passwords-broker";
+import { initTransferBroker } from "./passwords-transfer";
 import { initPasswordAccess } from "./passwords-access";
 import { initPasswordSharing } from "./passwords-sharing";
 import { initOnboarding } from "./passwords-onboarding";
@@ -29,6 +30,7 @@ let workflows: ReturnType<typeof initWorkflows> | undefined;
 let passwordAccess: ReturnType<typeof initPasswordAccess> | undefined;
 let passwordSharing: ReturnType<typeof initPasswordSharing> | undefined;
 let passwordBroker: ReturnType<typeof initPasswordBroker> | undefined;
+let transferBroker: ReturnType<typeof initTransferBroker> | undefined;
 let onboarding: ReturnType<typeof initOnboarding> | undefined;
 function refreshNavigation() {
   const special = !byId("health-view").hidden ? "nav-health" : !byId("settings-view").hidden ? "nav-settings" : null;
@@ -60,11 +62,11 @@ function setBusy(next: boolean) {
   busy = next;
   document.querySelectorAll<HTMLButtonElement>("button").forEach(button => { if (button.id !== "lock") button.disabled = next || (button.id === "unlock" && !ready) || (getPrivacyPreferences().discreet && ["reveal-detail-password", "edit-entry", "show-totp", "share-entry", "share-profile"].includes(button.dataset.testid || "")); });
   byId("workspace").setAttribute("aria-busy", String(next));
-  passwordAccess?.setBusy(next); passwordSharing?.setBusy(next); passwordBroker?.setBusy(next); onboarding?.refresh();
+  passwordAccess?.setBusy(next); passwordSharing?.setBusy(next); passwordBroker?.setBusy(next); transferBroker?.setBusy(next); onboarding?.refresh();
 }
 function clearEditor() { byId("editor-status").textContent = ""; byId("editor-status").hidden = true; form("entry-form").reset(); input("entry-id").value = ""; input("entry-password").type = "password"; byId("reveal-password").setAttribute("aria-pressed", "false"); byId("reveal-password").textContent = "Anzeigen"; byId<HTMLDialogElement>("editor").close(); }
 function lock(message = "Tresor gesperrt.", refresh = true) {
-  workflows?.clear(); passwordAccess?.clear(); passwordSharing?.clear(); passwordBroker?.clear(); onboarding?.clear();
+  workflows?.clear(); passwordAccess?.clear(); passwordSharing?.clear(); passwordBroker?.clear(); transferBroker?.clear(); onboarding?.clear();
   cancelReveal(); clearActivities();
   clearTimeout(clipboardTimer); void cleanupClipboard();
   generation++; pendingFocus = null; selectedId = null; activeTag = null; revealedId = null; editorReturnFocus = null;
@@ -143,7 +145,7 @@ async function commit(next: Vault, run: number, nextKey: CryptoKey | null = key,
   if (!unlocked(run)) return false;
   if (!saved.record) throw new Error("Server hat keinen Tresor gespeichert.");
   revision = saved.revision; envelope = sealed; remote = sealed; key = nextKey; vault = next;
-  render(); void passwordAccess?.refresh(); void passwordSharing?.refresh(); recordActivity("save"); passwordBroker?.clear(false); void passwordBroker?.unlocked(); return true;
+  render(); void passwordAccess?.refresh(); void passwordSharing?.refresh(); recordActivity("save"); passwordBroker?.clear(false); transferBroker?.clear(false); void passwordBroker?.unlocked().then(() => transferBroker?.unlocked()); return true;
 }
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string): HTMLElementTagNameMap[K] { const node = document.createElement(tag); if (text !== undefined) node.textContent = text; return node; }
 function action(label: string, testId: string, handler: () => void): HTMLButtonElement { const button = element("button", label); button.className = "secondary"; button.dataset.testid = testId; button.type = "button"; button.disabled = busy; button.addEventListener("click", handler); return button; }
@@ -309,7 +311,7 @@ function acceptOpened(opened: Awaited<ReturnType<typeof openVault>>, nextRevisio
   revision = nextRevision; vault = opened.vault; key = opened.key; envelope = opened.envelope; remote = opened.envelope; lastActivity = Date.now();
   input("master").value = ""; input("master-confirm").value = "";
   byId("gate").hidden = true; document.body.classList.add("unlocked"); byId("workspace").hidden = false; byId("lock").hidden = false;
-  render(); void passwordAccess?.refresh(); void passwordSharing?.refresh(); onboarding?.refresh(); void passwordBroker?.unlocked(); status(message); focusAfter("new-entry");
+  render(); void passwordAccess?.refresh(); void passwordSharing?.refresh(); onboarding?.refresh(); void passwordBroker?.unlocked().then(() => transferBroker?.unlocked()); status(message); focusAfter("new-entry");
 }
 form("unlock-form").addEventListener("submit", event => {
   event.preventDefault(); if (!ready) return;
@@ -413,7 +415,7 @@ for (const name of ["pointerdown", "keydown", "input"] as const) document.addEve
 setInterval(() => { if (vault && Date.now() - lastActivity >= 300_000) lock("Nach 5 Minuten ohne Eingabe gesperrt."); }, 1000);
 document.addEventListener("visibilitychange", () => { clearTimeout(hiddenTimer); if (document.visibilityState === "hidden") { if (getPrivacyPreferences().strictBackground) { if (vault || busy) lock("Beim Wechsel in den Hintergrund gesperrt."); } else hiddenTimer = setTimeout(() => { if (vault || busy) lock("Nach 30 Sekunden im Hintergrund gesperrt."); }, 30_000); } });
 window.addEventListener("pagehide", () => { lock("Seite verlassen, Tresor gesperrt.", false); });
-initPrivacy(() => { cancelReveal(); clearEditor(); workflows?.clear(); passwordAccess?.clear(); passwordSharing?.clear(); passwordBroker?.clear(); if (vault) { render(); void passwordAccess?.refresh(); void passwordSharing?.refresh(); void passwordBroker?.unlocked(); } });
+initPrivacy(() => { cancelReveal(); clearEditor(); workflows?.clear(); passwordAccess?.clear(); passwordSharing?.clear(); passwordBroker?.clear(); transferBroker?.clear(); if (vault) { render(); void passwordAccess?.refresh(); void passwordSharing?.refresh(); void passwordBroker?.unlocked().then(() => transferBroker?.unlocked()); } });
 workflows = initWorkflows({vault:()=>vault,revision:()=>revision,generation:()=>generation,current:unlocked,busy:()=>busy,discreet:()=>getPrivacyPreferences().discreet,run:operation,commit,status,select:id=>{showEntries();selectEntry(id,true);},settings:showSettings,copy,pairing:pairingRequest,shareProfile:profile=>passwordSharing?.shareProfile(profile)});
 const accessContext = {
   get: () => ({token, revision, record: envelope || remote, vault, generation, shareOrigin, discreet: getPrivacyPreferences().discreet}),
@@ -424,6 +426,14 @@ const accessContext = {
 passwordAccess = initPasswordAccess(accessContext);
 passwordSharing = initPasswordSharing(accessContext);
 passwordBroker = initPasswordBroker(accessContext);
+transferBroker = initTransferBroker(accessContext, {
+  get: () => vault?.transfers ?? [],
+  save: async transfers => {
+    await operation(async run => {
+      if (!vault || !await commit({ ...vault, transfers }, run)) throw new Error("Verbindungen konnten nicht gespeichert werden.");
+    });
+  },
+});
 onboarding = initOnboarding({vault:()=>vault,hasRecord:()=>!!remote,ready:()=>ready,busy:()=>busy,login:()=>edit(),settings:showSettings,backup:()=>byId("export-backup").click()});
 initBrand();
 initPresentation();

@@ -50,6 +50,10 @@ jobs:
           cargo deny --version
           cargo audit --version
           "$CHROME_PATH" --version
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: "0.12.17"
+          enable-cache: false
       - name: Source and regression checks
         run: python3 scripts/run.py ci-source 900 -- bash scripts/ci.sh source
       - name: Dependency security and licenses

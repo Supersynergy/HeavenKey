@@ -2,6 +2,7 @@ use super::*;
 mod access;
 mod broker;
 mod browser_executor;
+mod transfer;
 
 pub const MAX_BODY: usize = 2 * 1024 * 1024;
 const PAIRING_TTL: Duration = Duration::from_secs(120);
@@ -17,6 +18,7 @@ pub struct VaultApp {
     extensions: Arc<Mutex<Extensions>>,
     access: Arc<access::Access>,
     broker: Arc<broker::Broker>,
+    transfer: Arc<transfer::TransferBroker>,
 }
 
 #[derive(Default)]
@@ -357,6 +359,7 @@ pub async fn save(
     tx.commit().map_err(internal)?;
     drop(db);
     app.broker.invalidate();
+    app.transfer.invalidate();
     if salt_changed {
         app.access.invalidate()?;
     }
@@ -380,7 +383,11 @@ pub async fn script() -> Response {
 pub async fn style() -> Response {
     (
         [("content-type", "text/css")],
-        include_str!("../../web/src/passwords.css"),
+        [
+            include_str!("../../web/src/passwords.css"),
+            include_str!("../../web/src/passwords-transfer.css"),
+        ]
+        .concat(),
     )
         .into_response()
 }
@@ -463,6 +470,7 @@ async fn guard(State(app): State<VaultApp>, req: Request, next: Next) -> Respons
             })
         && cors_origin.is_none()
         && !broker::agent_transport(req.headers(), req.uri().path())
+        && !transfer::agent_transport(req.headers(), req.uri().path())
     {
         forbidden("local_vault_denied").into_response()
     } else {
@@ -548,6 +556,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         extensions: Arc::new(Mutex::new(Extensions::default())),
         access,
         broker: Arc::new(broker::Broker::new()),
+        transfer: Arc::new(transfer::TransferBroker::new()),
     };
     broker::Broker::supervise(&app.broker, app.db.clone());
     let shutdown_broker = app.broker.clone();
@@ -592,6 +601,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         .route("/api/password-vault/read", axum::routing::post(read_post))
         .merge(access::routes())
         .merge(broker::routes())
+        .merge(transfer::routes())
         .layer(DefaultBodyLimit::max(MAX_BODY))
         .layer(middleware::from_fn_with_state(app.clone(), guard))
         .with_state(app);

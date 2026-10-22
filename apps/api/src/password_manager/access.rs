@@ -768,6 +768,7 @@ mod tests {
             extensions: Arc::new(Mutex::new(Extensions::default())),
             access: Arc::new(Access::new(18240, None).unwrap()),
             broker: Arc::new(super::broker::Broker::new()),
+            transfer: Arc::new(super::transfer::TransferBroker::new()),
         }
     }
     fn headers(app: &VaultApp) -> HeaderMap {
