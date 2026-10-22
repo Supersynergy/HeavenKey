@@ -36,6 +36,11 @@ if broker_receipt.exists():
     name = "password-broker.json"
     shutil.copyfile(broker_receipt, destination / name)
     files[name] = hashlib.sha256(broker_receipt.read_bytes()).hexdigest()
+transfer_receipt = source / "transfer-broker/browser.json"
+if transfer_receipt.exists():
+    name = "transfer-broker.json"
+    shutil.copyfile(transfer_receipt, destination / name)
+    files[name] = hashlib.sha256(transfer_receipt.read_bytes()).hexdigest()
 (destination / "manifest.json").write_text(
     json.dumps(
         {
