@@ -3,7 +3,7 @@ use std::{
     collections::{HashMap, HashSet},
     fs,
     io::{Read, Write},
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::{Child, Command, Stdio},
     sync::{
         Arc,
@@ -194,6 +194,25 @@ fn private_profile() -> Result<PathBuf, &'static str> {
     Ok(profile)
 }
 
+fn browser_command(browser: &Path, profile: &Path, resolver_rules: &str) -> Command {
+    let mut command = Command::new(browser);
+    command.args([
+    "--headless=new", "--no-first-run", "--no-default-browser-check", "--incognito",
+    "--disable-extensions", "--disable-sync", "--disable-background-networking",
+    "--disable-component-update", "--disable-default-apps", "--disable-domain-reliability",
+    "--disable-breakpad", "--disable-crash-reporter", "--disable-application-cache",
+    "--disk-cache-size=0", "--media-cache-size=0", "--password-store=basic",
+    "--disable-save-password-bubble", "--disable-client-side-phishing-detection",
+    "--disable-features=PasswordManagerOnboarding,PasswordLeakDetection,AutofillServerCommunication,Translate,MediaRouter,OptimizationHints,Prerender2",
+    "--force-webrtc-ip-handling-policy=disable_non_proxied_udp", "--no-proxy-server", "--disable-quic", "--dns-prefetch-disable", "about:blank",
+]).arg(format!("--host-resolver-rules={resolver_rules}"))
+    .arg(format!("--user-data-dir={}", profile.display()))
+    .stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+    #[cfg(target_os = "macos")]
+    command.arg("--use-mock-keychain");
+    command
+}
+
 impl BrowserSession {
     pub fn start(login: Login, cancel: Arc<AtomicBool>) -> Result<Self, &'static str> {
         if cancel.load(Ordering::Acquire) {
@@ -244,22 +263,9 @@ impl BrowserSession {
             expires: Instant::now() + SESSION_TIME,
             poisoned: false,
         };
-        let (child, mut input, mut output) = {
-            let mut command = Command::new(browser);
-            command.args([
-                "--headless=new", "--no-first-run", "--no-default-browser-check", "--incognito",
-                "--disable-extensions", "--disable-sync", "--disable-background-networking",
-                "--disable-component-update", "--disable-default-apps", "--disable-domain-reliability",
-                "--disable-breakpad", "--disable-crash-reporter", "--disable-application-cache",
-                "--disk-cache-size=0", "--media-cache-size=0", "--password-store=basic",
-                "--disable-save-password-bubble", "--disable-client-side-phishing-detection",
-                "--disable-features=PasswordManagerOnboarding,PasswordLeakDetection,AutofillServerCommunication,Translate,MediaRouter,OptimizationHints,Prerender2",
-                "--force-webrtc-ip-handling-policy=disable_non_proxied_udp", "--no-proxy-server", "--disable-quic", "--dns-prefetch-disable", "about:blank",
-            ]).arg(format!("--host-resolver-rules={resolver_rules}"))
-                .arg(format!("--user-data-dir={}", session.profile.display()))
-                .stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
-            uac_browser_pipe::spawn(&mut command).map_err(|_| "browser_start_failed")?
-        };
+        let mut command = browser_command(&browser, &session.profile, &resolver_rules);
+        let (child, mut input, mut output) =
+            uac_browser_pipe::spawn(&mut command).map_err(|_| "browser_start_failed")?;
         session.child = Some(child);
         let (tx, rx) = mpsc::sync_channel(2);
         session.reader = Some(rx);
@@ -1002,6 +1008,56 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg(target_os = "macos")]
+    fn private_browser_command_avoids_host_keychain_without_relaxing_isolation() {
+        use std::os::unix::fs::PermissionsExt;
+        let profile = private_profile().unwrap();
+        assert_eq!(
+            fs::metadata(&profile).unwrap().permissions().mode() & 0o777,
+            0o700
+        );
+        let command = browser_command(
+            Path::new("/synthetic/chromium"),
+            &profile,
+            "MAP localhost 127.0.0.1, MAP * ~NOTFOUND",
+        );
+        let args: Vec<_> = command
+            .get_args()
+            .map(|s| s.to_string_lossy().into_owned())
+            .collect();
+        fs::remove_dir_all(&profile).unwrap();
+        assert!(
+            args.iter().any(|arg| arg == "--use-mock-keychain"),
+            "Ephemeral macOS Chromium must avoid host Safe Storage prompts"
+        );
+        for required in [
+            "--incognito",
+            "--headless=new",
+            "--password-store=basic",
+            "--disable-sync",
+            "--no-proxy-server",
+        ] {
+            assert!(args.iter().any(|arg| arg == required));
+        }
+        assert!(
+            args.iter()
+                .any(|arg| arg == &format!("--user-data-dir={}", profile.display()))
+        );
+        assert!(
+            args.iter()
+                .any(|arg| arg.starts_with("--host-resolver-rules=MAP localhost 127.0.0.1"))
+        );
+        for forbidden in [
+            "--no-sandbox",
+            "--disable-web-security",
+            "--ignore-certificate-errors",
+            "--allow-insecure-localhost",
+        ] {
+            assert!(!args.iter().any(|arg| arg.starts_with(forbidden)));
+        }
+    }
+
+    #[test]
     fn dns_all_answers_must_be_public_and_chromium_is_pinned_to_one() {
         let origin = Url::parse("https://synthetic.test/").unwrap();
         let parse = |s: &str| s.parse::<std::net::IpAddr>().unwrap();
@@ -1124,7 +1180,14 @@ mod tests {
                 loop {
                     let headers = String::from_utf8_lossy(&buffer[..n]);
                     let Some(end) = headers.find("\r\n\r\n") else {
-                        break;
+                        if n == buffer.len() {
+                            break;
+                        }
+                        match socket.read(&mut buffer[n..]) {
+                            Ok(0) | Err(_) => break,
+                            Ok(count) => n += count,
+                        }
+                        continue;
                     };
                     let length = headers
                         .lines()
@@ -1199,6 +1262,52 @@ mod tests {
         );
         let mut session = result.expect("private pipe login");
         let profile = session.profile.clone();
+        #[cfg(target_os = "macos")]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let output = Command::new("ps")
+                .args([
+                    "-p",
+                    &session.child.as_ref().unwrap().id().to_string(),
+                    "-o",
+                    "command=",
+                ])
+                .output()
+                .unwrap();
+            assert!(output.status.success());
+            let argv = String::from_utf8(output.stdout).unwrap();
+            let required = [
+                "--use-mock-keychain",
+                "--incognito",
+                "--headless=new",
+                "--password-store=basic",
+                "--no-proxy-server",
+                "--remote-debugging-pipe",
+            ];
+            for flag in required {
+                assert!(argv.contains(flag), "missing private browser flag {flag}");
+            }
+            for flag in [
+                "--no-sandbox",
+                "--ignore-certificate-errors",
+                "--disable-web-security",
+                "--allow-insecure-localhost",
+            ] {
+                assert!(
+                    !argv.contains(flag),
+                    "unexpected private browser flag {flag}"
+                );
+            }
+            assert!(argv.contains(&format!("--user-data-dir={}", profile.display())));
+            assert_eq!(
+                fs::metadata(&profile).unwrap().permissions().mode() & 0o777,
+                0o700
+            );
+            println!(
+                "private_browser_argv_flags={}",
+                json!({"flags":required,"private_profile":true,"profile_mode_octal":"0700","tls_validation_disabled":false,"sandbox_disabled":false,"physical_popup_observed":false})
+            );
+        }
         let result = session.read("/account").expect("restricted read");
         let serialized = result.to_string();
         assert!(serialized.contains("Signed in"));
