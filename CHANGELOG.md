@@ -2,6 +2,8 @@
 
 ## 0.20.0
 
+- Tokio 1.53.3 behebt den I/O-Sicherheitsbefund RUSTSEC-2026-0386.
+
 - macOS 14+: eigenes AppKit/WebKit-Fenster, flüchtiger Web-Kontext, native Import-/Exportdialoge und App-Menüs.
 - Die App startet und beendet ihren eigenen lokalen Dienst. Ein belegter Port wird abgewiesen; beim Beenden wird das Prozessende überprüft.
 - Windows-x64: speicherbasierte SSH-Schlüsselnutzung über das vorhandene OpenSSL-Feature; aktueller SFTP-/FTPES-Build.
