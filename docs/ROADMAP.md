@@ -1,27 +1,23 @@
-# HeavenKey Roadmap
+# HeavenKey: Stand und nächste Abnahmen
 
-## Implementiert in der lokalen Vorschau
+## Stand 0.20
 
-| Stand | Funktionsumfang |
+Der lokale Passwortmanager enthält verschlüsselte Logins, Formularprofile, Importvorschau mit Duplikatprüfung, Passkey-Entsperren bei kompatiblem PRF-Authenticator, befristete Feldfreigaben, SSH-Schlüsselverwaltung sowie SFTP/FTPES-Broker. Geschützte Aufträge verwenden Pseudonyme und einen getrennten Login-Browser. Die Freigabe bleibt ausdrücklich beim Eigentümer.
+
+0.20 ergänzt ein macOS-App-Fenster mit verwaltetem lokalem Dienst, flüchtigem WebKit-Kontext, nativen Datei-Dialogen und Tastaturmenüs. Der Windows-SSH-Build verwendet die vorhandene OpenSSL-Unterstützung der Bibliothek. Windows und Linux verwenden weiterhin den Systembrowser als Oberfläche. Die Einrichtungshilfe führt direkt zur Transfer- oder Agenteneinrichtung, ohne Rechte zu vergeben.
+
+Die [Customer Journey](CUSTOMER-JOURNEY.md) beschreibt die Bedienung. Plattform-, Build- und Runtime-Nachweise stehen im jeweiligen Releasebericht; eine implementierte Funktion ist kein pauschaler Sicherheitsnachweis.
+
+## Offene Produktabnahmen
+
+| Bereich | Erforderlicher Nachweis |
 | --- | --- |
-| 0.1–0.5 | Passkey-Anmeldung, Bootstrap für Eigentümer, mehrere Schlüssel, genaue Aktionsbestätigung, begrenzte Weitergabe und vererbter Widerruf. |
-| 0.6 | Desktop-Pakete und minimale Erweiterungen; die veröffentlichten Pakete entsprechen diesem älteren Stand. |
-| 0.7 · Quellstand | Konto-Recovery, verschlüsselter Signierschlüssel mit separater Verwahrung, optionaler PRF-Tresor, Sitzungslesen, Agenten-Schlüsselbesitznachweis, lokaler CRM-Pilot, Bereichsauswahl in Erweiterungen und bebilderte Installation. |
-| 0.7 · Integration | SQLCipher-Speicher und Migration, gemeinsame HTTPS-Origin/RP-ID, privates Dokument für Passkey-/Sitzungs-/Agentenlesen, Betriebs-Vorlagen, Offline-Gate, Widerruf-Snapshots und Mandantenbibliothek. |
+| Windows | Echter Windows-Kernel mit Hello/PRF. Sandbox-Angriffspfade müssen dort ausgeführt werden. Wine ersetzt diese Abnahme nicht. |
+| macOS-Verteilung | Herausgebersignatur, Notarisierung und Installation auf einem fremden Mac. Ad-hoc-Siegel bestätigen keine Herausgeberidentität. |
+| Physische Passkeys | Geräte- und Betriebssystem-Matrix mit Enrollment, Entsperren, Abbruch und Verlust. |
+| Firefox | Mozilla-Signierung und dauerhafte Installation nach Neustart. |
+| Native Windows-/Linux-Fenster | Eigene Desktop-Shell samt Lifecycle, Datei-Dialogen, WebAuthn- und Sicherheitsabnahme. |
+| Externe Connectoren | Reale Zielsysteme, Tenant-Zuordnung, Widerruf, Fehler und Wiederholungen am tatsächlichen Ausführungspunkt. |
+| Sicherheitsprüfung | Unabhängiges Audit; vertrauenswürdiger Host und Zielwebsite bleiben Voraussetzungen. |
 
-Der aktuelle Nachweis steht in [0.7-Verifikation](V07-VERIFICATION.md). Physische Passkeys, echte Betriebssystem-Keystores und neue Browserläufe sind dort ausdrücklich separat ausgewiesen.
-
-## Nächste Abnahmen und Integrationen
-
-| Priorität | Nächster Schritt | Erfolgskriterium |
-| --- | --- | --- |
-| 1 | Chrome und Firefox auf geeigneter Testmaschine | Komplette Passkey-, Recovery- und Erweiterungsabläufe einschließlich Abbruch; Screenshots des realen Ablaufs. |
-| 1 | Physische Geräte und native Keystores | macOS, Windows, Linux; gesperrter Keystore, Geräteverlust und Neustart tatsächlich prüfen. |
-| 1 | Neue 0.7-Desktop-Pakete | Plattform-Builds, überprüfte Startdateien, Prüfsummen, anschließende Signierung/Notarisierung. |
-| 2 | Dauerhafte Firefox-Verteilung | Mozilla-Signierung und Installation nach Browser-Neustart. |
-| 2 | Dauerhafter HTTPS-Betrieb | Feste Domain, tatsächliches Hosting sowie Backup und Restore im Zielbetrieb abnehmen. Die gemeinsame Implementierung und lokale TLS-Prüfung sind enthalten. |
-| 2 | Server-Backup und Restore | Verschlüsselte Datenbank, beide Schutzschlüssel und bestehende Identitäten nach Restore gemeinsam prüfen. |
-| 2 | Reale Next-Office-Anbindung | Rechte am tatsächlichen Connector prüfen; echte Tenant-Zuordnung, Wiederholungen, Fehler und Widerruf testen. |
-| 3 | Mandanten, externe Protokolle, Offline | Enthaltene Mandantenbibliothek und Offline-Gate an konkrete Produktcaller binden; keine interoperablen oder verteilten Garantien aus dem lokalen Pilot ableiten. |
-
-Eine neue verbindliche Zeitplanung folgt aus den konkreten Plattform- und Integrationsabnahmen. Frühere Schätzungen sind keine Zusage für diesen erweiterten Umfang.
+Das getrennte Zugangslabor und seine Mandanten-/Offline-Bibliotheken sind keine vollständige Cloud- oder Unternehmensbereitstellung des Passwortmanagers.

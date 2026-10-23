@@ -38,7 +38,8 @@ try{
  fixture=spawn(cmd[0],[...cmd.slice(1),"--directory",fixtureDir],{cwd:root,stdio:["ignore","pipe","pipe"]});fixture.stdout!.on("data",v=>fixtureLog+=v);fixture.stderr!.on("data",v=>fixtureLog+=v);
  const info=await until(async()=>{if(fixture!.exitCode!==null)throw Error("Fixture failed: "+fixtureLog);try{return JSON.parse(await readFile(join(fixtureDir,"fixture.json"),"utf8"))}catch{return null}},Boolean,60);
  const port=await new Promise<number>(res=>{const listener=createServer();listener.listen(0,"127.0.0.1",()=>{const p=(listener.address() as any).port;listener.close(()=>res(p));});});origin="http://localhost:"+port;
- const args=launch(["--password-manager","--port",String(port),"--data-dir",join(temp,"vault")]);service=spawn(args[0],args.slice(1),{cwd:root,stdio:["ignore","pipe","pipe"]});service.stdout!.on("data",v=>serviceLog+=v);service.stderr!.on("data",v=>serviceLog+=v);
+ const dataPath = process.env.HEAVENKEY_WINDOWS_PATHS === "1" ? "Z:" + join(temp,"vault").replaceAll("/", "\\") : join(temp,"vault");
+ const args=launch(["--password-manager","--port",String(port),"--data-dir",dataPath]);service=spawn(args[0],args.slice(1),{cwd:root,stdio:["ignore","pipe","pipe"]});service.stdout!.on("data",v=>serviceLog+=v);service.stderr!.on("data",v=>serviceLog+=v);
  await until(async()=>{if(service!.exitCode!==null)throw Error("Service failed: "+serviceLog);try{return(await fetch(origin+"/health")).ok}catch{return false}},Boolean);
  const config=await fetch(origin+"/api/password-vault/config",{headers:{Origin:origin,"X-HeavenKey-Client":"password-manager"}});assert.equal(config.status,200);ownerToken=(await config.json() as any).token;
  browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||(platform()==="darwin"?"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome":"/usr/bin/google-chrome"),args:platform()==="linux"?["--no-sandbox"]:[]});

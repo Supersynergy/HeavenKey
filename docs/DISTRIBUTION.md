@@ -1,8 +1,18 @@
-# HeavenKey-Pakete und Browser-Erweiterungen
+# HeavenKey installieren und starten
+
+macOS 14 oder neuer: Entpacke dein Architektur-Paket und ziehe `HeavenKey.app` nach Programme. Doppelklick öffnet das App-Fenster. Die App startet einen eigenen lokalen Dienst; Beenden oder das Schließen des letzten Fensters beendet ihn. Der Kommandozeilen-Starter bleibt für ausdrücklich gestartete Browser-Sitzungen enthalten. Bei einem bereits belegten Port zeigt die App einen Fehler und verbindet sich nicht mit dem fremden Listener.
+
+Windows x64: Entpacke den gesamten Ordner und starte `Start HeavenKey.cmd`. Linux: entpacken und `./start.sh`. Diese beiden Pakete verwenden den Systembrowser; sie enthalten noch kein natives WebView-Fenster. Der Dienst muss während der Nutzung laufen. Windows ist per Cross-Build und Wine prüfbar; Windows Hello und die Windows-Kernel-Sandbox sind ohne Windows-System nicht abgenommen.
+
+Die macOS-App verwendet einen flüchtigen WebKit-Kontext. Tresordaten liegen verschlüsselt im lokalen Dienst. Dateiimporte und Sicherungen nutzen native Auswahldialoge. „Ansicht → Neu laden und Tresor sperren“ entfernt den entsperrten UI-Zustand. „Im Browser öffnen“ öffnet nur die eigene lokale Tresor-Adresse; die App muss weiterlaufen. Ein Passkey im WebView ist kein allgemeiner Hardware-Nachweis: Verwende bei fehlender Unterstützung einen kompatiblen Browser.
+
+Die Pakete haben Prüfsummen und Quellstand-Manifeste. Ad-hoc-Integritätssiegel in macOS sind keine Herausgebersignatur oder Apple-Notarisierung. [Einrichtung und Bedienreise](CUSTOMER-JOURNEY.md).
+
+# Weitere Paketdetails
 
 Der [lokale Agenten-Broker](AGENT-BROKER.md) benötigt zusätzlich einen installierten Chromium-Browser. `--broker-agent` und der [eingeschlossene Agentenstart](AGENT-SANDBOX.md) sind im Programm enthalten; `broker.rs` ist ein optionales Cargo-`-Zscript`-Hilfsskript für die Entwicklung.
 
-Der Release-Kandidat 0.19.0 startet über den enthaltenen Starter den lokalen Passwortmanager. Er ergänzt den [SFTP-/FTPES-Broker](TRANSFER-BROKER.md) für macOS und Linux sowie die bisherigen Zugangslabor-Funktionen. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Verbindliche Build- und Laufzeitnachweise stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md). Neue Windows-Pakete gehören nicht zu dieser Ausgabe.
+Der Release-Kandidat 0.20.0 enthält den lokalen Passwortmanager und den SFTP-/FTPES-Broker für macOS, Windows und Linux. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Verbindliche Build- und Laufzeitnachweise stehen im Releasebericht.
 
 Die Pakete enthalten Server, Weboberfläche und Lizenzhinweise. Für den Passwortmanager brauchst du einen aktuellen Browser, aber kein Rust, Bun, Python, Docker oder Passkey. Das optionale Zugangslabor verwendet WebAuthn, SQLCipher und eine geschützte Signierschlüsselhülle. Physische Passkeys sind noch nicht abgenommen.
 
@@ -11,12 +21,12 @@ Die Pakete enthalten Server, Weboberfläche und Lizenzhinweise. Für den Passwor
 | Computer | Paket | Start |
 | --- | --- | --- |
 | Windows 10/11, x64 | `windows-x64.zip` | Entpacken; `Start HeavenKey.cmd` doppelklicken. |
-| macOS, Apple Silicon | `macos-arm64.zip` | Entpacken; `Start HeavenKey.command` doppelklicken. |
-| macOS, Intel | `macos-x64.zip` | Entpacken; `Start HeavenKey.command` doppelklicken. |
+| macOS, Apple Silicon | `macos-arm64.zip` | Entpacken; `HeavenKey.app` öffnen (macOS 14+). |
+| macOS, Intel | `macos-x64.zip` | Entpacken; `HeavenKey.app` öffnen (macOS 14+). |
 | Linux, x64 | `linux-x64.tar.gz` | Entpacken; `./start.sh` ausführen. |
 | Linux, ARM64 | `linux-arm64.tar.gz` | Entpacken; `./start.sh` ausführen. |
 
-Das Terminal bleibt geöffnet. Der Starter öffnet `http://localhost:18240/passwords/`; falls das nicht klappt, öffne die Adresse selbst. `Ctrl+C` beendet HeavenKey. Die API bindet nur an die lokale IPv4-Adresse. Unter Linux braucht das automatische Öffnen `xdg-open`; die manuelle Adresse funktioniert auch ohne Desktop.
+Beim CLI-Starter bleibt das Terminal geöffnet. Er öffnet `http://localhost:18240/passwords/`; falls das nicht klappt, öffne die Adresse selbst. `Ctrl+C` beendet HeavenKey. Die API bindet nur an die lokale IPv4-Adresse. Unter Linux braucht das automatische Öffnen `xdg-open`; die manuelle Adresse funktioniert auch ohne Desktop.
 
 Die Ausgabe ist nicht vom Herausgeber signiert oder von Apple notarisiert. Windows und macOS können eine Herkunftswarnung anzeigen. Prüfe Quelle und SHA256SUMS vor dem Start. Verändere keine globalen Sicherheitseinstellungen. Auf macOS lässt sich eine geprüfte App über „Datenschutz & Sicherheit“ freigeben. Auf Windows ARM ist das x64-Paket nur ein Kandidat für die Betriebssystem-Emulation; eine native ARM64-Ausgabe fehlt.
 

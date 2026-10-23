@@ -25,3 +25,5 @@ Diese Screenshots wurden am 17. Oktober 2026 aus der laufenden HeavenKey-App mit
 Die Bilddateien sind unbearbeitete Browseraufnahmen. Sie belegen die abgebildete Ansicht, aber keine Abnahme echter Passkeys, nativer Windows- oder Mobilgeräte. Ausgeführte Funktionsprüfungen sind getrennt in der Release-Abnahme dokumentiert. Die früheren generierten Markenbilder bleiben unter `docs/assets/` mit ihrer eigenen Herkunftsbeschreibung erhalten.
 
 Der Freigabedialog startet ohne ausgewähltes Konto. Die Zustimmung bleibt zunächst offen.
+
+`native-macos.png`: reales AppKit/WebKit-Fenster des 0.20-Builds auf macOS, eigener synthetischer Testtresor unter Port 18243. Der Login wurde in einer früheren lokalen Ausgabe angelegt und im aktualisierten Build entsperrt; keine echten Zugangsdaten.

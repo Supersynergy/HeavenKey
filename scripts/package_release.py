@@ -13,6 +13,7 @@ import tomllib
 import zipfile
 
 import build_openssl
+import build_desktop
 
 from build_portable import TARGETS, source_fingerprint
 
@@ -188,9 +189,10 @@ def desktop(target):
                 '#!/bin/sh\nset -eu\ncd "$(dirname "$0")"\nexec ./heavenkey --password-manager --open "$@"\n'
             )
             starter.chmod(0o755)
+        app = build_desktop.app_bundle(directory, binary, target, VERSION) if "apple" in target else None
         shutil.copyfile(ROOT / "docs/DISTRIBUTION.md", directory / "README.md")
         for name in (
-            "PASSWORD-MANAGER.md", "PASSWORD-MANAGER-GAPS.md",
+            "PASSWORD-MANAGER.md", "PASSWORD-MANAGER-GAPS.md", "CUSTOMER-JOURNEY.md",
             "PASSWORD-MANAGER-VERIFICATION.md", "PASSWORD-MANAGER-RESEARCH-TOOLS.md",
             "ACCESS-AND-SHARING.md", "AGENT-BROKER.md", "AGENT-SANDBOX.md", "PROTECTED-FLOW.md", "PROTECTED-THREAT-MODEL.md", "VAULT-KDF.md", "TRANSFER-BROKER.md", "SSH-KEYS.md",
             "password-manager-matrix.json", "LICENSING.md",
@@ -214,6 +216,8 @@ def desktop(target):
             "source_fingerprint": build["source_fingerprint"],
             "portable_assets": True,
             "publisher_signed": False,
+            "desktop_shell": "native-webkit" if app else "system-browser",
+            "app_files_sha256": build_desktop.bundle_hashes(app) if app else {},
             "openssl_version": build["openssl_version"],
             "openssl_source_sha256": build["openssl_source_sha256"],
         }

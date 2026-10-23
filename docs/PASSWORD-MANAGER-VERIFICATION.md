@@ -55,3 +55,12 @@ Für jedes Paket werden Start ohne Quelldateien, eingebettete Assets, Speichern 
 Die Pakete sind nicht vom Herausgeber signiert oder Apple-notarisiert. Physische Passkeys, native Biometrie, mobile Credential-Provider, Gerätesynchronisation, verwaltete Website-Passkeys, Anhänge und öffentlich betriebenes Freigabe-Hosting sind nicht abgenommen. Die Agenten des Zugangslabors erhalten keinen Zugriff auf den Passworttresor. Bereits vom Empfänger gespeicherte Angaben können nicht zurückgerufen werden.
 
 Eine beschädigte SQLite-Dateistruktur benötigt eine gültige Sicherung in einem neuen Datenordner. Bei beschädigtem Tresor-JSON oder Ciphertext kann dagegen eine vollständig geprüfte Sicherung vom Sperrbildschirm aus den bisherigen Datensatz ersetzen.
+
+
+## Lokale Desktop-Abnahme 0.20
+
+Das AppKit/WebKit-Fenster wurde auf macOS mit einem getrennten synthetischen Tresor geprüft: vorhandenen Login nach Neustart entsperren, Einrichtungshilfe, native Datei-Dialoge, verschlüsselter Export, Restore in einen leeren Testtresor, Cmd+R zum Sperren und Beenden des eigenen Dienstes. Der belegte Startport wurde mit einem lebenden fremden Listener geprüft: Die App zeigt den Fehler und ruft dessen HTTP-Handler nicht auf. 15 native Prüfungen decken Navigation, ungültige Argumente und einen Prozess ab, der die ersten Stop-Signale ignoriert.
+
+Die aktuelle Windows-x64-EXE besteht unter Wine fünf portable Runtime-Fälle, 20 Browser-Fälle und 31 Transfer-Fälle. Die Transfers nutzen tatsächliche synthetische SFTP-/FTPES-Gegenstellen, einschließlich wiederverwendeter SSH-Identität. Der Windows-Compilefehler ist über das bestehende `ssh2`-Feature `openssl-on-win32` behoben; privates Schlüsselmaterial wird nicht als temporäre Datei geschrieben. Wine ist kein Windows-Kernel-, Hello- oder physischer Passkey-Nachweis. Windows und Linux verwenden weiterhin den Systembrowser als Oberfläche.
+
+Ein frischer SGG-Review fand den unvollständigen Stop-Pfad; begrenztes Warten und überprüfte Eskalation beheben ihn. Neue Bibliotheksversionen wurden nicht aufgenommen. Native macOS-Pakete sind ad-hoc versiegelt, ohne Herausgebersignatur oder Notarisierung. Quellstand, Binary-Hashes und CI-Abnahme werden im Releasebericht getrennt ausgewiesen.

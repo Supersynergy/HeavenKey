@@ -23,7 +23,7 @@ base64.workspace = true
 sha2.workspace = true
 ed25519-dalek.workspace = true
 rand.workspace = true
-ssh2 = "=0.9.6"
+ssh2 = { version = "=0.9.6", features = ["openssl-on-win32"] }
 suppaftp = { version = "=12.1.0", features = ["native-tls"] }
 native-tls = "=0.2.18"
 log = { version = "=0.4.34", features = ["max_level_off", "release_max_level_off"] }

@@ -22,9 +22,9 @@ class PackagingTests(unittest.TestCase):
             "apps/web/dist/passwords.js", "apps/web/passwords.html",
             "apps/web/dist/share.js", "apps/web/share.html",
             "docs/assets/heavenkey-hero-square.png",
-            "scripts/build_openssl.py", "scripts/build_portable.py", "scripts/build_extension.ts", "scripts/broker.rs",
+            "scripts/build_openssl.py", "scripts/build_portable.py", "scripts/build_desktop.py", "scripts/build_extension.ts", "scripts/broker.rs",
             "scripts/build_agent_sandbox.ts", "scripts/sandbox/Dockerfile",
-            "apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css",
+            "apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css", "apps/desktop/HeavenKey.swift",
         ):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -34,7 +34,7 @@ class PackagingTests(unittest.TestCase):
         self.create_build_sources()
         with patch.object(build_portable, "ROOT", self.root):
             baseline = build_portable.source_fingerprint()
-            for name in ("apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css", "docs/assets/heavenkey-hero-square.png", "apps/web/share.html"):
+            for name in ("apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css", "docs/assets/heavenkey-hero-square.png", "apps/web/share.html", "apps/desktop/HeavenKey.swift", "scripts/build_desktop.py"):
                 with self.subTest(asset=name):
                     asset = self.root / name
                     original = asset.read_text()

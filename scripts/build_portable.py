@@ -40,13 +40,14 @@ def source_fingerprint():
             "docs/assets/heavenkey-hero-square.png",
             "scripts/build_openssl.py",
             "scripts/build_portable.py",
+            "scripts/build_desktop.py",
             "scripts/build_extension.ts",
             "scripts/broker.rs",
             "scripts/build_agent_sandbox.ts",
             "scripts/sandbox/Dockerfile",
         )
     ]
-    for name in ("apps/api", "crates", "apps/web/src", "apps/demo", "apps/extension", "packages/forms", "packages/transfers", "packages/protected"):
+    for name in ("apps/api", "apps/desktop", "crates", "apps/web/src", "apps/demo", "apps/extension", "packages/forms", "packages/transfers", "packages/protected"):
         directory = ROOT / name
         for path in directory.rglob("*"):
             if not path.is_file():

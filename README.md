@@ -6,13 +6,15 @@
 
 Passwörter und Formularprofile lokal verwalten. HeavenKey verschlüsselt den Tresor im Browser und speichert ihn auf deinem Computer. Für den Passwortmanager brauchst du weder ein Cloudkonto noch eine Internetverbindung.
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.19.0](https://img.shields.io/badge/version-0.19.0-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.19.0-rc.1)
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.20.0](https://img.shields.io/badge/version-0.20.0-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.20.0-rc.1)
 
-[Downloads](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.19.0-rc.1) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Dateitransfer](docs/TRANSFER-BROKER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
+[Downloads](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.20.0-rc.1) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Dateitransfer](docs/TRANSFER-BROKER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
 
-![HeavenKey mit Navigation, Eintragsliste und Login-Details im hellen Design](docs/screenshots/vault-desktop.png)
+![HeavenKey als native macOS-App mit einem synthetischen Testkonto](docs/screenshots/native-macos.png)
 
 *Die Bilder zeigen die echte lokale App mit ausschließlich erfundenen Beispieldaten. Passwörter bleiben verdeckt.*
+
+Die macOS-App hat ein eigenes Fenster, native Datei-Dialoge und Tastaturmenüs. Beim Beenden stoppt sie ihren Dienst und die daran gebundenen Agentensitzungen. Passkeys hängen von WebView, Betriebssystem und Authenticator ab; über „Ansicht → Im Browser öffnen“ kannst du einen kompatiblen Browser verwenden.
 
 ## Die Idee hinter HeavenKey
 
@@ -22,18 +24,19 @@ Die ursprüngliche Idee steckt jetzt im Passwortmanager: den lokalen Tresor mit 
 
 ## Starten
 
-1. Lade das Paket für deinen Computer aus dem [aktuellen Release](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.19.0-rc.1). Prüfe es mit der dortigen `SHA256SUMS` und entpacke es.
-2. Öffne den enthaltenen Starter. Er startet den lokalen Dienst und öffnet `http://localhost:18240/passwords/` im Browser.
+1. Lade das Paket für deinen Computer aus dem [aktuellen Release](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.20.0-rc.1). Prüfe es mit der dortigen `SHA256SUMS` und entpacke es.
+2. Öffne auf macOS `HeavenKey.app`. Die App verwaltet ihren lokalen Dienst und zeigt den Tresor im eigenen Fenster. Unter Windows und Linux öffnet der Starter den lokalen Tresor im Browser.
 3. Lege ein Masterpasswort mit mindestens 14 Zeichen fest. Exportiere anschließend eine verschlüsselte Sicherung und prüfe ihre Wiederherstellung.
 
 | Computer | Paket | Starter |
 | --- | --- | --- |
-| macOS mit Apple Silicon | `HeavenKey-0.19.0-macos-arm64.zip` | `Start HeavenKey.command` |
-| macOS mit Intel-Prozessor | `HeavenKey-0.19.0-macos-x64.zip` | `Start HeavenKey.command` |
-| Linux x64 | `HeavenKey-0.19.0-linux-x64.tar.gz` | `./start.sh` |
-| Linux ARM64 | `HeavenKey-0.19.0-linux-arm64.tar.gz` | `./start.sh` |
+| macOS mit Apple Silicon | `HeavenKey-0.20.0-macos-arm64.zip` | `HeavenKey.app` (macOS 14+) |
+| macOS mit Intel-Prozessor | `HeavenKey-0.20.0-macos-x64.zip` | `HeavenKey.app` (macOS 14+) |
+| Windows x64 | `HeavenKey-0.20.0-windows-x64.zip` | `Start HeavenKey.cmd` |
+| Linux x64 | `HeavenKey-0.20.0-linux-x64.tar.gz` | `./start.sh` |
+| Linux ARM64 | `HeavenKey-0.20.0-linux-arm64.tar.gz` | `./start.sh` |
 
-Der neue Transfer-Broker wird für macOS und Linux ausgeliefert. Für Windows steht weiterhin die [vorherige Ausgabe 0.15](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.15.0-rc.1) bereit; eine native Windows-Abnahme des neuen Brokers fehlt.
+Windows verwendet jetzt denselben OpenSSL-Pfad für SSH-Schlüssel im Speicher wie macOS und Linux. Wine-Kompatibilität und echte Windows-Sicherheitsabnahme sind getrennte Nachweise. Die Pakete sind noch ohne Herausgebersignatur oder Notarisierung.
 
 Für den Tresor genügt ein aktueller Browser. Die optionale Agenten-Sandbox benötigt zusätzlich Docker; Rust und Bun werden nur für die Entwicklung benötigt. Das Terminal des Starters bleibt geöffnet; `Ctrl+C` beendet den Dienst. Die Pakete sind unsigniert und nicht Apple-notarisiert. [Installation und Datenordner](docs/DISTRIBUTION.md) erklären die Betriebssystemhinweise und den Updateablauf.
 

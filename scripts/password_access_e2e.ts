@@ -326,8 +326,19 @@ try {
 	await owner.page.locator("[data-testid=setup-guide]").click();
 	assert(await owner.page.locator("#onboarding-dialog").isVisible());
 	await view(owner.page, "#onboarding-dialog", "onboarding-guide");
+	assert((await owner.page.locator("#onboarding-progress").innerText()).includes("nächster Schritt"));
+	await owner.page.locator("#onboarding-agent").locator("xpath=ancestor::details").evaluate((el: HTMLDetailsElement) => { el.open = true; });
+	await owner.page.locator("#onboarding-agent").click();
+	assert(await owner.page.locator("#onboarding-dialog").isHidden());
+	assert(await owner.page.locator("#protected-composer").evaluate((el) => el === document.activeElement));
+	await owner.page.locator("#onboarding-open").click();
+	await owner.page.locator("#onboarding-transfer").click();
+	assert(await owner.page.locator("#transfer-settings").evaluate((el) => el === document.activeElement));
+	await owner.page.locator("#onboarding-open").click();
+	check("onboarding: agent and transfer shortcuts focus the settings without granting access");
 	await owner.page.keyboard.press("Escape");
 	assert(await owner.page.locator("#onboarding-dialog").isHidden());
+	await owner.page.locator("#nav-all").click();
 	await owner.page.locator("[data-testid=setup-first-login]").click();
 	await owner.page.locator("#entry-title").fill("Synthetic integrated account");
 	await owner.page

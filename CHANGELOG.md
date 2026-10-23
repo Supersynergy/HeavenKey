@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.20.0
+
+- macOS 14+: eigenes AppKit/WebKit-Fenster, flüchtiger Web-Kontext, native Import-/Exportdialoge und App-Menüs.
+- Die App startet und beendet ihren eigenen lokalen Dienst. Ein belegter Port wird abgewiesen; beim Beenden wird das Prozessende überprüft.
+- Windows-x64: speicherbasierte SSH-Schlüsselnutzung über das vorhandene OpenSSL-Feature; aktueller SFTP-/FTPES-Build.
+- Einrichtung mit nächstem sinnvollen Schritt, direkten Transfer-/Agentenlinks und einer zusammenhängenden Bedienreise. Die Links erteilen keine Rechte.
+- Windows-/Linux-Oberfläche bleibt im Systembrowser. Windows-Kernel-Sandbox, physische Passkeys, Herausgebersignaturen und Notarisierung bleiben gesonderte Abnahmen.
+
+
 ## 0.17.0 (Release candidate) — 2026-10-22
 
 - Wiederverwendbare Ed25519-Identitäten im verschlüsselten Tresor: erzeugen, öffentlichen Schlüssel herunterladen und vorhandene Verbindungsschlüssel ohne Duplikate übernehmen.
