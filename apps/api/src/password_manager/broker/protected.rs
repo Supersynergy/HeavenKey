@@ -21,6 +21,9 @@ pub(super) struct Workspace {
     request: Option<String>,
     draft: Option<String>,
     closed: bool,
+    pub(super) approved: bool,
+    recipient_path: Option<String>,
+    delivery: &'static str,
 }
 impl Workspace {
     pub(super) fn live(&self, s: &Inner) -> bool {
@@ -31,18 +34,28 @@ impl Workspace {
             && self.revision == s.revision
             && s.clients.get(&self.client).is_some_and(|c| c.protected)
     }
-    fn status(&self, s: &Inner) -> &'static str {
-        if self.closed {
+    fn owner_status(&self, s: &Inner) -> &'static str {
+        if self.closed || !self.live(s) {
+            return self.status(s);
+        }
+        self.request
+            .as_ref()
+            .and_then(|id| s.requests.get(id))
+            .map_or("published", |p| p.status)
+    }
+    pub(super) fn status(&self, s: &Inner) -> &'static str {
+        if self.until <= Instant::now() {
+            "expired"
+        } else if self.closed {
             "closed"
         } else if !self.live(s) {
             "expired"
         } else if self.draft.is_some() {
             "drafted"
+        } else if self.approved {
+            "approved"
         } else {
-            self.request
-                .as_ref()
-                .and_then(|id| s.requests.get(id))
-                .map_or("published", |p| p.status)
+            "published"
         }
     }
 }
@@ -56,6 +69,7 @@ struct Publish {
     source_id: String,
     origin: String,
     template: String,
+    recipient_path: Option<String>,
     references: Vec<Reference>,
 }
 #[derive(Deserialize)]
@@ -141,6 +155,7 @@ impl Inner {
     fn close_workspace(&mut self, id: &str) {
         let request = self.workspaces.get_mut(id).and_then(|w| {
             w.closed = true;
+            w.set_delivery("unknown");
             w.request.clone()
         });
         if let Some(p) = request.and_then(|id| self.requests.get_mut(&id)) {
@@ -193,6 +208,10 @@ async fn publish(
         || input.source_id.len() > 200
         || input.source_id.chars().any(char::is_control)
         || !canonical_origin(&input.origin)
+        || input
+            .recipient_path
+            .as_ref()
+            .is_some_and(|path| !recipient_path(path))
         || input.template != "reply"
         || !references_valid(&input.references)
         || input
@@ -233,6 +252,9 @@ async fn publish(
         request: None,
         draft: None,
         closed: false,
+        approved: false,
+        recipient_path: input.recipient_path,
+        delivery: "none",
     };
     s.workspaces.insert(id.clone(), w);
     Ok(Json(
@@ -246,7 +268,7 @@ async fn owner_list(State(app): State<VaultApp>, h: HeaderMap) -> ApiResult<Json
         return Err(denied());
     }
     Ok(Json(
-        json!({"workspaces":s.workspaces.values().map(|w| json!({"workspace_id":w.id,"client_id":w.client,"status":w.status(&s),"expires_at":w.expires,"request_id":w.request,"draft":w.draft})).collect::<Vec<_>>()}),
+        json!({"workspaces":s.workspaces.values().map(|w| json!({"workspace_id":w.id,"client_id":w.client,"status":w.owner_status(&s),"approved":w.approved,"delivery":w.delivery,"recipient_path":w.recipient_path,"expires_at":w.expires,"request_id":w.request,"draft":w.draft})).collect::<Vec<_>>()}),
     ))
 }
 async fn owner_close(
@@ -297,7 +319,13 @@ async fn login(
     }
     if s.requests
         .values()
-        .filter(|p| matches!(p.status, "pending" | "running"))
+        .filter(|p| {
+            p.workspace
+                .as_ref()
+                .map_or(matches!(p.status, "pending" | "running"), |id| {
+                    s.workspaces.get(id).is_some_and(|w| w.live(&s))
+                })
+        })
         .count()
         >= 8
     {
@@ -308,8 +336,9 @@ async fn login(
     let expires = w.expires.min(now() + 120);
     let origin = w.origin.clone();
     if s.requests.len() >= 32 {
-        s.requests
-            .retain(|_, p| matches!(p.status, "pending" | "running" | "ready"));
+        s.requests.retain(|_, p| {
+            p.workspace.is_some() || matches!(p.status, "pending" | "running" | "ready")
+        });
     }
     s.requests.insert(
         id.clone(),
@@ -347,15 +376,7 @@ async fn draft(
     if w.draft.is_some() {
         return Err(busy());
     }
-    let ready = w
-        .request
-        .as_ref()
-        .and_then(|id| s.requests.get(id))
-        .filter(|p| p.status == "ready")
-        .and_then(|p| p.session.as_ref())
-        .and_then(|id| s.jobs.get(id))
-        .is_some_and(|j| j.protected && j.client == c.id && !j.cancel.load(Ordering::SeqCst));
-    if !ready {
+    if !w.approved {
         return Err(denied());
     }
     if !valid_draft(&input.text, &w.references) {
@@ -384,6 +405,124 @@ async fn close(
     s.close_workspace(&input.workspace_id);
     Ok(Json(json!({"closed":true})))
 }
+fn recipient_path(path: &str) -> bool {
+    !path.is_empty()
+        && path.len() <= 512
+        && path.starts_with('/')
+        && !path.contains("//")
+        && path
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || "_~!$&'()*+,;=:.-/".contains(c))
+        && !path.split('/').any(|s| matches!(s, "." | ".."))
+        && Url::parse(&format!("https://example.invalid{path}"))
+            .is_ok_and(|u| u.path() == path && u.query().is_none() && u.fragment().is_none())
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Delivery {
+    epoch: u64,
+    revision: u64,
+    draft_sha256: String,
+    sealed: Sealed,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DeliveryPayload {
+    version: u8,
+    recipient_url: String,
+    document: String,
+}
+impl Drop for DeliveryPayload {
+    fn drop(&mut self) {
+        self.recipient_url.zeroize();
+        self.document.zeroize();
+    }
+}
+impl Workspace {
+    pub(super) fn set_delivery(&mut self, outcome: &'static str) {
+        if self.delivery == "sending" {
+            self.delivery = outcome;
+        }
+    }
+}
+async fn deliver(
+    State(app): State<VaultApp>,
+    h: HeaderMap,
+    axum::extract::Path(id): axum::extract::Path<String>,
+    Json(input): Json<Delivery>,
+) -> ApiResult<Json<Value>> {
+    use sha2::{Digest, Sha256};
+    access(&app, &h, true)?;
+    if input.draft_sha256.len() != 64
+        || !input
+            .draft_sha256
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    {
+        return Err(invalid());
+    }
+    // Validate the owner and immutable grant before decrypting; reserve under this same lock.
+    let mut s = app.broker.state(&app)?;
+    let w = s
+        .workspaces
+        .get(&id)
+        .filter(|w| w.live(&s) && w.approved && w.delivery == "none")
+        .ok_or_else(denied)?;
+    if s.epoch != input.epoch || s.revision != input.revision {
+        return Err(denied());
+    }
+    let path = w
+        .recipient_path
+        .as_ref()
+        .filter(|p| recipient_path(p))
+        .ok_or_else(denied)?;
+    let draft = w
+        .draft
+        .as_ref()
+        .filter(|d| valid_draft(d, &w.references))
+        .ok_or_else(denied)?;
+    if format!("{:x}", Sha256::digest(draft.as_bytes())) != input.draft_sha256 {
+        return Err(denied());
+    }
+    let p = w
+        .request
+        .as_ref()
+        .and_then(|id| s.requests.get(id))
+        .filter(|p| p.status == "ready")
+        .ok_or_else(denied)?;
+    let j = p
+        .session
+        .as_ref()
+        .and_then(|id| s.jobs.get(id))
+        .filter(|j| j.protected && j.client == w.client && !j.cancel.load(Ordering::SeqCst))
+        .ok_or_else(denied)?;
+    let tx = j.tx.clone();
+    let recipient = Zeroizing::new(format!("{}{path}", w.origin));
+    let aad = format!(
+        "HeavenKey protected delivery v1\0{id}\0{}\0{}\0{}",
+        input.epoch, input.revision, input.draft_sha256
+    );
+    let plain = app.broker.unseal_bytes(aad.as_bytes(), &input.sealed)?;
+    let mut payload: DeliveryPayload = serde_json::from_slice(&plain).map_err(|_| invalid())?;
+    if payload.version != 1 || payload.document.len() > 16000 || payload.recipient_url != *recipient
+    {
+        return Err(invalid());
+    }
+    s.workspaces.get_mut(&id).ok_or_else(denied)?.delivery = "sending";
+    if tx
+        .try_send(BrowserCommand::Deliver {
+            workspace: id.clone(),
+            recipient,
+            document: Zeroizing::new(std::mem::take(&mut payload.document)),
+        })
+        .is_err()
+    {
+        s.workspaces.get_mut(&id).ok_or_else(denied)?.delivery = "failed";
+    }
+    Ok(Json(json!({"delivery":"sending"})))
+}
+
 pub(super) fn routes() -> Router<VaultApp> {
     Router::new()
         .route(
@@ -398,6 +537,10 @@ pub(super) fn routes() -> Router<VaultApp> {
             "/api/password-broker/protected/workspaces/{id}",
             axum::routing::delete(owner_close),
         )
+        .route(
+            "/api/password-broker/protected/workspaces/{id}/deliver",
+            post(deliver),
+        )
         .route("/api/password-broker/agent/protected-list", post(list))
         .route("/api/password-broker/agent/protected-login", post(login))
         .route("/api/password-broker/agent/protected-draft", post(draft))
@@ -408,6 +551,211 @@ pub(super) fn routes() -> Router<VaultApp> {
 mod tests {
     use super::super::tests::{agent, app, owner};
     use super::*;
+
+    fn sealed_delivery(
+        a: &VaultApp,
+        id: &str,
+        epoch: u64,
+        revision: u64,
+        hash: &str,
+        recipient: &str,
+        document: &str,
+    ) -> Sealed {
+        use openssl::{encrypt::Encrypter, symm::encrypt_aead};
+        let aad = format!("HeavenKey protected delivery v1\0{id}\0{epoch}\0{revision}\0{hash}");
+        let key = [31; 32];
+        let iv = [17; 12];
+        let mut tag = [0; 16];
+        let plain =
+            serde_json::to_vec(&json!({"version":1,"recipient_url":recipient,"document":document}))
+                .unwrap();
+        let mut ciphertext = encrypt_aead(
+            Cipher::aes_256_gcm(),
+            &key,
+            Some(&iv),
+            aad.as_bytes(),
+            &plain,
+            &mut tag,
+        )
+        .unwrap();
+        ciphertext.extend(tag);
+        let mut enc = Encrypter::new(a.broker.key().unwrap()).unwrap();
+        enc.set_rsa_padding(Padding::PKCS1_OAEP).unwrap();
+        enc.set_rsa_oaep_md(MessageDigest::sha256()).unwrap();
+        enc.set_rsa_mgf1_md(MessageDigest::sha256()).unwrap();
+        let mut wrapped = vec![0; 384];
+        let n = enc.encrypt(&key, &mut wrapped).unwrap();
+        wrapped.truncate(n);
+        Sealed {
+            key: URL_SAFE_NO_PAD.encode(wrapped),
+            iv: URL_SAFE_NO_PAD.encode(iv),
+            ciphertext: URL_SAFE_NO_PAD.encode(ciphertext),
+        }
+    }
+    #[test]
+    fn recipient_paths_are_canonical_and_cannot_override_origin() {
+        for good in ["/", "/inbox", "/api/documents/send"] {
+            assert!(recipient_path(good), "{good}");
+        }
+        for bad in [
+            "",
+            "//evil.test",
+            "/a/../b",
+            "/./a",
+            "/%2e%2e",
+            "/a?x",
+            "/a#b",
+            "/a\\b",
+            "/a b",
+            "/a//b",
+            "/a[b]",
+            "/@evil.test",
+            "/ü",
+        ] {
+            assert!(!recipient_path(bad), "{bad}");
+        }
+    }
+    #[tokio::test]
+    async fn sealed_delivery_is_owner_only_aad_bound_exact_recipient_and_once_only() {
+        use sha2::{Digest, Sha256};
+        let a = app();
+        let (h, client) = setup(&a).await;
+        let mut p = input(&a, &client);
+        p.recipient_path = Some("/inbox".into());
+        let id = p.workspace_id.clone();
+        let _ = publish(State(a.clone()), owner(&a), Json(p)).await.unwrap();
+        let rid = requested(&a, &h, &id).await;
+        let (sid, _) = ready(&a, &rid);
+        let (epoch, revision, text, rx) = {
+            let mut s = a.broker.state(&a).unwrap();
+            let text = format!("Hallo [[HK:{}]].", s.workspaces[&id].references[0].id);
+            s.workspaces.get_mut(&id).unwrap().draft = Some(text.clone());
+            let (tx, rx) = mpsc::sync_channel(1);
+            s.jobs.get_mut(&sid).unwrap().tx = tx;
+            (s.epoch, s.revision, text, rx)
+        };
+        let hash = format!("{:x}", Sha256::digest(text.as_bytes()));
+        for (headers, target, bind_epoch, bind_hash, document) in [
+            (
+                h.clone(),
+                "https://example.com/inbox",
+                epoch,
+                hash.as_str(),
+                "owner document",
+            ),
+            (
+                owner(&a),
+                "https://evil.test/inbox",
+                epoch,
+                hash.as_str(),
+                "owner document",
+            ),
+            (
+                owner(&a),
+                "https://example.com/other",
+                epoch,
+                hash.as_str(),
+                "owner document",
+            ),
+            (
+                owner(&a),
+                "https://example.com/inbox",
+                epoch + 1,
+                hash.as_str(),
+                "owner document",
+            ),
+            (
+                owner(&a),
+                "https://example.com/inbox",
+                epoch,
+                "0000000000000000000000000000000000000000000000000000000000000000",
+                "owner document",
+            ),
+        ] {
+            let sealed =
+                sealed_delivery(&a, &id, bind_epoch, revision, bind_hash, target, document);
+            assert!(
+                deliver(
+                    State(a.clone()),
+                    headers,
+                    axum::extract::Path(id.clone()),
+                    Json(Delivery {
+                        epoch,
+                        revision,
+                        draft_sha256: hash.clone(),
+                        sealed
+                    })
+                )
+                .await
+                .is_err()
+            );
+            assert_eq!(a.broker.state(&a).unwrap().workspaces[&id].delivery, "none");
+        }
+        for n in 0..2 {
+            let sealed = sealed_delivery(
+                &a,
+                &id,
+                epoch,
+                revision,
+                &hash,
+                "https://example.com/inbox",
+                "owner document",
+            );
+            let result = deliver(
+                State(a.clone()),
+                owner(&a),
+                axum::extract::Path(id.clone()),
+                Json(Delivery {
+                    epoch,
+                    revision,
+                    draft_sha256: hash.clone(),
+                    sealed,
+                }),
+            )
+            .await;
+            assert_eq!(result.is_ok(), n == 0);
+        }
+        match rx.try_recv().unwrap() {
+            BrowserCommand::Deliver {
+                recipient,
+                document,
+                ..
+            } => {
+                assert_eq!(*recipient, "https://example.com/inbox");
+                assert_eq!(*document, "owner document");
+            }
+            _ => panic!("wrong operation"),
+        }
+        assert!(rx.try_recv().is_err());
+        for outcome in ["sending", "accepted", "failed", "unknown"] {
+            a.broker
+                .state(&a)
+                .unwrap()
+                .workspaces
+                .get_mut(&id)
+                .unwrap()
+                .delivery = outcome;
+            let Json(out) = agent_status(
+                State(a.clone()),
+                h.clone(),
+                Json(RequestId {
+                    request_id: rid.clone(),
+                }),
+            )
+            .await
+            .unwrap();
+            assert_eq!(out, json!({"status":"approved"}));
+            let Json(out) = list(State(a.clone()), h.clone(), Json(Empty {}))
+                .await
+                .unwrap();
+            let wire = out.to_string();
+            assert!(
+                !wire.contains("delivery")
+                    && !wire.contains("recipient")
+                    && !wire.contains("inbox")
+            );
+        }
+    }
 
     async fn setup(a: &VaultApp) -> (HeaderMap, String) {
         let _ = unlock(State(a.clone()), owner(a), Json(Empty {}))
@@ -445,6 +793,7 @@ mod tests {
             source_id: "private-login-source".into(),
             origin: "https://example.com".into(),
             template: "reply".into(),
+            recipient_path: None,
             references: ["person", "email", "case"]
                 .iter()
                 .map(|kind| Reference {
@@ -492,10 +841,112 @@ mod tests {
                 tx,
             },
         );
+        let wid = s.requests[rid].workspace.clone().unwrap();
+        s.workspaces.get_mut(&wid).unwrap().approved = true;
         let p = s.requests.get_mut(rid).unwrap();
         p.status = "ready";
         p.session = Some(sid.clone());
         (sid, cancel)
+    }
+    #[tokio::test]
+    async fn retired_protected_requests_preserve_tombstones_without_poisoning_owner_projection() {
+        let a = app();
+        let (h, client) = setup(&a).await;
+        let mut ids = Vec::new();
+        for _ in 0..32 {
+            ids.push(published(&a, &client).await);
+        }
+        for id in &ids {
+            requested(&a, &h, id).await;
+            let _ = close(
+                State(a.clone()),
+                h.clone(),
+                Json(WorkspaceId {
+                    workspace_id: id.clone(),
+                }),
+            )
+            .await
+            .unwrap();
+        }
+        let Json(pair) = pairing(State(a.clone()), owner(&a), Json(Empty {}))
+            .await
+            .unwrap();
+        let Json(normal) = connect(
+            State(a.clone()),
+            agent(""),
+            Json(Connect {
+                code: pair["code"].as_str().unwrap().into(),
+                label: "Ordinary synthetic".into(),
+            }),
+        )
+        .await
+        .unwrap();
+        let Json(r) = request(
+            State(a.clone()),
+            agent(normal["token"].as_str().unwrap()),
+            Json(Ask {
+                origin: "https://example.com".into(),
+                scope: "login_read".into(),
+            }),
+        )
+        .await
+        .unwrap();
+        let Json(out) = status(State(a.clone()), owner(&a)).await.unwrap();
+        assert!(out["requests"].as_array().unwrap().len() <= 32);
+        assert_eq!(out["requests"].as_array().unwrap().len(), 1);
+        assert_eq!(out["requests"][0]["id"], r["request_id"]);
+        let s = a.broker.state(&a).unwrap();
+        assert_eq!(s.requests.len(), 33);
+        assert_eq!(s.workspaces.len(), 32);
+        assert!(ids.iter().all(|id| s.workspaces[id].closed));
+    }
+    #[tokio::test]
+    async fn protected_approval_projection_is_independent_of_site_and_delivery() {
+        let a = app();
+        let (h, client) = setup(&a).await;
+        let id = published(&a, &client).await;
+        let rid = requested(&a, &h, &id).await;
+        ready(&a, &rid);
+        for actual in ["running", "ready", "failed", "expired"] {
+            a.broker
+                .state(&a)
+                .unwrap()
+                .requests
+                .get_mut(&rid)
+                .unwrap()
+                .status = actual;
+            let Json(out) = agent_status(
+                State(a.clone()),
+                h.clone(),
+                Json(RequestId {
+                    request_id: rid.clone(),
+                }),
+            )
+            .await
+            .unwrap();
+            assert_eq!(out, json!({"status":"approved"}));
+            let Json(out) = list(State(a.clone()), h.clone(), Json(Empty {}))
+                .await
+                .unwrap();
+            assert_eq!(out["workspaces"][0]["status"], "approved");
+        }
+        let text = format!(
+            "Hallo [[HK:{}]].",
+            a.broker.state(&a).unwrap().workspaces[&id].references[0].id
+        );
+        a.broker.state(&a).unwrap().jobs.clear();
+        assert!(
+            draft(
+                State(a.clone()),
+                h,
+                Json(Draft {
+                    workspace_id: id,
+                    text
+                })
+            )
+            .await
+            .is_ok()
+        );
     }
     #[tokio::test]
     async fn protected_identity_cannot_upgrade_or_read_even_a_guessed_live_session() {
@@ -641,7 +1092,7 @@ mod tests {
         assert_eq!(s.requests[&rid].status, "pending");
     }
     #[tokio::test]
-    async fn protected_drafts_require_live_ready_login_and_exact_refs_and_are_once_only() {
+    async fn protected_drafts_require_owner_approval_and_exact_refs_and_are_once_only() {
         let a = app();
         let (h, client) = setup(&a).await;
         let id = published(&a, &client).await;

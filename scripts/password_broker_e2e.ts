@@ -144,7 +144,7 @@ const initialProfiles = await profiles();
 try {
  await mkdir(resolve(reportPath, ".."), { recursive: true });
  await assertFree(18269);
- fixture = Bun.serve({ port: 18269, hostname: "localhost", async fetch(req) {
+ fixture = Bun.serve({ port: 18269, hostname: "127.0.0.1", async fetch(req) {
   const url = new URL(req.url); fixtureTraffic.push({ path: url.pathname, method: req.method });
   if (url.pathname === "/login" && req.method === "POST") { const fields = new URLSearchParams(await req.text()); if (fields.get("username") !== username || fields.get("password") !== password) return new Response("Denied", { status: 403 }); loginPosts++; return new Response(null, { status: 302, headers: { location: "/account", "set-cookie": "broker_session=" + cookie + "; Path=/; HttpOnly; SameSite=Strict" } }); }
   const signed = req.headers.get("cookie")?.includes(cookie);

@@ -1,7 +1,15 @@
 import { expect, test } from "bun:test";
-import { buildProtectedPrompt, publishedReferences, resolveProtectedDraft, validatePrivateWorkspaces } from "./schema";
+import { buildProtectedPrompt, publishedReferences, resolveProtectedDraft, validatePrivateWorkspaces, validateRecipientPath } from "./schema";
 const ids = ["00000000-0000-4000-8000-000000000001", "00000000-0000-4000-8000-000000000002", "00000000-0000-4000-8000-000000000003", "00000000-0000-4000-8000-000000000004"];
 const login = { id: "login" };
+test("recipient endpoint is optional, canonical, and retained only in private record", () => {
+ for (const path of ["/", "/messages/send", "/post-42", "/a_b.json"]) expect(validateRecipientPath(path)).toBe(path);
+ for (const path of ["", "//host", "/a/../b", "/./b", "/a//b", "/a?x=1", "/a#x", "/a%2fb", "/a\\b", "/a@b", "https://host/a", "/a\n", "/" + "a".repeat(512), "/" + "a".repeat(510) + "%"]) expect(() => validateRecipientPath(path)).toThrow();
+ const record = { ...workspace, recipient_path: "/messages/send" };
+ expect(validatePrivateWorkspaces([record], [login])).toEqual([record]);
+ expect(JSON.stringify(publishedReferences(record))).not.toContain("messages");
+ expect(() => validatePrivateWorkspaces([{ ...record, recipient_path: "/a?x" }], [login])).toThrow();
+});
 export const workspace = { id: ids[0], created_at: "2026-10-22T12:00:00.000Z", source_id: "login", template: "reply" as const, references: [{ id: ids[1], kind: "person" as const, value: "Synthetic Name" }, { id: ids[2], kind: "email" as const, value: "synthetic@example.invalid" }, { id: ids[3], kind: "case" as const, value: "CASE-42" }] };
 test("private schema binds exact source and rejects unknown fields, duplicate or missing kinds, ids, oversized originals", () => {
  expect(validatePrivateWorkspaces([workspace], [login])).toEqual([workspace]);

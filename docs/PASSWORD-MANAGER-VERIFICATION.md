@@ -1,4 +1,4 @@
-# Passwortmanager 0.18.0 RC · Abnahme und Grenzen
+# Passwortmanager 0.19.0 RC · Abnahme und Grenzen
 
 Diese Ausgabe ergänzt wiederverwendbare SSH-Identitäten, den Import passender PKCS8-/Public-Key-Dateien, die Duplikatprüfung, eine Verbindungsvorschau und das Benennen vorhandener Passkeys. Die SSH-Identitäten liegen in derselben verschlüsselten Tresorhülle. Der bestehende SFTP-/FTPES-Broker behält ausdrückliche Einzelaufträge und Metadatenexporte für zehn Transferprogramme. Zehn Anbietervorlagen einschließlich netcup erleichtern die Einrichtung. Die Vorlagen sind keine Abnahme echter Kundenkonten oder sämtlicher nativer Fremdprogramme. Der [Transfervertrag](TRANSFER-BROKER.md) verlangt ein serverseitig eingeschränktes Konto; HeavenKey kann dessen Verzeichnisgrenze nicht beweisen.
 
@@ -8,7 +8,7 @@ Die Ausgabe integriert optionales PRF-Passkey-Entsperren, befristete verschlüss
 
 ## Geschützter Composer
 
-Die Ausgabe ergänzt einen eigenen geschützten Agentenzugang, drei strukturierte private Felder, zufällige Referenzen und eine lokale Klartextvorschau. Der geschützte Zugang darf keine Website-Inhalte lesen und kann keine gewöhnlichen Lese- oder Transferrechte übernehmen. `scripts/protected_flow_e2e.ts` prüft den Ablauf gegen die echte App; `scripts/protected_sandbox_e2e.ts` prüft zusätzlich die eingeschlossene Linux-Shell. Die 24 geplanten Fälle werden im Releasebericht einzeln zu ausgeführten Nachweisen oder verbleibenden Grenzen zugeordnet. Fall 24 behandelt Nebenkanäle als Restrisiko. Keine beliebige PII-Erkennung, externe Zustellung oder universelle Website-Automation wird behauptet. [Bedienung und Vertrag](PROTECTED-FLOW.md).
+Die Ausgabe ergänzt lokale Profilvorschläge, fokuserhaltende Statusanzeigen und einen einmaligen Besitzerversand an einen gebundenen Website-Endpunkt. Der geschützte Agent erhält ausschließlich Referenzen und den Zustand der Besitzerfreigabe; weder Website-Ergebnisse noch Sitzungsreferenz oder Versandresultat werden ausgegeben. `scripts/protected_flow_e2e.ts` prüft den Ablauf gegen die echte App; `scripts/protected_sandbox_e2e.ts` prüft die eingeschlossene Linux-Shell. Neue getrennte Fixtures prüfen kontrollierte DNS-Wechsel mit echtem TLS/Chromium, den unveränderten Fünf-Minuten-Ablauf und die Zustellung des aufgelösten Dokuments. Der Releasebericht bindet diese Nachweise an Quellen und Binärhashes und ordnet die 24 Fälle einzeln zu. Fall 24 behandelt verbleibende Nebenkanäle als Restrisiko. Beliebige PII-Erkennung und universelle Website-Automation sind nicht abgenommen. [Bedienung und Vertrag](PROTECTED-FLOW.md).
 
 ## Prüfumfang
 

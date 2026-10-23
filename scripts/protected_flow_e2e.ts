@@ -97,9 +97,15 @@ async function addLogin(title: string, url: string) {
 }
 async function review(id: string) { await settings(); await owner.locator("#broker-review-" + id).click(); await owner.locator("#broker-approval-dialog").waitFor(); }
 async function ready(token: string, id: string) {
- const result = await until(async () => (await agent("status", token, { request_id: id })).value, value => ["ready", "failed", "denied", "expired"].includes(value.status), 25);
- assert.equal(result.status, "ready", "Private Chrome login did not become ready"); assert(result.session_id); return result.session_id as string;
+ const approval = await until(async () => (await agent("status", token, { request_id: id })).value, value => value.status === "approved", 25);
+ assert.deepEqual(approval, { status: "approved" }, "Protected agent must see approval only");
+ const state = await until(async () => (await ownerApi("/api/password-broker")).value, value => value.requests.some((row: any) => row.id === id && ["ready", "failed", "denied", "expired"].includes(row.status)), 25);
+ const request = state.requests.find((row: any) => row.id === id); assert.equal(request.status, "ready", "Owner-observed private Chrome login did not become ready");
+ const sessions = state.sessions.filter((row: any) => row.client_id === request.client_id && row.origin === request.origin);
+ assert.equal(sessions.length, 1, "Owner harness must identify exactly one live private session");
+ return sessions[0].id as string;
 }
+
 async function profiles() { return (await readdir(profileRoot)).filter(name => /^heavenkey-broker-[0-9a-f-]{36}$/.test(name)); }
 async function cleanupOwnedBrowsers() {
  for (const signal of ["SIGTERM", "SIGKILL"] as const) {
@@ -168,7 +174,7 @@ async function localMain() {
  for (const path of sourceFiles.filter(path => path !== "scripts/protected_flow_e2e.ts")) assert(binaryTime >= (await stat(join(root,path))).mtimeMs, "Binary predates source; root must rebuild before protected acceptance: " + path);
  await assertFree(18369);
  const freshLogins: boolean[] = [];
- fixture = Bun.serve({ port: 18369, hostname: "localhost", async fetch(req) {
+ fixture = Bun.serve({ port: 18369, hostname: "127.0.0.1", async fetch(req) {
   const url = new URL(req.url); fixtureTraffic.push({ path: url.pathname, method: req.method });
   if (url.pathname === "/evil") throw Error("Cross-origin private browser request escaped policy");
   if (url.pathname === "/redirect-login") return new Response(null, { status: 302, headers: { location: "http://127.0.0.1:18369/evil" } });
@@ -215,7 +221,7 @@ async function localMain() {
  await protectedApprove(rid,published.source_id); const session=await ready(client.token,rid); assert.equal(loginPosts,1); const firstProfiles=await profiles(); assert(firstProfiles.length>0);
  assert(lastApproval); assert.notEqual((await ownerApi(lastApproval.path,lastApproval.body)).status,200);
  mapCase(5,"passed","Second protected-login and sealed owner approval replay both rejected.");
- mapCase(19,"passed","Explicit consent performed one real Chromium synthetic form login. Username/password reached only the approved local website; agent got status/session ID.");
+ mapCase(19,"passed","Explicit consent performed one real Chromium synthetic form login. Username/password reached only the approved local website; agent got exactly {status:approved}, with no session ID; only owner harness observed browser readiness.");
  const beforeTraffic=fixtureTraffic.length;
  for(const path of ["/account","/gzip","/binary","/redirect","/account?pii="+encodeURIComponent(person)]) await deniedRequest("read",client.token,{session_id:session,path});
  assert.equal(fixtureTraffic.length,beforeTraffic);
@@ -255,11 +261,27 @@ async function localMain() {
  mapCase(6,"partial","Explicit protected-close, owner deletion and actual vault revision revoke tested. Five-minute wall-clock expiry is covered by backend unit test, not waited in this 240-second browser run.");
  const redirectSource=await owner.locator("#protected-new").isEnabled(); assert(redirectSource); await owner.locator("#protected-new").click(); const redirectId=(await owner.locator("#protected-source option").filter({hasText:"Redirect control"}).getAttribute("value"))!; await owner.keyboard.press("Escape");
  const redirectJob=await compose(client.client_id,redirectId); const redirectRequest=await cli("protected-login",{token:client.token,workspace_id:redirectJob.workspace_id}); await protectedApprove(redirectRequest.request_id,redirectId);
- await until(async()=>(await agent("status",client.token,{request_id:redirectRequest.request_id})).value.status,value=>["failed","denied","expired"].includes(value),25);
+ await until(async()=>(await ownerApi("/api/password-broker")).value.requests.find((row:any)=>row.id===redirectRequest.request_id)?.status,value=>["failed","denied","expired"].includes(value),25);
+ assert.deepEqual((await agent("status",client.token,{request_id:redirectRequest.request_id})).value,{status:"approved"},"Failed website must not change agent approval projection");
+ const redirectRefs=(await cli("protected-list",{token:client.token})).workspaces.find((row:any)=>row.workspace_id===redirectJob.workspace_id).references;
+ assert.deepEqual(await cli("protected-draft",{token:client.token,workspace_id:redirectJob.workspace_id,text:`Hallo [[HK:${redirectRefs[0].id}]].`}),{status:"drafted"},"Owner approval permits drafting after website failure");
  assert(!fixtureTraffic.some(row=>row.path==="/evil")); mapCase(8,"partial","Real private-browser cross-origin login redirect failed closed without requesting destination. DNS-rebinding is not independently simulated.");
  await entries(); await owner.locator(`[data-entry-id='${published.source_id}'] button`).click(); await owner.locator("[data-testid=delete-entry]").click(); await owner.locator("#delete-confirm").click();
  await owner.locator("#delete-dialog-status").filter({hasText:"geschützte Aufträge"}).waitFor(); await owner.locator("#delete-cancel").click(); await settings();
  check("referenced login cannot be removed before its encrypted protected records");
+ const tombstoneClient=await protectedPair("Retired request regression");
+ for(let i=0;i<32;i++) {
+  const id=crypto.randomUUID();
+  const grant=await ownerApi("/api/password-broker/protected/workspaces",{workspace_id:id,client_id:tombstoneClient.client_id,epoch:redirectJob.epoch,revision:redirectJob.revision,source_id:redirectJob.source_id,origin:fixtureOrigin,template:"reply",references:["person","email","case"].map(kind=>({id:crypto.randomUUID(),kind}))});
+  assert.equal(grant.status,200);
+  assert.equal((await agent("protected-login",tombstoneClient.token,{workspace_id:id})).status,200);
+  assert.equal((await agent("protected-close",tombstoneClient.token,{workspace_id:id})).status,200);
+ }
+ const normalRequest=await agent("request",legacy.token,{origin:fixtureOrigin,scope:"login_read"}); assert.equal(normalRequest.status,200);
+ const ownerProjection=(await ownerApi("/api/password-broker")).value;
+ assert(ownerProjection.requests.length<=32); assert(ownerProjection.requests.some((row:any)=>row.id===normalRequest.value.request_id));
+ await owner.locator("#broker-review-"+normalRequest.value.request_id).waitFor();
+ check("32 retired protected request tombstones preserve ordinary owner approval through the real checkedBroker decoder");
  await owner.locator("#protected-preview-"+workspace).click(); await entries(); await owner.locator("#lock").click();
  assert.equal(await owner.locator("#protected-preview").textContent(),""); for(const kind of ["person","email","case"]) assert.equal(await owner.locator("#protected-"+kind).inputValue(),"");
  await unlock(); await settings(); await owner.locator("#protected-preview-"+workspace).waitFor(); await owner.locator("#protected-preview-"+workspace).click(); assert((await owner.locator("#protected-preview").innerText()).includes(person));

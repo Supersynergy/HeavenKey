@@ -104,6 +104,90 @@ fn approved_url(value: &str, origin: &Url) -> bool {
     })
 }
 
+fn public_ip(ip: std::net::IpAddr) -> bool {
+    use std::net::IpAddr;
+    match ip {
+        IpAddr::V4(ip) => {
+            let [a, b, c, _] = ip.octets();
+            !(matches!(a, 0 | 10 | 127)
+                || a >= 224
+                || (a == 100 && (64..=127).contains(&b))
+                || (a == 169 && b == 254)
+                || (a == 172 && (16..=31).contains(&b))
+                || (a == 192
+                    && (b == 168 || (b == 0 && matches!(c, 0 | 2)) || (b == 88 && c == 99)))
+                || (a == 198 && (matches!(b, 18 | 19) || (b == 51 && c == 100)))
+                || (a == 203 && b == 0 && c == 113))
+        }
+        IpAddr::V6(ip) => {
+            let s = ip.segments();
+            (s[0] & 0xe000) == 0x2000
+                && !(s[0] == 0x2001 && (s[1] < 0x0200 || s[1] == 0x0db8))
+                && s[0] != 0x2002
+                && !(s[0] == 0x3fff && s[1] < 0x1000)
+        }
+    }
+}
+fn validated_pin(origin: &Url, answers: &[std::net::IpAddr]) -> Result<String, &'static str> {
+    let host = origin.host_str().ok_or("invalid_origin")?;
+    let local = origin.scheme() == "http" && host == "localhost";
+    if answers.is_empty()
+        || answers.iter().any(|ip| {
+            if local {
+                !ip.is_loopback()
+            } else {
+                !public_ip(*ip)
+            }
+        })
+    {
+        return Err("browser_address_denied");
+    }
+    let selected = answers
+        .iter()
+        .find(|ip| ip.is_ipv4())
+        .unwrap_or(&answers[0]);
+    let address = match selected {
+        std::net::IpAddr::V4(ip) => ip.to_string(),
+        std::net::IpAddr::V6(ip) => format!("[{ip}]"),
+    };
+    Ok(format!("MAP {host} {address}, MAP * ~NOTFOUND"))
+}
+fn resolve_pin(origin: &Url) -> Result<String, &'static str> {
+    use std::net::ToSocketAddrs;
+    static RESOLVING: AtomicBool = AtomicBool::new(false);
+    struct ResolverGuard;
+    impl Drop for ResolverGuard {
+        fn drop(&mut self) {
+            RESOLVING.store(false, Ordering::Release);
+        }
+    }
+    if RESOLVING
+        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+        .is_err()
+    {
+        return Err("browser_dns_busy");
+    }
+    let guard = ResolverGuard;
+    let host = origin.host_str().ok_or("invalid_origin")?.to_owned();
+    let port = origin.port_or_known_default().ok_or("invalid_origin")?;
+    let (tx, rx) = mpsc::sync_channel(1);
+    thread::Builder::new()
+        .name("broker-dns".into())
+        .spawn(move || {
+            let _guard = guard;
+            let result = (host.as_str(), port)
+                .to_socket_addrs()
+                .map(|addresses| addresses.map(|a| a.ip()).collect::<Vec<_>>());
+            let _ = tx.send(result);
+        })
+        .map_err(|_| "browser_dns_failed")?;
+    let answers = rx
+        .recv_timeout(Duration::from_secs(5))
+        .map_err(|_| "browser_dns_failed")?
+        .map_err(|_| "browser_dns_failed")?;
+    validated_pin(origin, &answers)
+}
+
 fn private_profile() -> Result<PathBuf, &'static str> {
     let profile = std::env::temp_dir().join(format!("heavenkey-broker-{}", uuid::Uuid::new_v4()));
     uac_browser_pipe::create_private_directory(&profile).map_err(|_| "browser_profile_failed")?;
@@ -132,6 +216,10 @@ impl BrowserSession {
         {
             return Err("invalid_origin");
         }
+        if origin.scheme() == "http" && origin.host_str() != Some("localhost") {
+            return Err("invalid_origin");
+        }
+        let resolver_rules = resolve_pin(&origin)?;
         origin.set_path("/");
         origin.set_query(None);
         origin.set_fragment(None);
@@ -166,8 +254,9 @@ impl BrowserSession {
                 "--disk-cache-size=0", "--media-cache-size=0", "--password-store=basic",
                 "--disable-save-password-bubble", "--disable-client-side-phishing-detection",
                 "--disable-features=PasswordManagerOnboarding,PasswordLeakDetection,AutofillServerCommunication,Translate,MediaRouter,OptimizationHints,Prerender2",
-                "--force-webrtc-ip-handling-policy=disable_non_proxied_udp", "about:blank",
-            ]).arg(format!("--user-data-dir={}", session.profile.display()))
+                "--force-webrtc-ip-handling-policy=disable_non_proxied_udp", "--no-proxy-server", "--disable-quic", "--dns-prefetch-disable", "about:blank",
+            ]).arg(format!("--host-resolver-rules={resolver_rules}"))
+                .arg(format!("--user-data-dir={}", session.profile.display()))
                 .stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
             uac_browser_pipe::spawn(&mut command).map_err(|_| "browser_start_failed")?
         };
@@ -610,6 +699,67 @@ impl BrowserSession {
         }
     }
 
+    /// Owner-only fixed operation in an isolated world; website JavaScript cannot replace fetch.
+    pub fn deliver(&mut self, recipient: &str, document: &str) -> &'static str {
+        let outcome = self.deliver_inner(recipient, document).unwrap_or("unknown");
+        self.close();
+        outcome
+    }
+    fn deliver_inner(
+        &mut self,
+        recipient: &str,
+        document: &str,
+    ) -> Result<&'static str, &'static str> {
+        let deadline = Instant::now() + COMMAND_TIME;
+        self.check(deadline)?;
+        if document.len() > 16000 || !approved_url(recipient, &self.origin) {
+            return Ok("failed");
+        }
+        let target = self.target_session.clone();
+        let tree = self.command("Page.getFrameTree", json!({}), Some(&target), deadline)?;
+        let frame = tree["frameTree"]["frame"]["id"]
+            .as_str()
+            .ok_or("browser_protocol_failed")?;
+        let world = self.command(
+            "Page.createIsolatedWorld",
+            json!({"frameId":frame,"worldName":"HeavenKey protected delivery"}),
+            Some(&target),
+            deadline,
+        )?;
+        let context = world["executionContextId"]
+            .as_u64()
+            .ok_or("browser_protocol_failed")?;
+        let url = Zeroizing::new(
+            serde_json::to_string(recipient).map_err(|_| "browser_protocol_failed")?,
+        );
+        let body =
+            Zeroizing::new(serde_json::to_string(document).map_err(|_| "browser_protocol_failed")?);
+        let expression = Zeroizing::new(format!(
+            "(async()=>{{try{{const r=await fetch({},{{method:'POST',credentials:'include',redirect:'error',cache:'no-store',headers:{{'Content-Type':'text/plain;charset=UTF-8'}},body:{}}});return r.ok?'accepted':'failed';}}catch{{return 'unknown';}}}})()",
+            url.as_str(),
+            body.as_str()
+        ));
+        let encoded = Zeroizing::new(
+            serde_json::to_string(expression.as_str()).map_err(|_| "browser_protocol_failed")?,
+        );
+        let params = Zeroizing::new(format!(
+            "{{\"expression\":{},\"contextId\":{context},\"returnByValue\":true,\"awaitPromise\":true,\"timeout\":4000}}",
+            encoded.as_str()
+        ));
+        let mut reply = self.command_raw("Runtime.evaluate", &params, Some(&target), deadline)?;
+        let outcome = if reply.get("exceptionDetails").is_some() {
+            "unknown"
+        } else {
+            match reply["result"]["value"].as_str() {
+                Some("accepted") => "accepted",
+                Some("failed") => "failed",
+                _ => "unknown",
+            }
+        };
+        wipe_json(&mut reply);
+        Ok(outcome)
+    }
+
     pub fn read(&mut self, path: &str) -> Result<Value, &'static str> {
         let result = self.read_inner(path);
         if result.is_err() {
@@ -852,6 +1002,54 @@ mod tests {
     use super::*;
 
     #[test]
+    fn dns_all_answers_must_be_public_and_chromium_is_pinned_to_one() {
+        let origin = Url::parse("https://synthetic.test/").unwrap();
+        let parse = |s: &str| s.parse::<std::net::IpAddr>().unwrap();
+        assert_eq!(
+            validated_pin(&origin, &[parse("93.184.216.34"), parse("1.1.1.1")]).unwrap(),
+            "MAP synthetic.test 93.184.216.34, MAP * ~NOTFOUND"
+        );
+        assert!(validated_pin(&origin, &[]).is_err());
+        for ip in [
+            "0.0.0.0",
+            "10.1.2.3",
+            "100.64.0.1",
+            "127.0.0.1",
+            "169.254.169.254",
+            "172.16.0.1",
+            "192.168.1.1",
+            "192.0.0.1",
+            "192.0.2.1",
+            "192.88.99.1",
+            "198.18.0.1",
+            "198.51.100.1",
+            "203.0.113.1",
+            "224.0.0.1",
+            "255.255.255.255",
+            "::",
+            "::1",
+            "::ffff:127.0.0.1",
+            "64:ff9b::7f00:1",
+            "100::1",
+            "2001:db8::1",
+            "2002:7f00:1::1",
+            "3fff::1",
+            "fc00::1",
+            "fe80::1",
+            "ff02::1",
+        ] {
+            assert!(
+                validated_pin(&origin, &[parse("93.184.216.34"), parse(ip)]).is_err(),
+                "{ip}"
+            );
+        }
+        assert!(public_ip(parse("2606:4700:4700::1111")));
+        let local = Url::parse("http://localhost:1234/").unwrap();
+        assert!(validated_pin(&local, &[parse("127.0.0.1"), parse("::1")]).is_ok());
+        assert!(validated_pin(&local, &[parse("1.1.1.1")]).is_err());
+    }
+
+    #[test]
     fn redaction_handles_mixed_case_encoding_and_marker_credentials() {
         let mut session = BrowserSession {
             child: None,
@@ -952,6 +1150,16 @@ mod tests {
                         "native form did not send expected synthetic credentials"
                     );
                     "HTTP/1.1 303 See Other\r\nLocation: /account\r\nSet-Cookie: fixture=synthetic-cookie; HttpOnly; SameSite=Strict\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".to_owned()
+                } else if request.starts_with("POST /inbox ") {
+                    assert!(request.contains("fixture=synthetic-cookie"));
+                    assert!(
+                        request
+                            .to_ascii_lowercase()
+                            .contains("content-type: text/plain;charset=utf-8")
+                    );
+                    assert!(request.ends_with("synthetic owner document"));
+                    "HTTP/1.1 202 Accepted\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                        .to_owned()
                 } else if request.starts_with("GET /offsite ") {
                     format!(
                         "HTTP/1.1 302 Found\r\nLocation: http://{forbidden_address}/capture\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
@@ -982,7 +1190,7 @@ mod tests {
         let cancel = Arc::new(AtomicBool::new(false));
         let result = BrowserSession::start(
             Login {
-                url: format!("http://{address}/"),
+                url: format!("http://localhost:{}/", address.port()),
                 username: Zeroizing::new("canary-user".into()),
                 password: Zeroizing::new("canary-password".into()),
                 otp: Some(Zeroizing::new("123456".into())),
@@ -1007,9 +1215,29 @@ mod tests {
             assert!(!serialized.contains(canary), "canary leaked");
         }
         assert_eq!(result["links"].as_array().unwrap().len(), 1);
+        let mut delivery = BrowserSession::start(
+            Login {
+                url: format!("http://localhost:{}/", address.port()),
+                username: Zeroizing::new("canary-user".into()),
+                password: Zeroizing::new("canary-password".into()),
+                otp: Some(Zeroizing::new("123456".into())),
+            },
+            Arc::new(AtomicBool::new(false)),
+        )
+        .expect("delivery private browser");
+        let delivery_profile = delivery.profile.clone();
+        assert_eq!(
+            delivery.deliver(
+                &format!("http://localhost:{}/inbox", address.port()),
+                "synthetic owner document"
+            ),
+            "accepted"
+        );
+        assert!(!delivery_profile.exists());
+        drop(delivery);
         let mut redirected = BrowserSession::start(
             Login {
-                url: format!("http://{address}/"),
+                url: format!("http://localhost:{}/", address.port()),
                 username: Zeroizing::new("canary-user".into()),
                 password: Zeroizing::new("canary-password".into()),
                 otp: Some(Zeroizing::new("123456".into())),

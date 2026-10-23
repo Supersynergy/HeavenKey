@@ -71,10 +71,9 @@ assert all(set(ref)=={'id','kind'} for ref in workspace['references'])
 wid=workspace['workspace_id']
 code,request=rpc('protected/login',{'workspace_id':wid});assert code==200
 assert rpc('protected/login',{'workspace_id':wid})[0]!=200
-ready=wait(lambda:rpc('status',{'request_id':request['request_id']})[1],lambda row:row.get('status') in ['ready','failed','denied'])
-assert ready['status']=='ready'
-assert set(ready)<=set(['status','session_id'])
-assert rpc('read',{'session_id':ready['session_id'],'path':'/'})[0]!=200
+ready=wait(lambda:rpc('status',{'request_id':request['request_id']})[1],lambda row:row.get('status')=='approved')
+assert ready=={'status':'approved'}
+assert rpc('read',{'session_id':'00000000-0000-4000-8000-000000000001','path':'/'})[0]!=200
 assert rpc('request',{'origin':'https://example.invalid','scope':'login_read'})[0]!=200
 assert rpc('protected/draft',{'workspace_id':wid,'text':'[[HK:00000000-0000-0000-0000-000000000000]]'})[0]!=200
 refs={ref['kind']:'[[HK:'+ref['id']+']]' for ref in workspace['references']}
@@ -87,7 +86,7 @@ assert rpc('protected/close',{'workspace_id':wid})[0]==200
 `;
 try {
  for (const url of [origin, site]) { try { await fetch(url, { signal: AbortSignal.timeout(300) }); throw Error("Occupied synthetic port"); } catch (error) { if (String(error).includes("Occupied")) throw error; } }
- fixture = Bun.serve({ port: 18379, hostname: "localhost", async fetch(req) {
+ fixture = Bun.serve({ port: 18379, hostname: "127.0.0.1", async fetch(req) {
   const path = new URL(req.url).pathname;
   if (req.method === "POST" && path === "/login") {
    const data = new URLSearchParams(await req.text()); assert.equal(data.get("username"), username); assert.equal(data.get("password"), password); loginPosts++;
@@ -121,14 +120,16 @@ try {
  await owner.locator("#protected-publish").click(); await owner.locator("#protected-composer-dialog").waitFor({ state: "hidden" }); await owner.locator("#protected-status").filter({ hasText: "Verschlüsselt gespeichert und" }).waitFor();
  const pending = await until(() => api("/api/password-broker"), row => row.requests.some((r: any) => r.scope === "protected" && r.status === "pending")); const request = pending.requests.find((r: any) => r.scope === "protected" && r.status === "pending");
  await owner.locator("#broker-review-" + request.id).click(); await owner.locator("#broker-approval-dialog").waitFor(); assert.equal(await owner.locator("#broker-account").isDisabled(), true); await owner.locator("#broker-consent").check(); await owner.locator("#broker-approve").click(); await owner.locator("#broker-approval-dialog").waitFor({ state: "hidden" });
- const drafted = await until(() => api("/api/password-broker/protected/workspaces"), row => row.workspaces.some((w: any) => w.status === "drafted")); const workspace = drafted.workspaces.find((w: any) => w.status === "drafted");
+ const drafted = await until(() => api("/api/password-broker/protected/workspaces"), row => row.workspaces.some((w: any) => w.approved === true && typeof w.draft === "string")); const workspace = drafted.workspaces.find((w: any) => w.approved === true && typeof w.draft === "string");
+ const ownerReady = await until(() => api("/api/password-broker"), row => row.requests.some((r:any) => r.id === request.id && ["ready","failed","denied","expired"].includes(r.status)));
+ assert.equal(ownerReady.requests.find((r:any) => r.id === request.id).status,"ready");
  assert.equal(loginPosts, 1); check("contained shell authenticates through explicit owner approval without credentials or page data");
  await owner.locator("#protected-preview-" + workspace.workspace_id).click(); const preview = await owner.locator("#protected-preview").innerText(); for (const value of privateValues) assert(preview.includes(value));
  check("only local owner preview resolves private references");
  await until(async () => guest!.exitCode, code => code !== null, 20); assert.equal(guest.exitCode, 0, "Guest failed: " + output);
  const records = output.split("\n").flatMap(line => { try { return [JSON.parse(line)]; } catch { return []; } });
  const guestRecords = records.flatMap(row => typeof row.heavenkey_agent_output === "string" ? row.heavenkey_agent_output.split("\n").flatMap((line: string) => { try { return [JSON.parse(line)]; } catch { return []; } }) : []);
- assert(guestRecords.some(row => row.protected_guest_pass === true));
+ assert(guestRecords.some(row => row.protected_guest_pass === true && JSON.stringify(row.status_keys) === JSON.stringify(["status"])));
  for (const secret of [master, username, password, cookie, hostCanary, ownerToken, code, ...privateValues]) assert(!output.includes(secret), "Synthetic secret in guest/host transcript");
  check("guest env/filesystem/PTY and arbitrary reveal operations cannot obtain host secrets"); check("guest can submit one pseudonymous draft but replay and legacy raw reads are denied");
  const receipt = records.filter(row => row.heavenkey_sandbox_receipt === 1).at(-1); assert(receipt && receipt.container_id === container && receipt.removed === true); assert.equal((await docker(["inspect", container], true)).code !== 0, true);

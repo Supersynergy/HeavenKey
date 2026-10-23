@@ -293,7 +293,7 @@ async function pendingFrom(run: ReturnType<typeof launch>) {
 try {
  await free(18278); await free(18279);
  imageFacts = JSON.parse((await docker(["image", "inspect", image])).out)[0]; dockerFacts = JSON.parse((await docker(["info", "--format", "{{json .}}"])).out); assert.equal(dockerFacts.OSType, "linux");
- fixture = Bun.serve({ port: 18279, hostname: "localhost", async fetch(request) {
+ fixture = Bun.serve({ port: 18279, hostname: "127.0.0.1", async fetch(request) {
   const url = new URL(request.url);
   if (url.pathname === "/login" && request.method === "POST") { const body = new URLSearchParams(await request.text()); if (body.get("username") !== username || body.get("password") !== password) return new Response("denied", { status: 403 }); loginPosts++; return new Response(null, { status: 302, headers: { location: "/account", "set-cookie": "session=" + cookie + "; HttpOnly; SameSite=Strict; Path=/" } }); }
   if (request.headers.get("cookie")?.includes(cookie)) return new Response("<!doctype html><title>Synthetic contained account</title><h1>Synthetic contained account</h1><p>" + username + " " + password + "</p>", { headers: { "Content-Type": "text/html" } });

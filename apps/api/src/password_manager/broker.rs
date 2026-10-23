@@ -74,7 +74,15 @@ struct Job {
     until: Instant,
     expires: u64,
     cancel: Arc<AtomicBool>,
-    tx: mpsc::SyncSender<ReadCommand>,
+    tx: mpsc::SyncSender<BrowserCommand>,
+}
+enum BrowserCommand {
+    Read(ReadCommand),
+    Deliver {
+        workspace: String,
+        recipient: Zeroizing<String>,
+        document: Zeroizing<String>,
+    },
 }
 struct ReadCommand {
     path: String,
@@ -347,10 +355,10 @@ impl Broker {
         s.sweep(rev);
         Ok(s)
     }
-    fn unseal(&self, id: &str, epoch: u64, rev: u64, sealed: &Sealed) -> ApiResult<Login> {
+    fn unseal_bytes(&self, aad: &[u8], sealed: &Sealed) -> ApiResult<Zeroizing<Vec<u8>>> {
         if !decoded(&sealed.key, 384, 384)
             || !decoded(&sealed.iv, 12, 12)
-            || !decoded(&sealed.ciphertext, 17, 16384)
+            || !decoded(&sealed.ciphertext, 17, 100_000)
         {
             return Err(invalid());
         }
@@ -371,18 +379,24 @@ impl Broker {
             .decode(&sealed.ciphertext)
             .map_err(|_| invalid())?;
         let split = cipher.len() - 16;
-        let aad = format!("HeavenKey broker v1\0{id}\0{epoch}\0{rev}");
-        let plain = Zeroizing::new(
+        Ok(Zeroizing::new(
             decrypt_aead(
                 Cipher::aes_256_gcm(),
                 &key[..32],
                 Some(&iv),
-                aad.as_bytes(),
+                aad,
                 &cipher[..split],
                 &cipher[split..],
             )
             .map_err(|_| invalid())?,
-        );
+        ))
+    }
+    fn unseal(&self, id: &str, epoch: u64, rev: u64, sealed: &Sealed) -> ApiResult<Login> {
+        if !decoded(&sealed.ciphertext, 17, 16384) {
+            return Err(invalid());
+        }
+        let aad = format!("HeavenKey broker v1\0{id}\0{epoch}\0{rev}");
+        let plain = self.unseal_bytes(aad.as_bytes(), sealed)?;
         let mut p: Payload = serde_json::from_slice(&plain).map_err(|_| invalid())?;
         if p.version != 1
             || p.url.len() > 2048
@@ -477,7 +491,7 @@ async fn status(State(app): State<VaultApp>, h: HeaderMap) -> ApiResult<Json<Val
     let key = URL_SAFE_NO_PAD.encode(app.broker.key()?.public_key_to_der().map_err(internal)?);
     let s = app.broker.state(&app)?;
     Ok(Json(
-        json!({"version":1,"enabled":true,"unlocked":s.owner.is_some(),"epoch":s.epoch,"public_key":key,"browser_available":browser_executor::available(),"process_protection":uac_browser_pipe::process_protection(),"limits":{"session_seconds":SESSION_TTL,"client_operations_per_minute":120,"invalid_tokens_per_minute":32},"clients":s.clients.values().map(|c|json!({"id":c.id,"label":c.label,"expires_at":c.expires,"protected":c.protected})).collect::<Vec<_>>(),"requests":s.requests.values().map(|p|json!({"id":p.id,"client_id":p.client,"label":p.label,"origin":p.origin,"scope":if p.workspace.is_some(){"protected"}else{"login_read"},"source_id":p.workspace.as_ref().and_then(|id| s.workspaces.get(id)).map(|w| &w.source),"status":p.status,"expires_at":p.expires})).collect::<Vec<_>>(),"sessions":s.jobs.values().map(|j|json!({"id":j.id,"client_id":j.client,"label":j.label,"origin":j.origin,"expires_at":j.expires})).collect::<Vec<_>>(),"audit":s.audit}),
+        json!({"version":1,"enabled":true,"unlocked":s.owner.is_some(),"epoch":s.epoch,"public_key":key,"browser_available":browser_executor::available(),"process_protection":uac_browser_pipe::process_protection(),"limits":{"session_seconds":SESSION_TTL,"client_operations_per_minute":120,"invalid_tokens_per_minute":32},"clients":s.clients.values().map(|c|json!({"id":c.id,"label":c.label,"expires_at":c.expires,"protected":c.protected})).collect::<Vec<_>>(),"requests":s.requests.values().filter(|p| p.workspace.as_ref().is_none_or(|id| s.workspaces.get(id).is_some_and(|w| w.live(&s)))).map(|p|json!({"id":p.id,"client_id":p.client,"label":p.label,"origin":p.origin,"scope":if p.workspace.is_some(){"protected"}else{"login_read"},"source_id":p.workspace.as_ref().and_then(|id| s.workspaces.get(id)).map(|w| &w.source),"status":p.status,"expires_at":p.expires})).collect::<Vec<_>>(),"sessions":s.jobs.values().map(|j|json!({"id":j.id,"client_id":j.client,"label":j.label,"origin":j.origin,"expires_at":j.expires})).collect::<Vec<_>>(),"audit":s.audit}),
     ))
 }
 async fn unlock(
@@ -601,8 +615,9 @@ async fn request(
         return Err(busy());
     }
     if s.requests.len() >= 32 {
-        s.requests
-            .retain(|_, p| matches!(p.status, "pending" | "running" | "ready"));
+        s.requests.retain(|_, p| {
+            p.workspace.is_some() || matches!(p.status, "pending" | "running" | "ready")
+        });
     }
     let id = Uuid::new_v4().to_string();
     let expires = now() + 120;
@@ -637,7 +652,24 @@ async fn agent_status(
         .get(&input.request_id)
         .filter(|p| p.client == c.id)
         .ok_or_else(denied)?;
-    let out = json!({"status":p.status,"session_id":p.session});
+    let out = if let Some(workspace) = &p.workspace {
+        let status = s.workspaces.get(workspace).map_or("closed", |w| {
+            if !w.live(&s) {
+                if w.status(&s) == "closed" {
+                    "closed"
+                } else {
+                    "expired"
+                }
+            } else if w.approved {
+                "approved"
+            } else {
+                "pending"
+            }
+        });
+        json!({"status":status})
+    } else {
+        json!({"status":p.status,"session_id":p.session})
+    };
     s.audit("status", "ok", &input.request_id);
     Ok(Json(out))
 }
@@ -737,7 +769,7 @@ async fn approve(
         return Err(invalid());
     }
     {
-        let s = app.broker.state(&app)?;
+        let mut s = app.broker.state(&app)?;
         if s.owner.is_none()
             || s.epoch != input.epoch
             || s.revision != input.revision
@@ -745,6 +777,10 @@ async fn approve(
         {
             cancel.store(true, Ordering::SeqCst);
             return Err(denied());
+        }
+        let workspace = s.requests.get(&id).and_then(|p| p.workspace.clone());
+        if let Some(w) = workspace.and_then(|id| s.workspaces.get_mut(&id)) {
+            w.approved = true;
         }
         app.broker.active.fetch_add(1, Ordering::SeqCst);
     }
@@ -786,7 +822,7 @@ async fn approve(
             }
             while !cancel.load(Ordering::SeqCst) && Instant::now() < deadline {
                 match rx.recv_timeout(Duration::from_millis(100)) {
-                    Ok(cmd) => {
+                    Ok(BrowserCommand::Read(cmd)) => {
                         let result = if protected {
                             Err("broker_denied")
                         } else {
@@ -797,6 +833,24 @@ async fn approve(
                         }
                         let _ = cmd.result.send(result);
                     }
+                    Ok(BrowserCommand::Deliver {
+                        workspace,
+                        recipient,
+                        document,
+                    }) => {
+                        let outcome = if protected {
+                            browser.deliver(&recipient, &document)
+                        } else {
+                            "failed"
+                        };
+                        if let Some(b) = weak.upgrade()
+                            && let Ok(mut s) = b.state.lock()
+                            && let Some(w) = s.workspaces.get_mut(&workspace)
+                        {
+                            w.set_delivery(outcome);
+                        }
+                        break;
+                    }
                     Err(mpsc::RecvTimeoutError::Timeout) => {}
                     Err(_) => break,
                 }
@@ -806,6 +860,10 @@ async fn approve(
                 && let Ok(mut s) = b.state.lock()
             {
                 s.jobs.remove(&sid);
+                let workspace = s.requests.get(&id).and_then(|p| p.workspace.clone());
+                if let Some(w) = workspace.and_then(|id| s.workspaces.get_mut(&id)) {
+                    w.set_delivery("unknown");
+                }
                 if let Some(p) = s.requests.get_mut(&id) {
                     p.status = "expired";
                     p.session = None;
@@ -849,10 +907,10 @@ async fn read_page(
             .filter(|j| j.client == c.id && !j.protected)
             .ok_or_else(denied)?;
         let (tx, rx) = mpsc::sync_channel(1);
-        j.tx.try_send(ReadCommand {
+        j.tx.try_send(BrowserCommand::Read(ReadCommand {
             path: input.path,
             result: tx,
-        })
+        }))
         .map_err(|_| busy())?;
         (rx, j.cancel.clone())
     };
@@ -886,9 +944,12 @@ async fn close(
 ) -> ApiResult<Json<Value>> {
     let mut s = app.broker.state(&app)?;
     let c = s.authenticate(&h, false)?;
+    if c.protected {
+        return Err(denied());
+    }
     if s.jobs
         .get(&input.session_id)
-        .is_some_and(|j| j.client == c.id)
+        .is_some_and(|j| j.client == c.id && !j.protected)
     {
         if let Some(j) = s.jobs.remove(&input.session_id) {
             j.cancel.store(true, Ordering::SeqCst);

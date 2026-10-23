@@ -2,7 +2,7 @@
 
 Der [lokale Agenten-Broker](AGENT-BROKER.md) benötigt zusätzlich einen installierten Chromium-Browser. `--broker-agent` und der [eingeschlossene Agentenstart](AGENT-SANDBOX.md) sind im Programm enthalten; `broker.rs` ist ein optionales Cargo-`-Zscript`-Hilfsskript für die Entwicklung.
 
-Der Release-Kandidat 0.18.0 startet über den enthaltenen Starter den lokalen Passwortmanager. Er ergänzt den [SFTP-/FTPES-Broker](TRANSFER-BROKER.md) für macOS und Linux sowie die bisherigen Zugangslabor-Funktionen. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Verbindliche Build- und Laufzeitnachweise stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md). Neue Windows-Pakete gehören nicht zu dieser Ausgabe.
+Der Release-Kandidat 0.19.0 startet über den enthaltenen Starter den lokalen Passwortmanager. Er ergänzt den [SFTP-/FTPES-Broker](TRANSFER-BROKER.md) für macOS und Linux sowie die bisherigen Zugangslabor-Funktionen. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Verbindliche Build- und Laufzeitnachweise stehen in [der Release-Abnahme](PASSWORD-MANAGER-VERIFICATION.md). Neue Windows-Pakete gehören nicht zu dieser Ausgabe.
 
 Die Pakete enthalten Server, Weboberfläche und Lizenzhinweise. Für den Passwortmanager brauchst du einen aktuellen Browser, aber kein Rust, Bun, Python, Docker oder Passkey. Das optionale Zugangslabor verwendet WebAuthn, SQLCipher und eine geschützte Signierschlüsselhülle. Physische Passkeys sind noch nicht abgenommen.
 

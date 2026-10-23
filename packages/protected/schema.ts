@@ -1,7 +1,7 @@
 export type ReferenceKind = "person" | "email" | "case";
 export type PublishedReference = { id: string; kind: ReferenceKind };
 export type PrivateReference = PublishedReference & { value: string };
-export type PrivateWorkspace = { id: string; created_at: string; source_id: string; template: "reply"; references: PrivateReference[]; draft?: string };
+export type PrivateWorkspace = { id: string; created_at: string; source_id: string; template: "reply"; references: PrivateReference[]; draft?: string; recipient_path?: string };
 export const REFERENCE_KINDS = ["person", "email", "case"] as const;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const utf8 = new TextEncoder();
@@ -9,6 +9,10 @@ const invalid = () => new Error("Ungültiger geschützter Arbeitsbereich oder En
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const keys = (v: object, expected: string) => Object.keys(v).sort().join() === expected;
 export const isProtectedId = (v: unknown): v is string => typeof v === "string" && uuid.test(v) && v !== "00000000-0000-0000-0000-000000000000";
+export function validateRecipientPath(value: unknown): string {
+ if (typeof value !== "string" || value.length > 512 || !/^\/[A-Za-z0-9_~!$&'()*+,;=:.\/-]*$/.test(value) || value.includes("//") || value.split("/").some(part => part === "." || part === "..")) throw invalid();
+ return value;
+}
 function checkedReferences(value: unknown, privateValues: boolean): asserts value is PrivateReference[] {
  if (!Array.isArray(value) || value.length !== 3) throw invalid();
  const ids = new Set<string>(), kinds = new Set<string>();
@@ -22,7 +26,8 @@ export function validatePrivateWorkspaces(value: unknown, logins: readonly { id:
  if (!Array.isArray(value) || value.length > 32) throw invalid();
  const ids = new Set<string>();
  for (const row of value) {
-  if (!object(row) || !keys(row, row.draft === undefined ? "created_at,id,references,source_id,template" : "created_at,draft,id,references,source_id,template") || !isProtectedId(row.id) || row.template !== "reply" || typeof row.created_at !== "string" || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(row.created_at) || !Number.isFinite(Date.parse(row.created_at)) || new Date(row.created_at).toISOString() !== row.created_at || typeof row.source_id !== "string" || logins.filter(login => login.id === row.source_id).length !== 1) throw invalid();
+  if (!object(row) || !keys(row, ["created_at", "id", "references", "source_id", "template", ...(row.draft !== undefined ? ["draft"] : []), ...(row.recipient_path !== undefined ? ["recipient_path"] : [])].sort().join()) || !isProtectedId(row.id) || row.template !== "reply" || typeof row.created_at !== "string" || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(row.created_at) || !Number.isFinite(Date.parse(row.created_at)) || new Date(row.created_at).toISOString() !== row.created_at || typeof row.source_id !== "string" || logins.filter(login => login.id === row.source_id).length !== 1) throw invalid();
+  if (row.recipient_path !== undefined) validateRecipientPath(row.recipient_path);
   checkedReferences(row.references, true);
   for (const id of [row.id, ...row.references.map(ref => ref.id)]) { if (ids.has(id)) throw invalid(); ids.add(id); }
   if (row.draft !== undefined) resolveProtectedDraft(row.draft, row.references);
