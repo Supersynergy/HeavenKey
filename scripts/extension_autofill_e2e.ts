@@ -29,7 +29,7 @@ async function start() {
   while(Date.now()<until) { if(processServer.exitCode!==null) throw new Error(`Rust server exited: ${output}`);try{if((await fetch(origin+'/health',{signal:AbortSignal.timeout(500)})).ok)return;}catch{}await Bun.sleep(100); }
   throw new Error('Rust server startup timed out');
 }
-async function stop(){ if(!processServer||processServer.exitCode!==null)return;processServer.kill('SIGINT');const until=Date.now()+3000;while(processServer.exitCode===null&&Date.now()<until)await Bun.sleep(50);if(processServer.exitCode===null)processServer.kill('SIGKILL');}
+async function stop(){ if(!processServer||processServer.exitCode!==null||processServer.signalCode!==null)return;processServer.kill('SIGINT');const until=Date.now()+3000;while(processServer.exitCode===null&&processServer.signalCode===null&&Date.now()<until)await Bun.sleep(50);if(processServer.exitCode===null&&processServer.signalCode===null)processServer.kill('SIGKILL');}
 try {
   await start();
   const grantedExtension=join(temporary,'extension');await cp(extension,grantedExtension,{recursive:true});
@@ -59,6 +59,21 @@ try {
   check('unpacked extension with declared test-only localhost grant; real Rust one-use pairing');
   await popup.locator('#extension-master').fill(master);await popup.locator('#unlock-extension').click();await popup.locator('#smart-workspace').waitFor({state:'visible',timeout:10000}).catch(async e=>{console.log('Unlock status:',await popup.locator('#smart-status').textContent(),errors);throw e;});
   check('real Rust encrypted snapshot decrypted in popup');
+  const cdp=await browser.newCDPSession(app);await cdp.send('WebAuthn.enable');
+  await cdp.send('WebAuthn.addVirtualAuthenticator',{options:{protocol:'ctap2',ctap2Version:'ctap2_1',transport:'internal',hasResidentKey:true,hasUserVerification:true,isUserVerified:true,automaticPresenceSimulation:true,hasPrf:true}});
+  const handoffBodies:string[]=[];browser.on('request',(request:any)=>{if(request.url().includes('/extension/unlock/')||request.url().includes('/password-passkeys/'))handoffBodies.push(request.postData()||'');});
+  await app.bringToFront();await app.reload();await app.locator('#master').fill(master);await app.locator('#unlock').click();await app.locator('#workspace:not([hidden])[aria-busy=false]').waitFor();
+  await app.locator('#nav-settings').click();await app.locator('#passkey-enroll').click();await app.locator('#passkey-label').fill('Synthetic extension PRF');await app.locator('#passkey-master').fill(master);await app.locator('#password-passkey-dialog button[type=submit]').click();await app.locator('#password-passkey-dialog').waitFor({state:'hidden'});
+  check('native virtual PRF authenticator enrolls through real Rust verifier');
+  await popup.bringToFront();await popup.locator('#lock-extension').click();const nextPage=browser.waitForEvent('page'), nextStart=popup.waitForResponse((r:any)=>r.url().endsWith('/extension/unlock/start'));await popup.locator('#passkey-extension').click();const approval=await nextPage, requested=await(await nextStart).json();
+  const approvalUrl=origin+'/passwords/#extension-unlock='+requested.id;await approval.close();
+  // CDP authenticators are target-scoped. Reuse its enrolled target for the same real approval URL.
+  await app.goto(approvalUrl);await app.waitForFunction(()=>document.querySelector('[data-code]')?.textContent?.length===8).catch(async e=>{console.log('Approval readiness',await app.locator('body').innerText(),errors);throw e;});await app.locator('[data-unlock]:not([disabled])').waitFor();
+  const code=await app.locator('[data-code]').textContent();assert.match(code,/^[0-9A-F]{8}$/);assert((await popup.locator('#passkey-code').textContent()).includes(code));
+  await app.locator('[data-unlock]').click();await app.waitForFunction(()=>document.querySelector('[data-status]')?.textContent?.includes('Einmalig freigegeben')).catch(async e=>{console.log('Passkey approval:',await app.locator('[data-status]').textContent());throw e;});
+  await popup.bringToFront();await popup.locator('#complete-passkey').click();await popup.locator('#smart-workspace').waitFor({state:'visible'}).catch(async e=>{console.log('Passkey extension:',await popup.locator('#smart-status').textContent());throw e;});
+  check('real PRF passkey unlock crosses single-use encrypted channel into paired extension without clipboard');
+  assert(!handoffBodies.some(body=>body.includes(master)||body.includes('Synthetic-login-only#42')));check('passkey enrollment and handoff API bodies contain neither master nor login plaintext');
   const stored=await popup.evaluate(async()=>await (globalThis as any).chrome.storage.local.get(null));check('browser storage has connection/token only',Object.keys(stored).join()==='heavenkey.extension.v1'&&!JSON.stringify(stored).includes(master)&&!JSON.stringify(stored).includes('Synthetic-login-only'));
     const uiStatus=async(text:string)=>popup.waitForFunction(text=>document.querySelector('#smart-status')!.textContent!.includes(text),text);
   await popup.locator('[data-id="synthetic-profile"]').click();await popup.locator('#scan-page').click();await popup.locator('#fill-confirmation').waitFor({state:'visible'});
@@ -144,6 +159,11 @@ try {
   const replacedScan=await invoke('scan');const first=replacedScan.value.fields.find((f:any)=>f.entity==='firstName');await target.locator('#firstName').evaluate((el:any)=>el.replaceWith(el.cloneNode(true)));const replaced=await invoke('fill',{scan:replacedScan.value.scan,entities:payload,selected:[{id:first.id,entity:'firstName'}]});check('SPA field replacement rejects stale DOM reference',!replaced.ok);
   const mismatch=await invoke('scan',{origin:'https://evil.invalid'});check('isolated coordinator rejects an origin mismatch',!mismatch.ok);
 
+  await target.evaluate(()=>{const input=document.createElement('input');input.id='signup-secret';input.type='password';input.autocomplete='new-password';document.body.prepend(input);});
+  const signupScan=await invoke('scan');const signup=signupScan.value.fields.find((f:any)=>f.field==='signup-secret');assert(signup);
+  const signupFill=await invoke('fill',{scan:signupScan.value.scan,entities:payload,selected:[{id:signup.id,entity:'password'}],secrets:true});
+  check('saved login password never fills a new-password registration field',signupFill.ok && signupFill.value.count===0 && await target.locator('#signup-secret').inputValue()==='');
+
   if(!process.argv.includes('--engine-only')) {
     await mkdir(join(root,'apps/extension/evidence'),{recursive:true});await popup.setViewportSize({width:440,height:900});await popup.screenshot({path:join(root,'apps/extension/evidence/popup-unlocked.png'),fullPage:true});
     await popup.locator('#lock-extension').click();await popup.locator('#extension-master').fill('Synthetic-wrong-master-password');await popup.locator('#unlock-extension').click();await popup.waitForFunction(()=>document.querySelector('#smart-status')!.textContent!.includes('Entsperren fehlgeschlagen'));check('wrong master cannot unlock actual Rust ciphertext',await popup.locator('#smart-workspace').isHidden());
@@ -152,7 +172,7 @@ try {
     await popup.screenshot({path:join(root,'apps/extension/evidence/popup-disconnected.png'),fullPage:true});
   }
 
-  const sourcePaths=['scripts/extension_autofill_e2e.ts','apps/extension/popup.html','apps/extension/popup.css','apps/extension/popup.js','apps/extension/settings.js','apps/extension/content.ts','apps/extension/smart-popup.ts','apps/extension/background.ts','apps/extension/vendor/extract.js','apps/extension/vendor/fill.js','apps/web/src/passwords-crypto.ts','packages/forms/schema.ts','scripts/build_extension.ts'];
+  const sourcePaths=['scripts/extension_autofill_e2e.ts','apps/extension/popup.html','apps/extension/popup.css','apps/extension/popup.js','apps/extension/settings.js','apps/extension/content.ts','apps/extension/smart-popup.ts','apps/extension/background.ts','apps/extension/unlock-channel.ts','apps/web/src/passwords-extension-unlock.ts','apps/web/src/passwords-access.ts','apps/extension/vendor/extract.js','apps/extension/vendor/fill.js','apps/web/src/passwords-crypto.ts','packages/forms/schema.ts','scripts/build_extension.ts'];
   const source_sha256=Object.fromEntries(await Promise.all(sourcePaths.map(async path=>[path,createHash('sha256').update(await readFile(join(root,path))).digest('hex')])));
   const report={source_sha256,pass:true,browser:browserPath,real_unpacked_extension:true,real_rust_pairing:!process.argv.includes('--engine-only'),mocks:false,test_only_manifest_grant:'http://localhost/*',native_optional_permission_prompt:'not automated: headless request waits for browser UI',synthetic_only:true,binary_sha256:createHash('sha256').update(await readFile(binary)).digest('hex'),manifest_sha256:createHash('sha256').update(await readFile(join(extension,'manifest.json'))).digest('hex'),cases,errors};
   await writeFile(join(root,process.argv.includes('--engine-only')?'apps/extension/ENGINE-RECEIPT.json':'apps/extension/TEST-RECEIPT.json'),JSON.stringify(report,null,2)+'\n');

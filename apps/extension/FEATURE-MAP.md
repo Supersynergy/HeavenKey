@@ -18,3 +18,7 @@
 | Clipboard and selection | Explicit popup clicks; no background reads |
 | Existing access-lab settings and opener | Existing `settings.js` and `popup.js` |
 | Chrome/Firefox production bundles | `bun scripts/build_extension.ts`, version from workspace Cargo.toml |
+| Login and template context menus | Background user gesture, target tab/intent only; no cross-frame fill |
+| Matching site and one-form login preview | Exact-origin sort; preselected empty login fields, final origin consent |
+| Optional biometric/PIN unlock | Owner WebAuthn PRF with 90-second, single-use encrypted extension handoff |
+| Registration protection | New-password fields reject saved passwords, including explicit remapping |

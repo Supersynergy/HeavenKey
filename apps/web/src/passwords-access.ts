@@ -296,6 +296,77 @@ export async function localRequest<T = unknown>(
 	if (text.length > 2_000_000) throw new Error("Antwort zu groß.");
 	return JSON.parse(text) as T;
 }
+export async function unlockUsingPasskey(
+	ctx: Pick<AccessContext, "get">,
+	signal: AbortSignal,
+	check: () => void,
+	useMaster?: (
+		master: string,
+		revision: number,
+		record: Envelope,
+	) => Promise<void>,
+) {
+	let prf: Uint8Array<ArrayBuffer> | undefined,
+		master = "";
+	try {
+		check();
+		const start = await localRequest<
+			CeremonyResponse & { credentials: unknown }
+		>(ctx, "/api/password-passkeys/auth/start", signal, {});
+		check();
+		const evalByCredential: Record<string, { first: Uint8Array<ArrayBuffer> }> =
+			{};
+		for (const row of credentialRows(start.credentials))
+			evalByCredential[row.id] = { first: checkedBytes(row.prf_salt, 32) };
+		const credential = await nativeCredential(start.options, false, signal, {
+			prf: { evalByCredential },
+		} as AuthenticationExtensionsClientInputs);
+		check();
+		prf = prfResult(credential);
+		const finished = await localRequest<UnlockResponse>(
+			ctx,
+			"/api/password-passkeys/auth/finish",
+			signal,
+			{
+				request_id: start.request_id,
+				credential: serializeCredential(credential),
+			},
+		);
+		check();
+		const selected = credentialRows(start.credentials).find(
+			(row) => row.id === credential.id,
+		);
+		if (
+			!selected ||
+			finished.credential_id !== credential.id ||
+			selected.vault_salt !== finished.vault_salt ||
+			selected.prf_salt !== finished.wrap.prf_salt ||
+			finished.record.salt !== finished.vault_salt ||
+			!Number.isSafeInteger(finished.revision)
+		)
+			throw new Error("Passkey und Tresor stimmen nicht überein.");
+		master = await unwrapMaster(
+			finished.wrap,
+			prf,
+			finished.vault_salt,
+			credential.id,
+			location.origin,
+			check,
+		);
+		check();
+		const opened = await openVault(finished.record, master);
+		check();
+		if (useMaster) {
+			await useMaster(master, finished.revision, finished.record);
+			check();
+		}
+		return { opened, revision: finished.revision };
+	} finally {
+		master = "";
+		prf?.fill(0);
+	}
+}
+
 export function initPasswordAccess(ctx: AccessContext) {
 	let controller = new AbortController(),
 		epoch = 0,
@@ -330,33 +401,78 @@ export function initPasswordAccess(ctx: AccessContext) {
 	const renameDialog = document.createElement("dialog");
 	renameDialog.id = "passkey-rename-dialog";
 	renameDialog.setAttribute("aria-labelledby", "passkey-rename-heading");
-	renameDialog.innerHTML = '<h2 id="passkey-rename-heading">Passkey benennen</h2><form><label for="passkey-rename-label">Name</label><input id="passkey-rename-label" maxlength="48" required autocomplete="off"><p role="status"></p><div class="actions"><button type="submit">Namen speichern</button><button type="button" class="secondary" data-cancel>Abbrechen</button></div></form>';
+	renameDialog.innerHTML =
+		'<h2 id="passkey-rename-heading">Passkey benennen</h2><form><label for="passkey-rename-label">Name</label><input id="passkey-rename-label" maxlength="48" required autocomplete="off"><p role="status"></p><div class="actions"><button type="submit">Namen speichern</button><button type="button" class="secondary" data-cancel>Abbrechen</button></div></form>';
 	document.body.append(renameDialog);
 	const renameLabel = renameDialog.querySelector<HTMLInputElement>("input")!;
 	const renameMessage = renameDialog.querySelector("[role=status]")!;
 	let renameTarget: CredentialRow | null = null;
 	function closeRename(cancel = true) {
-		if (cancel) { epoch++; controller.abort(); controller = new AbortController(); }
-		renameTarget = null; renameLabel.value = ""; renameMessage.textContent = "";
+		if (cancel) {
+			epoch++;
+			controller.abort();
+			controller = new AbortController();
+		}
+		renameTarget = null;
+		renameLabel.value = "";
+		renameMessage.textContent = "";
 		if (renameDialog.open) renameDialog.close();
 		card.focus();
 	}
-	renameDialog.addEventListener("cancel", event => { event.preventDefault(); closeRename(); });
-	renameDialog.querySelector<HTMLButtonElement>("[data-cancel]")!.onclick = () => closeRename();
-	renameDialog.querySelector("form")!.onsubmit = event => {
+	renameDialog.addEventListener("cancel", (event) => {
+		event.preventDefault();
+		closeRename();
+	});
+	renameDialog.querySelector<HTMLButtonElement>("[data-cancel]")!.onclick =
+		() => closeRename();
+	renameDialog.querySelector("form")!.onsubmit = (event) => {
 		event.preventDefault();
 		if (busy || !renameTarget || !ctx.unlocked() || ctx.get().discreet) return;
-		const id = renameTarget.id, name = renameLabel.value.trim(), snapshot = ctx.get(), op = epoch;
-		if (!name || name.length > 48 || /[\x00-\x1f\x7f]/.test(name)) { renameMessage.textContent = "Einen Namen mit höchstens 48 Zeichen eingeben."; return; }
+		const id = renameTarget.id,
+			name = renameLabel.value.trim(),
+			snapshot = ctx.get(),
+			op = epoch;
+		if (!name || name.length > 48 || /[\x00-\x1f\x7f]/.test(name)) {
+			renameMessage.textContent =
+				"Einen Namen mit höchstens 48 Zeichen eingeben.";
+			return;
+		}
 		let completed: number | null = null;
-		void ctx.run(async run => {
-			try {
-				guard(run, op); if (!snapshot.record) throw new Error("Tresor nicht verfügbar.");
-				await localRequest(ctx, "/api/password-passkeys/" + encodeURIComponent(id), controller.signal, { label: name, revision: snapshot.revision, vault_salt: snapshot.record.salt });
-				guard(run, op); closeRename(false); await refresh();
-				if (ctx.current(run)) { ctx.announce("Passkey-Name gespeichert."); completed = run; }
-			} catch (error) { if (ctx.current(run) && op === epoch && (error as Error).name !== "AbortError") renameMessage.textContent = (error as Error).message; }
-		}).then(() => { if (completed !== null && ctx.current(completed) && ctx.unlocked()) document.getElementById("passkey-rename-" + id)?.focus(); });
+		void ctx
+			.run(async (run) => {
+				try {
+					guard(run, op);
+					if (!snapshot.record) throw new Error("Tresor nicht verfügbar.");
+					await localRequest(
+						ctx,
+						"/api/password-passkeys/" + encodeURIComponent(id),
+						controller.signal,
+						{
+							label: name,
+							revision: snapshot.revision,
+							vault_salt: snapshot.record.salt,
+						},
+					);
+					guard(run, op);
+					closeRename(false);
+					await refresh();
+					if (ctx.current(run)) {
+						ctx.announce("Passkey-Name gespeichert.");
+						completed = run;
+					}
+				} catch (error) {
+					if (
+						ctx.current(run) &&
+						op === epoch &&
+						(error as Error).name !== "AbortError"
+					)
+						renameMessage.textContent = (error as Error).message;
+				}
+			})
+			.then(() => {
+				if (completed !== null && ctx.current(completed) && ctx.unlocked())
+					document.getElementById("passkey-rename-" + id)?.focus();
+			});
 	};
 	const label = dialog.querySelector<HTMLInputElement>("#passkey-label")!,
 		masterInput = dialog.querySelector<HTMLInputElement>("#passkey-master")!,
@@ -397,7 +513,10 @@ export function initPasswordAccess(ctx: AccessContext) {
 			button.disabled = busy || !ctx.unlocked() || ctx.get().discreet;
 		for (const button of dialog.querySelectorAll<HTMLButtonElement>("button"))
 			button.disabled = busy && !button.hasAttribute("data-cancel");
-		for (const input of renameDialog.querySelectorAll<HTMLInputElement | HTMLButtonElement>("input,button")) input.disabled = busy && !input.hasAttribute("data-cancel");
+		for (const input of renameDialog.querySelectorAll<
+			HTMLInputElement | HTMLButtonElement
+		>("input,button"))
+			input.disabled = busy && !input.hasAttribute("data-cancel");
 	}
 	async function refresh() {
 		setBusy(busy);
@@ -420,9 +539,23 @@ export function initPasswordAccess(ctx: AccessContext) {
 					text = document.createElement("span"),
 					remove = document.createElement("button");
 				const rename = document.createElement("button");
-				rename.type = "button"; rename.className = "secondary"; rename.textContent = "Umbenennen"; rename.id = "passkey-rename-" + row.id;
-				rename.setAttribute("aria-label", "Passkey " + (ctx.get().discreet ? "" : row.label || "") + " umbenennen");
-				rename.onclick = () => { if (busy || !ctx.unlocked() || ctx.get().discreet) return; renameTarget = row; renameLabel.value = row.label || "Passkey"; renameDialog.showModal(); renameLabel.focus(); };
+				rename.type = "button";
+				rename.className = "secondary";
+				rename.textContent = "Umbenennen";
+				rename.id = "passkey-rename-" + row.id;
+				rename.setAttribute(
+					"aria-label",
+					"Passkey " +
+						(ctx.get().discreet ? "" : row.label || "") +
+						" umbenennen",
+				);
+				rename.onclick = () => {
+					if (busy || !ctx.unlocked() || ctx.get().discreet) return;
+					renameTarget = row;
+					renameLabel.value = row.label || "Passkey";
+					renameDialog.showModal();
+					renameLabel.focus();
+				};
 				text.textContent = ctx.get().discreet
 					? "Passkey"
 					: row.label || "Passkey";
@@ -575,69 +708,13 @@ export function initPasswordAccess(ctx: AccessContext) {
 	};
 	unlock.onclick = () =>
 		void ctx.run(async (generation) => {
-			const operation = epoch;
-			let prf: Uint8Array<ArrayBuffer> | undefined,
-				master = "";
-			try {
-				guard(generation, operation);
-				const start = await localRequest<
-					CeremonyResponse & { credentials: unknown }
-				>(ctx, "/api/password-passkeys/auth/start", controller.signal, {});
-				guard(generation, operation);
-				const evalByCredential: Record<
-					string,
-					{ first: Uint8Array<ArrayBuffer> }
-				> = {};
-				for (const row of credentialRows(start.credentials))
-					evalByCredential[row.id] = { first: checkedBytes(row.prf_salt, 32) };
-				const credential = await nativeCredential(
-					start.options,
-					false,
-					controller.signal,
-					{ prf: { evalByCredential } } as AuthenticationExtensionsClientInputs,
-				);
-				guard(generation, operation);
-				prf = prfResult(credential);
-				const finished = await localRequest<UnlockResponse>(
-					ctx,
-					"/api/password-passkeys/auth/finish",
-					controller.signal,
-					{
-						request_id: start.request_id,
-						credential: serializeCredential(credential),
-					},
-				);
-				guard(generation, operation);
-				const selected = credentialRows(start.credentials).find(
-					(row) => row.id === credential.id,
-				);
-				if (
-					!selected ||
-					finished.credential_id !== credential.id ||
-					selected.vault_salt !== finished.vault_salt ||
-					selected.prf_salt !== finished.wrap.prf_salt ||
-					finished.record.salt !== finished.vault_salt ||
-					!Number.isSafeInteger(finished.revision)
-				)
-					throw new Error("Passkey und Tresor stimmen nicht überein.");
-				master = await unwrapMaster(
-					finished.wrap,
-					prf,
-					finished.vault_salt,
-					credential.id,
-					location.origin,
-					() => guard(generation, operation),
-				);
-				guard(generation, operation);
-				const opened = await openVault(finished.record, master);
-				guard(generation, operation);
-				await ctx.accept(opened, finished.revision, generation);
-				guard(generation, operation);
-				ctx.announce("Tresor mit Passkey entsperrt.");
-			} finally {
-				master = "";
-				prf?.fill(0);
-			}
+			const operation = epoch,
+				check = () => guard(generation, operation);
+			const result = await unlockUsingPasskey(ctx, controller.signal, check);
+			check();
+			await ctx.accept(result.opened, result.revision, generation);
+			check();
+			ctx.announce("Tresor mit Passkey entsperrt.");
 		});
 	document.addEventListener("keydown", (event) => {
 		if (event.key === "Escape" && !dialog.open) {

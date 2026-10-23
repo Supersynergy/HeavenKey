@@ -1,21 +1,28 @@
 import './vendor/extract.js';
 import { openVault, sealVault, validateEnvelope, totp, type Vault, type Envelope } from '../web/src/passwords-crypto';
 import { PROFILE_KEYS, HIGH_FIELDS, validateProfiles, type FormProfile } from '../../packages/forms/schema';
+import { generateChannel, channelCode, openUnlock, validateRequest, type UnlockRequest } from './unlock-channel';
 const extension = (globalThis as any).browser || (globalThis as any).chrome;
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const input = (id: string) => $<HTMLInputElement>(id);
 const labels: Record<string,string> = { accountHolder:'Kontoinhaber',address2:'Adresszusatz',ahv:'AHV-Nummer',amount:'Betrag',bankName:'Bankname',bic:'BIC',birthdate:'Geburtsdatum',blz:'Bankleitzahl',caseno:'Aktenzeichen',ccExp:'Kartenablauf',ccHolder:'Karteninhaber',city:'Ort',company:'Firma',contractno:'Vertragsnummer',country:'Land',creditcard:'Kartennummer',creditorId:'Gläubiger-ID',currency:'Währung',customerno:'Kundennummer',cvc:'Kartenprüfnummer',date:'Datum',email:'E-Mail',familienstand:'Familienstand',firstName:'Vorname',geburtsname:'Geburtsname',geburtsort:'Geburtsort',gkv:'Krankenversicherung',houseNumber:'Hausnummer',hrb:'Handelsregister',iban:'IBAN',jobTitle:'Beruf / Position',konfession:'Konfession',language:'Sprache',lastName:'Nachname',mandatsref:'Mandatsreferenz',memberno:'Mitgliedsnummer',message:'Nachricht',name:'Name',nationality:'Staatsangehörigkeit',number:'Nummer',password:'Passwort',perso:'Ausweisnummer',phone:'Telefon',postbox:'Postfach',purpose:'Verwendungszweck',salutation:'Anrede',sozialvers:'Sozialversicherung',state:'Bundesland',steuerid:'Steuer-ID',steuernr:'Steuernummer',street:'Straße und Hausnummer',streetName:'Straße',subject:'Betreff',title:'Titel',url:'Webseite',username:'Benutzername',vat:'Umsatzsteuer-ID',zip:'Postleitzahl',otp:'Einmalcode',bday_day:'Geburtstag (Tag)',bday_month:'Geburtstag (Monat)',bday_year:'Geburtstag (Jahr)',cc_exp:'Kartenablauf',cc_month:'Kartenablauf (Monat)',cc_year:'Kartenablauf (Jahr)' };
 type Connection = { origin: string; token: string };
 type ExtendedVault = Vault & { profiles?: FormProfile[] };
-type Field = { id: string; field: string; entity: string | null; score: number; hasValue: boolean; sensitive: boolean; secret: boolean; kind: string };
+type Field = { id: string; field: string; entity: string | null; score: number; hasValue: boolean; sensitive: boolean; secret: boolean; kind: string; form: string };
 let connection: Connection | null = null, key: CryptoKey | null = null, vault: ExtendedVault | null = null, envelope: Envelope | null = null;
 let revision = 0, epoch = 0, busy = false, lastActivity = Date.now(), entities: Record<string,string> = {}, sourceLogin: any = null, sourceProfile: FormProfile | null = null;
 let pageTarget: { id: number; origin: string; href: string } | null = null, preview: { scan: string; fields: Field[] } | null = null;
+let siteOrigin = '', pendingUnlock: {request: UnlockRequest; privateKey: CryptoKey; expires: number} | null = null;
+let nextFocus: HTMLElement | null=null;
+function focusAfter(control: HTMLElement) { if(busy) nextFocus=control;else control.focus(); }
 const button = (label: string, fn: () => void, kind = 'secondary') => { const b = document.createElement('button'); b.type = 'button'; b.className = kind; b.textContent = label; b.addEventListener('click', () => { if (!busy) fn(); }); return b; };
 function status(message: string, error = false) { $('smart-status').textContent = message; $('smart-status').dataset.error = String(error); }
 function resetPreview() { preview = null; $('field-map').replaceChildren(); $('fill-confirmation').hidden = true; input('confirm-origin').checked = false; }
-function resetSource() { entities = {}; sourceLogin = null; sourceProfile = null; $('entity-preview').replaceChildren(); input('source-text').value = ''; input('profile-title').value = ''; input('include-sensitive').checked = false; input('include-secrets').checked = false; input('overwrite').checked = false; input('include-choices').checked = false; resetPreview(); }
+function resetSource() { $('quick-login').hidden=true; entities = {}; sourceLogin = null; sourceProfile = null; $('entity-preview').replaceChildren(); input('source-text').value = ''; input('profile-title').value = ''; input('include-sensitive').checked = false; input('include-secrets').checked = false; input('overwrite').checked = false; input('include-choices').checked = false; resetPreview(); }
 function lock(message = 'Tresor gesperrt.') {
+  nextFocus=null;
+  const pending=pendingUnlock; pendingUnlock=null; $('complete-passkey').hidden=true; $('passkey-code').textContent='';
+  if(pending && connection) void api('/api/password-vault/extension/unlock/cancel',{id:pending.request.id}).catch(()=>console.warn('HeavenKey: Abbruch beim Dienst nicht bestätigt; die Anfrage läuft nach spätestens 90 Sekunden ab.'));
   epoch++; key = null; vault = null; envelope = null; resetSource(); input('extension-master').value = ''; input('vault-search').value = ''; $('source-list').replaceChildren(); $('smart-workspace').hidden = true; $('unlock-form').hidden = !connection; $('lock-extension').hidden = true; status(message);
 }
 function connected() { $('pairing-form').hidden = !!connection; $('disconnect').hidden = !connection; $('unlock-form').hidden = !connection || !!key; $('connection-label').textContent = connection ? `Verbunden · ${connection.origin}` : 'Noch nicht verbunden'; }
@@ -29,6 +36,7 @@ async function api(path: string, body?: unknown) {
   if (!connection) throw new Error('Bitte zuerst koppeln.');
   const activeConnection = connection;
   const response = await fetch(activeConnection.origin + path, { method: body ? 'POST' : 'GET', credentials: 'omit', cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(12000), headers: { 'X-HeavenKey-Client': 'password-extension', 'X-HeavenKey-Token': activeConnection.token, ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
+  if (response.status === 403 && path.includes('/extension/unlock/') && (await response.clone().json()).error==='extension_unlock_unavailable') throw Error('Passkey-Anfrage abgelaufen oder Tresor geändert. Erneut starten oder Masterpasswort verwenden.');
   if (response.status === 401 || response.status === 403) { await disconnect('Kopplung widerrufen oder Programm neu gestartet. Bitte erneut koppeln.'); throw new Error('Die Kopplung ist nicht mehr gültig.'); }
   if (response.status === 409) { lock('Speicherkonflikt. Erneut entsperren und die Änderung wiederholen.'); throw new Error('Der Tresor wurde inzwischen geändert.'); }
   if (!response.ok) throw new Error(`Lokales Programm antwortet mit ${response.status}.`);
@@ -48,16 +56,20 @@ async function run(fn: (generation: number) => Promise<void>) {
   $('smart').setAttribute('aria-busy','true');
   try { await fn(generation); }
   catch (error) { if (generation === epoch) status(error instanceof Error ? error.message : 'Aktion fehlgeschlagen.',true); }
-  finally { for (const { control, disabled } of controls) control.disabled = disabled; busy = false; $('smart').setAttribute('aria-busy','false'); }
+  finally { for (const { control, disabled } of controls) control.disabled = disabled; busy = false; $('smart').setAttribute('aria-busy','false'); if(generation===epoch && nextFocus?.isConnected) nextFocus.focus();nextFocus=null; }
 }
 function active(generation: number) { if (generation !== epoch) throw new Error('Die Sitzung wurde gesperrt.'); }
 function renderSources() {
   if (!vault) return;
   const query = input('vault-search').value.trim().toLowerCase(), list = $('source-list'); list.replaceChildren();
   const profiles = vault.profiles || [];
-  for (const entry of [...vault.entries.map(v => ({ v, kind: 'login' })), ...profiles.map(v => ({ v, kind: 'profile' }))]) {
+  const intent=new URL(location.href).searchParams.get('intent');
+  const matches=(entry: any)=>{ try{return new URL(entry.url).origin===siteOrigin;}catch{return false;} };
+  const logins=[...vault.entries].sort((a,b)=>Number(matches(b))-Number(matches(a)) || a.title.localeCompare(b.title));
+  for (const entry of [...logins.map(v => ({ v, kind: 'login' })), ...profiles.map(v => ({ v, kind: 'profile' }))]) {
+    if(intent==='template' && entry.kind!=='profile') continue;
     if (!JSON.stringify({ title: entry.v.title, username: (entry.v as any).username, entities: entry.kind === 'profile' ? (entry.v as FormProfile).entities : undefined }).toLowerCase().includes(query)) continue;
-    const b = button(`${entry.kind === 'login' ? 'Login' : 'Profil'} · ${entry.v.title}`, () => {
+    const b = button(`${entry.kind === 'login' ? matches(entry.v) ? 'Diese Seite' : 'Andere Seite' : 'Vorlage'} · ${entry.v.title}`, () => {
       resetSource();
       if (entry.kind === 'login') {
         sourceLogin = entry.v;
@@ -65,6 +77,8 @@ function renderSources() {
         status('Login gewählt. Füllen ist nur auf seiner exakt gespeicherten Herkunft erlaubt.');
       } else { sourceProfile = entry.v as FormProfile; entities = { ...sourceProfile.entities }; input('profile-title').value = sourceProfile.title; status('Profil gewählt. Prüfe die Werte und die Zielseite.'); }
       renderEntities();
+      $('quick-login').hidden=entry.kind!=='login' || !matches(entry.v);
+      if(entry.kind==='login' && matches(entry.v)) $('quick-login').textContent=`Login auf ${siteOrigin} prüfen`;
     });
     b.dataset.kind = entry.kind; b.dataset.id = entry.v.id; list.append(b);
   }
@@ -77,6 +91,15 @@ function renderEntities() {
     const label = document.createElement('label'); label.className = 'entity-row'; label.textContent = (labels[name] || name) + (HIGH_FIELDS.has(name) ? ' · sensibel' : '');
     const field = document.createElement('input'); field.value = value; field.dataset.entity = name; field.maxLength = 10000; field.autocomplete = 'off'; field.type = ['password','otp'].includes(name) ? 'password' : 'text'; field.addEventListener('input', () => { entities[name] = field.value; resetPreview(); }); label.append(field); list.append(label);
   }
+}
+async function acceptOpened(opened: Awaited<ReturnType<typeof openVault>>, nextRevision: number, generation: number) {
+  active(generation); validateProfiles((opened.vault as ExtendedVault).profiles || []);
+  const pending=pendingUnlock;pendingUnlock=null;$('complete-passkey').hidden=true;$('passkey-code').textContent='';
+  if(pending) {await api('/api/password-vault/extension/unlock/cancel',{id:pending.request.id});active(generation);}
+  key=opened.key;vault=opened.vault;envelope=opened.envelope;revision=nextRevision;lastActivity=Date.now();
+  try { siteOrigin=(await target()).origin; } catch { siteOrigin=''; }
+  active(generation); $('site-origin').textContent=siteOrigin || 'Öffne HeavenKey auf einer HTTPS-Webseite.';
+  connected();$('smart-workspace').hidden=false;$('lock-extension').hidden=false;renderSources();status('Entsperrt. Passende Logins stehen oben, gespeicherte Profile dienen als Vorlagen.');focusAfter(input('vault-search'));
 }
 async function target() {
   const param = new URL(location.href).searchParams.get('target');
@@ -155,11 +178,55 @@ $('unlock-form').addEventListener('submit', event => {
     const current = snapshot(await api('/api/password-vault/read', {})); active(generation);
     if (!current.record) throw new Error('Zuerst im HeavenKey-Programm einen Tresor erstellen.');
     const opened = await openVault(current.record, master); active(generation);
-    validateProfiles((opened.vault as ExtendedVault).profiles || []);
-    key = opened.key; vault = opened.vault; envelope = opened.envelope; revision = current.revision; lastActivity = Date.now();
-    connected(); $('smart-workspace').hidden = false; $('lock-extension').hidden = false; renderSources(); status('Entsperrt. Wähle einen Login, ein Profil oder füge einen Text ein.'); input('vault-search').focus();
+    await acceptOpened(opened,current.revision,generation);
   });
 });
+$('passkey-extension').addEventListener('click',()=>void run(async generation=>{
+  if(!connection) return;
+  const own=await extension.tabs.getCurrent();active(generation);
+  if(!own?.id) {
+    const current=await target();active(generation);
+    await extension.tabs.create({url:extension.runtime.getURL(`popup.html?target=${current.id}&passkey=1`)});return;
+  }
+  const previous=pendingUnlock;pendingUnlock=null;
+  if(previous) await api('/api/password-vault/extension/unlock/cancel',{id:previous.request.id});
+  const channel=await generateChannel();active(generation);
+  const result=await api('/api/password-vault/extension/unlock/start',{public_key:channel.public_key});active(generation);
+  const current=snapshot(await api('/api/password-vault/read',{}));active(generation);
+  if(!current.record || result.expires_in!==90) throw Error('Kein Tresor für diese Anfrage.');
+  const request=validateRequest({id:result.id,origin:location.origin,public_key:channel.public_key,revision:current.revision,vault_salt:current.record.salt});
+  const code=await channelCode(request);active(generation);
+  pendingUnlock={request,privateKey:channel.privateKey,expires:Date.now()+90000};
+  const waiting=pendingUnlock;setTimeout(()=>{if(pendingUnlock===waiting) lock('Passkey-Anfrage abgelaufen. Erneut starten oder Masterpasswort verwenden.');},90000);
+  $('passkey-code').textContent=`Vergleichscode: ${code}`;$('complete-passkey').hidden=false;
+  await extension.tabs.create({url:connection.origin+'/passwords/#extension-unlock='+encodeURIComponent(request.id)});active(generation);
+  status('Im HeavenKey-Tab Code vergleichen und mit Passkey freigeben. Danach hier „Freigabe übernehmen“ wählen.');
+}));
+$('complete-passkey').addEventListener('click',()=>void run(async generation=>{
+  const pending=pendingUnlock;if(!pending || Date.now()>=pending.expires) {lock('Freigabe abgelaufen. Bitte neu starten.');return;}
+  const result=await api('/api/password-vault/extension/unlock/poll',{id:pending.request.id});active(generation);
+  if(result.pending) {status('Noch keine Freigabe. Im HeavenKey-Tab zuerst mit Passkey bestätigen.');return;}
+  pendingUnlock=null;$('complete-passkey').hidden=true;$('passkey-code').textContent='';
+  if(result.revision!==pending.request.revision || result.vault_salt!==pending.request.vault_salt) throw Error('Der Tresor wurde geändert.');
+  let master='';
+  try {
+    master=await openUnlock(pending.request,pending.privateKey,result.sealed);active(generation);
+    const current=snapshot(await api('/api/password-vault/read',{}));active(generation);
+    if(current.revision!==result.revision || !current.record || current.record.salt!==result.vault_salt) throw Error('Der Tresor wurde geändert. Neu anfordern.');
+    const opened=await openVault(current.record,master);active(generation);await acceptOpened(opened,current.revision,generation);
+  } finally {master='';}
+}));
+$('quick-login').addEventListener('click',()=>void run(async generation=>{
+  if(!key || !sourceLogin) return;
+  pageTarget=await target();active(generation);
+  const result=await inject(pageTarget,'scan',generation);active(generation);showMap(result);
+  const passwords=result.fields.filter((f:Field)=>f.entity==='password' && f.kind!=='new-password');
+  const form=passwords.length===1 ? passwords[0].form : null;
+  const allowed=form ? result.fields.filter((f:Field)=>f.form===form && ['username','email','password'].includes(f.entity||'') && !f.hasValue && f.kind!=='new-password') : [];
+  for(const check of document.querySelectorAll<HTMLInputElement>('[data-field]')) check.checked=allowed.some((f:Field)=>f.id===check.dataset.field);
+  input('include-secrets').checked=true;input('confirm-origin').checked=false;
+  status(form ? 'Loginfelder ausgewählt. Prüfe die Adresse und gib das Einfügen frei. Es wird nichts abgesendet.' : 'Kein eindeutiges Loginformular. Wähle die Felder einzeln in der Vorschau.');$('fill-confirmation').scrollIntoView({block:'nearest'});focusAfter(input('confirm-origin'));
+}));
 $('lock-extension').addEventListener('click', () => { lock(); input('extension-master').focus(); });
 $('disconnect').addEventListener('click', () => void disconnect());
 input('vault-search').addEventListener('input', renderSources);
@@ -207,4 +274,4 @@ for (const id of ['include-sensitive','include-secrets','overwrite','include-cho
 for (const type of ['pointerdown','keydown']) document.addEventListener(type, () => { lastActivity = Date.now(); });
 setInterval(() => { if (key && Date.now() - lastActivity > 120000) lock('Nach 2 Minuten Inaktivität gesperrt.'); },10000);
 addEventListener('pagehide', () => lock());
-void (async () => { try { const saved = (await extension.storage.local.get('heavenkey.extension.v1'))['heavenkey.extension.v1']; if (validConnection(saved)) connection = saved; else if (saved) await extension.storage.local.remove('heavenkey.extension.v1'); connected(); } catch { status('Verbindungseinstellung konnte nicht geladen werden.',true); } })();
+void (async () => { try { const saved = (await extension.storage.local.get('heavenkey.extension.v1'))['heavenkey.extension.v1']; if (validConnection(saved)) connection = saved; else if (saved) await extension.storage.local.remove('heavenkey.extension.v1'); connected(); if(connection && new URL(location.href).searchParams.get('passkey')==='1') $('passkey-extension').click(); } catch { status('Verbindungseinstellung konnte nicht geladen werden.',true); } })();

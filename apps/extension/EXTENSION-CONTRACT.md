@@ -15,3 +15,13 @@ Production manifests request `activeTab`, `scripting`, `storage`, `contextMenus`
 The legacy access-lab opener retains its existing local/HTTPS destination validation and connection-only preferences. Firefox temporary loading and Chrome unpacked loading are separate from store signing and distribution approval.
 
 Saving a profile retains the unlocked record’s exact KDF and salt; the popup never silently downgrades an Argon2id vault. Migration is an explicit owner action in the main app.
+
+## Passkey handoff and login shortcut
+
+The passkey button opens a full extension tab when invoked from a transient toolbar popup. A fresh, non-extractable P-256 private key stays in that tab. The paired service holds only its public point and a 90-second request bound to extension origin, current pairing token, vault revision and salt. The owner page displays the extension origin and an eight-digit hexadecimal comparison code. Only an explicit owner click starts the existing verified WebAuthn/PRF unlock ceremony. Device biometrics or PIN depend on the browser and authenticator; no fingerprint support is presumed.
+
+The owner page encrypts the transient master with ephemeral ECDH, HKDF-SHA256 and AES-256-GCM, authenticating the request, recipient point, extension origin, revision and salt. The local service relays only the sealed payload. The requesting extension consumes it once, rechecks the encrypted vault snapshot and decrypts locally. Replacement, revision changes, expiry and revocation invalidate the request. Closing, locking or falling back to the master password discards the private channel key. JavaScript cannot guarantee immediate erasure of immutable strings or protection from a compromised host/browser.
+
+Context menus offer login, saved form templates and selected-text preview. They transmit only a target tab ID and intent, never credential values. Cross-frame context invocations are ignored. Exact-origin logins sort first. The login shortcut preselects empty username/email/password fields only when one current-password candidate identifies one form. Ambiguous forms require manual mapping. New-password targets never receive saved secrets, even with secret consent. Filling still requires an explicit origin confirmation and never submits.
+
+This user-operated extension is separate from the contained agent broker. A receiving website can read deliberately filled values, and an agent with unrestricted page inspection or host access is outside this extension's secrecy boundary. Agent-only opaque login must use the scoped broker, not a DOM-readable browser session.

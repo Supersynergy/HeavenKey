@@ -6,9 +6,9 @@
 
 Passwörter und Formularprofile lokal verwalten. HeavenKey verschlüsselt den Tresor im Browser und speichert ihn auf deinem Computer. Für den Passwortmanager brauchst du weder ein Cloudkonto noch eine Internetverbindung.
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.20.0](https://img.shields.io/badge/version-0.20.0-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.20.0-rc.1)
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.21.0](https://img.shields.io/badge/version-0.21.0-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.21.0-rc.1)
 
-[Downloads](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.20.0-rc.1) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Dateitransfer](docs/TRANSFER-BROKER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
+[Downloads](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.21.0-rc.1) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Dateitransfer](docs/TRANSFER-BROKER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
 
 ![HeavenKey als native macOS-App mit einem synthetischen Testkonto](docs/screenshots/native-macos.png)
 
@@ -24,17 +24,17 @@ Die ursprüngliche Idee steckt jetzt im Passwortmanager: den lokalen Tresor mit 
 
 ## Starten
 
-1. Lade das Paket für deinen Computer aus dem [aktuellen Release](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.20.0-rc.1). Prüfe es mit der dortigen `SHA256SUMS` und entpacke es.
+1. Lade das Paket für deinen Computer aus dem [aktuellen Release](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.21.0-rc.1). Prüfe es mit der dortigen `SHA256SUMS` und entpacke es.
 2. Öffne auf macOS `HeavenKey.app`. Die App verwaltet ihren lokalen Dienst und zeigt den Tresor im eigenen Fenster. Unter Windows und Linux öffnet der Starter den lokalen Tresor im Browser.
 3. Lege ein Masterpasswort mit mindestens 14 Zeichen fest. Exportiere anschließend eine verschlüsselte Sicherung und prüfe ihre Wiederherstellung.
 
 | Computer | Paket | Starter |
 | --- | --- | --- |
-| macOS mit Apple Silicon | `HeavenKey-0.20.0-macos-arm64.zip` | `HeavenKey.app` (macOS 14+) |
-| macOS mit Intel-Prozessor | `HeavenKey-0.20.0-macos-x64.zip` | `HeavenKey.app` (macOS 14+) |
-| Windows x64 | `HeavenKey-0.20.0-windows-x64.zip` | `Start HeavenKey.cmd` |
-| Linux x64 | `HeavenKey-0.20.0-linux-x64.tar.gz` | `./start.sh` |
-| Linux ARM64 | `HeavenKey-0.20.0-linux-arm64.tar.gz` | `./start.sh` |
+| macOS mit Apple Silicon | `HeavenKey-0.21.0-macos-arm64.zip` | `HeavenKey.app` (macOS 14+) |
+| macOS mit Intel-Prozessor | `HeavenKey-0.21.0-macos-x64.zip` | `HeavenKey.app` (macOS 14+) |
+| Windows x64 | `HeavenKey-0.21.0-windows-x64.zip` | `Start HeavenKey.cmd` |
+| Linux x64 | `HeavenKey-0.21.0-linux-x64.tar.gz` | `./start.sh` |
+| Linux ARM64 | `HeavenKey-0.21.0-linux-arm64.tar.gz` | `./start.sh` |
 
 Windows verwendet jetzt denselben OpenSSL-Pfad für SSH-Schlüssel im Speicher wie macOS und Linux. Wine-Kompatibilität und echte Windows-Sicherheitsabnahme sind getrennte Nachweise. Die Pakete sind noch ohne Herausgebersignatur oder Notarisierung.
 
@@ -60,9 +60,15 @@ Ohne zusätzliche Konfiguration funktionieren Freigabelinks nur auf demselben Co
 
 ### Ausfüllen im Browser
 
-Installiere das separate Chromium-Paket für Chrome oder Edge. Erzeuge unter Einstellungen einen einmaligen Kopplungscode und gib ihn mit dem lokalen Port in der Erweiterung ein. Der Dienst muss laufen. Die [Installationsanleitung](docs/DISTRIBUTION.md#browser-erweiterung) beschreibt auch das temporäre Laden unter Firefox ab Version 140.
+Installiere das separate Chromium-Paket für Chrome oder Edge. Unter Firefox ab Version 140 kannst du das Firefox-Paket temporär laden; eine dauerhafte Firefox-Signierung steht aus. Erzeuge unter Einstellungen einen einmaligen Kopplungscode und gib ihn mit dem lokalen Port in der Erweiterung ein. Der Dienst muss laufen. Details stehen in der [Installationsanleitung](docs/DISTRIBUTION.md#browser-erweiterung).
 
-Zum Füllen wählst du einen Login oder ein Profil, prüfst die Zielseite und bestätigst die ausgewählten Felder. Logins benötigen genau die gespeicherte Website-Origin. Finanz- und Identitätsdaten sowie Passwörter und Einmalcodes haben eigene Freigaben. Bestehende Werte bleiben standardmäßig erhalten; Formulare werden nicht abgesendet. Rückgängig ist für die unveränderte Zielseite zeitlich begrenzt möglich.
+Per Rechtsklick öffnest du „Login sicher einfügen“ oder wählst eine gespeicherte Formularvorlage. Passende Logins stehen oben. Bei einem eindeutigen Loginformular wählt HeavenKey die leeren Anmeldefelder vor; du bestätigst die genaue Adresse vor dem Einfügen. „Neues Passwort“, unsichtbare Felder und fremde Frames bleiben ausgeschlossen. Es wird nichts abgesendet.
+
+Entsperre mit dem Masterpasswort oder einem zuvor eingerichteten PRF-Passkey. Der Passkey-Weg öffnet die lokale HeavenKey-Seite: Vergleichscode prüfen, mit dem Gerät bestätigen und in der Erweiterung die Freigabe übernehmen. Fingerabdruck, Gesicht, PIN oder Sicherheitsschlüssel hängen vom Gerät und Browser ab. Die einmalige verschlüsselte Übergabe läuft nach 90 Sekunden ab. Das Masterpasswort bleibt der Rückweg.
+
+![HeavenKey-Erweiterung in Firefox: passende Logins und verschlüsselte Formularvorlagen](docs/images/screenshots/extension-firefox.png)
+
+Browser-Abnahme mit synthetischen Testdaten.
 
 Die Erweiterung hat keinen dauerhaften Zugriff auf alle Websites. Der Browser speichert nur Verbindungseinstellungen und das Kopplungstoken. Sperren, Trennen oder Schließen entfernt die entschlüsselte Sitzung. Eine bereits an die Seite übergebene Eingabe kann diese wie eine manuelle Eingabe lesen.
 

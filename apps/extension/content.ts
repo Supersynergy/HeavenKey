@@ -4,7 +4,7 @@ import './vendor/fill.js';
 import { PROFILE_KEYS, HIGH_FIELDS } from '../../packages/forms/schema';
 
 type Entities = Record<string, string>;
-type Field = { id: string; field: string; entity: string | null; score: number; hasValue: boolean; sensitive: boolean; secret: boolean; kind: string };
+type Field = { id: string; field: string; entity: string | null; score: number; hasValue: boolean; sensitive: boolean; secret: boolean; kind: string; form: string };
 type Target = { el: HTMLElement; fingerprint: string; field: Field };
 type Request = { action: 'scan' | 'fill' | 'undo' | 'capture' | 'clear'; origin: string; href: string; scan?: string; entities?: Entities; selected?: { id: string; entity: string }[]; sensitive?: boolean; secrets?: boolean; overwrite?: boolean; choices?: boolean };
 const root = globalThis as any;
@@ -83,11 +83,13 @@ function makeEngine() {
     if (req.action === 'clear') { clear(); return { cleared: true }; }
     if (req.action === 'scan' || req.action === 'capture') {
       targets = new Map(); scan = crypto.randomUUID(); href = location.href;
-      const fields: Field[] = [], captured: Entities = {};
+      const fields: Field[] = [], captured: Entities = {}, forms=new Map<Element,string>();
       for (const el of P.allFields().slice(0, 500)) {
         if (!usable(el)) continue;
         const match = identify(el), key = match.entity, id = crypto.randomUUID();
-        const field: Field = { id, field: (P.labelText(el) || el.name || el.id || el.tagName).trim().slice(0, 120), entity: key, score: match.score, hasValue: hasValue(el), sensitive: !!key && high.has(base(key)), secret: !!key && secret.has(base(key)), kind: el.type || el.tagName.toLowerCase() };
+        const form=el.form || el.closest('form') || document.documentElement;
+        if(!forms.has(form)) forms.set(form,crypto.randomUUID());
+        const field: Field = { id, field: (P.labelText(el) || el.name || el.id || el.tagName).trim().slice(0, 120), entity: key, score: match.score, hasValue: hasValue(el), sensitive: !!key && high.has(base(key)), secret: !!key && secret.has(base(key)), kind: /\bnew-password\b/i.test(el.autocomplete || '') ? 'new-password' : el.type || el.tagName.toLowerCase(), form:forms.get(form)! };
         targets.set(id, { el, fingerprint: fingerprint(el), field }); fields.push(field);
         if (req.action === 'capture' && key && !secret.has(base(key)) && (!high.has(base(key)) || req.sensitive) && (!high.has(base(key)) || exactSensitive(el, key)) && !['checkbox','radio'].includes(el.type)) {
           const value = text(el).trim(); if (value && value.length <= 10000 && PROFILE_KEYS.includes(key as any) && !captured[key]) captured[key] = value;
@@ -122,6 +124,7 @@ function makeEngine() {
       const target = targets.get(selection.id), key = selection.entity;
       if (!target || !allowed(key) || !usable(target.el) || fingerprint(target.el) !== target.fingerprint) throw new Error('Ein Feld hat sich geändert. Bitte erneut prüfen.');
       const el: any = target.el, original = target.field.entity;
+      if (secret.has(base(key)) && target.field.kind === 'new-password') { blocked.push(target.field.field); return null; }
       // Re-mapping cannot downgrade the sensitivity of the actual target.
       if ((original && (high.has(base(original)) || secret.has(base(original))) && base(original) !== base(key)) || (high.has(base(key)) && (!req.sensitive || !exactSensitive(el, key))) || (secret.has(base(key)) && (!req.secrets || !exactSensitive(el, key)))) { blocked.push(target.field.field); return null; }
       if (hasValue(el) && !req.overwrite) return null;

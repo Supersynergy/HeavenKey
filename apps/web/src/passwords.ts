@@ -6,6 +6,7 @@ import { initPasswordBroker } from "./passwords-broker";
 import { initProtectedComposer } from "./passwords-protected";
 import { initTransferBroker } from "./passwords-transfer";
 import { initAccessOverview } from "./passwords-access-overview";
+import { initExtensionUnlock } from "./passwords-extension-unlock";
 import { initPasswordAccess } from "./passwords-access";
 import { initPasswordSharing } from "./passwords-sharing";
 import { initOnboarding } from "./passwords-onboarding";
@@ -63,7 +64,7 @@ const status = (message: string, error = false) => {
 };
 function setBusy(next: boolean) {
   busy = next;
-  document.querySelectorAll<HTMLButtonElement>("button").forEach(button => { if (button.id !== "lock") button.disabled = next || (button.id === "unlock" && !ready) || (getPrivacyPreferences().discreet && ["reveal-detail-password", "edit-entry", "show-totp", "share-entry", "share-profile"].includes(button.dataset.testid || "")); });
+  document.querySelectorAll<HTMLButtonElement>("button").forEach(button => { if (button.closest("[data-independent-controls]")) return; if (button.id !== "lock") button.disabled = next || (button.id === "unlock" && !ready) || (getPrivacyPreferences().discreet && ["reveal-detail-password", "edit-entry", "show-totp", "share-entry", "share-profile"].includes(button.dataset.testid || "")); });
   byId("workspace").setAttribute("aria-busy", String(next));
   passwordAccess?.setBusy(next); passwordSharing?.setBusy(next); passwordBroker?.setBusy(next); transferBroker?.setBusy(next); protectedComposer?.setBusy(next); onboarding?.refresh();
 }
@@ -431,6 +432,7 @@ const accessContext = {
   announce: status,
 };
 passwordAccess = initPasswordAccess(accessContext);
+initExtensionUnlock(accessContext);
 passwordSharing = initPasswordSharing(accessContext);
 passwordBroker = initPasswordBroker(accessContext);
 transferBroker = initTransferBroker(accessContext, {

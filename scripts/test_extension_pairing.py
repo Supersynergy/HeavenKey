@@ -45,6 +45,41 @@ class ExtensionPairing(test_password_manager.PasswordManager):
         self.assertGreaterEqual(len(pending["code"]), 22)
         return self.http("/extension/connect", {"code": pending["code"]}, origin=origin)[0]
 
+    def test_passkey_handoff_is_single_use_origin_revision_and_grant_bound(self):
+        key = {"x": "A" * 43, "y": "A" * 43}
+        sealed = {"public_key": key, "iv": "A" * 16, "ciphertext": "A" * 32}
+        with self.server():
+            owner = self.pm("/config")["token"]
+            chrome = self.pair(owner)["token"]
+            firefox = self.pair(owner, self.firefox)["token"]
+            self.pm(body={"expected_revision": 0, "record": self.record()}, token=owner)
+            start = lambda: self.http("/extension/unlock/start", {"public_key": key}, token=chrome)[0]["id"]
+            identity = start()
+            self.assertEqual(self.http("/extension/unlock/poll", {"id": identity}, token=chrome)[0], {"pending": True})
+            self.reject(path="/extension/unlock/poll", body={"id": identity}, token=firefox, origin=self.firefox)
+            self.reject(path="/extension/unlock/describe", body={"id": identity}, token=chrome)
+            self.reject(path="/extension/unlock/approve", body={"id": identity, "sealed": sealed}, token=chrome)
+            described = self.pm("/extension/unlock/describe", {"id": identity}, token=owner)
+            self.assertEqual(described["origin"], self.chrome)
+            self.assertEqual(described["revision"], 1)
+            self.pm("/extension/unlock/approve", {"id": identity, "sealed": sealed}, token=owner)
+            self.denied(403, path="/extension/unlock/approve", body={"id": identity, "sealed": sealed}, token=owner)
+            result = self.http("/extension/unlock/poll", {"id": identity}, token=chrome)[0]
+            self.assertEqual(result["sealed"], sealed)
+            self.reject(path="/extension/unlock/poll", body={"id": identity}, token=chrome)
+            identity = start()
+            replacement = start()
+            self.reject(path="/extension/unlock/poll", body={"id": identity}, token=chrome)
+            self.pm(body={"expected_revision": 1, "record": self.record()}, token=owner)
+            self.reject(path="/extension/unlock/poll", body={"id": replacement}, token=chrome)
+            identity = start()
+            self.http("/extension/unlock/cancel", {"id": identity}, token=chrome)
+            self.denied(403, path="/extension/unlock/describe", body={"id": identity}, token=owner)
+            identity = start()
+            self.pair(owner)
+            self.denied(403, path="/extension/unlock/describe", body={"id": identity}, token=owner)
+            self.reject(path="/extension/unlock/poll", body={"id": identity}, token=chrome)
+
     def test_pairing_origin_cas_replacement_revoke_restart(self):
         with self.server():
             app_token = self.pm("/config")["token"]

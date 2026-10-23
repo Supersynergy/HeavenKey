@@ -2,6 +2,7 @@ use super::*;
 mod access;
 mod broker;
 mod browser_executor;
+mod extension_unlock;
 mod transfer;
 
 pub const MAX_BODY: usize = 2 * 1024 * 1024;
@@ -25,6 +26,7 @@ pub struct VaultApp {
 struct Extensions {
     pending: Option<Pairing>,
     grants: HashMap<String, String>,
+    unlocks: HashMap<String, extension_unlock::Pending>,
 }
 
 struct Pairing {
@@ -427,6 +429,11 @@ async fn guard(State(app): State<VaultApp>, req: Request, next: Next) -> Respons
         "/api/password-vault"
             | "/api/password-vault/read"
             | "/api/password-vault/extension/connect"
+    ) || matches!(
+        req.uri().path(),
+        "/api/password-vault/extension/unlock/start"
+            | "/api/password-vault/extension/unlock/poll"
+            | "/api/password-vault/extension/unlock/cancel"
     );
     let cors_origin = origin
         .filter(|value| extension_route && extension_origin(value))
@@ -600,6 +607,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         .route("/api/password-vault", get(read).post(save))
         .route("/api/password-vault/read", axum::routing::post(read_post))
         .merge(access::routes())
+        .merge(extension_unlock::routes())
         .merge(broker::routes())
         .merge(transfer::routes())
         .layer(DefaultBodyLimit::max(MAX_BODY))
