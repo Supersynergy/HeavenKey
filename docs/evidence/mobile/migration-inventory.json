@@ -1,0 +1,213 @@
+{
+  "baseline": "cacc4530f1fca4b2e4cee0176c725f6dd3c10c4f",
+  "branches": [
+    {
+      "ref": "origin/codex/heaven-browserdemo",
+      "head": "8173f63c96a8c566eefb9c9d8a444a59354d4372",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/codex/heaven-https-passkeys",
+      "head": "b156cbec417af521281a1d7372b3e11bfec74534",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/codex/heavenkey-app-design-20261016",
+      "head": "3a64f20c9301baa9616ce7b26895d663233f4eed",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/codex/heavenkey-golden-key-20261016",
+      "head": "20be029291a7a479862adda866b3447b4e0029a1",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/codex/heavenkey-integrated-20261016",
+      "head": "1a65e7bcdeab179e35336918e380a904dec67483",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/codex/heavenkey-password-manager-20261016",
+      "head": "9a7a7f1d40a51910c7cf336d2a6ef976b8839843",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/codex/heavenkey-polish-privacy-20261016",
+      "head": "034f1917e73b06e3408ded49d6c405801b35f58b",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/codex/heavenkey-smartfield-20261017",
+      "head": "717ba2a5cd40ebc03d273398cbd6a05257c380ad",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/codex/installation-guide-v0.12.0",
+      "head": "48da25db5884a55ba8d13961876eb20049b17044",
+      "ancestor_of_baseline": false,
+      "commits": [
+        "48da25d docs: rebuild illustrated installation guide for HeavenKey 0.12.0"
+      ],
+      "changed_paths": [
+        "README.md",
+        "docs/DISTRIBUTION.md",
+        "docs/INSTALLATION-VERIFICATION.md",
+        "docs/INSTALLATION.md",
+        "docs/LAB-INSTALLATION.md",
+        "docs/PASSKEY-GUIDE.md",
+        "docs/USAGE.md",
+        "docs/evidence/installation-v012-review.json",
+        "docs/images/01-installation.svg",
+        "docs/images/02-erster-passkey.svg",
+        "docs/images/03-chrome.svg",
+        "docs/images/04-firefox.svg",
+        "docs/images/05-zugaenge.svg",
+        "docs/images/06-recovery.svg",
+        "docs/images/07-agenten.svg",
+        "docs/images/08-browserkopplung.svg",
+        "docs/images/09-autofill.svg",
+        "docs/images/README.md",
+        "docs/screenshots/README.md",
+        "docs/screenshots/installation-v012-passkey-settings.png",
+        "scripts/illustrate_guides.py"
+      ]
+    },
+    {
+      "ref": "origin/codex/passkey-platform-20261016",
+      "head": "f3200701ec7586abe19697b62160683d24dc3a14",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/codex/platform-packages",
+      "head": "ddb8fbdae2638051af83df1564931e57d2bb3ce2",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/devin/0.7-gate-cli",
+      "head": "01fb75fd3f3d473356f7feb98af7acb1913940f3",
+      "ancestor_of_baseline": false,
+      "commits": [
+        "01fb75f feat(gate,verifier,api): offline enforcement demo, hkv CLI, /api/issuer snapshot"
+      ],
+      "changed_paths": [
+        "Cargo.lock",
+        "apps/api/src/main.rs",
+        "apps/gate/Cargo.toml",
+        "apps/gate/src/main.rs",
+        "apps/gate/tests/gate.rs",
+        "crates/verifier/src/bin/hkv.rs",
+        "docs/DEVELOPMENT.md",
+        "docs/DONORS.md",
+        "docs/GATE.md",
+        "docs/SPEC.md"
+      ]
+    },
+    {
+      "ref": "origin/devin/1791843634-protected-storage",
+      "head": "33f1d44d7a49e26f80033ee1def1338907bc814b",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/devin/1791843693-delegation-v1-vectors",
+      "head": "95ee6a925a3fcfab7243076d96c11a37d7862561",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/devin/1791879114-grant-v0-vectors",
+      "head": "d42176b261f59d921c782c3c806d362864a91c77",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/devin/1791879402-revocation-snapshot",
+      "head": "72187e3b60d4fa167fb47700954e37d9c4207a54",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/devin/parallel-gate",
+      "head": "ae0db6556171ef05170b1d38a3d545c1f245e004",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/devin/parallel-ops",
+      "head": "130142fbc1721a325fc9fc494d030c7721e3333c",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/devin/parallel-tenancy",
+      "head": "ab2e18e670f36efec4146647ac7b59044899d320",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/devin/parallel-ucan-bridge",
+      "head": "ff31ff31541d2a049bd1a2a9ea2dd959f08e6640",
+      "ancestor_of_baseline": false,
+      "commits": [
+        "ff31ff3 feat(ucan-bridge): export verified delegation chains as deterministic UCAN-shaped JWTs"
+      ],
+      "changed_paths": [
+        "Cargo.lock",
+        "crates/ucan-bridge/Cargo.toml",
+        "crates/ucan-bridge/src/lib.rs",
+        "docs/UCAN-BRIDGE.md",
+        "docs/evidence/ucan-bridge.json",
+        "docs/vectors/ucan-bridge-v1.json",
+        "scripts/ucan-reference.mjs"
+      ]
+    },
+    {
+      "ref": "origin/fix/ci-hardening-20261012",
+      "head": "d3509abbfff76a203174b4ac26cca5abd5b2414a",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/main",
+      "head": "cacc4530f1fca4b2e4cee0176c725f6dd3c10c4f",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/pr15",
+      "head": "33f1d44d7a49e26f80033ee1def1338907bc814b",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/pr16",
+      "head": "95ee6a925a3fcfab7243076d96c11a37d7862561",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/pr17",
+      "head": "130142fbc1721a325fc9fc494d030c7721e3333c",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/pr18",
+      "head": "ae0db6556171ef05170b1d38a3d545c1f245e004",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/pr19",
+      "head": "ab2e18e670f36efec4146647ac7b59044899d320",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/pr20",
+      "head": "d42176b261f59d921c782c3c806d362864a91c77",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/pr21",
+      "head": "72187e3b60d4fa167fb47700954e37d9c4207a54",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/pr23",
+      "head": "b156cbec417af521281a1d7372b3e11bfec74534",
+      "ancestor_of_baseline": true
+    },
+    {
+      "ref": "origin/pr24",
+      "head": "f3200701ec7586abe19697b62160683d24dc3a14",
+      "ancestor_of_baseline": true
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "kind": "native Android AutofillService in actual Chrome on isolated API 36 emulator",
+  "browser": "Chrome 133.0.6943.137",
+  "browser_test_flag": "enable-autofill-virtual-view-structure",
+  "fixture": "Synthetic HTML inserted into a successfully loaded HTTPS example.com/example.org document; no form submission or credential transmission",
+  "device_authentication": true,
+  "explicit_account_selection": true,
+  "browser_username_filled": true,
+  "browser_password_filled": true,
+  "no_automatic_submission": true,
+  "wrong_origin_rejected": true,
+  "cancelled_authentication_left_fields_empty": true,
+  "physical_device": false,
+  "current_stable_browser": false,
+  "ios_runtime": false,
+  "production_signed": false,
+  "apk_sha256": "0665568f2898a5a90791710ac7ed14df107ca0f15a3f55833f8010882eceb613",
+  "source_files": {
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/HeavenAutofillService.kt": "cdb78bfa90d6fdf5ed6ca05096e9550f907b7bdd6b9da06105ecf2799052b1f5",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/AutofillActivity.kt": "35344a23f8af44450cc615f16b03de98ba595f6a074f9da5a61fcae6aa9cce30",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/VaultStore.kt": "b41a41e05113fe34e8a7bc15d5306b02f5ced008717124c28941a89f4622fbf5",
+    "apps/mobile/android/app/src/main/AndroidManifest.xml": "5774213e8806994ec3906b374b251191e3e93553397d916474ef7bda080d199d"
+  }
+}

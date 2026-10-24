@@ -30,3 +30,18 @@ portable target:
 
 package *targets:
     python3 scripts/package_release.py {{targets}}
+
+mobile-check:
+    python3 scripts/run.py mobile-check 180 -- just _mobile-check
+
+_mobile-check:
+    cd apps/mobile && dart format --output=none --set-exit-if-changed lib test integration_test
+    cd apps/mobile && flutter analyze --no-pub
+    cd apps/mobile && flutter test --no-pub
+    python3 scripts/mobile_native_gate.py all
+
+mobile-android:
+    python3 scripts/run.py mobile-android 300 -- just _mobile-android
+
+_mobile-android:
+    cd apps/mobile && flutter build apk --debug --no-pub

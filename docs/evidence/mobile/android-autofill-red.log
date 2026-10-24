@@ -1,0 +1,23 @@
+--------- beginning of crash
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: FATAL EXCEPTION: main
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: Process: app.heavenkey.heavenkey_mobile, PID: 8109
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: java.lang.NullPointerException: second must not be null
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at app.heavenkey.heavenkey_mobile.FillPolicy.target$visit(HeavenAutofillService.kt:67)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at app.heavenkey.heavenkey_mobile.FillPolicy.target$visit(HeavenAutofillService.kt:79)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at app.heavenkey.heavenkey_mobile.FillPolicy.target$visit(HeavenAutofillService.kt:79)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at app.heavenkey.heavenkey_mobile.FillPolicy.target$visit(HeavenAutofillService.kt:79)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at app.heavenkey.heavenkey_mobile.FillPolicy.target$visit(HeavenAutofillService.kt:79)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at app.heavenkey.heavenkey_mobile.FillPolicy.target(HeavenAutofillService.kt:81)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at app.heavenkey.heavenkey_mobile.HeavenAutofillService.onFillRequest(HeavenAutofillService.kt:90)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at android.service.autofill.AutofillService$1$$ExternalSyntheticLambda3.accept(D8$$SyntheticClass:0)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at com.android.internal.util.function.pooled.PooledLambdaImpl.doInvoke(PooledLambdaImpl.java:310)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at com.android.internal.util.function.pooled.PooledLambdaImpl.invoke(PooledLambdaImpl.java:204)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at com.android.internal.util.function.pooled.OmniFunction.run(OmniFunction.java:87)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:995)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:103)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:248)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:338)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9067)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:593)
+10-24 19:44:12.942  8109  8109 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:932)
