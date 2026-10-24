@@ -1,7 +1,7 @@
 cd apps/mobile && dart format --output=none --set-exit-if-changed lib test integration_test
 Formatted 5 files (0 changed) in 0.02 seconds.
 cd apps/mobile && flutter analyze --no-pub
-Analyzing mobile...                                             
+Analyzing mobile...
 No issues found! (ran in 1.4s)
 cd apps/mobile && flutter test --no-pub
 00:00 +0: loading /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart
