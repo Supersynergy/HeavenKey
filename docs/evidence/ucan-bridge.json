@@ -1,0 +1,48 @@
+{
+  "workstream": "ucan-bridge",
+  "generated_utc": "2026-10-12T22:29:51Z",
+  "commands": [
+    {
+      "command": "cargo fmt --check",
+      "exit": 0,
+      "tail": []
+    },
+    {
+      "command": "cargo clippy --locked --offline --all-targets -- -D warnings",
+      "exit": 0,
+      "tail": [
+        "Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.09s"
+      ]
+    },
+    {
+      "command": "cargo test --locked --offline -p uac-ucan-bridge",
+      "exit": 0,
+      "tail": [
+        "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.31s",
+        "     Running unittests src/lib.rs (target/debug/build/uac-ucan-bridge/fec1515fdb125445/out/uac_ucan_bridge-fec1515fdb125445)",
+        "   Doc-tests uac_ucan_bridge"
+      ]
+    },
+    {
+      "command": "bun scripts/ucan-reference.mjs",
+      "exit": 0,
+      "tail": [
+        "{\"passed\":42,\"fixtures\":3,\"cases\":12,\"invalid_tokens\":26,\"independent\":\"Node crypto Ed25519 with separate JWS/base58btc encoder\"}"
+      ]
+    },
+    {
+      "command": "node scripts/ucan-reference.mjs",
+      "exit": 0,
+      "tail": [
+        "{\"passed\":42,\"fixtures\":3,\"cases\":12,\"invalid_tokens\":26,\"independent\":\"Node crypto Ed25519 with separate JWS/base58btc encoder\"}"
+      ]
+    }
+  ],
+  "vectors": {
+    "fixtures": 3,
+    "cases": 12,
+    "invalid_tokens": 26,
+    "cases_denied": 8
+  },
+  "note": "Rust erzeugt die Token-Bytes, die JS-Referenz verifiziert unabhaengig; cargo deny/audit sind auf dieser Maschine nicht installiert."
+}

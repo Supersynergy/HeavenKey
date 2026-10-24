@@ -2472,11 +2472,19 @@ dependencies = [
 [[package]]
 name = "uac-ucan-bridge"
 version = "0.21.0"
+dependencies = [
+ "base64 0.22.1",
+ "ed25519-dalek",
+ "serde",
+ "serde_json",
+ "uac-verifier",
+]
 
 [[package]]
 name = "uac-verifier"
 version = "0.21.0"
 dependencies = [
+ "base64 0.22.1",
  "ed25519-dalek",
  "serde",
  "serde_json",
