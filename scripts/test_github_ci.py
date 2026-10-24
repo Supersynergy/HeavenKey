@@ -10,6 +10,41 @@ import github_ci
 
 
 class RunnerGateTests(unittest.TestCase):
+    def test_preparation_mounts_a_frozen_snapshot_inside_state(self):
+        root = Path(tempfile.mkdtemp(dir=self.directory.name))
+        state = Path(tempfile.mkdtemp(dir=self.directory.name))
+        inputs = {
+            "scripts/ci/prepare_image.sh": b"prepare fixture",
+            "scripts/ci/runner_entry.sh": b"runner fixture",
+            "package.json": b"approved package",
+            "bun.lock": b"approved lock",
+            "apps/web/package.json": b"approved web package",
+        }
+        for relative, value in inputs.items():
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(value)
+
+        def command(args, **_kwargs):
+            if args[:3] == ["docker", "image", "inspect"]:
+                (root / "package.json").write_bytes(b"changed after snapshot")
+                return subprocess.CompletedProcess(args, 1, "", "")
+            return subprocess.CompletedProcess(args, 0, "", "")
+
+        def attached(args, _name, _log, _seconds):
+            self.assertIn(f"{state / 'source'}:/source:ro", args)
+            for relative, value in inputs.items():
+                self.assertEqual((state / "source" / relative).read_bytes(), value)
+
+        with (
+            patch.object(github_ci, "ROOT", root),
+            patch.object(github_ci, "STATE", state),
+            patch.object(github_ci, "ARCHIVES", ()),
+            patch.object(github_ci, "command", side_effect=command),
+            patch.object(github_ci, "attached_container", side_effect=attached),
+        ):
+            github_ci.prepare_image()
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory(prefix="heavenkey-runner-test-")
         self.addCleanup(self.directory.cleanup)
