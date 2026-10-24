@@ -117,7 +117,7 @@ Das Masterpasswort und der nicht exportierbare Schlüssel bleiben im entsperrten
 
 Verlust des Masterpassworts lässt sich nicht durch HeavenKey zurücksetzen. Ein Passkey hilft nur, solange sein verschlüsselter lokaler Umschlag und das Gerät verfügbar sind. Ein Passwortwechsel oder eine gesperrte Wiederherstellung entfernt Passkey-Umschläge und widerruft bestehende Freigaben. Bereits abgerufene Angaben kann ein Empfänger speichern; Ablauf und Widerruf verhindern weitere Serverabrufe. Der vollständige Freigabelink ist vertraulich: Wer ihn zuerst mit einem Passkey beansprucht, wird zum gebundenen Empfänger. JavaScript garantiert keine vollständige physische Speicherlöschung; die Bereinigung der Zwischenablage hängt vom Browser ab. Programme im selben Benutzerkonto und ein kompromittierter Browser gehören zur Vertrauensgrenze.
 
-Die [Release-Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) unterscheidet natives Apple Silicon von Rosetta, Wine und QEMU. Die Chromium-Tests verwenden eine ausdrückliche Testfreigabe für localhost; der native Berechtigungsdialog ist nicht automatisiert abgenommen. Firefox wurde auf Paketebene geprüft. Physische Passkeys und ein externes Kryptografie-Audit sind nicht abgenommen. Native mobile Apps, Gerätesynchronisation und die Verwaltung von Website-Passkeys sind noch offen. Die responsive Ansicht ersetzt keinen mobilen Credential-Provider.
+Die [Release-Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) unterscheidet natives Apple Silicon von Rosetta, Wine und QEMU. Die Chromium-Tests verwenden eine ausdrückliche Testfreigabe für localhost; der native Berechtigungsdialog ist nicht automatisiert abgenommen. Firefox wurde auf Paketebene geprüft. Physische Passkeys und ein externes Kryptografie-Audit sind nicht abgenommen. Die Produktionsfreigabe der Handy-App steht aus. Gerätesynchronisation und die Verwaltung von Website-Passkeys sind noch offen. Die responsive Ansicht ersetzt keinen mobilen Credential-Provider.
 
 `ACCEPTANCE.json` und `SHA256SUMS` im jeweiligen Release binden die Nachweise an Quellstand und Dateien. Der [Vergleich mit Enpass und 20 weiteren Produkten](docs/PASSWORD-MANAGER-GAPS.md) dokumentiert den früheren Ausgangsstand; er ist kein aktuelles Gesamtranking oder Nachweis eines allgemeinen Funktionsvorsprungs.
 
@@ -163,8 +163,9 @@ HeavenKey ist proprietäre Software. Die [HeavenKey Proprietary License 1.0](LIC
 Die [Flutter-App für Android und iPhone](docs/MOBILE.md) ergänzt den Desktop-Tresor
 mit nativer Geräteauthentifizierung und verschlüsselter Sicherung. Android verlangt
 für die gemeldete HTTPS-Domain eine ausdrückliche Einmalfreigabe vor dem Entsperren.
-Android-Debug-Build und Quellprüfungen sind verfügbar; die signierte iOS- und Browser-Geräteabnahme ist
-offen. Diese Version ist für Testdaten vorgesehen und synchronisiert noch nicht
+Die [Android-Vorschau 0.24](https://github.com/Supersynergy/HeavenKey/releases/tag/mobile-v0.24.0-preview.1)
+enthält das APK und SHA256SUMS. Sie verwendet einen Debug-Schlüssel; die signierte
+iOS- und Browser-Geräteabnahme ist offen. Diese Version ist für Testdaten vorgesehen und synchronisiert noch nicht
 mit dem Desktop-Tresor. [Integrationsstand](docs/MIGRATION-20261024.md).
 
 Die [bebilderte Installation](docs/INSTALLATION.md) bleibt ausdrücklich auf

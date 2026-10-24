@@ -6,6 +6,14 @@ eigenen lokalen Speicher; sie synchronisiert den Desktop-Tresor noch nicht.
 Version 0.24.0 ergänzt adaptive Browserfreigaben. Die verschlüsselte Sicherung
 aus Version 0.23 bleibt erhalten.
 
+## Android-Vorschau installieren
+
+Das [Release 0.24](https://github.com/Supersynergy/HeavenKey/releases/tag/mobile-v0.24.0-preview.1)
+enthält `HeavenKey-0.24.0-android-preview.apk` und `SHA256SUMS`. Lade das APK auf ein
+Android-Gerät und folge dessen Installationsdialog. Erforderlich sind Android
+API 30 oder neuer und eine eingerichtete Gerätesperre. Das APK verwendet einen
+Debug-Schlüssel und ist ausschließlich für Testdaten vorgesehen.
+
 ## Funktionen
 
 Logins anlegen, ändern, suchen und löschen; zufällige Passwörter erzeugen;

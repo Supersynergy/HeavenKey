@@ -51,5 +51,5 @@ belegt keine Kompatibilität aller aufgeführten Pakete. Desktop-Synchronisierun
 und Website-Passkey-Verwaltung sind offen.
 
 `python3 scripts/mobile_device_acceptance.py` bleibt ohne diese Gerätebelege rot.
-Der GitHub-PR bleibt ein Entwurf. Eine allgemeine Überlegenheit gegenüber anderen
+Die Android-App wird als Entwicklungsvorschau verteilt. Eine allgemeine Überlegenheit gegenüber anderen
 Passwortmanagern ist nicht belegt.
