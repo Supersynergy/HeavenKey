@@ -99,14 +99,18 @@ def prepare_image():
         "bun.lock",
         "apps/web/package.json",
     )
-    digest = hashlib.sha256(
-        BASE.encode() + b"".join((ROOT / p).read_bytes() for p in sources)
-    ).hexdigest()[:16]
+    snapshot = {path: (ROOT / path).read_bytes() for path in sources}
+    digest = hashlib.sha256(BASE.encode() + b"".join(snapshot.values())).hexdigest()[:16]
     image = f"heavenkey-ci:{digest}"
     if command(["docker", "image", "inspect", image], check=False).returncode == 0:
         return image
     archive = STATE / "downloads"
     archive.mkdir(exist_ok=True)
+    source = STATE / "source"
+    for relative, contents in snapshot.items():
+        staged = source / relative
+        staged.parent.mkdir(parents=True, exist_ok=True)
+        staged.write_bytes(contents)
     for repo, tag, filename, checksum in ARCHIVES:
         path = archive / filename
         if not path.exists():
@@ -153,7 +157,7 @@ def prepare_image():
             "-v",
             f"{archive}:/archive:ro",
             "-v",
-            f"{ROOT}:/source:ro",
+            f"{source}:/source:ro",
             BASE,
             "bash",
             "/source/scripts/ci/prepare_image.sh",
@@ -398,9 +402,15 @@ def run_ci(image):
 
 
 def main():
+    global STATE
     parser = argparse.ArgumentParser()
     parser.add_argument("--prepare-only", action="store_true")
+    parser.add_argument("--state-dir", type=Path, help="Absolute CI cache/evidence path visible to the Docker VM")
     args = parser.parse_args()
+    if args.state_dir is not None:
+        if not args.state_dir.is_absolute():
+            parser.error("--state-dir must be absolute")
+        STATE = args.state_dir.resolve()
     STATE.mkdir(mode=0o700, exist_ok=True)
     with (STATE / "runner.lock").open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)

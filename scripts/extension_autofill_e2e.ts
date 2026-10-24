@@ -11,7 +11,7 @@ const root = resolve(import.meta.dir,'..');
 const temporary = await mkdtemp(join(tmpdir(),'heavenkey-smartfield-'));
 const binary = resolve(process.env.HEAVENKEY_BINARY || 'target/debug/uac-api');
 const extension = resolve(process.env.HEAVENKEY_EXTENSION || 'dist/extension-source-chromium');
-const browserPath = process.env.CHROME_PATH || '/Users/master/Library/Caches/ms-playwright/chromium-1169/chrome-mac/Chromium.app/Contents/MacOS/Chromium';
+const browserPath = process.env.CHROME_PATH || chromium.executablePath();
 const origin = 'http://localhost:18257', master = 'Synthetic-extension-master-only!';
 const cases: {name:string;pass:boolean}[] = [], errors: string[] = [];
 let browser: any, processServer: any, output = '';

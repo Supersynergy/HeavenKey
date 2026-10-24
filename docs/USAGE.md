@@ -1,16 +1,16 @@
-# HeavenKey benutzen
+# Zugangslabor benutzen
 
-HeavenKey verwaltet Passkeys und begrenzte Zugänge zum Demo-Dokument. Die aktuelle Version läuft lokal. Physische Passkeys sind noch nicht abgenommen; `just e2e` verwendet virtuelle Geräte für den vollständigen Testablauf.
+Das getrennte HeavenKey-Zugangslabor verwaltet Passkeys und begrenzte Zugänge zum Demo-Dokument. Für den lokalen Passwortmanager gilt stattdessen die [bebilderte Installation](INSTALLATION.md). Physische Passkeys sind noch nicht abgenommen; `just e2e` verwendet virtuelle Geräte für den vollständigen Testablauf.
 
 ## Einrichten
 
-Entpacke ein fertiges Paket und starte es wie in der [Paket-Anleitung](DISTRIBUTION.md) beschrieben. Für einen Start aus dem Quellcode baust du zuerst das Projekt wie in der [README](../README.md#ausprobieren) beschrieben:
+Entpacke ein geprüftes Paket und starte das Programm **ohne `--password-manager`** auf Port 18241, wie in der [Labor-Installation](LAB-INSTALLATION.md) beschrieben. Der normale Paket-Starter öffnet den Passwortmanager. Für einen Start aus dem Quellcode baust du zuerst das Projekt wie in der [README](../README.md#entwicklung) beschrieben:
 
 ```sh
-cargo run --locked --offline -p uac-api -- --open
+cargo run --locked --offline -p uac-api -- --port 18241 --open
 ```
 
-Öffne `http://localhost:18240`. Der Server bleibt im Vordergrund; `Ctrl+C` beendet ihn. Die Daten liegen im Benutzerprofil. Der Server zeigt den genauen Pfad an; die [Paket-Anleitung](DISTRIBUTION.md) nennt die Standardorte. Einen vorhandenen Entwicklungsbestand unter `data/` verwendest du mit `--data-dir data`.
+Öffne `http://localhost:18241/`. Der Server bleibt im Vordergrund; `Ctrl+C` beendet ihn. Die Daten liegen im Benutzerprofil. Der Server zeigt den genauen Pfad an; die [Paket-Anleitung](DISTRIBUTION.md) nennt die Standardorte. Einen vorhandenen Entwicklungsbestand unter `data/` verwendest du mit `--data-dir data`.
 
 Bei einer neuen Installation erzeugt der Server einen einmaligen Einrichtungscode. Öffne die angezeigte Datei `owner-bootstrap.txt` lokal als Textdatei.
 
@@ -22,7 +22,7 @@ Melde dich mit deinem Kontonamen und einem aktiven Passkey an. Die Anmeldung gil
 
 - **Hinzufügen:** Gib dem neuen Schlüssel einen Namen, bestätige die Änderung mit einem vorhandenen Passkey und erstelle den neuen Passkey.
 - **Widerrufen:** Wähle den betroffenen Schlüssel, prüfe den Bestätigungsdialog und bestätige mit einem aktiven Passkey. Der Widerruf beendet offene Sitzungen des Kontos.
-- **Letzter Schlüssel:** Der letzte aktive Passkey lässt sich nicht widerrufen. Für den Verlust aller Schlüssel steht im 0.7-Quellstand die vorbereitete [Einmalcode-Wiederherstellung](PASSKEY-GUIDE.md#alle-passkeys-verloren) zur Verfügung.
+- **Letzter Schlüssel:** Der letzte aktive Passkey lässt sich nicht widerrufen. Für den Verlust aller Schlüssel steht die vorbereitete [Einmalcode-Wiederherstellung](PASSKEY-GUIDE.md#alle-passkeys-verloren) zur Verfügung.
 
 Du kannst bis zu acht aktive Passkeys speichern. Ein anderer aktiver Passkey desselben Kontos kann vorhandene Zugänge weiter nutzen. Um einen Zugang zu entziehen, widerrufe den Zugang selbst.
 
@@ -60,6 +60,7 @@ Die Kontodatenbank ist mit SQLCipher verschlüsselt. Ihr Schlüssel stammt aus `
 Mit `uac-api --store-query '{"sql":"SELECT ...","params":[]}'` führt ein lokaler Operator Wartungsabfragen aus. Für das Offline-Gate exportiert `python3 scripts/revocation_snapshot.py --data DATENORDNER --out revocations.json` den aktuellen Widerruf-Snapshot; dafür sind dieselben Speicher- und Schutzschlüssel nötig. Eine Passkey-Bestätigung bietet keine unabhängige Anzeige der Transaktionsdaten auf dem Authentikator. Weitere Grenzen stehen in der [Spezifikation](SPEC.md).
 
 
-## Erweiterte Funktionen in 0.7
+## Weitere Laboranleitungen
 
-[Bebilderte Installation](INSTALLATION.md), [Recovery und Tresor](PASSKEY-GUIDE.md), [Agentenfreigaben](AGENT-GUIDE.md) und [technische Grenzen](PASSKEY-PLATFORM.md) beschreiben die neuen Abläufe. Verfügbare 0.6-Pakete enthalten diese Erweiterungen noch nicht.
+[Labor-Installation](LAB-INSTALLATION.md), [Recovery und Notiztresor](PASSKEY-GUIDE.md), [Agentenfreigaben](AGENT-GUIDE.md) und [technische Grenzen](PASSKEY-PLATFORM.md) beschreiben die getrennten Laborabläufe. Die in 0.7 hinzugekommenen Funktionen bleiben in 0.12.0 enthalten.
+

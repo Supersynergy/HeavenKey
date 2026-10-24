@@ -26,8 +26,9 @@ def badge(x, y, number):
     )
 
 
-def plate(filename, title, subtitle, body, height=660):
-    source = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="{height}" viewBox="0 0 1200 {height}" role="img" aria-labelledby="title desc"><title id="title">{escape(title)}</title><desc id="desc">{escape(subtitle)}. Schematische Bedienillustration.</desc>{rect(0, 0, 1200, height, PAPER, radius=0)}{rect(0, 0, 1200, 110, DARK, radius=0)}{text(42, 45, "HeavenKey · Schritt für Schritt", 16, GOLD, 600)}{text(42, 85, title, 30, "#ffffff", 700)}{text(42, 148, subtitle, 18, MUTED)}{body}{text(42, height - 25, "Bedienillustration · Quellstand 0.7 · keine Browser-Abnahme", 13, MUTED)}</svg>'''
+def plate(filename, title, subtitle, body, height=660, source_version="0.7"):
+    footer = f"Schematische Bedienillustration · Quellstand {source_version} · kein Screenshot / keine Browser-Abnahme"
+    source = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="{height}" viewBox="0 0 1200 {height}" role="img" aria-labelledby="title desc"><title id="title">{escape(title)}</title><desc id="desc">{escape(subtitle)}. Schematische Bedienillustration, kein Screenshot.</desc>{rect(0, 0, 1200, height, PAPER, radius=0)}{rect(0, 0, 1200, 110, DARK, radius=0)}{text(42, 45, "HeavenKey · Schritt für Schritt", 16, GOLD, 600)}{text(42, 85, title, 30, "#ffffff", 700)}{text(42, 148, subtitle, 18, MUTED)}{body}{text(42, height - 25, footer, 13, MUTED)}</svg>'''
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / filename).write_text(source + "\n")
 
@@ -39,9 +40,9 @@ def install():
             "1",
             "Paket wählen",
             [
-                "Passendes Betriebssystem",
-                "und Prozessor auswählen.",
-                "Archiv vollständig entpacken.",
+                "Mit berechtigtem GitHub-Konto",
+                "v0.12.0 und SHA256SUMS laden.",
+                "Prüfen, vollständig entpacken.",
             ],
         ),
         (
@@ -57,7 +58,7 @@ def install():
             "3",
             "Browser öffnen",
             [
-                "http://localhost:18240",
+                "localhost:18240/passwords/",
                 "Programm geöffnet lassen.",
                 "Die Erweiterung ist optional.",
             ],
@@ -74,12 +75,12 @@ def install():
     b += (
         rect(42, 480, 1115, 90, "#e8eeea")
         + text(
-            65, 513, "Neuer 0.7-Quellstand: einfacher Entwicklungsstart", 18, INK, 700
+            65, 513, "HeavenKey 0.12.0 · Lokaler Passwortmanager", 18, INK, 700
         )
         + text(
             65,
             546,
-            "Rust + Bun 1.4.2 + Python installieren → python3 scripts/first_run.py",
+            "Masterpasswort anlegen → Login speichern → verschlüsselte Sicherung exportieren",
             18,
             INK,
         )
@@ -87,8 +88,9 @@ def install():
     plate(
         "01-installation.svg",
         "In drei Schritten starten",
-        "Fertiges Vorschau-Paket verwenden oder den neuen Quellstand lokal bauen.",
+        "Das Paket startet den Passwortmanager. Passkey und Browser-Erweiterung sind optional.",
         b,
+        source_version="0.12.0",
     )
 
 
@@ -96,7 +98,7 @@ def setup():
     b = (
         rect(42, 185, 700, 365, "white", "#d5ddda")
         + rect(42, 185, 700, 42, "#e5e9e6")
-        + text(64, 212, "http://localhost:18240", 16, INK)
+        + text(64, 212, "http://localhost:18241 · Zugangslabor", 16, INK)
     )
     b += text(70, 265, "Deine Schlüssel. Begrenzte Rechte.", 24, INK, 700)
     fields = [
@@ -180,8 +182,9 @@ def chrome():
     plate(
         "03-chrome.svg",
         "Chrome: Erweiterung laden",
-        "Die Erweiterung öffnet HeavenKey; Passkeys bleiben auf der HeavenKey-Adresse.",
+        "Chromium-Paket 0.12.0 verwenden; danach lokal koppeln und Formularaktionen bestätigen.",
         b,
+        source_version="0.12.0",
     )
 
 
@@ -219,8 +222,9 @@ def firefox():
     plate(
         "04-firefox.svg",
         "Firefox: Vorschau-Erweiterung laden",
-        "Für die lokale Vorschau wird kein Mozilla-Konto und kein Browser-Passwort benötigt.",
+        "Firefox ab 140 · Firefox-Paket 0.12.0 · temporär laden und danach lokal koppeln.",
         b,
+        source_version="0.12.0",
     )
 
 
@@ -311,7 +315,7 @@ def recovery():
         + text(
             65,
             548,
-            "Für den Server zusätzlich Datenordner UND OS-Keystore oder externe Schutzdatei sichern.",
+            "Für den Labor-Server: Datenordner UND Datenbank- und Signierschutzschlüssel sichern.",
             17,
             INK,
         )
@@ -370,7 +374,54 @@ def agent():
     )
 
 
+def workflow(filename, title, subtitle, steps):
+    """Numbered process cards; deliberately do not imitate browser dialogs."""
+    body = ""
+    for index, (heading, detail) in enumerate(steps):
+        x, y = 42 + (index % 2) * 570, 185 + (index // 2) * 155
+        body += (
+            rect(x, y, 545, 137, "white", "#d5ddda")
+            + badge(x + 32, y + 34, index + 1)
+            + text(x + 64, y + 40, heading, 21, INK, 700)
+            + lines(x + 22, y + 78, detail, 17)
+        )
+    plate(filename, title, subtitle, body, height=710, source_version="0.12.0")
+
+
+def pairing():
+    workflow(
+        "08-browserkopplung.svg",
+        "Browser verbinden: zwei bewusste Freigaben",
+        "Schematischer Ablauf · Der native Berechtigungsdialog ist hier nicht abgebildet.",
+        [
+            ("App: Einstellungen", ["Browser-Erweiterung verbinden öffnen.", "Verbindungscode erzeugen wählen."]),
+            ("Einmaligen Code kopieren", ["Code kopieren · gilt nur zwei Minuten.", "Nach Dienstneustart erneut koppeln."]),
+            ("Erweiterung öffnen", ["Lokalen Port und Kopplungscode eintragen.", "Lokal verbinden wählen."]),
+            ("Browserberechtigung bestätigen", ["Optionale Berechtigung: http://localhost/*", "Nach Ablehnung findet keine Kopplung statt."]),
+            ("Popup mit Masterpasswort öffnen", ["Tresor entsperren wählen.", "Die Hauptseite entsperrt das Popup nicht."]),
+            ("Zugriff bewusst beenden", ["Sperren oder Popup schließen.", "Verbindung entfernen oder in der App widerrufen."]),
+        ],
+    )
+
+
+def autofill():
+    workflow(
+        "09-autofill.svg",
+        "Autofill: prüfen, auswählen und bestätigen",
+        "Schematischer Ablauf · Die Website kann bewusst ausgefüllte Werte lesen.",
+        [
+            ("Zielseite aktiv öffnen", ["HTTPS-Seite, dann HeavenKey-Symbol öffnen.", "Für Logins: Schema, Host und Port abgleichen."]),
+            ("Login oder Profil auswählen", ["Popup mit Masterpasswort entsperren.", "Unter Werte prüfen die Angaben kontrollieren."]),
+            ("Felder der Seite prüfen", ["Felder und ihre Zuordnung auswählen.", "Vorhandene Werte bleiben standardmäßig erhalten."]),
+            ("Geheimnisse extra freigeben", ["Passwort und Einmalcode freigeben: nur bei Bedarf.", "Finanz- und Identitätsdaten: eigene Freigabe."]),
+            ("Angezeigte Zielseite bestätigen", ["Ich gebe die ausgewählten Werte für … frei.", "Nur gewählte Felder füllen wählen."]),
+            ("Ergebnis prüfen", ["Es wird kein Formular abgesendet.", "Rückgängig: unveränderte Seite, max. zwei Minuten."]),
+        ],
+    )
+
+
 if __name__ == "__main__":
-    for build in [install, setup, chrome, firefox, access, recovery, agent]:
+    for build in [install, setup, chrome, firefox, access, recovery, agent, pairing, autofill]:
         build()
-    print("Created seven SVG instruction plates.")
+    print("Created nine schematic SVG instruction plates (not screenshots).")
+
