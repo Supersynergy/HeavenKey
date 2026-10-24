@@ -1,0 +1,59 @@
+--------- beginning of system
+10-25 01:17:18.846   649   649 D AutofillManagerService: setLogLevelFromSettings(): level=2, debug=true, verbose=false
+10-25 01:17:18.846   649   649 D AutofillManagerService: setMaxPartitionsFromSettings(): 10
+10-25 01:17:18.846   649   649 D AutofillManagerService: setMaxVisibleDatasetsFromSettings(): 0
+10-25 01:17:19.555   649   649 D AutofillManagerService: Restriction did not change for user 0
+--------- beginning of main
+10-25 01:17:43.110  1030  1030 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 01:17:45.270  1928  1928 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 01:17:47.373  1030  1030 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 01:17:50.106  1928  1928 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 01:17:57.965   649   670 D AutofillManagerService: onBackKeyPressed()
+10-25 01:17:58.546  1928  1928 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 01:18:00.614   649   670 D AutofillManagerService: onBackKeyPressed()
+10-25 01:18:04.015  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:18:04.015  3986  3986 D HeavenKeyAutofill: fill request contexts=1 cancelled=false
+10-25 01:18:04.040  3986  3986 D HeavenKeyAutofill: parsed nodes=85 hosts=1 usernames=1 passwords=1 focused=true invalid=false
+10-25 01:18:06.604   649   670 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 01:18:10.845  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:18:10.851  1928  1928 W AutofillManager: onAuthenticationResult(): sessionId=2147483647 not active
+10-25 01:18:13.759  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:18:13.759  3986  3986 D HeavenKeyAutofill: fill request contexts=1 cancelled=false
+10-25 01:18:13.765  3986  3986 D HeavenKeyAutofill: parsed nodes=85 hosts=1 usernames=1 passwords=1 focused=true invalid=false
+10-25 01:18:16.020  3986  3986 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 01:18:22.476   886   886 I AutofillManager: showAutofillDialog() return false due to improve fill dialog
+10-25 01:18:22.500   649   670 D AutofillManagerService: onBackKeyPressed()
+10-25 01:18:22.533  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:18:22.887  1928  1928 W AutofillManager: onAuthenticationResult(): sessionId=2147483647 not active
+10-25 01:18:25.663  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:18:25.663  3986  3986 D HeavenKeyAutofill: fill request contexts=1 cancelled=false
+10-25 01:18:25.666  3986  3986 D HeavenKeyAutofill: parsed nodes=85 hosts=1 usernames=1 passwords=1 focused=true invalid=false
+10-25 01:18:27.878  3986  3986 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 01:18:34.072   886   886 I AutofillManager: showAutofillDialog() return false due to improve fill dialog
+10-25 01:18:36.889  1928  1928 V AutofillManager: notifyValueChanged() virtual view autofilled successfully:196608 value:[type=1, value=20_chars]
+10-25 01:18:36.889  1928  1928 V AutofillManager: notifyValueChanged() virtual view autofilled successfully:196609 value:[type=1, value=26_chars]
+10-25 01:18:36.982  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:18:40.053  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:18:40.053  3986  3986 D HeavenKeyAutofill: fill request contexts=1 cancelled=false
+10-25 01:18:40.054  3986  3986 D HeavenKeyAutofill: parsed nodes=85 hosts=1 usernames=1 passwords=1 focused=true invalid=false
+10-25 01:18:42.311  3986  3986 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 01:18:48.551   886   886 I AutofillManager: showAutofillDialog() return false due to improve fill dialog
+10-25 01:18:51.255  1928  1928 V AutofillManager: notifyValueChanged() virtual view autofilled successfully:262144 value:[type=1, value=17_chars]
+10-25 01:18:51.255  1928  1928 V AutofillManager: notifyValueChanged() virtual view autofilled successfully:262145 value:[type=1, value=26_chars]
+10-25 01:18:51.339  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:18:55.382  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:18:55.382  3986  3986 D HeavenKeyAutofill: fill request contexts=1 cancelled=false
+10-25 01:18:55.385  3986  3986 D HeavenKeyAutofill: parsed nodes=85 hosts=2 usernames=1 passwords=1 focused=true invalid=false
+10-25 01:18:55.388  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:19:01.097  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:19:01.097  3986  3986 D HeavenKeyAutofill: fill request contexts=1 cancelled=false
+10-25 01:19:01.101  3986  3986 D HeavenKeyAutofill: parsed nodes=85 hosts=1 usernames=1 passwords=1 focused=true invalid=false
+10-25 01:19:05.207  3986  3986 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 01:19:09.442   886   886 I AutofillManager: showAutofillDialog() return false due to improve fill dialog
+10-25 01:19:14.025  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:19:14.029  1928  1928 W AutofillManager: onAuthenticationResult(): sessionId=2147483647 not active
+10-25 01:19:21.882  3986  3986 D HeavenKeyAutofill: connected
+10-25 01:19:21.882  3986  3986 D HeavenKeyAutofill: fill request contexts=1 cancelled=false
+10-25 01:19:21.883  3986  3986 D HeavenKeyAutofill: parsed nodes=85 hosts=1 usernames=1 passwords=1 focused=true invalid=false
+10-25 01:19:24.321  3986  3986 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 01:19:59.335  1928  1928 I AutofillManager: onAuthenticationResult(): empty intent

@@ -161,8 +161,8 @@ HeavenKey ist proprietäre Software. Die [HeavenKey Proprietary License 1.0](LIC
 ## Handy-App in Entwicklung
 
 Die [Flutter-App für Android und iPhone](docs/MOBILE.md) ergänzt den Desktop-Tresor
-mit nativer Geräteauthentifizierung und verschlüsselter Sicherung. Der frühere
-Android-Autofill-Pfad ist wegen unvollständiger Herkunftsmetadaten gesperrt.
+mit nativer Geräteauthentifizierung und verschlüsselter Sicherung. Android verlangt
+für die gemeldete HTTPS-Domain eine ausdrückliche Einmalfreigabe vor dem Entsperren.
 Android-Debug-Build und Quellprüfungen sind verfügbar; die signierte iOS- und Browser-Geräteabnahme ist
 offen. Diese Version ist für Testdaten vorgesehen und synchronisiert noch nicht
 mit dem Desktop-Tresor. [Integrationsstand](docs/MIGRATION-20261024.md).

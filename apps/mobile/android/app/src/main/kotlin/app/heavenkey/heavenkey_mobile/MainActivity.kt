@@ -27,8 +27,13 @@ class MainActivity : FlutterActivity() {
             fun fail(code: String) = result.error(code, "HeavenKey konnte die Aktion nicht ausführen.", null)
             try {
                 when (call.method) {
-                    "status" -> result.success(mapOf("available" to true, "secureDevice" to vault.secureDevice(),
-                        "autofillEnabled" to (getSystemService(AutofillManager::class.java)?.hasEnabledAutofillServices() == true), "platform" to "android"))
+                    "status" -> {
+                        val browser = FillPolicy.defaultBrowser(this)
+                        result.success(mapOf("available" to true, "secureDevice" to vault.secureDevice(),
+                            "autofillEnabled" to (getSystemService(AutofillManager::class.java)?.hasEnabledAutofillServices() == true),
+                            "browserTrusted" to (browser != null && BrowserTrust.trusted(this, browser)),
+                            "windowFocused" to hasWindowFocus(), "platform" to "android"))
+                    }
                     "unlock" -> vault.authenticate(this) { error ->
                         if (error != null) fail(error) else try {
                             result.success(vault.read().map { value -> value.keys().asSequence().associateWith { value.getString(it) } })
@@ -60,6 +65,16 @@ class MainActivity : FlutterActivity() {
                     "enableAutofill" -> {
                         startActivity(Intent(Settings.ACTION_REQUEST_SET_AUTOFILL_SERVICE,
                             Uri.parse("package:${ComponentName(this, HeavenAutofillService::class.java).packageName}")))
+                        result.success(null)
+                    }
+                    "configureBrowser" -> {
+                        val browser = FillPolicy.defaultBrowser(this) ?: throw VaultFailure("browser_untrusted")
+                        if (!BrowserTrust.trusted(this, browser)) throw VaultFailure("browser_untrusted")
+                        val settings = Intent(Intent.ACTION_APPLICATION_PREFERENCES)
+                            .addCategory(Intent.CATEGORY_DEFAULT).addCategory(Intent.CATEGORY_APP_BROWSER)
+                            .addCategory(Intent.CATEGORY_PREFERENCE).setPackage(browser)
+                        if (settings.resolveActivity(packageManager) == null) throw VaultFailure("browser_configuration_unavailable")
+                        startActivity(settings)
                         result.success(null)
                     }
                     else -> result.notImplemented()

@@ -68,6 +68,9 @@ class VaultController extends ChangeNotifier {
         'vault_changed' =>
           'Tresor wurde geändert. Bitte die Vorschau neu laden.',
         'backup_busy' => 'Eine Sicherungsaktion läuft bereits. Bitte warten.',
+        'browser_untrusted' =>
+          'Dieser Standardbrowser ist noch nicht freigegeben.',
+        'browser_configuration_unavailable' => 'Bitte im Browser die Einstellungen für Autofill öffnen und HeavenKey auswählen.',
         _ => 'Aktion fehlgeschlagen. Der Tresor bleibt geschützt.',
       };
       if (failure.code == 'vault_full' ||
@@ -160,6 +163,10 @@ class VaultController extends ChangeNotifier {
   });
   Future<bool> enableAutofill() => _perform((_) async {
     await _channel.invokeMethod<void>('enableAutofill');
+  });
+
+  Future<bool> configureBrowser() => _perform((_) async {
+    await _channel.invokeMethod<void>('configureBrowser');
   });
 
   Future<String?> newBackupKey() async {

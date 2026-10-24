@@ -21,6 +21,11 @@ import Foundation
         precondition(VaultPolicy.credentialOrigin([("example.com", true), ("https://example.com:8443/login", false)]) == "https://example.com:8443")
         precondition(VaultPolicy.credentialOrigin([("https://example.com", false), ("https://example.com:8443", false)]) == nil)
         precondition(VaultPolicy.credentialOrigin([("http://example.com", false)]) == nil)
+        precondition(VaultPolicy.credentialOrigin([("https://example.com", false), ("evil.example", true)]) == nil, "Conflicting domain hint must not be ignored")
+        precondition(VaultPolicy.credentialOrigin([]) == nil)
+        precondition(VaultPolicy.credentialOrigin([("https://example.com", false), ("example.com:8443", true)]) == nil)
+        precondition(VaultPolicy.credentialOrigin([("https://example.com", false), ("https://other.example", false)]) == nil)
+        precondition(VaultPolicy.credentialOrigin([("https://example.com", false), ("EXAMPLE.com", true)]) == "https://example.com")
         var invalid = entry; invalid["password"] = ""
         do { try VaultPolicy.validate(invalid); fatalError("empty password accepted") } catch VaultError.invalidEntry { }
         print("Swift origin and record policy checks passed")

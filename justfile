@@ -56,3 +56,10 @@ _mobile-backup-check:
 
 mobile-origin-check:
     python3 scripts/mobile_origin_check.py
+
+mobile-adaptive-check:
+    python3 scripts/run.py mobile-adaptive-check 300 -- just _mobile-adaptive-check
+
+_mobile-adaptive-check:
+    just _mobile-backup-check
+    python3 scripts/mobile_origin_check.py

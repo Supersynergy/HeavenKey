@@ -2,8 +2,9 @@
 
 Flutter-App für einen lokalen Android-/iPhone-Passworttresor mit nativer
 Geräteauthentifizierung und verschlüsselter Sicherung. Entwicklungsversion für
-Testdaten. Die Browserfreigabe ist noch nicht abgeschlossen; der alte Android-Pfad
-bleibt gesperrt.
+Testdaten. Android verlangt vor jeder Browserfreigabe eine ausdrückliche
+Einmalberechtigung für die gemeldete HTTPS-Domain. Die signierte iPhone-Abnahme
+und die Prüfung auf physischen Telefonen stehen aus.
 
 Build und offene Abnahmen: [Handy-Anleitung](../../docs/MOBILE.md).
 Der Schnittstellenvertrag steht in [MOBILE-CONTRACT.md](../../docs/MOBILE-CONTRACT.md).
@@ -13,4 +14,4 @@ flutter pub get --enforce-lockfile
 flutter run
 ```
 
-Vom Repository-Root: `just mobile-backup-check` und `just mobile-android`.
+Vom Repository-Root: `just mobile-adaptive-check` und `just mobile-android`.

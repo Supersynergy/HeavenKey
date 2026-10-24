@@ -394,23 +394,33 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
       ),
       const SizedBox(height: 16),
       const Text(
-        'Die Browserfreigabe wird überarbeitet. Der bisherige Android-Pfad ist gesperrt, weil die Herkunft der Formularfelder nicht vollständig geprüft werden kann. Es werden darüber keine Zugangsdaten ausgefüllt.',
+        'Android prüft den Browser und die gemeldete HTTPS-Domain. Vor jeder Passwortfreigabe bestätigst du die Domain einmalig. Ports und eingebettete Formulare derselben Domain kann der Browser dabei nicht zuverlässig unterscheiden. Es entsteht keine dauerhafte Ausnahme.',
       ),
       const SizedBox(height: 24),
       FilledButton.icon(
-        onPressed: null,
+        onPressed: vault.busy ? null : () => vault.enableAutofill(),
         icon: const Icon(Icons.settings_outlined),
         label: const Text('Autofill einrichten'),
       ),
+      if (vault.status['platform'] == 'android') ...[
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: vault.busy || vault.status['browserTrusted'] != true
+              ? null
+              : () => vault.configureBrowser(),
+          icon: const Icon(Icons.open_in_browser),
+          label: const Text('Browser einrichten'),
+        ),
+      ],
       const SizedBox(height: 20),
       Text(
         vault.status['autofillEnabled'] == true
-            ? 'HeavenKey ist im System ausgewählt. Die Passwortfreigabe bleibt trotzdem pausiert.'
-            : 'Bis zum Abschluss der Prüfung ist keine Einrichtung erforderlich.',
+            ? 'HeavenKey ist im System als Autofill-Dienst ausgewählt.'
+            : 'Wähle HeavenKey in den Systemeinstellungen als Autofill-Dienst.',
       ),
       const SizedBox(height: 16),
       const Text(
-        'Android: Die direkte Freigabe bleibt bis zur vollständigen Website-Zuordnung pausiert.\n\niPhone: Der Provider-Entwurf akzeptiert nur vollständige HTTPS-URL-Angaben. Reine Domain-Angaben reichen nicht. Ein signierter Gerätetest steht noch aus.',
+        'Chrome: In den Browsereinstellungen Autofill mit einem anderen Dienst aktivieren. Fehlt die Herkunft einzelner Eingabefelder, bleibt die Passwortfreigabe gesperrt. Ein aktueller Browser ist erforderlich.\n\niPhone: HeavenKey benötigt eine eindeutige HTTPS-Adresse. Bei unvollständigen Angaben bleibt die Passwortfreigabe gesperrt. Die iPhone-Geräteabnahme steht noch aus.',
       ),
     ],
   );

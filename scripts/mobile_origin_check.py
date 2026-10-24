@@ -17,19 +17,19 @@ if not compiler or not android.is_file():
 native = root / 'apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile'
 with tempfile.TemporaryDirectory(prefix='heavenkey-origin-') as scratch:
     binary = str(Path(scratch) / 'policy.jar')
-    subprocess.run([compiler, str(native/'OriginPolicy.kt'), str(native/'WebOriginPolicy.kt'),
+    subprocess.run([compiler, str(native/'OriginPolicy.kt'), str(native/'WebOriginPolicy.kt'), str(native/'BrowserTrust.kt'),
                     str(root/'scripts/mobile_origin_test.kt'), '-classpath', str(android),
                     '-include-runtime', '-d', binary], check=True, timeout=60)
     subprocess.run(['java', '-cp', binary+os.pathsep+str(android),
                     'app.heavenkey.heavenkey_mobile.Mobile_origin_testKt'], check=True, timeout=15)
 if '--policy-only' not in sys.argv:
-    receipt = root / 'docs/evidence/mobile/android-browser-origin.json'
+    receipt = root / 'docs/evidence/mobile/android-browser-adaptive.json'
     if not receipt.is_file():
-        raise SystemExit('PENDING: current real browser full-origin and port receipt required')
+        raise SystemExit('PENDING: current real browser adaptive scope, port and frame receipt required')
     data = json.loads(receipt.read_text())
-    assert all(data.get(name) is True for name in ('passed', 'full_origin_filled', 'other_port_rejected', 'wrong_domain_rejected', 'cancellation_rejected'))
+    assert all(data.get(name) is True for name in ('passed', 'explicit_host_consent_before_auth', 'no_fill_without_consent', 'same_host_other_port_requires_consent', 'foreign_host_rejected', 'foreign_frame_rejected', 'same_host_frame_requires_consent', 'cancellation_rejected', 'browser_signer_verified'))
     assert data.get('source_files'), 'missing source binding'
     for relative, expected in data['source_files'].items():
         path = (root/relative).resolve()
         assert path.is_relative_to(root) and hashlib.sha256(path.read_bytes()).hexdigest() == expected, relative
-print('Native full-origin policy accepted' + ('; browser acceptance separate' if '--policy-only' in sys.argv else '; current browser receipt matched'))
+print('Native adaptive scope policy accepted' + ('; browser acceptance separate' if '--policy-only' in sys.argv else '; current browser receipt matched'))

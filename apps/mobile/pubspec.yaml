@@ -1,7 +1,7 @@
 name: heavenkey_mobile
 description: HeavenKey local vault with native browser autofill.
 publish_to: none
-version: 0.23.0+23
+version: 0.24.0+24
 environment:
   sdk: ^3.13.2
 dependencies:

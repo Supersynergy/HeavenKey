@@ -1,0 +1,13 @@
+Exception in thread "main" java.lang.IllegalStateException: A top-level URL bar must not certify the full origin of a legacy form field
+	at app.heavenkey.heavenkey_mobile.Mobile_origin_testKt.main(mobile_origin_test.kt:26)
+	at app.heavenkey.heavenkey_mobile.Mobile_origin_testKt.main(mobile_origin_test.kt)
+Traceback (most recent call last):
+  File "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/scripts/mobile_origin_check.py", line 23, in <module>
+    subprocess.run(['java', '-cp', binary+os.pathsep+str(android),
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    'app.heavenkey.heavenkey_mobile.Mobile_origin_testKt'], check=True, timeout=15)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.15/3.15.0_1/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py", line 692, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['java', '-cp', '/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-origin-izjhs1ai/policy.jar:/opt/homebrew/share/android-commandlinetools/platforms/android-36/android.jar', 'app.heavenkey.heavenkey_mobile.Mobile_origin_testKt']' returned non-zero exit status 1.

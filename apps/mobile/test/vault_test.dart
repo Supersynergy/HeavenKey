@@ -247,4 +247,36 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     vault.dispose();
   });
+  testWidgets('adaptive autofill setup exposes both native setup actions', (
+    tester,
+  ) async {
+    final calls = <String>[];
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call.method);
+      return switch (call.method) {
+        'status' => {
+          'available': true,
+          'secureDevice': true,
+          'platform': 'android',
+          'browserTrusted': true,
+        },
+        'unlock' => <Object?>[],
+        _ => null,
+      };
+    });
+    final vault = VaultController();
+    await tester.pumpWidget(HeavenKeyApp(controller: vault));
+    await tester.tap(find.text('Tresor entsperren'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Autofill'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Autofill einrichten'));
+    await tester.pumpAndSettle();
+    expect(calls.where((value) => value == 'enableAutofill'), hasLength(1));
+    await tester.tap(find.text('Browser einrichten'));
+    await tester.pumpAndSettle();
+    expect(calls.where((value) => value == 'configureBrowser'), hasLength(1));
+    await tester.pumpWidget(const SizedBox());
+    vault.dispose();
+  });
 }

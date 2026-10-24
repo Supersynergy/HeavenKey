@@ -7,11 +7,21 @@ enum VaultPolicy {
         let urls = identifiers.filter { !$0.isDomain }
         guard !urls.isEmpty else { return nil }
         let origins = urls.compactMap { try? serviceOrigin($0.value, isDomain: false) }
-        guard origins.count == urls.count, Set(origins).count == 1 else { return nil }
-        return origins.first
+        guard origins.count == urls.count, Set(origins).count == 1, let selected = origins.first,
+              let host = URLComponents(string: selected)?.host else { return nil }
+        for item in identifiers where item.isDomain {
+            guard let hint = try? serviceOrigin(item.value, isDomain: true),
+                  URLComponents(string: hint)?.host == host else { return nil }
+        }
+        return selected
     }
     static func serviceOrigin(_ value: String, isDomain: Bool) throws -> String {
-        if isDomain { return try origin("https://\(value)") }
+        if isDomain {
+            let candidate = try origin("https://\(value)")
+            guard candidate == "https://\(value.lowercased())", URLComponents(string: candidate)?.port == nil
+            else { throw VaultError.invalidEntry }
+            return candidate
+        }
         guard var parts = URLComponents(string: value) else { throw VaultError.invalidEntry }
         parts.path = ""; parts.query = nil; parts.fragment = nil
         guard let site = parts.string else { throw VaultError.invalidEntry }

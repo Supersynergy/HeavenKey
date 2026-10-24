@@ -1,69 +1,55 @@
 # HeavenKey Mobile: Prüfstand
 
-Stand: 24. Oktober 2026. Die App ist eine Entwicklungsvorschau für Testdaten.
+Stand: 25. Oktober 2026. Version 0.24.0 ist eine Entwicklungsvorschau für Testdaten.
 
 | Ausgeführt | Ergebnis und Grenze |
 |---|---|
-| Zusammenführung auf GitHub `main` | Commit `1a906e1`; CI mit 181 Rust-, 147 Referenz- und 138 Browser-Prüfungen grün. Betrifft den bestehenden Core. |
-| Flutter | Statische Analyse sowie 23 Funktions- und Widgettests. Kanalfehler und verzögerte Antworten verwenden einen simulierten Plattformkanal. |
-| Android-Build | Aktueller nativer Test-Build mit Debug-Schlüssel. Test-APK und regulärer App-Einstiegspunkt werden getrennt gehalten. |
-| Native Android-Sicherung | Echter Keystore und sechs Gerätefreigaben auf API-36-Emulator: verschlüsseltes Archiv, frische Nonces, Fehler ohne Datenverlust, Merge mit ausdrücklicher Konfliktregel, Systemdateidialoge zum Speichern und erneuten Öffnen, Abbruch und Sperre. |
-| Format zwischen Plattformen | WebCrypto und tatsächlich kompiliertes Swift CryptoKit entschlüsseln gegenseitige Archive. Falscher Schlüssel und manipulierte Daten werden abgewiesen; Merge-Grenzen sind Teil des Oracles. |
-| Android-Browser | Alte 0.22-APK bestand einfache Formularchecks. Eine spätere Portprobe widerlegte den vollständigen Herkunftsschutz. APK zurückgezogen; Legacy-Dienst und Freigabe-Activity deaktiviert. Browserintegration bleibt offen. |
-| iOS | Plists und Xcode-Target geprüft. Swift-Regeln und Sicherungscode auf macOS ausgeführt. Domain-only-Anfragen abgewiesen. Kein UIKit-Build und kein Safari-Gerätetest. |
+| Zusammenführung auf GitHub `main` | Commit `1a906e1`; 181 Rust-, 147 Referenz- und 138 Browser-Prüfungen. Betrifft den bestehenden Core. |
+| Flutter | Statische Analyse und 24 Funktions-/Widgettests. Plattformkanalfehler verwenden einen simulierten Kanal. |
+| Android-Regeln | 42 ausgeführte Kotlin-Fälle für HTTPS-Host, Signaturprüfung, Einmalfreigabe, Abbruch, Ablauf und Replay. |
+| Native Android-Sicherung | Echter Keystore und sechs Gerätefreigaben auf API 36; verschlüsseltes Archiv, Fehler ohne Datenverlust, ausdrückliche Konfliktregel, Systemdateidialoge, Abbruch und Hintergrundsperre. |
+| Sicherungsformat | 75 Prüfungen mit WebCrypto und tatsächlich kompiliertem Swift CryptoKit; gegenseitige Entschlüsselung, falscher Schlüssel, manipulierte Daten und Merge-Grenzen. |
+| Android-Browser | Offiziell signiertes Brave 1.98.60 auf einem Emulator. Beide Felder nach Einmalfreigabe, PIN und Kontoauswahl befüllt; andere Ports, Frames, fremde Hosts, HTTP, Abbruch und Ablauf geprüft. |
+| iOS | Swift-Regeln ausgeführt; Plists und das Xcode-Target geprüft. UIKit-Quelldatei syntaktisch geparst. Kein UIKit-Build und kein Safari-Gerätetest. |
 
-## Nachweise
+## Aktuelle Nachweise
 
-Unter `docs/evidence/mobile` stehen `android-backup.json`,
-`android-backup.log` und die vorherigen Core-/Browserbelege.
-Die JSON-Dateien binden die tatsächlich verwendeten Quellen und APKs über SHA-256.
-Test-APK und Vorschau-APK haben getrennte Einstiegspunkte und eigene Hashes.
-Die frühere `android-browser.json` beschreibt den damaligen Stand und belegt
-keine aktuelle Browserfreigabe.
+`docs/evidence/mobile/android-backup.json` und `android-browser-adaptive.json`
+binden die verwendeten Quellen und APKs mit SHA-256. Ihre Protokolle liegen daneben.
+Test-APK und regulärer App-Einstiegspunkt bleiben getrennt. Die Herkunft des
+Browser-APKs, sein Dateihash und die geprüfte Signatur stehen in
+`test-browser-provenance.json`.
 
-Die Browserprüfung lud öffentliche HTTPS-Beispieldomains und ersetzte deren
-Dokumentinhalt durch das beigefügte synthetische Formular. Sie prüft den nativen
-Browser-/Systempfad, keinen produktiven Login-Server. Formularabsenden blieb
-unterbunden; Zugangsdaten wurden nicht an die Domains gesendet.
-Die spätere Portprobe verwendete lokale synthetische HTTPS-Seiten auf 8443/9443
-mit einer auf das Testzertifikat begrenzten SPKI-Ausnahme. Sie belegte, dass die
-alte APK den Standardport-Login auf `:8443` anbot. Der Beleg steht in
-`android-port-browser-red.json`.
+Die Browserprüfung verwendet lokale synthetische HTTPS-Seiten auf 8443/9443 sowie
+eine HTTP-Gegenprobe auf 8888. Die Zertifikatsausnahme ist auf den SPKI des eigenen
+Testzertifikats begrenzt. Formularabsenden bleibt unterbunden. Es wurden keine
+echten Zugangsdaten verwendet oder an fremde Websites gesendet.
 
-## Gefundene und behobene Fehler
+Die Android-Freigabe gilt einmalig für den gemeldeten HTTPS-Host einschließlich
+anderer HTTPS-Ports und eingebetteter Formulare derselben Domain. Der Dialog
+erklärt diesen Umfang vor der Authentifizierung. Eine vollständige Portprüfung
+wird damit nicht behauptet. Gespeicherte Adressen bleiben unverändert.
+Die [Entscheidung und Primärquellen](MOBILE-AUTOFILL-POLICY.md) beschreiben die Regeln.
 
-Chrome liefert HTML-Attribute teilweise ohne Wert. Der erste native Request
-stürzte daran ab; der Parser überspringt diese Attribute jetzt. Außerdem wurde
-ein `Dataset` auf eine Anfrage nach einer ganzen `FillResponse` zurückgegeben.
-Android wies dies mit `invalid index (65535)` zurück. Der Dienst verwendet nun
-eine authentifizierte Dataset-Auswahl. Derselbe Browserablauf füllte danach
-beide Felder. Die roten Protokolle und der grüne Beleg bleiben erhalten.
+Chrome 133 meldet keine Herkunft je Eingabefeld. Die native Anfrage wurde deshalb
+abgewiesen; `android-legacy-missing-field-origin.log` hält das fest.
+Die ältere 0.22-APK bleibt nach der widerlegten Portprüfung zurückgezogen.
+Frühere Browserbelege sind historische Nachweise.
 
-Weitere Regressionen prüften verspätete Entsperrantworten, gesperrte Schreibzugriffe,
-Speichergrenzen und ungültige Ursprünge. Ein abgewiesenes Speichern wegen voller
-Datei erhält den vorhandenen Tresor und den bearbeitbaren Entwurf.
-Bei Sicherungen bleiben Datei und Tresor nach falschem Schlüssel oder falschem
-GCM-Tag erhalten. Veraltete Vorschaubindungen werden abgewiesen. Ein unveränderter
-Import schreibt den Tresor nicht erneut; Ersetzen vorhandener IDs braucht die
-ausdrückliche Auswahl. Die Android-Systemdateidialoge wurden tatsächlich bedient.
-
-Ein unabhängiger Review fand einen Fehler beim Leeren der Android-Zwischenablage.
-Der Gerätetest reproduzierte ihn nach einem 32-sekündigen App-Wechsel.
-HeavenKey leert die eigene Kopie jetzt vor dem Fokusverlust. Kann Android die
-Beschreibung gerade nicht liefern, bleibt die Eigentumsmarkierung für den
-nächsten Fokuswechsel erhalten. Derselbe Test läuft grün; fremde Kopien bleiben
-erhalten. Das rote Protokoll steht in `android-clipboard-red.log`.
+Die Sicherung prüft auch einen echten Wechsel für 32 Sekunden in Androids
+Einstellungen. HeavenKeys eigene Zwischenablagekopie wird entfernt; eine fremde
+Kopie bleibt erhalten. Nach der Gerätefreigabe wartet der Prüfcode auf den
+zurückgekehrten Eingabefokus. Native Autofill-Ergebnisse werden erst nach ihrer
+asynchronen Ankunft in den Browserfeldern gewertet.
 
 ## Offene Abnahme
 
-Für die iPhone-Abnahme fehlen eine nutzbare Xcode-Umgebung, ein Apple Developer
-Team und ein bereitgestelltes Testgerät. Auf beiden Plattformen fehlen eine
-Produktionssignierung, die Sicherheitsreview und die vollständige Prüfung auf
-physischen Telefonen mit aktuellen Browsern, einschließlich Port- und Frame-Fällen.
-Die mobile Sicherung und Wiederherstellung sind implementiert und auf Android
-ausgeführt. Die Synchronisierung mit dem Desktop bleibt offen. Die deaktivierte
-Browserfreigabe erfüllt den ursprünglichen Integrationsauftrag noch nicht.
+Für iOS fehlen ein nutzbares iPhone-SDK, ein Apple Developer Team und ein
+Testgerät. Produktionssignierung, die unabhängige Sicherheitsabnahme sowie
+physische Telefone mit aktuellen Browsern stehen aus. Die Browser-Vertrauensliste
+belegt keine Kompatibilität aller aufgeführten Pakete. Desktop-Synchronisierung
+und Website-Passkey-Verwaltung sind offen.
 
-`python3 scripts/mobile_device_acceptance.py` bleibt deshalb ohne vollständigen
-Gerätenachweis rot. Der GitHub-PR bleibt ein Entwurf. Eine Überlegenheit gegenüber
-anderen Passwortmanagern ist nicht belegt.
+`python3 scripts/mobile_device_acceptance.py` bleibt ohne diese Gerätebelege rot.
+Der GitHub-PR bleibt ein Entwurf. Eine allgemeine Überlegenheit gegenüber anderen
+Passwortmanagern ist nicht belegt.

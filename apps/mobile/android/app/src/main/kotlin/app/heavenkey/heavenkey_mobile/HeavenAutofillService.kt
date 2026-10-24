@@ -16,30 +16,37 @@ import android.service.autofill.FillResponse
 import android.service.autofill.SaveCallback
 import android.service.autofill.SaveRequest
 import android.text.InputType
+import android.view.View
 import android.view.autofill.AutofillId
 import android.widget.RemoteViews
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-internal data class FillTarget(val origin: String, val browser: String,
+private fun trace(context: Context, event: String) {
+    if (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0)
+        android.util.Log.d("HeavenKeyAutofill", event)
+}
+
+internal data class FillTarget(val scope: WebHostScope, val browser: String,
     val username: AutofillId, val password: AutofillId)
-internal data class PendingFill(val target: FillTarget, val expires: Long)
+internal data class PendingFill(val target: FillTarget, val challenge: FillChallenge)
 internal object FillRequests {
     private val requests = ConcurrentHashMap<String, PendingFill>()
-    @Synchronized fun add(target: FillTarget): String {
+    @Synchronized fun add(pending: PendingFill): String {
         val now = SystemClock.elapsedRealtime()
-        requests.entries.removeIf { it.value.expires <= now }
-        if (requests.size >= 16) requests.clear()
+        requests.entries.removeIf { !it.value.challenge.live(now) }
+        if (requests.size >= 16) {
+            requests.values.forEach { it.challenge.cancel() }; requests.clear()
+        }
         val nonce = UUID.randomUUID().toString()
-        requests[nonce] = PendingFill(target, now + 30_000)
+        requests[nonce] = pending
         return nonce
     }
-    fun remove(nonce: String) { requests.remove(nonce) }
-    fun take(nonce: String): FillTarget? = requests.remove(nonce)
-        ?.takeIf { it.expires > SystemClock.elapsedRealtime() }?.target
+    fun remove(nonce: String) { requests.remove(nonce)?.challenge?.cancel() }
+    fun take(nonce: String): PendingFill? = requests.remove(nonce)
+        ?.takeIf { it.challenge.live(SystemClock.elapsedRealtime()) }
 }
 internal object FillPolicy {
-    private val addressFields = setOf("url_bar", "location_bar_edit_text", "url_field", "mozac_browser_toolbar_url_view")
     @Suppress("DEPRECATION")
     fun defaultBrowser(context: Context): String? {
         val resolved = context.packageManager.resolveActivity(Intent(Intent.ACTION_VIEW,
@@ -47,67 +54,74 @@ internal object FillPolicy {
             ?.activityInfo?.packageName
         return resolved?.takeUnless { it == "android" || it == context.packageName }
     }
+    fun trustedBrowser(context: Context, browser: String): Boolean =
+        browser == defaultBrowser(context) && BrowserTrust.trusted(context, browser)
+
     fun target(context: Context, structure: AssistStructure): FillTarget? {
         val browser = structure.activityComponent?.packageName ?: return null
-        if (browser != defaultBrowser(context)) return null
-        val origins = mutableSetOf<String>()
-        val nativeUrls = mutableSetOf<String>()
+        if (!trustedBrowser(context, browser)) { trace(context, "browser rejected"); return null }
+        val hosts = mutableSetOf<String>()
         val usernames = mutableSetOf<AutofillId>()
         val passwords = mutableSetOf<AutofillId>()
+        var focused = false
         var count = 0
         var invalid = false
         fun visit(node: AssistStructure.ViewNode, depth: Int) {
+            if (invalid) return
             if (++count > 4096 || depth > 32) { invalid = true; return }
-            if (node.idPackage == browser && node.idEntry in addressFields && node.htmlInfo == null) {
-                node.text?.toString()?.let { nativeUrls.add(it) }
-            }
-            val domain = node.webDomain
-            if (domain != null) {
-                if (node.webScheme != "https") invalid = true
-                else try {
-                    val origin = OriginPolicy.canonical("https://$domain")
-                    if (origin != "https://$domain".lowercase()) invalid = true else origins.add(origin)
-                } catch (_: VaultFailure) { invalid = true }
-            }
-            val hints = node.autofillHints?.map { it.lowercase() }.orEmpty()
+            val scope = if (node.webDomain != null) WebOriginPolicy.legacy(node.webScheme, node.webDomain) else null
+            if (node.webDomain != null && scope == null) { invalid = true; return }
+            scope?.let { hosts.add(it.host) }
             val attributes = node.htmlInfo?.attributes?.mapNotNull { attribute ->
-                val name = attribute.first?.lowercase()
-                val value = attribute.second?.lowercase()
-                if (name == null || value == null) null else name to value
+                attribute.first?.lowercase()?.let { it to attribute.second.orEmpty().lowercase() }
             }?.toMap().orEmpty()
+            val hints = node.autofillHints?.map { it.lowercase() }.orEmpty()
             val autocomplete = attributes["autocomplete"].orEmpty().split(' ')
             val variation = node.inputType and InputType.TYPE_MASK_VARIATION
-            val isPassword = hints.any { it == "password" } || "current-password" in autocomplete ||
+            val excluded = "new-password" in autocomplete || "new-password" in hints || "newpassword" in hints ||
+                "one-time-code" in autocomplete || attributes["type"] == "hidden" ||
+                "readonly" in attributes || "disabled" in attributes
+            val password = hints.any { it == "password" } || "current-password" in autocomplete ||
                 attributes["type"] == "password" || variation == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
                 variation == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
-            val isUsername = hints.any { it == "username" || it == "emailaddress" } ||
+            val username = hints.any { it == "username" || it == "emailaddress" } ||
                 "username" in autocomplete || "email" in autocomplete || attributes["type"] == "email"
-            if (node.autofillId != null && node.visibility == android.view.View.VISIBLE) {
-                if (isPassword) passwords.add(node.autofillId!!)
-                else if (isUsername) usernames.add(node.autofillId!!)
+            if (!excluded && (password || username) && node.visibility == View.VISIBLE && node.isEnabled && node.autofillId != null) {
+                if (scope == null || node.htmlInfo == null) { invalid = true; return }
+                if (password) passwords.add(node.autofillId!!) else usernames.add(node.autofillId!!)
+                if (node.isFocused) focused = true
             }
-            for (index in 0 until node.childCount) visit(node.getChildAt(index), depth + 1)
+            for (index in 0 until node.childCount) {
+                if (invalid) break
+                visit(node.getChildAt(index), depth + 1)
+            }
         }
-        for (index in 0 until structure.windowNodeCount) visit(structure.getWindowNodeAt(index).rootViewNode, 0)
-        if (invalid || origins.size != 1 || nativeUrls.size != 1 || usernames.size != 1 || passwords.size != 1) return null
-        val fullOrigin = WebOriginPolicy.resolve("https", origins.single().removePrefix("https://"), nativeUrls.single()) ?: return null
-        return FillTarget(fullOrigin, browser, usernames.single(), passwords.single())
+        for (index in 0 until structure.windowNodeCount) {
+            if (invalid) break
+            visit(structure.getWindowNodeAt(index).rootViewNode, 0)
+        }
+        trace(context, "parsed nodes=$count hosts=${hosts.size} usernames=${usernames.size} passwords=${passwords.size} focused=$focused invalid=$invalid")
+        if (invalid || !focused || hosts.size != 1 || usernames.size != 1 || passwords.size != 1) return null
+        return FillTarget(WebHostScope(hosts.single()), browser, usernames.single(), passwords.single())
     }
 }
 
 class HeavenAutofillService : AutofillService() {
+    override fun onConnected() { super.onConnected(); trace(this, "connected") }
     override fun onFillRequest(request: FillRequest, cancellationSignal: CancellationSignal, callback: FillCallback) {
+        trace(this, "fill request contexts=${request.fillContexts.size} cancelled=${cancellationSignal.isCanceled}")
         if (cancellationSignal.isCanceled) { callback.onSuccess(null); return }
         val target = request.fillContexts.lastOrNull()?.structure?.let { FillPolicy.target(this, it) }
         if (target == null) { callback.onSuccess(null); return }
-        val nonce = FillRequests.add(target)
-        cancellationSignal.setOnCancelListener { FillRequests.remove(nonce) }
+        val pending = PendingFill(target, FillChallenge(SystemClock.elapsedRealtime() + 30_000))
+        val nonce = FillRequests.add(pending)
+        cancellationSignal.setOnCancelListener { pending.challenge.cancel(); FillRequests.remove(nonce) }
         val intent = Intent(this, AutofillActivity::class.java).putExtra("nonce", nonce)
             .setData(Uri.parse("heavenkey-autofill://challenge/$nonce"))
         val sender = PendingIntent.getActivity(this, 0, intent,
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE).intentSender
         val presentation = RemoteViews(packageName, android.R.layout.simple_list_item_1)
-        presentation.setTextViewText(android.R.id.text1, "Mit HeavenKey entsperren")
+        presentation.setTextViewText(android.R.id.text1, "Domainfreigabe mit HeavenKey prüfen")
         val lockedDataset = Dataset.Builder(presentation)
             .setValue(target.username, null).setValue(target.password, null)
             .setAuthentication(sender).build()

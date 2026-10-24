@@ -28,9 +28,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".AutofillActivity" android:exported="false" android:enabled="false"
+        <activity android:name=".AutofillActivity" android:exported="false" android:enabled="true"
             android:theme="@android:style/Theme.Material.Light.Dialog.Alert" android:excludeFromRecents="true" />
-        <service android:name=".HeavenAutofillService" android:exported="true" android:enabled="false"
+        <service android:name=".HeavenAutofillService" android:exported="true" android:enabled="true"
             android:permission="android.permission.BIND_AUTOFILL_SERVICE">
             <intent-filter><action android:name="android.service.autofill.AutofillService" /></intent-filter>
             <meta-data android:name="android.autofill" android:resource="@xml/autofill_service" />

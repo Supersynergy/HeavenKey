@@ -3,7 +3,8 @@
 Die Flutter-App unter `apps/mobile` ergänzt den vorhandenen Desktop-Passwortmanager.
 Diese Entwicklungsversion ist für synthetische Testdaten vorgesehen. Sie hat einen
 eigenen lokalen Speicher; sie synchronisiert den Desktop-Tresor noch nicht.
-Version 0.23.0 ergänzt eine verschlüsselte Sicherung mit Wiederherstellung.
+Version 0.24.0 ergänzt adaptive Browserfreigaben. Die verschlüsselte Sicherung
+aus Version 0.23 bleibt erhalten.
 
 ## Funktionen
 
@@ -68,21 +69,29 @@ wurde zwischen Swift CryptoKit und WebCrypto geprüft; die Android-Dateidialoge
 und die Wiederherstellung wurden auf einem Emulator ausgeführt. Ein signierter
 iPhone-Gerätetest steht noch aus.
 
-## Browserfreigabe pausiert
+## Browserfreigabe einrichten
 
-Der alte Android-Pfad bot im echten Browsertest einen Standardport-Login auf
-einem anderen HTTPS-Port an. Seine APK wurde zurückgezogen. Der Dienst und seine
-Freigabe-Activity sind jetzt im Manifest deaktiviert. Parserprüfungen allein
-belegen keine sichere Zuordnung der Formularfelder zu ihrer vollständigen Herkunft.
+Wähle HeavenKey in Androids Systemeinstellungen als Autofill-Dienst. In Chrome
+muss zusätzlich Autofill mit einem anderen Dienst aktiviert sein. Die App bietet
+beide Einstiege; ältere Browser können eine manuelle Einrichtung verlangen.
 
-Der iPhone-Provider-Entwurf akzeptiert ausschließlich vollständige HTTPS-URL-Kontexte.
-Domain-Angaben und einzelne Credential-Identitäten reichen nicht aus, um den
-anfragenden Port sicher festzustellen. Die Browserintegration ist deshalb weiterhin
-ein offener Teil des Auftrags.
-Die offiziellen Schnittstellen sind in der
-[Android-Anleitung](https://developer.android.com/identity/autofill/autofill-services)
-und der [Apple-Dokumentation](https://developer.apple.com/documentation/authenticationservices/ascredentialproviderviewcontroller)
-beschrieben.
+Vor jedem Vorgang prüft HeavenKey die Identität des aktuellen Standardbrowsers.
+Bei der älteren Android-Schnittstelle wird anschließend die gemeldete HTTPS-Domain
+angezeigt. Die Einmalfreigabe erklärt, dass andere HTTPS-Ports und eingebettete
+Formulare derselben Domain dazugehören können. Erst danach folgen Gerätefreigabe
+und Kontoauswahl. Die gespeicherte Adresse bleibt unverändert. Ein Abbruch setzt
+keine Felder; eine spätere Anfrage braucht eine neue Freigabe.
+
+Andere Hosts werden nicht aus einer gemeinsamen übergeordneten Domain abgeleitet.
+HTTP und widersprüchliche Angaben werden abgewiesen. Eine Browsersignatur auf der
+Vertrauensliste ist noch keine Kompatibilitätszusage für jede Browserversion.
+Die [Regeln und Primärquellen](MOBILE-AUTOFILL-POLICY.md) erklären die Entscheidung.
+Die alte 0.22-APK bleibt nach dem Portfehler zurückgezogen.
+
+Der iPhone-Provider benötigt eine eindeutige HTTPS-URL. Zusätzliche Domain-Angaben
+müssen dazu passen. Bei unvollständigem Kontext erklärt die Ansicht die Sperre;
+das Entsperren bleibt deaktiviert. Eine gespeicherte Credential-Identität belegt
+nicht die aktuelle Website. Die signierte iPhone-Abnahme steht weiterhin aus.
 
 ## Abnahme und Grenzen
 
@@ -91,25 +100,24 @@ native Sicherheitskonfiguration und den tatsächlichen Xcode-Objektgraphen. Der
 Swift-Origin-Validator wird mit positiven und negativen Fällen ausgeführt.
 Diese Prüfung ersetzt keinen iOS-Build und keinen Test in Safari oder Chrome.
 
-Auf einem isolierten Android-Emulator mit API 36 wurden Geräteauthentifizierung,
-verschlüsseltes Speichern mit wechselnder IV, erneutes Öffnen, Ändern, Löschen
-und die Hintergrundsperre ausgeführt. In Version 0.22 füllte der native
-Autofill-Dienst beide Felder nach PIN und Kontoauswahl. Die abweichende Domain
-`example.org` erhielt keine Zugangsdaten; ein PIN-Abbruch ließ beide Felder leer.
-Das Formular bestand aus synthetischem HTML in einem geladenen HTTPS-Dokument.
-Chrome 133 verwendete seine damalige Autofill-Testoption. Die spätere Portprobe
-zeigte, dass diese früheren Checks nicht ausreichten. Das ist keine Abnahme
-auf einem physischen Telefon oder einem aktuellen Browser. Details und Hashes:
-[Prüfstand](MOBILE-ACCEPTANCE.md).
+Die native Sicherung wurde auf einem isolierten Android-Emulator mit API 36
+ausgeführt. Der aktuelle Browsercheck verwendet das offiziell signierte Brave
+1.98.60 und lokale synthetische HTTPS-Seiten auf zwei Ports. Er verlangt vor
+jeder Befüllung eine neue Freigabe und prüft auch fremde Frames, HTTP, Abbruch
+und Ablauf. Die TLS-Ausnahme gilt ausschließlich für das Testzertifikat.
+Chrome 133 liefert keine Herkunft je Eingabefeld und bleibt gesperrt.
+Die Emulatorprüfung ersetzt keine Abnahme auf einem Telefon. Ergebnisse und
+Quellenbindungen stehen im [Prüfstand](MOBILE-ACCEPTANCE.md).
 
 Eine browserübergreifende Sicherheitsabnahme fehlt. Der
-[Plattformvertrag](MOBILE-CONTRACT.md) beschreibt das weiterhin offene Ziel einer
-vollständigen Herkunftsprüfung; das Abschalten des unsicheren Pfads erfüllt dieses
-Ziel noch nicht. `just mobile-origin-check` bleibt ohne passenden Browserbeleg rot.
+[Plattformvertrag](MOBILE-CONTRACT.md) unterscheidet den exakten URL-Abgleich und
+die ausdrücklich erteilte Android-Einmalfreigabe. `just mobile-origin-check`
+verlangt zur aktuellen Quelle passende Browserbelege; Parsertests allein reichen
+nicht aus.
 
 Offen sind der signierte iOS-Build mit Geräteprüfung, Safari-Autofill, die Prüfung
 mit einem aktuellen Android-Browser auf einem Telefon, die native Sicherheitsreview
-und die direkte Browserintegration. Ohne extern gespeicherte Sicherung und den
+und die Abnahme weiterer Browser. Ohne extern gespeicherte Sicherung und den
 zugehörigen Schlüssel können Daten bei Geräteverlust oder entfernter Gerätesperre
 verloren gehen. Deshalb diese Version ausschließlich mit Testdaten verwenden.
 TOTP, Synchronisierung und das Speichern fremder Passkeys sind in der mobilen App

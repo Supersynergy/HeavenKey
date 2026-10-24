@@ -10,13 +10,14 @@ Channel: `heavenkey/vault`. All errors use a safe code/message without secret va
 
 | Method | Input | Result |
 |---|---|---|
-| `status` | none | `{available: bool, secureDevice: bool, autofillEnabled: bool, platform: string}` |
+| `status` | none | `{available, secureDevice, autofillEnabled, platform}`; Android also reports `browserTrusted` and `windowFocused`. |
 | `unlock` | none | Device authentication, then a list of entry maps. Empty list for a new vault. Cancellation is an error. |
 | `save` | entry map | Save atomically; return null. Requires an authenticated session. |
 | `delete` | `{id: string}` | Delete atomically; return null. Requires an authenticated session. |
 | `lock` | none | Discard native session and clear owned clipboard; return null. |
 | `copyPassword` | `{id: string}` | Copy from authenticated native vault, mark sensitive and schedule expiry after 30 seconds; clear owned data when leaving; return null. |
 | `enableAutofill` | none | Open the system provider settings; return null. |
+| `configureBrowser` | none | Android: open the pinned default browser’s Autofill settings; report unsupported settings instead of guessing a private activity. |
 | `newBackupKey` | none | Authenticated session; return `hk1_` plus canonical base64url of 32 random bytes. |
 | `copyBackupKey` | `{recoveryKey}` | Authenticated session and the same clipboard policy as passwords. |
 | `createBackup` | `{recoveryKey}` | Authenticated snapshot encrypted with platform AES-256-GCM; return envelope string. |
@@ -55,20 +56,29 @@ archive or stale fingerprint must leave the existing vault unchanged.
 
 Android: API 30+, Keystore AES-GCM with required strong biometric/device credential
 authentication, `noBackupFilesDir` and atomic writes. No accessibility service.
-The legacy AutofillService and its authentication activity are disabled. The
-previous implementation reconstructed a default-port origin from host-only hints;
-the old APK offered that login on another port. A native top-level URL alone
-also does not establish the origin of each frame. Browser delivery remains an
-open requirement until a complete per-field origin is verified. It must not be
-closed by simply disabling the feature or passing parser tests.
+The browser must be the current default and its current APK signer set must match
+bundled release-certificate pins. A legacy request establishes an exact HTTPS
+host, not a complete field origin. Before authentication, require explicit
+single-request host authorization explaining unknown ports and same-host frames.
+Only then may stored HTTPS origins on that exact host be offered; the stored
+origin itself is unchanged. No implicit parent/subdomain matching or persisted
+exception. A top-level URL bar must never certify field origin. Conflicting
+reported hosts, HTTP, ambiguous pairs and hidden/new-password fields are rejected.
+Recheck browser trust, cancellation and the 30-second deadline before consuming
+the grant exactly once. Source/parser tests cannot substitute for the actual
+browser flow. The user authorized this researched adaptive policy; details and
+primary sources are in MOBILE-AUTOFILL-POLICY.md.
 
 iOS: shared Keychain access group for app and Credential Provider extension;
 `whenPasscodeSetThisDeviceOnly` plus user presence, no iCloud synchronization.
 Extension prompts for device authentication and credential selection. Only a
 complete, unambiguous HTTPS URL context can authorize delivery. Domain-only and
 identity-only requests do not establish the requesting port and are rejected.
-URL identifiers require exact origin equality.
-Add the actual Xcode extension target, embed phase and matching entitlements.
+URL identifiers require exact origin equality; every supplied domain hint must
+agree with that host. Context changes and backgrounding invalidate pending UI and
+authentication callbacks. A request expires after 120 seconds. Unsupported
+contexts show a reason with the unlock action disabled. The extension target,
+embed phase and matching entitlements are present; an iOS SDK build stays separate.
 
 Native compilation, signed installation and actual browser flows are separate
 acceptance from Dart tests or source inspection. No platform acceptance claim

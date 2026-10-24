@@ -31,6 +31,14 @@ void main() {
       Future<void> authenticate() async {
         debugPrint('NATIVE_PHASE_AUTH');
         expect(await vault.unlock(), isTrue);
+        for (var attempt = 0; attempt < 30; attempt++) {
+          final state = await channel.invokeMapMethod<Object?, Object?>(
+            'status',
+          );
+          if (state?['windowFocused'] == true) return;
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        }
+        fail('Native input focus did not return after authentication.');
       }
 
       await tester.pumpWidget(HeavenKeyApp(controller: vault));
