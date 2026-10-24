@@ -20,44 +20,12 @@ import android.util.Base64
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
-import java.net.URI
 import java.security.KeyStore
-import java.time.Instant
 import java.util.UUID
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
-
-internal class VaultFailure(val code: String) : Exception(code)
-
-internal object OriginPolicy {
-    fun canonical(value: String): String {
-        val uri = try { URI(value) } catch (_: Exception) { throw VaultFailure("invalid_entry") }
-        val host = uri.host?.lowercase() ?: throw VaultFailure("invalid_entry")
-        val labels = host.split('.')
-        val label = Regex("^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
-        if (value != value.trim() || uri.scheme != "https" || uri.rawUserInfo != null ||
-            uri.rawQuery != null || uri.rawFragment != null || uri.rawAuthority.contains('%') ||
-            (uri.rawPath.isNotEmpty() && uri.rawPath != "/") || host.length > 253 || labels.size < 2 ||
-            labels.any { !label.matches(it) } || Regex("^[0-9.]+$").matches(host) ||
-            (uri.port != -1 && uri.port !in 1..65535)) throw VaultFailure("invalid_entry")
-        return "https://$host" + if (uri.port == -1 || uri.port == 443) "" else ":${uri.port}"
-    }
-    fun validate(entry: JSONObject) {
-        val limits = mapOf("id" to 80, "title" to 120, "origin" to 2048, "username" to 320,
-            "password" to 1024, "notes" to 4096, "updatedAt" to 80)
-        if (entry.length() != limits.size) throw VaultFailure("invalid_entry")
-        for ((field, limit) in limits) {
-            val value = entry.opt(field)
-            if (value !is String || value.length > limit) throw VaultFailure("invalid_entry")
-        }
-        if (!Regex("^[A-Za-z0-9_-]{1,80}$").matches(entry.getString("id")) ||
-            entry.getString("title").isBlank() || entry.getString("password").isEmpty() ||
-            canonical(entry.getString("origin")) != entry.getString("origin")) throw VaultFailure("invalid_entry")
-        try { Instant.parse(entry.getString("updatedAt")) } catch (_: Exception) { throw VaultFailure("invalid_entry") }
-    }
-}
 
 internal class VaultStore(private val context: Context) {
     private val file = AtomicFile(File(context.noBackupFilesDir, "heavenkey-v1.aesgcm"))
@@ -164,20 +132,58 @@ internal class VaultStore(private val context: Context) {
         write(values)
     }
     fun delete(id: String) { write(read().filterNot { it.getString("id") == id }) }
+    fun newBackupKey(): String { read(); return MobileBackup.newKey() }
+    fun copyBackupKey(recoveryKey: String) {
+        read()
+        if (!MobileBackup.checkKey(recoveryKey)) throw BackupFailure("invalid_key")
+        copyText(recoveryKey)
+    }
+    fun createBackup(recoveryKey: String): String {
+        val archive = MobileBackup.seal(read(), recoveryKey)
+        requireSession()
+        return archive
+    }
+    fun inspectBackup(envelope: String, recoveryKey: String): Map<String, Any> {
+        val current = read()
+        val incoming = MobileBackup.open(envelope, recoveryKey)
+        requireSession()
+        val ids = current.map { it.getString("id") }.toSet()
+        val existing = incoming.count { it.getString("id") in ids }
+        return mapOf("total" to incoming.size, "new" to incoming.size - existing, "existing" to existing,
+            "vaultFingerprint" to MobileBackup.fingerprint(current),
+            "archiveFingerprint" to MobileBackup.archiveFingerprint(envelope),
+            "entries" to incoming.map { entry -> listOf("id", "title", "origin", "username").associateWith { entry.getString(it) } })
+    }
+    fun restoreBackup(envelope: String, recoveryKey: String, vaultFingerprint: String,
+                      archiveFingerprint: String, replaceExisting: Boolean): List<JSONObject> {
+        val current = read()
+        if (MobileBackup.fingerprint(current) != vaultFingerprint ||
+            MobileBackup.archiveFingerprint(envelope) != archiveFingerprint) throw BackupFailure("vault_changed")
+        val incoming = MobileBackup.open(envelope, recoveryKey)
+        val merged = MobileBackup.merge(current, incoming, replaceExisting)
+        requireSession()
+        if (MobileBackup.fingerprint(merged) != vaultFingerprint) write(merged)
+        return merged
+    }
     fun copy(id: String) {
         val entry = read().find { it.getString("id") == id } ?: throw VaultFailure("invalid_entry")
+        copyText(entry.getString("password"))
+    }
+    private fun copyText(value: String) {
         clearClipboard()
         val label = "HeavenKey-${UUID.randomUUID()}"
-        val clip = ClipData.newPlainText(label, entry.getString("password"))
+        val clip = ClipData.newPlainText(label, value)
         clip.description.extras = PersistableBundle().apply { putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true) }
         context.getSystemService(ClipboardManager::class.java).setPrimaryClip(clip)
         clipboardLabel = label
         handler.postDelayed({ if (clipboardLabel == label) clearClipboard() }, 30_000)
     }
-    private fun clearClipboard() {
+    fun clearClipboard() {
+        val label = clipboardLabel ?: return
         val clipboard = context.getSystemService(ClipboardManager::class.java)
-        val label = clipboardLabel
-        if (label != null && clipboard.primaryClipDescription?.label?.toString() == label) clipboard.clearPrimaryClip()
+        // Android can hide the description while this window lacks input focus.
+        val current = clipboard.primaryClipDescription ?: return
+        if (current.label?.toString() == label) clipboard.clearPrimaryClip()
         clipboardLabel = null
     }
 }

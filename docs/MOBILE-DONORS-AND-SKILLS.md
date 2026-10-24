@@ -31,8 +31,12 @@ Die Auswahl passt zu diesem Auftrag und ist keine allgemeine Rangliste.
 
 `si atlas --json`, `si find` und `si resolve` bestätigten die lokalen Skill-Quellen.
 Die vollständigen Skilltexte wurden nicht in das Produkt oder einen permanenten
-Prompt übernommen. Eine optionale Delegation wurde von der Capsule-Prüfung
-abgewiesen; die Implementierung wurde in diesem Chat fortgesetzt.
+Prompt übernommen. Die erste Delegation wurde abgewiesen. In der Sicherungsrunde
+arbeiteten zwei Agenten mit getrennten Dateibereichen an Oberfläche und nativen
+Kanälen. Ein weiterer Kontext prüfte die Sicherung unabhängig. Sein
+Zwischenablagefund wurde am Emulator reproduziert und mit demselben Test behoben.
+Die Ergebnisse
+ersetzen keine Geräteabnahme oder professionelle Sicherheitsprüfung.
 
 ## Nachweise
 

@@ -16,6 +16,11 @@ import Foundation
         try VaultPolicy.validate(entry)
         let loginOrigin = try VaultPolicy.serviceOrigin("https://example.com/login?next=https://other.example", isDomain: false)
         precondition(loginOrigin == "https://example.com")
+        precondition(VaultPolicy.credentialOrigin([("example.com", true)]) == nil)
+        precondition(VaultPolicy.credentialOrigin([("https://example.com:8443/login", false)]) == "https://example.com:8443")
+        precondition(VaultPolicy.credentialOrigin([("example.com", true), ("https://example.com:8443/login", false)]) == "https://example.com:8443")
+        precondition(VaultPolicy.credentialOrigin([("https://example.com", false), ("https://example.com:8443", false)]) == nil)
+        precondition(VaultPolicy.credentialOrigin([("http://example.com", false)]) == nil)
         var invalid = entry; invalid["password"] = ""
         do { try VaultPolicy.validate(invalid); fatalError("empty password accepted") } catch VaultError.invalidEntry { }
         print("Swift origin and record policy checks passed")

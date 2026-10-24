@@ -1,0 +1,3 @@
+cd apps/mobile && flutter build apk --debug --no-pub
+Running Gradle task 'assembleDebug'...                             12,6s
+✓ Built build/app/outputs/flutter-apk/app-debug.apk

@@ -1,0 +1,29 @@
+{
+  "kind": "independent agent review with root runtime reproduction and self-review",
+  "professional_security_audit": false,
+  "findings": [
+    {
+      "priority": "P1",
+      "finding": "Host-only Android metadata loses port; top-level URL cannot prove frame origin. iOS domain-only/identity-only contexts also cannot establish complete origin.",
+      "state": "contained; working browser integration remains open",
+      "containment": "Android legacy service and authentication activity disabled; iOS requires unambiguous URL context and rejects identity-only requests. Old preview APK withdrawn.",
+      "evidence": [
+        "android-port-browser-red.json",
+        "native-review-813151c.json"
+      ]
+    },
+    {
+      "priority": "P2",
+      "finding": "Owned Android clipboard label was forgotten after metadata became inaccessible in background.",
+      "state": "reproduced then fixed",
+      "fix": "Clear before onPause; retain label when metadata unavailable; retry on focus return; preserve foreign clipboard.",
+      "red": "android-clipboard-red.log",
+      "green": "android-backup.log",
+      "source_files": {
+        "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/MainActivity.kt": "8e85d8f0fdb6dfd4279eeb7ec063b9ee517f61b756cc55d3fbad169f2446dc4c",
+        "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/VaultStore.kt": "a07eb54942efce0e77eefdf41e3813b5b527c7adb31009d1095ca7e0e3407d20",
+        "apps/mobile/integration_test/backup_native_test.dart": "d8775c5e94461e4fa03b45971d06723943d5f6f85a7fcd60950222c3461cef49"
+      }
+    }
+  ]
+}

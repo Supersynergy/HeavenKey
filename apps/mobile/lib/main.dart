@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'backup_panel.dart';
 import 'vault_controller.dart';
 import 'vault_entry.dart';
 
@@ -135,6 +136,14 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
                             ),
                           ),
                         ),
+                      if (vault.backupNotice != null)
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Semantics(
+                            liveRegion: true,
+                            child: Text(vault.backupNotice!),
+                          ),
+                        ),
                       if (vault.busy) const LinearProgressIndicator(),
                       Expanded(
                         child: !vault.unlocked
@@ -224,6 +233,7 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
                             : switch (tab) {
                                 1 => health(),
                                 2 => autofill(),
+                                3 => BackupPanel(vault: vault),
                                 _ => entryList(entries),
                               },
                       ),
@@ -257,6 +267,10 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
                 NavigationDestination(
                   icon: Icon(Icons.web_outlined),
                   label: 'Autofill',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.backup_outlined),
+                  label: 'Sicherung',
                 ),
               ],
             )
@@ -380,23 +394,23 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
       ),
       const SizedBox(height: 16),
       const Text(
-        '1. HeavenKey in den Systemeinstellungen als Passwortanbieter aktivieren.\n\n2. Eine gespeicherte HTTPS-Website im Browser öffnen.\n\n3. HeavenKey wählen, Gerät entsperren und den passenden Login bestätigen.',
+        'Die Browserfreigabe wird überarbeitet. Der bisherige Android-Pfad ist gesperrt, weil die Herkunft der Formularfelder nicht vollständig geprüft werden kann. Es werden darüber keine Zugangsdaten ausgefüllt.',
       ),
       const SizedBox(height: 24),
       FilledButton.icon(
-        onPressed: vault.busy ? null : () => vault.enableAutofill(),
+        onPressed: null,
         icon: const Icon(Icons.settings_outlined),
         label: const Text('Autofill einrichten'),
       ),
       const SizedBox(height: 20),
       Text(
         vault.status['autofillEnabled'] == true
-            ? 'HeavenKey ist als Autofill-Anbieter aktiv.'
-            : 'Aktivierung in den Systemeinstellungen prüfen.',
+            ? 'HeavenKey ist im System ausgewählt. Die Passwortfreigabe bleibt trotzdem pausiert.'
+            : 'Bis zum Abschluss der Prüfung ist keine Einrichtung erforderlich.',
       ),
       const SizedBox(height: 16),
       const Text(
-        'Android: Unterstützt den gewählten Standardbrowser. In Chrome zusätzlich „Autofill mit einem anderen Dienst“ aktivieren.\n\niPhone: „Einstellungen → Allgemein → Automatisch ausfüllen & Passwörter“ öffnen und HeavenKey wählen.\n\nHeavenKey vergleicht die gespeicherte Website mit den Angaben des Browsers. HTTP und abweichende Domains werden abgewiesen. Port- und Frame-Grenzen sind noch nicht auf allen Browsern geprüft.',
+        'Android: Die direkte Freigabe bleibt bis zur vollständigen Website-Zuordnung pausiert.\n\niPhone: Der Provider-Entwurf akzeptiert nur vollständige HTTPS-URL-Angaben. Reine Domain-Angaben reichen nicht. Ein signierter Gerätetest steht noch aus.',
       ),
     ],
   );

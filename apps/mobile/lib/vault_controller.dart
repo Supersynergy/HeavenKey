@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import 'backup_preview.dart';
 import 'vault_entry.dart';
 
 class VaultController extends ChangeNotifier {
@@ -16,6 +17,10 @@ class VaultController extends ChangeNotifier {
   String? error;
   int _generation = 0;
   Timer? _expiry;
+  Timer? _archiveExpiry;
+  String? _selectedBackup;
+  String? get selectedBackup => _selectedBackup;
+  String? backupNotice;
   bool _disposed = false;
   void _notify() {
     if (!_disposed) notifyListeners();
@@ -32,7 +37,10 @@ class VaultController extends ChangeNotifier {
     _notify();
   }
 
-  Future<bool> _perform(Future<void> Function(int generation) action) async {
+  Future<bool> _perform(
+    Future<void> Function(int generation) action, {
+    bool backup = false,
+  }) async {
     if (busy || _disposed) return false;
     final generation = _generation;
     busy = true;
@@ -44,26 +52,49 @@ class VaultController extends ChangeNotifier {
     } on PlatformException catch (failure) {
       if (generation != _generation || _disposed) return false;
       error = switch (failure.code) {
-        'cancelled' => 'Entsperren abgebrochen.',
+        'cancelled' =>
+          backup ? 'Sicherungsaktion abgebrochen.' : 'Entsperren abgebrochen.',
         'device_not_secure' => 'Zuerst eine Gerätesperre einrichten.',
         'locked' => 'Bitte den Tresor erneut entsperren.',
         'corrupt_vault' =>
           'Tresor konnte nicht gelesen werden. Daten bleiben erhalten.',
         'vault_full' =>
           'Speichergrenze erreicht. Der Eintrag wurde nicht gespeichert.',
+        'invalid_key' =>
+          'Wiederherstellungsschlüssel stimmt nicht. Bitte prüfen.',
+        'invalid_archive' =>
+          'Sicherung ist ungültig oder beschädigt. Der Tresor bleibt erhalten.',
+        'too_large' => 'Sicherung überschreitet die Speichergrenze von 24 MiB.',
+        'vault_changed' =>
+          'Tresor wurde geändert. Bitte die Vorschau neu laden.',
+        'backup_busy' => 'Eine Sicherungsaktion läuft bereits. Bitte warten.',
         _ => 'Aktion fehlgeschlagen. Der Tresor bleibt geschützt.',
       };
-      if (failure.code == 'vault_full') {
+      if (failure.code == 'vault_full' ||
+          (backup &&
+              const {
+                'invalid_key',
+                'invalid_archive',
+                'too_large',
+                'vault_changed',
+                'backup_busy',
+                'cancelled',
+              }.contains(failure.code))) {
         return false;
       }
       await lock(keepError: true);
       return false;
     } on MissingPluginException {
+      if (generation != _generation || _disposed) return false;
       error = 'Diese Funktion benötigt die native Android- oder iOS-App.';
       await lock(keepError: true);
       return false;
     } on FormatException {
-      error = 'Ungültige Tresordaten. Daten bleiben erhalten.';
+      if (generation != _generation || _disposed) return false;
+      error = backup
+          ? 'Sicherung konnte nicht geprüft werden. Der Tresor bleibt erhalten.'
+          : 'Ungültige Tresordaten. Daten bleiben erhalten.';
+      if (backup) return false;
       await lock(keepError: true);
       return false;
     } finally {
@@ -78,6 +109,13 @@ class VaultController extends ChangeNotifier {
       await _channel.invokeMethod<void>('lock');
       return;
     }
+    _entries = _parseEntries(values);
+    unlocked = true;
+    _expiry?.cancel();
+    _expiry = Timer(const Duration(seconds: 60), lock);
+  });
+
+  List<VaultEntry> _parseEntries(List<Object?>? values) {
     if (values == null || values.length > 500) {
       throw const FormatException('Ungültiger Tresor.');
     }
@@ -91,11 +129,8 @@ class VaultController extends ChangeNotifier {
       if (!ids.add(entry.id)) throw const FormatException('Doppelte ID.');
       parsed.add(entry);
     }
-    _entries = parsed;
-    unlocked = true;
-    _expiry?.cancel();
-    _expiry = Timer(const Duration(seconds: 60), lock);
-  });
+    return parsed;
+  }
 
   Future<bool> save(VaultEntry entry) => _perform((generation) async {
     if (!unlocked) throw PlatformException(code: 'locked');
@@ -126,6 +161,168 @@ class VaultController extends ChangeNotifier {
   Future<bool> enableAutofill() => _perform((_) async {
     await _channel.invokeMethod<void>('enableAutofill');
   });
+
+  Future<String?> newBackupKey() async {
+    String? key;
+    final accepted = await _perform((generation) async {
+      if (!unlocked) throw PlatformException(code: 'locked');
+      final value = await _channel.invokeMethod<Object?>('newBackupKey');
+      if (generation != _generation || _disposed) return;
+      if (value is! String ||
+          value.length > 128 ||
+          !RegExp(r'^hk1_[A-Za-z0-9_-]+$').hasMatch(value)) {
+        throw const FormatException('Ungültiger Schlüssel.');
+      }
+      key = value;
+    }, backup: true);
+    return accepted ? key : null;
+  }
+
+  Future<bool> copyBackupKey(String recoveryKey) => _perform((_) async {
+    if (!unlocked) throw PlatformException(code: 'locked');
+    await _channel.invokeMethod<void>('copyBackupKey', {
+      'recoveryKey': recoveryKey,
+    });
+  }, backup: true);
+
+  Future<String?> createBackup(String recoveryKey) async {
+    String? envelope;
+    final accepted = await _perform((generation) async {
+      if (!unlocked) throw PlatformException(code: 'locked');
+      final value = await _channel.invokeMethod<Object?>('createBackup', {
+        'recoveryKey': recoveryKey,
+      });
+      if (generation != _generation || _disposed) return;
+      envelope = _encryptedEnvelope(value);
+    }, backup: true);
+    return accepted ? envelope : null;
+  }
+
+  Future<BackupPreview?> inspectBackup(
+    String envelope,
+    String recoveryKey,
+  ) async {
+    BackupPreview? preview;
+    final accepted = await _perform((generation) async {
+      if (!unlocked) throw PlatformException(code: 'locked');
+      final value = await _channel.invokeMapMethod<Object?, Object?>(
+        'inspectBackup',
+        {'envelope': envelope, 'recoveryKey': recoveryKey},
+      );
+      if (generation != _generation || _disposed) return;
+      if (value == null) throw const FormatException('Ungültige Vorschau.');
+      preview = BackupPreview.fromMap(value);
+    }, backup: true);
+    return accepted ? preview : null;
+  }
+
+  Future<bool> restoreBackup(
+    String envelope,
+    String recoveryKey,
+    BackupPreview preview, {
+    bool replaceExisting = false,
+  }) => _perform((generation) async {
+    if (!unlocked) throw PlatformException(code: 'locked');
+    final values = await _channel.invokeListMethod<Object?>('restoreBackup', {
+      'envelope': envelope,
+      'recoveryKey': recoveryKey,
+      'vaultFingerprint': preview.vaultFingerprint,
+      'archiveFingerprint': preview.archiveFingerprint,
+      'replaceExisting': replaceExisting,
+    });
+    if (generation != _generation || _disposed) return;
+    _entries = _parseEntries(values);
+    clearBackupSelection();
+    backupNotice = 'Sicherung wiederhergestellt.';
+  }, backup: true);
+
+  String _encryptedEnvelope(Object? value) {
+    if (value is! String || value.isEmpty) {
+      throw const FormatException('Ungültige Sicherung.');
+    }
+    if (value.length > 24 * 1024 * 1024) {
+      throw PlatformException(code: 'too_large');
+    }
+    return value;
+  }
+
+  Future<bool?> saveBackupFile(String envelope) async =>
+      await _pickBackup(saveEnvelope: envelope) as bool?;
+
+  Future<String?> loadBackupFile() async => await _pickBackup() as String?;
+
+  Future<Object?> _pickBackup({String? saveEnvelope}) async {
+    if (busy || _disposed || !unlocked) return null;
+    busy = true;
+    error = null;
+    backupNotice = null;
+    if (saveEnvelope == null) clearBackupSelection();
+    _notify();
+    try {
+      // Pickers may background the app. Only ciphertext crosses this lock.
+      await lock();
+      if (_disposed) return null;
+      final value = await _channel
+          .invokeMethod<Object?>(
+            saveEnvelope == null ? 'loadBackupFile' : 'saveBackupFile',
+            saveEnvelope == null ? null : {'envelope': saveEnvelope},
+          )
+          .timeout(const Duration(seconds: 125));
+      if (_disposed) return null;
+      if (saveEnvelope != null) {
+        if (value is! bool) throw const FormatException('Ungültige Antwort.');
+        backupNotice = value
+            ? 'Verschlüsselte Sicherung gespeichert.'
+            : 'Speichern abgebrochen.';
+        return value;
+      }
+      if (value == null) {
+        backupNotice = 'Dateiauswahl abgebrochen.';
+        return null;
+      }
+      _selectedBackup = _encryptedEnvelope(value);
+      _archiveExpiry?.cancel();
+      _archiveExpiry = Timer(const Duration(minutes: 5), () {
+        _selectedBackup = null;
+        backupNotice =
+            'Dateiauswahl abgelaufen. Bitte die Sicherung neu wählen.';
+        _notify();
+      });
+      backupNotice = 'Verschlüsselte Sicherung ausgewählt. Bitte den Tresor erneut entsperren.';
+      return _selectedBackup;
+    } on PlatformException catch (failure) {
+      if (!_disposed) {
+        error = switch (failure.code) {
+          'cancelled' => 'Dateiauswahl abgebrochen.',
+          'too_large' =>
+            'Sicherung überschreitet die Speichergrenze von 24 MiB.',
+          'backup_busy' => 'Eine Dateiauswahl läuft bereits. Bitte warten.',
+          _ => 'Sicherungsdatei konnte nicht verarbeitet werden.',
+        };
+      }
+    } on MissingPluginException {
+      if (!_disposed) {
+        error = 'Diese Funktion benötigt die native Android- oder iOS-App.';
+      }
+    } on FormatException {
+      if (!_disposed) error = 'Sicherungsdatei ist ungültig.';
+    } on TimeoutException {
+      if (!_disposed) {
+        error = 'Dateiauswahl hat zu lange gedauert. Bitte erneut versuchen.';
+      }
+    } finally {
+      busy = false;
+      _notify();
+    }
+    return null;
+  }
+
+  void clearBackupSelection() {
+    _archiveExpiry?.cancel();
+    _selectedBackup = null;
+    _notify();
+  }
+
   Future<void> lock({bool keepError = false}) async {
     _generation++;
     _expiry?.cancel();
@@ -149,6 +346,9 @@ class VaultController extends ChangeNotifier {
     _disposed = true;
     _generation++;
     _expiry?.cancel();
+    _archiveExpiry?.cancel();
+    _selectedBackup = null;
+    backupNotice = null;
     _entries = [];
     super.dispose();
   }

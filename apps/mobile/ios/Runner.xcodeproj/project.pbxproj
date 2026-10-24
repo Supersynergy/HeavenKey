@@ -23,6 +23,9 @@
 		B22E0000000000000000000F = {isa = PBXBuildFile; fileRef = B22E00000000000000000002; };
 		B22E00000000000000000010 = {isa = PBXBuildFile; fileRef = B22E00000000000000000004; };
 		B22E00000000000000000011 = {isa = PBXBuildFile; fileRef = B22E00000000000000000005; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B24B00000000000000000011 = {isa = PBXBuildFile; fileRef = B24B00000000000000000001; };
+		B24B00000000000000000012 = {isa = PBXBuildFile; fileRef = B24B00000000000000000002; };
+		B24B00000000000000000013 = {isa = PBXBuildFile; fileRef = B24B00000000000000000001; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,6 +76,8 @@
 		B22E00000000000000000003 /* Runner/VaultBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Runner/VaultBridge.swift"; sourceTree = SOURCE_ROOT; };
 		B22E00000000000000000004 /* HeavenKeyAutofill/CredentialProviderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HeavenKeyAutofill/CredentialProviderViewController.swift"; sourceTree = SOURCE_ROOT; };
 		B22E00000000000000000005 /* HeavenKeyAutofill.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; path = HeavenKeyAutofill.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B24B00000000000000000001 /* Shared/MobileBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Shared/MobileBackup.swift"; sourceTree = SOURCE_ROOT; };
+		B24B00000000000000000002 /* Runner/BackupFiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Runner/BackupFiles.swift"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -145,7 +150,7 @@
 			path = Runner;
 			sourceTree = "<group>";
 		};
-		B22E00000000000000000014 /* HeavenKey Native */ = {isa = PBXGroup; name = "HeavenKey Native"; sourceTree = "<group>"; children = (B22E00000000000000000001, B22E00000000000000000002, B22E00000000000000000003, B22E00000000000000000004, ); };
+		B22E00000000000000000014 /* HeavenKey Native */ = {isa = PBXGroup; name = "HeavenKey Native"; sourceTree = "<group>"; children = (B22E00000000000000000001, B22E00000000000000000002, B22E00000000000000000003, B22E00000000000000000004, B24B00000000000000000001, B24B00000000000000000002, ); };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -309,11 +314,13 @@
 				B22E0000000000000000000B,
 				B22E0000000000000000000C,
 				B22E0000000000000000000D,
+				B24B00000000000000000011,
+				B24B00000000000000000012,
 
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B22E00000000000000000015 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B22E0000000000000000000E, B22E0000000000000000000F, B22E00000000000000000010, ); runOnlyForDeploymentPostprocessing = 0; };
+		B22E00000000000000000015 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B22E0000000000000000000E, B22E0000000000000000000F, B22E00000000000000000010, B24B00000000000000000013, ); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */

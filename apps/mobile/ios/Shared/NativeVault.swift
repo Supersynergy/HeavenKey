@@ -117,5 +117,33 @@ final class NativeVault {
         try write(entries)
     }
     func delete(_ id: String) throws { try write(read().filter { $0["id"] != id }) }
+    func newBackupKey() throws -> String { _ = try read(); return MobileBackup.newKey() }
+    func createBackup(_ recoveryKey: String) throws -> String {
+        let archive = try MobileBackup.seal(read(), recoveryKey: recoveryKey)
+        _ = try session()
+        return archive
+    }
+    func inspectBackup(_ envelope: String, recoveryKey: String) throws -> [String: Any] {
+        let current = try read()
+        let incoming = try MobileBackup.open(envelope, recoveryKey: recoveryKey)
+        _ = try session()
+        let ids = Set(current.map { $0["id"]! })
+        let existing = incoming.filter { ids.contains($0["id"]!) }.count
+        return ["total": incoming.count, "new": incoming.count - existing, "existing": existing,
+                "vaultFingerprint": try MobileBackup.fingerprint(current),
+                "archiveFingerprint": try MobileBackup.archiveFingerprint(envelope),
+                "entries": incoming.map { entry in Dictionary(uniqueKeysWithValues: ["id", "title", "origin", "username"].map { ($0, entry[$0]!) }) }]
+    }
+    func restoreBackup(_ envelope: String, recoveryKey: String, vaultFingerprint: String,
+                       archiveFingerprint: String, replaceExisting: Bool) throws -> [[String: String]] {
+        let current = try read()
+        guard try MobileBackup.fingerprint(current) == vaultFingerprint,
+              try MobileBackup.archiveFingerprint(envelope) == archiveFingerprint else { throw BackupError.vaultChanged }
+        let incoming = try MobileBackup.open(envelope, recoveryKey: recoveryKey)
+        let merged = try MobileBackup.merge(current, incoming: incoming, replaceExisting: replaceExisting)
+        _ = try session()
+        if try MobileBackup.fingerprint(merged) != vaultFingerprint { try write(merged) }
+        return merged
+    }
     deinit { lock() }
 }

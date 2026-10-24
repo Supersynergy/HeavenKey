@@ -39,6 +39,7 @@ internal object FillRequests {
         ?.takeIf { it.expires > SystemClock.elapsedRealtime() }?.target
 }
 internal object FillPolicy {
+    private val addressFields = setOf("url_bar", "location_bar_edit_text", "url_field", "mozac_browser_toolbar_url_view")
     @Suppress("DEPRECATION")
     fun defaultBrowser(context: Context): String? {
         val resolved = context.packageManager.resolveActivity(Intent(Intent.ACTION_VIEW,
@@ -50,12 +51,16 @@ internal object FillPolicy {
         val browser = structure.activityComponent?.packageName ?: return null
         if (browser != defaultBrowser(context)) return null
         val origins = mutableSetOf<String>()
+        val nativeUrls = mutableSetOf<String>()
         val usernames = mutableSetOf<AutofillId>()
         val passwords = mutableSetOf<AutofillId>()
         var count = 0
         var invalid = false
         fun visit(node: AssistStructure.ViewNode, depth: Int) {
             if (++count > 4096 || depth > 32) { invalid = true; return }
+            if (node.idPackage == browser && node.idEntry in addressFields && node.htmlInfo == null) {
+                node.text?.toString()?.let { nativeUrls.add(it) }
+            }
             val domain = node.webDomain
             if (domain != null) {
                 if (node.webScheme != "https") invalid = true
@@ -84,8 +89,9 @@ internal object FillPolicy {
             for (index in 0 until node.childCount) visit(node.getChildAt(index), depth + 1)
         }
         for (index in 0 until structure.windowNodeCount) visit(structure.getWindowNodeAt(index).rootViewNode, 0)
-        if (invalid || origins.size != 1 || usernames.size != 1 || passwords.size != 1) return null
-        return FillTarget(origins.single(), browser, usernames.single(), passwords.single())
+        if (invalid || origins.size != 1 || nativeUrls.size != 1 || usernames.size != 1 || passwords.size != 1) return null
+        val fullOrigin = WebOriginPolicy.resolve("https", origins.single().removePrefix("https://"), nativeUrls.single()) ?: return null
+        return FillTarget(fullOrigin, browser, usernames.single(), passwords.single())
     }
 }
 

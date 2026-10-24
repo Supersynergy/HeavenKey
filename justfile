@@ -45,3 +45,14 @@ mobile-android:
 
 _mobile-android:
     cd apps/mobile && flutter build apk --debug --no-pub
+
+mobile-backup-check:
+    python3 scripts/run.py mobile-backup-check 240 -- just _mobile-backup-check
+
+_mobile-backup-check:
+    bun scripts/mobile_backup_reference.mjs
+    just _mobile-check
+    python3 scripts/mobile_backup_acceptance.py
+
+mobile-origin-check:
+    python3 scripts/mobile_origin_check.py

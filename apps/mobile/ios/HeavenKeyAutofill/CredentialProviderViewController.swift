@@ -4,7 +4,6 @@ import UIKit
 final class CredentialProviderViewController: ASCredentialProviderViewController, UITableViewDataSource, UITableViewDelegate {
     private let vault = NativeVault()
     private var origins = Set<String>()
-    private var requestedID: String?
     private var entries: [[String: String]] = []
     private let table = UITableView(frame: .zero, style: .insetGrouped)
     private let message = UILabel()
@@ -32,27 +31,18 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
             stack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)])
         NotificationCenter.default.addObserver(self, selector: #selector(hideSecrets), name: UIApplication.didEnterBackgroundNotification, object: nil)
     }
-    private func origin(_ identifier: ASCredentialServiceIdentifier) -> String? {
-        return try? VaultPolicy.serviceOrigin(identifier.identifier, isDomain: identifier.type == .domain)
-    }
     override func prepareCredentialList(for serviceIdentifiers: [ASCredentialServiceIdentifier]) {
-        origins = Set(serviceIdentifiers.compactMap { origin($0) }); requestedID = nil
-        if origins.count != 1 || serviceIdentifiers.contains(where: { origin($0) == nil }) { origins = [] }
+        let target = VaultPolicy.credentialOrigin(serviceIdentifiers.map { ($0.identifier, $0.type == .domain) })
+        origins = target.map { [$0] } ?? []
     }
     override func prepareInterfaceToProvideCredential(for credentialRequest: any ASCredentialRequest) {
-        guard let request = credentialRequest as? ASPasswordCredentialRequest,
-              let identity = request.credentialIdentity as? ASPasswordCredentialIdentity,
-              let target = origin(identity.serviceIdentifier), let id = identity.recordIdentifier
-        else { cancel(.credentialIdentityNotFound); return }
-        origins = [target]; requestedID = id
+        cancel(.credentialIdentityNotFound)
     }
     override func provideCredentialWithoutUserInteraction(for credentialRequest: any ASCredentialRequest) {
         cancel(.userInteractionRequired)
     }
     override func prepareInterfaceToProvideCredential(for credentialIdentity: ASPasswordCredentialIdentity) {
-        guard let target = origin(credentialIdentity.serviceIdentifier), let id = credentialIdentity.recordIdentifier
-        else { cancel(.credentialIdentityNotFound); return }
-        origins = [target]; requestedID = id
+        cancel(.credentialIdentityNotFound)
     }
     override func provideCredentialWithoutUserInteraction(for credentialIdentity: ASPasswordCredentialIdentity) {
         cancel(.userInteractionRequired)
@@ -73,7 +63,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
             switch response {
             case .failure: self.cancel(.userCanceled)
             case .success(let values):
-                self.entries = values.filter { self.origins.contains($0["origin"] ?? "") && (self.requestedID == nil || $0["id"] == self.requestedID) }
+                self.entries = values.filter { self.origins.contains($0["origin"] ?? "") }
                 self.message.text = self.entries.isEmpty ? "Für diese Website ist kein Login gespeichert." : "Login für \(self.origins.first!) bestätigen"
                 self.table.reloadData()
             }

@@ -3,6 +3,7 @@
 Die Flutter-App unter `apps/mobile` ergänzt den vorhandenen Desktop-Passwortmanager.
 Diese Entwicklungsversion ist für synthetische Testdaten vorgesehen. Sie hat einen
 eigenen lokalen Speicher; sie synchronisiert den Desktop-Tresor noch nicht.
+Version 0.23.0 ergänzt eine verschlüsselte Sicherung mit Wiederherstellung.
 
 ## Funktionen
 
@@ -47,15 +48,37 @@ freigeben. Die Gruppe ist über `$(AppIdentifierPrefix)app.heavenkey.shared` geb
 Die Extension ist als eigenes Target eingebunden und wird in Runner eingebettet.
 Ein Apple-Team oder eine Herausgebersignatur wird im Repository nicht vorgetäuscht.
 
-## Browser einrichten
+## Sicherung und Wiederherstellung
 
-Android: HeavenKey als Autofill-Dienst aktivieren und den gewünschten Browser als
-Systemstandard wählen. Chrome benötigt zusätzlich „Autofill mit einem anderen
-Dienst“. Die native Implementierung zeigt zuerst eine Entsperraufforderung und
-anschließend die passenden Logins zur ausdrücklichen Auswahl.
+Im Tab **Sicherung** einen Wiederherstellungsschlüssel erzeugen und getrennt
+aufbewahren. Nach der Bestätigung speichert der Systemdialog eine verschlüsselte
+`HeavenKey-YYYY-MM-DD.hkb.json`. Der Schlüssel steht nicht in dieser Datei.
+Ohne ihn lässt sich die Sicherung nicht öffnen. Beim Dateidialog sperrt die App;
+eine erfolgreiche Dateiauswahl entsperrt sie nicht automatisch.
 
-Auf dem iPhone HeavenKey in „Automatisch ausfüllen & Passwörter“ aktivieren. Die
-Credential Provider Extension fordert Geräteauthentifizierung und eine Auswahl an.
+Zum Wiederherstellen die Datei wählen, den Tresor erneut entsperren und den
+Schlüssel eingeben. Die Vorschau zeigt Einträge ohne Passwörter. Vorhandene IDs
+bleiben standardmäßig erhalten. **Vorhandene Einträge ersetzen** muss ausdrücklich
+aktiviert werden. Änderungen am Tresor seit der Vorschau erfordern eine neue
+Vorschau. Falscher Schlüssel und beschädigte Dateien ersetzen keine vorhandenen
+Daten. Die Dateiauswahl bleibt höchstens fünf Minuten im Speicher.
+
+Das mobile Format ist getrennt vom Argon2id-Desktopformat. Seine Verschlüsselung
+wurde zwischen Swift CryptoKit und WebCrypto geprüft; die Android-Dateidialoge
+und die Wiederherstellung wurden auf einem Emulator ausgeführt. Ein signierter
+iPhone-Gerätetest steht noch aus.
+
+## Browserfreigabe pausiert
+
+Der alte Android-Pfad bot im echten Browsertest einen Standardport-Login auf
+einem anderen HTTPS-Port an. Seine APK wurde zurückgezogen. Der Dienst und seine
+Freigabe-Activity sind jetzt im Manifest deaktiviert. Parserprüfungen allein
+belegen keine sichere Zuordnung der Formularfelder zu ihrer vollständigen Herkunft.
+
+Der iPhone-Provider-Entwurf akzeptiert ausschließlich vollständige HTTPS-URL-Kontexte.
+Domain-Angaben und einzelne Credential-Identitäten reichen nicht aus, um den
+anfragenden Port sicher festzustellen. Die Browserintegration ist deshalb weiterhin
+ein offener Teil des Auftrags.
 Die offiziellen Schnittstellen sind in der
 [Android-Anleitung](https://developer.android.com/identity/autofill/autofill-services)
 und der [Apple-Dokumentation](https://developer.apple.com/documentation/authenticationservices/ascredentialproviderviewcontroller)
@@ -70,27 +93,25 @@ Diese Prüfung ersetzt keinen iOS-Build und keinen Test in Safari oder Chrome.
 
 Auf einem isolierten Android-Emulator mit API 36 wurden Geräteauthentifizierung,
 verschlüsseltes Speichern mit wechselnder IV, erneutes Öffnen, Ändern, Löschen
-und die Hintergrundsperre ausgeführt. In echtem Chrome 133 füllte der native
+und die Hintergrundsperre ausgeführt. In Version 0.22 füllte der native
 Autofill-Dienst beide Felder nach PIN und Kontoauswahl. Die abweichende Domain
 `example.org` erhielt keine Zugangsdaten; ein PIN-Abbruch ließ beide Felder leer.
 Das Formular bestand aus synthetischem HTML in einem geladenen HTTPS-Dokument.
-Chrome 133 verwendete seine damalige Autofill-Testoption. Das ist keine Abnahme
+Chrome 133 verwendete seine damalige Autofill-Testoption. Die spätere Portprobe
+zeigte, dass diese früheren Checks nicht ausreichten. Das ist keine Abnahme
 auf einem physischen Telefon oder einem aktuellen Browser. Details und Hashes:
 [Prüfstand](MOBILE-ACCEPTANCE.md).
 
-Die Auswahl vergleicht gespeicherte HTTPS-Websites mit den Metadaten des Systems.
-Android akzeptiert Web-Anfragen nur vom gewählten Standardbrowser. HTTP und
-abweichende, im Request sichtbare Domains werden abgewiesen. Ein vollständiger
-URL-Identifier unterscheidet auch Ports. Reine Domain-Identifier enthalten keine
-vollständige URL; insbesondere die Port- und Frame-Grenzen müssen für die jeweiligen
-Browser noch auf Geräten geprüft werden. Eine browserübergreifende Sicherheitsabnahme
-ist offen. Der [Plattformvertrag](MOBILE-CONTRACT.md) beschreibt das Entwicklungsziel.
+Eine browserübergreifende Sicherheitsabnahme fehlt. Der
+[Plattformvertrag](MOBILE-CONTRACT.md) beschreibt das weiterhin offene Ziel einer
+vollständigen Herkunftsprüfung; das Abschalten des unsicheren Pfads erfüllt dieses
+Ziel noch nicht. `just mobile-origin-check` bleibt ohne passenden Browserbeleg rot.
 
 Offen sind der signierte iOS-Build mit Geräteprüfung, Safari-Autofill, die Prüfung
 mit einem aktuellen Android-Browser auf einem Telefon, die native Sicherheitsreview
-und mobile Sicherung/Wiederherstellung.
-Bei Deinstallation, Geräteverlust oder Entfernen der Gerätesperre können die lokalen
-Daten verloren gehen. Deshalb diese Version ausschließlich mit Testdaten verwenden.
+und die direkte Browserintegration. Ohne extern gespeicherte Sicherung und den
+zugehörigen Schlüssel können Daten bei Geräteverlust oder entfernter Gerätesperre
+verloren gehen. Deshalb diese Version ausschließlich mit Testdaten verwenden.
 TOTP, Synchronisierung und das Speichern fremder Passkeys sind in der mobilen App
 noch nicht enthalten. Eine Überlegenheit gegenüber anderen Passwortmanagern wurde
 nicht nachgewiesen.
