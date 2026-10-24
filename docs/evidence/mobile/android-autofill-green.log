@@ -1,0 +1,1 @@
+PASS actual Chrome 133 on isolated Android API 36: username and password filled after native PIN and account selection; no automatic submission; https://example.org received no credentials; cancelling PIN left both fields empty. Source and APK hashes: android-browser.json.

@@ -1,0 +1,8 @@
+{
+  "oldApkSha256": "0665568f2898a5a90791710ac7ed14df107ca0f15a3f55833f8010882eceb613",
+  "actualBrowserOrigin": "https://heavenkey.test:8443",
+  "offeredOrigin": "https://heavenkey.test",
+  "wrongDefaultPortLoginOffered": true,
+  "syntheticFixture": true,
+  "testCertificatePinnedException": true
+}

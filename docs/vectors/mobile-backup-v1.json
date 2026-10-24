@@ -1,0 +1,28 @@
+{
+  "description": "Synthetic AES-256-GCM cross-platform fixture. Published key and nonce are for this vector only.",
+  "fingerprintScheme": "SHA256 of uint32be entry count, then entries sorted by ASCII id; each field id,notes,origin,password,title,updatedAt,username encoded as uint32be UTF-8 byte length followed by UTF-8 bytes.",
+  "recoveryKey": "hk1_AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+  "nonce": "AAECAwQFBgcICQoL",
+  "entries": [
+    {
+      "id": "unicode_b",
+      "title": "München 🔐",
+      "origin": "https://example.com",
+      "username": "δοκιμή@example.com",
+      "password": "päss🔑\\\"\n秘密",
+      "notes": "Zeile 1\nZeile 2 – é / 漢字",
+      "updatedAt": "2026-10-24T12:00:00.000Z"
+    },
+    {
+      "id": "ascii_a",
+      "title": "Port 8443",
+      "origin": "https://example.org:8443",
+      "username": "synthetic",
+      "password": "only-a-test",
+      "notes": "Synthetic fixture; no real credential.",
+      "updatedAt": "2026-10-24T12:00:01Z"
+    }
+  ],
+  "archive": "{\"format\":\"heavenkey-mobile-backup\",\"version\":1,\"iv\":\"AAECAwQFBgcICQoL\",\"ciphertext\":\"HHn0cqHH-Dn4L_7o3o0dMuH0qxaEEisQXUXfp1CqvNxieMuSjzGNDOSGU8_n9UFfhzdCt3i-165P5BA2N4aNj51Mqh_9skkMPniIG5zqfIZZ56xATEGd3DNCUHa2SXcxBVYZg9wgpWryeRDRJxgDU5gXA9iQskroKd1t7_Ilyn3Iop9SJYuXDyq9JkaaQqltsNbPF1t-5y__fdJVoLeAgva3r0mHpakXywb9yP9iBii9qwajq4RTWtl9JWrm55vRZjzum3m4sohDdOnEiHHrssxPyFsPNO7AQ6uq93t4v9RzE-T1xF0vXnAu3CqPMx0iy_rQKvwSpYdjAhMf7r54o0S-gOS94nwKRP1eJdhfU22z2uj3ouP12wFcV34lkcIqbHOyLZSqvHCoBA5uObeM8e25Piwn9aJyugs_Ze5TMYGs4RZJqUxamcKTCFcyoXlAqTi46vBtqGlk1x0V-ZNk3TdAjbz2dkjpc9bKV__QFkHn3XkQloV1s_reFLKzdytXxO_guvVit7nPBJceUm4wq8B-HN_-VDewfGT8fG_Ui2QvV2Zb7uNlJpGK5mLPwoCUB0k5T0nJ8FxlfM_sDoJrQ2GKpfU\"}",
+  "fingerprint": "ff2296d5d8d8b0118e83075826e9a630f336183af29bcca5aae8ae1e48db55c9"
+}

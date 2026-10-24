@@ -1,0 +1,20 @@
+cd apps/mobile && dart format --output=none --set-exit-if-changed lib test integration_test
+Formatted 5 files (0 changed) in 0.02 seconds.
+cd apps/mobile && flutter analyze --no-pub
+Analyzing mobile...
+No issues found! (ran in 1.4s)
+cd apps/mobile && flutter test --no-pub
+00:00 +0: loading /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart
+00:00 +0: HTTPS origin preserves host and nondefault port boundaries
+00:00 +1: generator and local health enforce documented bounds
+00:00 +2: malformed records and oversized fields are rejected
+00:00 +3: CRUD persists through the platform and survives a new controller
+00:00 +4: lock fences a delayed authentication result
+00:00 +5: a storage limit preserves the unlocked editor and existing entries
+00:00 +6: cancellation and corrupt storage fail closed without raw error text
+00:00 +7: session expires and removes secrets from the rendered editor
+00:00 +8: background clears credentials and the active editor
+00:00 +9: All tests passed!
+python3 scripts/mobile_native_gate.py all
+Swift origin and record policy checks passed
+{"passed": true, "kind": "native-source-configuration-and-policy", "checks": ["Android backup disabled", "Android cleartext disabled", "release vault has no network permission", "autofill service system permission", "authentication activity is private", "Keystore authentication required", "authenticated encryption configured", "atomic private vault and recovery detection", "Android API 30 minimum", "app and extension share one Keychain access group", "credential provider entitlement", "credential provider entitlement", "matching Keychain group substitutions", "actual extension target", "extension embedded in Runner", "shared native sources in target", "shared native sources in target", "device-only user-presence Keychain policy", "authentication cancellation fencing configured", "executed Swift HTTPS origin and record validation"], "signed_ios_build": false, "real_browser_autofill_acceptance": false}

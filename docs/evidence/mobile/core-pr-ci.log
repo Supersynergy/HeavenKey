@@ -1,0 +1,5 @@
+{"phase": "prepare-image", "cpus": 4, "memory_gib": 6, "timeout_seconds": 900}
+{"phase": "runner", "run_url": "https://github.com/Supersynergy/HeavenKey/actions/runs/40112318890", "head": "ec602df906fac89f8a06eaa88c4f29806ad24162", "runner_id": 62}
+{"conclusion": "success", "run_url": "https://github.com/Supersynergy/HeavenKey/actions/runs/40112318890", "evidence": "/Users/master/BASE/data/heavenkey-ci-20261024/evidence-40112318890"}
+{"acceptance": {"rust": 181, "reference": 147, "browser": 138}}
+run-guard: exit=0; peak_rss=243MiB; elapsed=554.644s

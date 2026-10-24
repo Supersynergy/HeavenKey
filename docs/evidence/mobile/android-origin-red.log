@@ -1,0 +1,3 @@
+Exception in thread "main" java.lang.IllegalStateException: origin regression: url=https://example.com:8443/login expected=https://example.com:8443 observed=https://example.com
+	at app.heavenkey.heavenkey_mobile.Mobile_origin_testKt.main(mobile_origin_test.kt:22)
+	at app.heavenkey.heavenkey_mobile.Mobile_origin_testKt.main(mobile_origin_test.kt)

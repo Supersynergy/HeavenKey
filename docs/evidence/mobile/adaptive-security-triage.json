@@ -1,0 +1,51 @@
+{
+  "review": {
+    "tool": "grepgod review HEAD",
+    "exit_code": 0,
+    "scope": "final product sources and native browser test diff; static inspection, no independent native runtime audit",
+    "executed_log": "heavenkey-adaptive-final-review.log"
+  },
+  "security": {
+    "tool": "grepgod --chain security . --files apps/mobile/**",
+    "exit_code": 1,
+    "classification": "three pre-existing informational unmaintained-package notices in unchanged Cargo.lock",
+    "advisories": [
+      {
+        "id": "RUSTSEC-2026-0370",
+        "package": "zvariant",
+        "kind": "unmaintained",
+        "source": "https://rustsec.org/advisories/RUSTSEC-2026-0370.html"
+      },
+      {
+        "id": "RUSTSEC-2026-0371",
+        "package": "zbus_names",
+        "kind": "unmaintained",
+        "source": "https://rustsec.org/advisories/RUSTSEC-2026-0371.html"
+      },
+      {
+        "id": "RUSTSEC-2026-0372",
+        "package": "zvariant_derive",
+        "kind": "unmaintained",
+        "source": "https://rustsec.org/advisories/RUSTSEC-2026-0372.html"
+      }
+    ],
+    "lockfile_changed": false,
+    "new_exploitable_vulnerability_proven": false,
+    "no_advisory_suppression_added": true
+  },
+  "independent_agent_review": "two fresh-capsule attempts rejected by the delegation guard; no guard override or source edits by agents; root self-review and static checks remain distinct from a professional audit",
+  "aislop": {
+    "whole_repository": {
+      "exit_code": 1,
+      "classification": "existing core findings and missing optional cppcheck; not a clean repository scan"
+    },
+    "changed_files": {
+      "exit_code": 0,
+      "errors": 0,
+      "warnings": 2,
+      "classification": "formatter warnings in mobile_native_gate.py and mobile_origin_check.py using existing repository style",
+      "scope": "supported file types; Kotlin and Dart compilation/checks are separate"
+    },
+    "no_auto_baseline_or_suppression_added": true
+  }
+}

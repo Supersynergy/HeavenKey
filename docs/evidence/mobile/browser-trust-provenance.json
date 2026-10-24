@@ -1,0 +1,30 @@
+{
+  "source": "https://www.gstatic.com/gpm-passkeys-privileged-apps/apps.json",
+  "source_sha256": "0891ee2507894999ead3eb4f42e17936a2e8ed8f8fd95592535c9811ef319481",
+  "fetched_at_unix": 1792876318,
+  "kind": "live-unversioned primary list; release certificates only, explicit browser packages",
+  "packages": [
+    "com.android.chrome",
+    "com.brave.browser",
+    "com.brave.browser_beta",
+    "com.brave.browser_nightly",
+    "com.chrome.beta",
+    "com.chrome.canary",
+    "com.chrome.dev",
+    "com.microsoft.emmx",
+    "com.microsoft.emmx.beta",
+    "com.microsoft.emmx.dev",
+    "com.opera.browser",
+    "com.opera.browser.beta",
+    "com.sec.android.app.sbrowser",
+    "com.sec.android.app.sbrowser.beta",
+    "com.vivaldi.browser",
+    "org.mozilla.fenix",
+    "org.mozilla.firefox",
+    "org.mozilla.firefox_beta",
+    "org.mozilla.focus",
+    "org.mozilla.klar"
+  ],
+  "asset_sha256": "2261254992e43594e98f51b4cfb825d4e5205119a0373363588eb7b8284e68c5",
+  "runtime_network": false
+}

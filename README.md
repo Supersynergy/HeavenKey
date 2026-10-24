@@ -157,3 +157,16 @@ Der [Startassistent](scripts/first_run.py) baut den Passwortmanager mit `python3
 HeavenKey ist proprietäre Software. Die [HeavenKey Proprietary License 1.0](LICENSE) erlaubt berechtigten Empfängern offizieller Binärpakete persönliche und interne Nutzung. Weitervertrieb, öffentliche Forks und abgeleitete Produkte benötigen eine gesonderte Erlaubnis. Drittanbieter-Lizenzen und zwingende gesetzliche Rechte bleiben erhalten.
 
 [Einordnung der Lizenz](docs/LICENSING.md) · [Drittanbieterhinweise](NOTICE.md) · [Beiträge](CONTRIBUTING.md)
+
+## Handy-App in Entwicklung
+
+Die [Flutter-App für Android und iPhone](docs/MOBILE.md) ergänzt den Desktop-Tresor
+mit nativer Geräteauthentifizierung und verschlüsselter Sicherung. Android verlangt
+für die gemeldete HTTPS-Domain eine ausdrückliche Einmalfreigabe vor dem Entsperren.
+Android-Debug-Build und Quellprüfungen sind verfügbar; die signierte iOS- und Browser-Geräteabnahme ist
+offen. Diese Version ist für Testdaten vorgesehen und synchronisiert noch nicht
+mit dem Desktop-Tresor. [Integrationsstand](docs/MIGRATION-20261024.md).
+
+Die [bebilderte Installation](docs/INSTALLATION.md) bleibt ausdrücklich auf
+Desktop-Release 0.12.0 bezogen. Das [Zugangslabor](docs/LAB-INSTALLATION.md) hat eine
+eigene Einrichtung.

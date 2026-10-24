@@ -1,0 +1,64 @@
+{
+  "com.android.chrome": [
+    "f0fd6c5b410f25cb25c3b53346c8972fae30f8ee7411df910480ad6b2d60db83"
+  ],
+  "com.brave.browser": [
+    "9c2db70513515fdbfbbc585b3edf3d7123d4dc67c94ffd306361c1d79bbf18ac"
+  ],
+  "com.brave.browser_beta": [
+    "9c2db70513515fdbfbbc585b3edf3d7123d4dc67c94ffd306361c1d79bbf18ac"
+  ],
+  "com.brave.browser_nightly": [
+    "9c2db70513515fdbfbbc585b3edf3d7123d4dc67c94ffd306361c1d79bbf18ac"
+  ],
+  "com.chrome.beta": [
+    "3d7a1223019aa39d9ea0e3436ab7c0896bfb4fb679f4de5fe7c23f326c8f994a",
+    "da633d34b69e63ae2103b49d53ce052fc5f7f3c53aab94fdc2a208bdfd14249c"
+  ],
+  "com.chrome.canary": [
+    "2019dfa1fb23efbf70c5bcd1443c5beab04f3f2ff4366e9ac1e3457639a24cfc"
+  ],
+  "com.chrome.dev": [
+    "3d7a1223019aa39d9ea0e3436ab7c0896bfb4fb679f4de5fe7c23f326c8f994a",
+    "9044ee5fee4bbc5e21dd44665431c4eb1f1f71a32716a0bc927bcbb39233cabf"
+  ],
+  "com.microsoft.emmx": [
+    "01e1999710a82c2749b4d50c445dc85d670b6136089d0a766a73827c82a1eac9"
+  ],
+  "com.microsoft.emmx.beta": [
+    "01e1999710a82c2749b4d50c445dc85d670b6136089d0a766a73827c82a1eac9"
+  ],
+  "com.microsoft.emmx.dev": [
+    "01e1999710a82c2749b4d50c445dc85d670b6136089d0a766a73827c82a1eac9"
+  ],
+  "com.opera.browser": [
+    "5d6afbf87f652af04647ada0df634cf22370900b164b09d50bd23aa2cb5285b8"
+  ],
+  "com.opera.browser.beta": [
+    "5d6afbf87f652af04647ada0df634cf22370900b164b09d50bd23aa2cb5285b8"
+  ],
+  "com.sec.android.app.sbrowser": [
+    "34df0e7a9f1cf1892e45c056b4973cd81ccf148a4050d11aea4ac5a65f900a42"
+  ],
+  "com.sec.android.app.sbrowser.beta": [
+    "34df0e7a9f1cf1892e45c056b4973cd81ccf148a4050d11aea4ac5a65f900a42"
+  ],
+  "com.vivaldi.browser": [
+    "e8a78544655ba8c09817f732768f5689b1662ec4b2bc5a0bc0ec138d33ca3d1e"
+  ],
+  "org.mozilla.fenix": [
+    "5004779088e7f988d5bc5cc5f8798febf4f8cd084a1b2a46efd4c8ee4aeaf211"
+  ],
+  "org.mozilla.firefox": [
+    "a78b62a5165b4494b2fead9e76a280d22d937fee6251aece599446b2ea319b04"
+  ],
+  "org.mozilla.firefox_beta": [
+    "a78b62a5165b4494b2fead9e76a280d22d937fee6251aece599446b2ea319b04"
+  ],
+  "org.mozilla.focus": [
+    "6203a473be36d64ee37f87fa500edbc79eab930610ab9b9fa4ca7d5c1f1b4ffc"
+  ],
+  "org.mozilla.klar": [
+    "6203a473be36d64ee37f87fa500edbc79eab930610ab9b9fa4ca7d5c1f1b4ffc"
+  ]
+}

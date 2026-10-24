@@ -1,0 +1,19 @@
+{
+  "status": "reviewed",
+  "head": "813151cff377aa587eff2640153a8267bbe8e33b",
+  "reviewer": "independent fresh-context agent heavenkey_native_review",
+  "findings": [
+    {
+      "severity": "P1",
+      "file": "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/HeavenAutofillService.kt",
+      "line": 63,
+      "trigger": "Host-only webDomain for https://example.com:8443 is reconstructed as https://example.com; default-port credentials can be selected.",
+      "evidence": "Immutable native source review; actual Android platform implementation strips authority port in ViewStructure web-domain data.",
+      "triage": "Root task .6; full native browser URL must match the reported web domain. Source regression observed red before fix; browser verification pending."
+    }
+  ],
+  "limits": [
+    "No signed iOS or physical-device review",
+    "Automated code review, not an independent professional security audit"
+  ]
+}

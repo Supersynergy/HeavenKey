@@ -1,0 +1,19 @@
+BROWSER_PHASE unlock isolated test device
+BROWSER_PHASE launch
+BROWSER_PHASE flags
+BROWSER_PHASE launch
+BROWSER_PHASE request /form
+BROWSER_PHASE locked dataset
+BROWSER_PHASE cleanup
+37 |   for (let attempt = 0; attempt < 2; attempt++) {
+38 |     state = await nodes(); const found = state.find(predicate);
+39 |     if (found) { await tap(found); return; }
+40 |     await pause(350);
+41 |   }
+42 |   throw new Error(label + ': ' + JSON.stringify(state.filter(n => n.text || n['content-desc']).map(n => ({ text: n.text, id: n['resource-id'], description: n['content-desc'] }))));
+                 ^
+error: Native locked dataset: [{"text":"HeavenKey synthetic test","id":"","description":""},{"text":"Username ","id":"","description":""},{"text":"Password ","id":"","description":""},{"text":"Sign in","id":"","description":""},{"text":"","id":"com.android.chrome:id/home_button","description":"Open the home page"},{"text":"","id":"com.android.chrome:id/location_bar_status_icon","description":"Connection is secure"},{"text":"heavenkey.test:8443/form","id":"com.android.chrome:id/url_bar","description":""},{"text":"","id":"com.android.chrome:id/optional_toolbar_button","description":"New tab"},{"text":"","id":"com.android.chrome:id/tab_switcher_button","description":"See 31 tabs"},{"text":"","id":"com.android.chrome:id/menu_button","description":"Update available. More options"},{"text":"","id":"com.android.chrome:id/keyboard_accessory","description":"Alternative filling options available above the keyboard"},{"text":"","id":"","description":"Show saved passwords and password options"},{"text":"","id":"","description":"Show saved payment methods"},{"text":"","id":"","description":"Show saved addresses"}]
+      at clickNative (/Users/master/Documents/Codex/work/heavenkey-ci-20261012/scripts/mobile_autofill_e2e.ts:42:13)
+      at async request (/Users/master/Documents/Codex/work/heavenkey-ci-20261012/scripts/mobile_autofill_e2e.ts:105:13)
+
+Bun v1.4.3 (macOS arm64)

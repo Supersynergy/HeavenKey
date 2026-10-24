@@ -1,0 +1,19 @@
+BROWSER_PHASE unlock isolated test device
+BROWSER_PHASE launch
+BROWSER_PHASE browser third-party mode
+BROWSER_PHASE request /form
+BROWSER_PHASE locked dataset
+BROWSER_PHASE request /form
+BROWSER_PHASE locked dataset
+BROWSER_PHASE consent
+BROWSER_PHASE request /form
+BROWSER_PHASE locked dataset
+BROWSER_PHASE consent
+BROWSER_PHASE request /frame-same
+BROWSER_PHASE locked dataset
+BROWSER_PHASE consent
+BROWSER_PHASE consent
+BROWSER_PHASE request /form
+BROWSER_PHASE locked dataset
+BROWSER_PHASE cleanup
+{"passed":true,"browser":"1.98.60","adaptive_host_scope":true,"full_field_origin_verified":false}

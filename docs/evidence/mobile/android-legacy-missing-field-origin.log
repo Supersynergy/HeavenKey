@@ -1,0 +1,21 @@
+--------- beginning of system
+10-25 00:51:39.940   628   628 D AutofillManagerService: setLogLevelFromSettings(): level=2, debug=true, verbose=false
+10-25 00:51:39.940   628   628 D AutofillManagerService: setMaxPartitionsFromSettings(): 10
+10-25 00:51:39.940   628   628 D AutofillManagerService: setMaxVisibleDatasetsFromSettings(): 0
+10-25 00:51:40.609   628   628 D AutofillManagerService: Restriction did not change for user 0
+--------- beginning of main
+10-25 00:52:02.368   973   973 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 00:52:04.743  1899  1899 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 00:52:05.896   973   973 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 00:52:14.902  1899  1899 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 00:52:17.166  1899  1899 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 00:52:26.288  4067  4067 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 00:52:32.258  4067  4067 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 00:52:34.477  4067  4067 D AutofillManager: Fill dialog is enabled:false, hints=[]
+10-25 00:52:36.580   628   651 D AutofillManagerService: onBackKeyPressed()
+10-25 00:52:36.630   628   651 D AutofillManagerService: onBackKeyPressed()
+10-25 00:52:39.751  4067  4067 I AutofillManager: showAutofillDialog() return false due to improve fill dialog
+10-25 00:52:39.973  4471  4471 D HeavenKeyAutofill: connected
+10-25 00:52:39.973  4471  4471 D HeavenKeyAutofill: fill request contexts=1 cancelled=false
+10-25 00:52:40.008  4471  4471 D HeavenKeyAutofill: parsed nodes=6 hosts=1 usernames=0 passwords=0 focused=false invalid=true
+10-25 00:52:40.020  4471  4471 D HeavenKeyAutofill: connected

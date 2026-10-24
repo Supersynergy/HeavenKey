@@ -1,0 +1,39 @@
+{
+  "gitleaks": {
+    "mode": "staged diff via stdin, redacted",
+    "findings": 1,
+    "actual_credentials": 0,
+    "locations": [
+      {
+        "file": "docs/vectors/mobile-backup-v1.json",
+        "diff_line": 3261,
+        "rule": "generic-api-key",
+        "classification": "Public deterministic conformance vector key, bytes 0 through 31; never a production vault key"
+      }
+    ]
+  },
+  "aislop": {
+    "exit_code": 1,
+    "summary": {
+      "errors": 27,
+      "warnings": 119,
+      "fixable": 17,
+      "files": 149,
+      "elapsed": "3.6s"
+    },
+    "new_error_findings": [
+      {
+        "file": "scripts/mobile_backup_reference.mjs",
+        "line": 132,
+        "rule": "security/hardcoded-secret",
+        "classification": "Synthetic-changed-password used only for merge-preservation conformance testing"
+      }
+    ],
+    "existing_error_findings": 26,
+    "existing_error_classification": "22 pre-existing test/schema secret heuristics and four existing ProcessLookupError cleanup catches in scripts/run.py; no global exclusions added",
+    "security_audit": false
+  },
+  "diff_whitespace": {
+    "harmless_warnings": "One extra final blank line in extracted OriginPolicy.kt and trailing spaces retained in two raw test logs; no behavior effect"
+  }
+}

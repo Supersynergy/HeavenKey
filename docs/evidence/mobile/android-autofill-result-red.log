@@ -1,0 +1,4 @@
+10-24 19:52:53.119   637  4353 D AutofillSession: setAuthenticationResultLocked(): id= 43057151, data=Bundle[mParcelledData.dataSize=2800]
+10-24 19:52:53.119   637  4353 D AutofillSession: setAuthenticationResultLocked(): result=Dataset[noId, fieldIds=[2:i65536@1746839074, 2:i65537@1746839074], fieldValues=[[type=1, value=22_chars], [type=1, value=23_chars]], fieldPresentations=2, fieldDialogPresentations=2, fieldInlinePresentations=2, fieldInlineTooltipInlinePresentations=2, fieldFilters=2, hasPresentation, autofillDatatypes=[null, null]], clientState=null, authenticationId=43057151
+10-24 19:52:53.119   637  4353 D AutofillSession: setAuthenticationResultLocked(): received Dataset from authentication flow
+10-24 19:52:53.119   637  4353 W AutofillSession: invalid index (65535) for authentication id 43057151

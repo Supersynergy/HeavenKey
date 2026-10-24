@@ -67,3 +67,8 @@ Quellen: [Rust OpenSSL: vendored](https://docs.rs/openssl/0.10.81/openssl/#vendo
 ## Nutzungsrechte
 
 Offizielle Binärpakete dürfen nach der beiliegenden `LICENSE` persönlich und intern genutzt werden. Weitervertrieb und abgeleitete Produkte brauchen eine gesonderte Erlaubnis. Drittanbieter-Lizenzen und zwingende gesetzliche Rechte bleiben erhalten. Details stehen in `LICENSING.md`.
+
+Die neue [Flutter-Handy-App](MOBILE.md) wird getrennt gebaut. Die bisherigen
+Desktop- und Erweiterungsarchive enthalten sie nicht. Die
+[bebilderte Installation](INSTALLATION.md) dokumentiert Desktop-Release 0.12.0;
+das [Zugangslabor](LAB-INSTALLATION.md) wird separat eingerichtet.

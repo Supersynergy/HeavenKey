@@ -1,0 +1,39 @@
+bun scripts/mobile_backup_reference.mjs
+{"ok":true,"assertions":75,"crypto":"WebCrypto ↔ compiled Swift CryptoKit","fixture":"docs/vectors/mobile-backup-v1.json","deviceRuntime":false}
+just _mobile-check
+cd apps/mobile && dart format --output=none --set-exit-if-changed lib test integration_test
+Formatted 9 files (0 changed) in 0.03 seconds.
+cd apps/mobile && flutter analyze --no-pub
+Analyzing mobile...                                             
+No issues found! (ran in 1.7s)
+cd apps/mobile && flutter test --no-pub
+00:00 +0: loading /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart
+00:00 +0: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: HTTPS origin preserves host and nondefault port boundaries
+00:00 +1: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: generator and local health enforce documented bounds
+00:00 +2: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: preview accepts metadata only and rejects inconsistent archives
+00:00 +3: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: preview accepts metadata only and rejects inconsistent archives
+00:00 +4: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: preview accepts metadata only and rejects inconsistent archives
+00:00 +5: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: preview accepts metadata only and rejects inconsistent archives
+00:00 +6: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: a storage limit preserves the unlocked editor and existing entries
+00:00 +7: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: wrong key and stale restore preserve the current unlocked vault
+00:00 +8: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: wrong key and stale restore preserve the current unlocked vault
+00:00 +9: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: session expires and removes secrets from the rendered editor
+00:00 +10: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: session expires and removes secrets from the rendered editor
+00:00 +11: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: session expires and removes secrets from the rendered editor
+00:00 +12: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: session expires and removes secrets from the rendered editor
+00:00 +13: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: session expires and removes secrets from the rendered editor
+00:00 +14: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: session expires and removes secrets from the rendered editor
+00:00 +15: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: session expires and removes secrets from the rendered editor
+00:00 +16: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: session expires and removes secrets from the rendered editor
+00:00 +17: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: export requires separate key storage and clears its key on lock
+00:00 +18: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: export requires separate key storage and clears its key on lock
+00:00 +19: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: backgrounded file picker needs unlock and fences a stale preview
+00:00 +20: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: editing the key invalidates an in-flight preview
+00:00 +21: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: restore needs confirmation and uses replacement=false
+00:01 +22: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: restore needs confirmation and uses replacement=true
+00:01 +23: All tests passed!
+python3 scripts/mobile_native_gate.py all
+Swift origin and record policy checks passed
+{"passed": true, "kind": "native-source-configuration-and-policy", "checks": ["Android backup disabled", "Android cleartext disabled", "release vault has no network permission", "autofill service system permission", "unverified legacy browser delivery disabled", "authentication activity is private", "unverified legacy authentication activity disabled", "Keystore authentication required", "authenticated encryption configured", "atomic private vault and recovery detection", "Android API 30 minimum", "app and extension share one Keychain access group", "credential provider entitlement", "credential provider entitlement", "matching Keychain group substitutions", "actual extension target", "extension embedded in Runner", "shared native sources in target", "shared native sources in target", "device-only user-presence Keychain policy", "authentication cancellation fencing configured", "executed Swift HTTPS origin and record validation"], "signed_ios_build": false, "real_browser_autofill_acceptance": false}
+python3 scripts/mobile_backup_acceptance.py
+Native Android backup and document-picker receipt matched; iOS runtime acceptance separate

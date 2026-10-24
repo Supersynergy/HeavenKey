@@ -1,0 +1,189 @@
+package app.heavenkey.heavenkey_mobile
+
+import android.app.Activity
+import android.app.KeyguardManager
+import android.content.ClipData
+import android.content.ClipDescription
+import android.content.ClipboardManager
+import android.content.Context
+import android.hardware.biometrics.BiometricManager
+import android.hardware.biometrics.BiometricPrompt
+import android.os.CancellationSignal
+import android.os.Handler
+import android.os.Looper
+import android.os.PersistableBundle
+import android.os.SystemClock
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import android.util.AtomicFile
+import android.util.Base64
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
+import java.security.KeyStore
+import java.util.UUID
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
+
+internal class VaultStore(private val context: Context) {
+    private val file = AtomicFile(File(context.noBackupFilesDir, "heavenkey-v1.aesgcm"))
+    private val alias = "heavenkey-vault-v1"
+    private var expires = 0L
+    private var generation = 0
+    private var clipboardLabel: String? = null
+    private val handler = Handler(Looper.getMainLooper())
+    private var pendingAuthentication: CancellationSignal? = null
+    private fun hasStoredData(): Boolean = listOf("", ".bak", ".new")
+        .any { File(file.baseFile.path + it).exists() }
+
+    fun secureDevice(): Boolean = context.getSystemService(KeyguardManager::class.java).isDeviceSecure
+    private fun key(): SecretKey {
+        val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        if (store.containsAlias(alias)) return store.getKey(alias, null) as SecretKey
+        if (hasStoredData()) throw VaultFailure("corrupt_vault")
+        if (!secureDevice()) throw VaultFailure("device_not_secure")
+        return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore").apply {
+            init(KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                .setKeySize(256).setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setRandomizedEncryptionRequired(true).setUserAuthenticationRequired(true)
+                .setUserAuthenticationParameters(60, KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL)
+                .build())
+        }.generateKey()
+    }
+    fun authenticate(activity: Activity, complete: (String?) -> Unit) {
+        if (!secureDevice()) { complete("device_not_secure"); return }
+        try { key() } catch (_: Exception) { complete("corrupt_vault"); return }
+        val token = ++generation
+        val signal = CancellationSignal()
+        pendingAuthentication?.cancel()
+        pendingAuthentication = signal
+        handler.postDelayed({ if (pendingAuthentication === signal) signal.cancel() }, 60_000)
+        var delivered = false
+        fun finish(error: String?) {
+            if (delivered) return
+            delivered = true
+            if (token != generation) { complete("cancelled"); return }
+            pendingAuthentication = null
+            if (error == null) expires = SystemClock.elapsedRealtime() + 60_000
+            complete(error)
+        }
+        BiometricPrompt.Builder(activity).setTitle("HeavenKey entsperren")
+            .setSubtitle("Login nur nach deiner Freigabe verwenden")
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)
+            .build().authenticate(signal, activity.mainExecutor, object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) { finish(null) }
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) { finish("cancelled") }
+            })
+    }
+    private fun requireSession() {
+        if (expires == 0L || SystemClock.elapsedRealtime() >= expires) {
+            lock(); throw VaultFailure("locked")
+        }
+    }
+    fun lock() { generation++; expires = 0; pendingAuthentication?.cancel(); pendingAuthentication = null; clearClipboard() }
+    fun read(): List<JSONObject> {
+        requireSession()
+        if (!hasStoredData()) return emptyList()
+        try {
+            if (file.baseFile.length() > 16 * 1024 * 1024) throw VaultFailure("corrupt_vault")
+            val envelope = JSONObject(String(file.readFully(), Charsets.UTF_8))
+            if (envelope.getInt("version") != 1) throw VaultFailure("corrupt_vault")
+            val iv = Base64.decode(envelope.getString("iv"), Base64.NO_WRAP)
+            if (iv.size != 12) throw VaultFailure("corrupt_vault")
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+            cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, iv))
+            cipher.updateAAD("HeavenKey/mobile/v1".toByteArray(Charsets.UTF_8))
+            val plaintext = cipher.doFinal(Base64.decode(envelope.getString("ciphertext"), Base64.NO_WRAP))
+            val values = try { JSONArray(String(plaintext, Charsets.UTF_8)) } finally { plaintext.fill(0) }
+            if (values.length() > 500) throw VaultFailure("corrupt_vault")
+            val ids = mutableSetOf<String>()
+            return (0 until values.length()).map { i -> values.getJSONObject(i).also {
+                OriginPolicy.validate(it)
+                if (!ids.add(it.getString("id"))) throw VaultFailure("corrupt_vault")
+            } }
+        } catch (error: android.security.keystore.UserNotAuthenticatedException) {
+            throw VaultFailure("locked")
+        } catch (_: Exception) { throw VaultFailure("corrupt_vault") }
+    }
+    private fun write(values: List<JSONObject>) {
+        requireSession()
+        if (values.size > 500) throw VaultFailure("invalid_entry")
+        values.forEach { OriginPolicy.validate(it) }
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE, key())
+        cipher.updateAAD("HeavenKey/mobile/v1".toByteArray(Charsets.UTF_8))
+        val plaintext = JSONArray(values).toString().toByteArray(Charsets.UTF_8)
+        val encrypted = try { cipher.doFinal(plaintext) } finally { plaintext.fill(0) }
+        val payload = JSONObject().put("version", 1).put("iv", Base64.encodeToString(cipher.iv, Base64.NO_WRAP))
+            .put("ciphertext", Base64.encodeToString(encrypted, Base64.NO_WRAP)).toString().toByteArray(Charsets.UTF_8)
+        if (payload.size > 16 * 1024 * 1024) throw VaultFailure("vault_full")
+        val output = file.startWrite()
+        try { output.write(payload); file.finishWrite(output) }
+        catch (error: Exception) { file.failWrite(output); throw error }
+    }
+    fun save(entry: JSONObject) {
+        OriginPolicy.validate(entry)
+        val values = read().toMutableList()
+        val index = values.indexOfFirst { it.getString("id") == entry.getString("id") }
+        if (index >= 0) values[index] = entry else values.add(entry)
+        write(values)
+    }
+    fun delete(id: String) { write(read().filterNot { it.getString("id") == id }) }
+    fun newBackupKey(): String { read(); return MobileBackup.newKey() }
+    fun copyBackupKey(recoveryKey: String) {
+        read()
+        if (!MobileBackup.checkKey(recoveryKey)) throw BackupFailure("invalid_key")
+        copyText(recoveryKey)
+    }
+    fun createBackup(recoveryKey: String): String {
+        val archive = MobileBackup.seal(read(), recoveryKey)
+        requireSession()
+        return archive
+    }
+    fun inspectBackup(envelope: String, recoveryKey: String): Map<String, Any> {
+        val current = read()
+        val incoming = MobileBackup.open(envelope, recoveryKey)
+        requireSession()
+        val ids = current.map { it.getString("id") }.toSet()
+        val existing = incoming.count { it.getString("id") in ids }
+        return mapOf("total" to incoming.size, "new" to incoming.size - existing, "existing" to existing,
+            "vaultFingerprint" to MobileBackup.fingerprint(current),
+            "archiveFingerprint" to MobileBackup.archiveFingerprint(envelope),
+            "entries" to incoming.map { entry -> listOf("id", "title", "origin", "username").associateWith { entry.getString(it) } })
+    }
+    fun restoreBackup(envelope: String, recoveryKey: String, vaultFingerprint: String,
+                      archiveFingerprint: String, replaceExisting: Boolean): List<JSONObject> {
+        val current = read()
+        if (MobileBackup.fingerprint(current) != vaultFingerprint ||
+            MobileBackup.archiveFingerprint(envelope) != archiveFingerprint) throw BackupFailure("vault_changed")
+        val incoming = MobileBackup.open(envelope, recoveryKey)
+        val merged = MobileBackup.merge(current, incoming, replaceExisting)
+        requireSession()
+        if (MobileBackup.fingerprint(merged) != vaultFingerprint) write(merged)
+        return merged
+    }
+    fun copy(id: String) {
+        val entry = read().find { it.getString("id") == id } ?: throw VaultFailure("invalid_entry")
+        copyText(entry.getString("password"))
+    }
+    private fun copyText(value: String) {
+        clearClipboard()
+        val label = "HeavenKey-${UUID.randomUUID()}"
+        val clip = ClipData.newPlainText(label, value)
+        clip.description.extras = PersistableBundle().apply { putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true) }
+        context.getSystemService(ClipboardManager::class.java).setPrimaryClip(clip)
+        clipboardLabel = label
+        handler.postDelayed({ if (clipboardLabel == label) clearClipboard() }, 30_000)
+    }
+    fun clearClipboard() {
+        val label = clipboardLabel ?: return
+        val clipboard = context.getSystemService(ClipboardManager::class.java)
+        // Android can hide the description while this window lacks input focus.
+        val current = clipboard.primaryClipDescription ?: return
+        if (current.label?.toString() == label) clipboard.clearPrimaryClip()
+        clipboardLabel = null
+    }
+}

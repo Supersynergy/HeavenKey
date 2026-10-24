@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "kind": "real Flutter/native integration on isolated API 36 Android emulator",
+  "device_authentication": true,
+  "native_encrypted_save": true,
+  "fresh_iv_on_each_update": true,
+  "native_lock_reopen": true,
+  "delete": true,
+  "background_lock": true,
+  "native_locked_write_rejected": true,
+  "plaintext_absent_from_file": true,
+  "real_browser_autofill": false,
+  "ios_runtime": false,
+  "test_apk_sha256": "37594763cfa18e170f8d320061185dd754e4bcc45b370cb37ba7c182024a14a8",
+  "source_files": {
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/AutofillActivity.kt": "35344a23f8af44450cc615f16b03de98ba595f6a074f9da5a61fcae6aa9cce30",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/HeavenAutofillService.kt": "cdb78bfa90d6fdf5ed6ca05096e9550f907b7bdd6b9da06105ecf2799052b1f5",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/MainActivity.kt": "137f4ed17267846e35d6edf47b00c59080de73f9c6525c865554855ec310c0a3",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/VaultStore.kt": "b41a41e05113fe34e8a7bc15d5306b02f5ced008717124c28941a89f4622fbf5",
+    "apps/mobile/integration_test/native_vault_test.dart": "dca9675f9dabf4c03f1b3c08ca6c5192a025d0a20935881a022b744d5985c5e3",
+    "apps/mobile/lib/main.dart": "6ff682b8bcd9cbd897f280f3783fa6bec690c7b2b8e353f10c04944723e98e31",
+    "apps/mobile/lib/vault_controller.dart": "7f794dcab13c843bac4daf80f58dc25996bacb68916f3d3b2565a1de4444e905",
+    "apps/mobile/lib/vault_entry.dart": "3462682aaabf6346550cd9ab1629abd6cbc476307c1252dad571308405336065"
+  }
+}
