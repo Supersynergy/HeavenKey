@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   verify:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.repository.private && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: [self-hosted, Linux, ARM64, 'heavenkey-ci-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_id }}']
     timeout-minutes: 25
     env:
@@ -26,6 +26,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - name: Initialize fresh CI evidence and local cache
+        id: fresh
         run: |
           bash scripts/ci.sh prepare
           mkdir -p /cache/target
@@ -63,5 +64,54 @@ jobs:
       - name: Virtual-authenticator browser tests
         run: bash scripts/ci.sh e2e
       - name: Preserve fresh evidence locally
-        if: always()
+        if: ${{ always() && steps.fresh.outcome == 'success' }}
         run: python3 scripts/ci/export_evidence.py
+
+  verify-public:
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    env:
+      CARGO_BUILD_JOBS: 4
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Initialize fresh CI evidence
+        id: fresh
+        run: bash scripts/ci.sh prepare
+      - name: Install verified CI tools
+        timeout-minutes: 5
+        run: bash scripts/ci/hosted_public.sh
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        timeout-minutes: 8
+        with:
+          toolchain: nightly-2026-10-11
+          components: rustfmt, clippy
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: "0.12.17"
+          enable-cache: false
+      - name: Locked dependencies and browser
+        timeout-minutes: 6
+        run: |
+          test "$(bun --version)" = 1.4.2
+          bun install --frozen-lockfile --ignore-scripts
+          cargo fetch --locked
+          bun node_modules/playwright-core/cli.js install --with-deps chromium
+          bun -e 'const {chromium}=require("playwright-core"); console.log("CHROME_PATH="+chromium.executablePath())' >> "$GITHUB_ENV"
+      - name: Source and regression checks
+        run: python3 scripts/run.py ci-source 900 -- bash scripts/ci.sh source
+      - name: Dependency security and licenses
+        run: python3 scripts/run.py ci-security 180 -- bash scripts/ci.sh security
+      - name: Build and integrated browser flows
+        run: python3 scripts/run.py ci-build 600 -- bash scripts/ci.sh build
+      - name: Virtual-authenticator browser tests
+        run: bash scripts/ci.sh e2e
+      - name: Source-bound evidence manifest in job log
+        if: ${{ always() && steps.fresh.outcome == 'success' }}
+        run: |
+          sudo mkdir -p /evidence
+          sudo chown "$USER" /evidence
+          python3 scripts/ci/export_evidence.py
+          cat /evidence/manifest.json

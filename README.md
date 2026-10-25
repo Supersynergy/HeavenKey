@@ -160,7 +160,7 @@ just check
 just e2e
 ```
 
-Der [Startassistent](scripts/first_run.py) baut den Passwortmanager mit `python3 scripts/first_run.py`; `--lab` startet das Zugangslabor. Verwende in Tests ausschließlich synthetische Daten. Das private Repository benötigt eine Zugriffsberechtigung.
+Der [Startassistent](scripts/first_run.py) baut den Passwortmanager mit `python3 scripts/first_run.py`; `--lab` startet das Zugangslabor. Verwende in Tests ausschließlich synthetische Daten. Das Repository ist öffentlich; die Downloads stehen unter Releases.
 
 Die Binärpakete wurden mit frischen temporären Datenordnern gestartet. Ein vollständiger Quell-Build aus einem neuen Klon ist nicht Teil dieser Paketabnahme.
 

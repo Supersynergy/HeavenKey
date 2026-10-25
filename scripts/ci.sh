@@ -8,7 +8,8 @@ prepare() {
     docs/evidence/browser-*.png docs/evidence/failure-*.png \
     docs/evidence/failure-diagnostic.json
   rm -f apps/extension/TEST-RECEIPT.json apps/extension/INTEGRATION-BLOCKER.json
-  rm -f docs/evidence/password-access/browser.json docs/evidence/protected-flow/browser.json
+  rm -f docs/evidence/password-access/browser.json docs/evidence/protected-flow/browser.json \
+    docs/evidence/password-broker/browser.json docs/evidence/transfer-broker/browser.json
 }
 
 source_checks() {

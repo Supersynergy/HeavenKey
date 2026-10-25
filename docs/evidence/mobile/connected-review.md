@@ -87,3 +87,22 @@ No Git commit/push, runtime or device job, network call, dependency operation or
 
 
 The additional independent audit approved one exact historical fingerprint for the preceding public audit-report digest. The current ignore file contains 197 exact entries; no broad exclusion was added. The redundant JSON field was removed to prevent repeating this false positive.
+
+
+## Public repository CI migration review
+
+# HeavenKey public CI final source review
+
+Approved for the six exact source hashes in public-ci-review-final.json. No unresolved P1/P2 finding remains in this public CI migration. This supersedes the rejected source approval in public-ci-review.json; the earlier report remains intact. No hosted CI pass is claimed.
+
+Both jobs now identify the fresh-evidence preparation step and require its successful outcome before running the always export step. The public preparation runs immediately after checkout, before tool installation. A checkout or cleanup failure therefore cannot trigger an export of older results. A later failure may export current partial diagnostics while the overall job remains failed.
+
+The prepare helper now removes password-broker/browser.json and transfer-broker/browser.json in addition to its previous generated receipt paths. These cover all exported historical fixture locations. The new regression creates historical success inputs in a disposable fixture, runs the real prepare command, and exercises the real exporter with only its output destination redirected. The supplied red log exports two stale successes and fails its empty-manifest assertion. The green log exports zero files and passes. This is executed evidence for the reported failure path, rather than a hosted-run result. The reviewer inspected the test and parsed its Python syntax; it was not rerun because this review prohibits Git mutations, including the regression's disposable Git fixture.
+
+README now describes the repository as public with downloads under Releases. The obsolete private-repository help panel remains removed. The application module, hosted installer, trusted private installer, exporter and private CLI file are unchanged from the previously reviewed hashes. In particular, the CLI's private-repository and admin-authorization guard is retained.
+
+The earlier isolation and integrity findings carry forward. Public workflows use the standard ARM64 hosted runner with contents:read and no persisted checkout credentials, supplied secrets, host mounts, cache or artifact-upload action. The self-hosted path is private-gated. All action references remain exact SHA pins. The three hosted tool archive checksums match the existing trusted installer definitions, and integrity checks run before extraction or execution. Locked dependency installation, disabled Bun lifecycle scripts, bounded downloads/stages and failure propagation remain in place.
+
+The reviewer executed current actionlint successfully, Bash syntax checks for both shell scripts, and Shellcheck for hosted_public.sh. All exited zero without findings. The three supplied input digests match. The JSON binds the current six source files and this report by SHA256; source hashes were checked again after report creation.
+
+No Git mutation, network request, native job, build, dependency installation or workflow dispatch occurred in this review. Passing source checks and the supplied isolated regression do not establish a successful GitHub-hosted run. Current hosted CI execution, release packaging and public downloads remain separate integration gates.
