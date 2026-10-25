@@ -1,0 +1,25 @@
+   Compiling tokio v1.53.3
+   Compiling slab v0.4.12
+   Compiling futures-sink v0.3.34
+   Compiling equivalent v1.0.3
+   Compiling indexmap v2.14.2
+   Compiling fnv v1.0.7
+   Compiling futures-channel v0.3.34
+   Compiling futures-util v0.3.34
+   Compiling tokio-openssl v0.6.5
+   Compiling fs-err v3.3.2
+   Compiling arc-swap v1.9.3
+   Compiling either v1.19.0
+   Compiling uac-api v0.25.0 (/Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/api)
+   Compiling uac-keystore v0.25.0 (/Users/master/Documents/Codex/work/heavenkey-ci-20261012/crates/keystore)
+   Compiling uac-verifier v0.25.0 (/Users/master/Documents/Codex/work/heavenkey-ci-20261012/crates/verifier)
+   Compiling uac-recovery v0.25.0 (/Users/master/Documents/Codex/work/heavenkey-ci-20261012/crates/recovery)
+   Compiling uac-browser-pipe v0.25.0 (/Users/master/Documents/Codex/work/heavenkey-ci-20261012/crates/browser-pipe)
+   Compiling tokio-util v0.7.20
+   Compiling tower v0.5.3
+   Compiling h2 v0.4.20
+   Compiling hyper v1.12.0
+   Compiling hyper-util v0.1.21
+   Compiling axum-server v0.8.0
+   Compiling axum v0.8.9
+    Finished `release` profile [optimized] target(s) in 51.32s

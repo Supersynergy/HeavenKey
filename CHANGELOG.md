@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.25.0 Vorschau — 2026-10-25
+
+- Gemeinsames Release mit macOS ARM64/Intel, Windows x64, Linux ARM64/x64, Android und Chromium-/Firefox-Erweiterung. Versionsangaben, Download-Verweise und Paket-Manifeste sind zusammengeführt.
+- Desktop und Android ausdrücklich koppeln und Logins sowie Website-Passkeys manuell verschlüsselt abgleichen. Gepinntes TLS, Revisionsgrenzen, Konfliktwahl und Gerätewiderruf schützen den Abgleich; Desktop-Metadaten bleiben erhalten.
+- Website-Passkeys über Android Credential Provider ab Android 14 erstellen und im geprüften Standardbrowser verwenden. Der Desktop bewahrt synchronisierte Schlüssel im verschlüsselten Tresor auf; ein Desktop-Betriebssystemanbieter ist noch nicht enthalten.
+- Gerätebereich in Flutter und Kopplungs-/Abgleichseinstellungen am Desktop. Fehler bei Replay-Historie, parallelen Änderungen und alten Relay-Revisionen sind korrigiert.
+- Android bleibt eine Debug-signierte Testvorschau. iOS, physische Telefonabnahme, Herausgebersignaturen und Produktionsfreigabe stehen aus.
+
+## 0.24.0 Android-Vorschau — 2026-10-25
+
+- Ausdrückliche Einmalfreigabe für die gemeldete HTTPS-Domain vor der Geräteauthentifizierung. Gleiche Domain mit anderen HTTPS-Ports oder Frames wird im Freigabedialog erklärt; vollständige Portprüfung wird nicht behauptet.
+- Aktuelles Brave im Android-Emulator geprüft. Verschlüsselte Login-Sicherung, Systemdateidialoge und Hintergrundsperre bestanden mit synthetischen Daten.
+
+## 0.21.0 Release-Kandidat — 2026-10-23
+
+- Browser-Erweiterungen mit Formularprofilen und einmaligem PRF-Passkey-Entsperrkanal. Vor dem Einfügen werden Website und ausgewählte Felder bestätigt.
+- Gemeinsame Desktop-Ausgaben für macOS, Windows und Linux. Native macOS-Abnahme, Rosetta-, Wine- und QEMU-Prüfungen sind getrennt dokumentiert.
+
 ## 0.20.0
 
 - Tokio 1.53.3 behebt den I/O-Sicherheitsbefund RUSTSEC-2026-0386.

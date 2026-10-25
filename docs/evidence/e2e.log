@@ -136,4 +136,4 @@ PASS ancestor tombstones and descendant denial survive restart
 PASS delegation workbench fits a mobile viewport
 PASS legacy single-passkey database migrates and authenticates with the same key
 PASS legacy credential migration is idempotent across a second restart
-{"total":138,"passed":138,"failed":0,"elapsed_seconds":13.7}
+{"total":138,"passed":138,"failed":0,"elapsed_seconds":14.1}

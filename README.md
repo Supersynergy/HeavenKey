@@ -4,11 +4,11 @@
 
 ![Das ursprüngliche HeavenKey-Motiv: ein Schlüssel vor einem leuchtenden Himmelstor](docs/assets/heavenkey-hero.png)
 
-Passwörter und Formularprofile lokal verwalten. HeavenKey verschlüsselt den Tresor im Browser und speichert ihn auf deinem Computer. Für den Passwortmanager brauchst du weder ein Cloudkonto noch eine Internetverbindung.
+Passwörter auf dem Desktop und auf Android lokal verwalten. HeavenKey verschlüsselt den Tresor auf deinem Gerät. Desktop und Handy lassen sich ausdrücklich koppeln und manuell abgleichen; Android erstellt und verwendet Website-Passkeys. Für den Passwortmanager brauchst du kein Cloudkonto.
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.21.0](https://img.shields.io/badge/version-0.21.0-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.21.0-rc.1)
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.25.0 Vorschau](https://img.shields.io/badge/version-0.25.0_preview-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.25.0-preview.1)
 
-[Downloads](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.21.0-rc.1) · [Einrichtung](docs/DISTRIBUTION.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Dateitransfer](docs/TRANSFER-BROKER.md) · [Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) · [Lizenz](LICENSE)
+[Alle aktuellen Downloads](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.25.0-preview.1) · [Desktop einrichten](docs/DISTRIBUTION.md) · [Handy und Synchronisierung](docs/MOBILE-SYNC-PASSKEYS.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Lizenz](LICENSE)
 
 ![HeavenKey als native macOS-App mit einem synthetischen Testkonto](docs/screenshots/native-macos.png)
 
@@ -20,21 +20,26 @@ Die macOS-App hat ein eigenes Fenster, native Datei-Dialoge und Tastaturmenüs. 
 
 Deine digitalen Türen sollen unter deiner Kontrolle bleiben. Der lokale Tresor bewahrt Passwörter und Formularprofile auf. Beim Ausfüllen entscheidest du, welche Angaben auf welche Seite gelangen. Browser-Verbindungen kannst du im Tresor widerrufen.
 
-Die ursprüngliche Idee steckt jetzt im Passwortmanager: den lokalen Tresor mit einem Passkey entsperren und einzelne Angaben zeitlich begrenzt an einen Empfänger weitergeben. Du wählst die Felder, die Laufzeit und kannst die Freigabe widerrufen. Das getrennte [Zugangslabor](#passkey-zugangslabor) bleibt für weitergehende Experimente erhalten. HeavenKey ist kein Passkey-Anbieter für beliebige Websites. Das Titelbild ist das ursprüngliche Markenmotiv, keine Aufnahme einer Funktion.
+Die ursprüngliche Idee steckt jetzt im Passwortmanager: den lokalen Tresor mit einem Passkey entsperren und einzelne Angaben zeitlich begrenzt an einen Empfänger weitergeben. Du wählst die Felder, die Laufzeit und kannst die Freigabe widerrufen. Android bietet zusätzlich Website-Passkeys über den geprüften Standardbrowser an; der Desktop verwahrt synchronisierte Passkeys im verschlüsselten Tresor. Ein Desktop-Betriebssystemanbieter ist noch nicht enthalten. Das getrennte [Zugangslabor](#passkey-zugangslabor) bleibt für weitergehende Experimente erhalten. Das Titelbild ist das ursprüngliche Markenmotiv, keine Aufnahme einer Funktion.
 
 ## Starten
 
-1. Lade das Paket für deinen Computer aus dem [aktuellen Release](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.21.0-rc.1). Prüfe es mit der dortigen `SHA256SUMS` und entpacke es.
+1. Lade das Paket aus dem [gemeinsamen Release 0.25](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.25.0-preview.1). Prüfe es mit der dortigen `SHA256SUMS` und entpacke Desktop-Pakete vollständig. Die Android-APK wird auf dem Handy installiert.
 2. Öffne auf macOS `HeavenKey.app`. Die App verwaltet ihren lokalen Dienst und zeigt den Tresor im eigenen Fenster. Unter Windows und Linux öffnet der Starter den lokalen Tresor im Browser.
 3. Lege ein Masterpasswort mit mindestens 14 Zeichen fest. Exportiere anschließend eine verschlüsselte Sicherung und prüfe ihre Wiederherstellung.
 
-| Computer | Paket | Starter |
+| System | Paket | Starter |
 | --- | --- | --- |
-| macOS mit Apple Silicon | `HeavenKey-0.21.0-macos-arm64.zip` | `HeavenKey.app` (macOS 14+) |
-| macOS mit Intel-Prozessor | `HeavenKey-0.21.0-macos-x64.zip` | `HeavenKey.app` (macOS 14+) |
-| Windows x64 | `HeavenKey-0.21.0-windows-x64.zip` | `Start HeavenKey.cmd` |
-| Linux x64 | `HeavenKey-0.21.0-linux-x64.tar.gz` | `./start.sh` |
-| Linux ARM64 | `HeavenKey-0.21.0-linux-arm64.tar.gz` | `./start.sh` |
+| macOS mit Apple Silicon | [HeavenKey-0.25.0-macos-arm64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.25.0-preview.1/HeavenKey-0.25.0-macos-arm64.zip) | `HeavenKey.app` (macOS 14+) |
+| macOS mit Intel-Prozessor | [HeavenKey-0.25.0-macos-x64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.25.0-preview.1/HeavenKey-0.25.0-macos-x64.zip) | `HeavenKey.app` (macOS 14+) |
+| Windows x64 | [HeavenKey-0.25.0-windows-x64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.25.0-preview.1/HeavenKey-0.25.0-windows-x64.zip) | `Start HeavenKey.cmd` |
+| Linux x64 | [HeavenKey-0.25.0-linux-x64.tar.gz](https://github.com/Supersynergy/HeavenKey/releases/download/v0.25.0-preview.1/HeavenKey-0.25.0-linux-x64.tar.gz) | `./start.sh` |
+| Linux ARM64 | [HeavenKey-0.25.0-linux-arm64.tar.gz](https://github.com/Supersynergy/HeavenKey/releases/download/v0.25.0-preview.1/HeavenKey-0.25.0-linux-arm64.tar.gz) | `./start.sh` |
+| Android | [HeavenKey-0.25.0-android-preview.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.25.0-preview.1/HeavenKey-0.25.0-android-preview.apk) | Android 11+, Gerätesperre; Website-Passkeys ab Android 14 |
+
+[Chromium-Erweiterung](https://github.com/Supersynergy/HeavenKey/releases/download/v0.25.0-preview.1/HeavenKey-0.25.0-extension-chromium.zip) · [Firefox-Erweiterung](https://github.com/Supersynergy/HeavenKey/releases/download/v0.25.0-preview.1/HeavenKey-0.25.0-extension-firefox.zip) · [SHA256SUMS](https://github.com/Supersynergy/HeavenKey/releases/download/v0.25.0-preview.1/SHA256SUMS)
+
+Alle acht Pakete liegen im selben Release. Android verwendet die unveränderte, im Emulator geprüfte 0.25-APK. Ein iOS-Paket ist noch nicht verfügbar. Dies ist eine Entwicklungsvorschau; Herausgebersignaturen und Produktionsfreigabe stehen aus.
 
 Windows verwendet jetzt denselben OpenSSL-Pfad für SSH-Schlüssel im Speicher wie macOS und Linux. Wine-Kompatibilität und echte Windows-Sicherheitsabnahme sind getrennte Nachweise. Die Pakete sind noch ohne Herausgebersignatur oder Notarisierung.
 
@@ -49,6 +54,7 @@ Für den Tresor genügt ein aktueller Browser. Die optionale Agenten-Sandbox ben
 - **Sicherungen:** den verschlüsselten Tresor exportieren und mit seinem Masterpasswort wiederherstellen. Profile bleiben bei Login-Änderungen und Passwortwechseln erhalten.
 - **Diskrete Ansicht:** private Detailfelder verdecken; bei Bedarf sofort beim Wechsel in den Hintergrund sperren. Ein lokaler Check zeigt kurze oder wiederverwendete Passwörter, ohne einen Datenleckdienst anzufragen.
 - **Passkey-Entsperren:** unter Einstellungen einen PRF-fähigen Passkey hinzufügen, benennen und den bestehenden Tresor damit öffnen. Das Masterpasswort bleibt für Sicherungen, Wiederherstellung und den Rückweg erforderlich.
+- **Handy und Desktop:** mit einem einmaligen Code koppeln und Logins sowie Website-Passkeys über gepinntes TLS verschlüsselt abgleichen. Änderungen werden manuell synchronisiert; Konflikte brauchen eine ausdrückliche Auswahl. [Einrichtung und Sicherung](docs/MOBILE-SYNC-PASSKEYS.md).
 - **Befristete Freigaben:** einzelne Login- oder Profilfelder ausdrücklich auswählen und als verschlüsselte Kopie für fünf Minuten bis sieben Tage freigeben. Der erste Empfänger bindet seinen eigenen Passkey an die Freigabe. Weitere Abrufe erfordern denselben Passkey.
 - **Geschützte Entwürfe:** Person, E-Mail und Vorgang verschlüsselt speichern; vorhandene lokale Profile übernehmen und einen eigenen Agenten nur mit Platzhaltern arbeiten lassen. Gebundene Anmeldungen einzeln bestätigen, ohne Seitenansicht oder Zwischenablage. Den Text lokal prüfen und nach einem eigenen Klick einmal an einen festgelegten Website-Endpunkt senden. Der geschützte Agent sieht weder Klartext noch Website- oder Versandresultat. [Ablauf und Grenzen](docs/PROTECTED-FLOW.md).
 - **Agent-Zugriff:** pro Anmeldung einen Login und die genaue Website freigeben. Der lokale Broker nutzt einen eigenen Browser ohne Zwischenablage; Agenten erhalten eine begrenzte Textansicht. [Einrichtung und Schutzgrenze](docs/AGENT-BROKER.md).
@@ -113,11 +119,11 @@ Geschützte Aufträge übernehmen auf Wunsch ein lokales Formularprofil. Einmali
 
 ## Sicherheit und Grenzen
 
-Das Masterpasswort und der nicht exportierbare Schlüssel bleiben im entsperrten Browser. Der Dienst speichert die verschlüsselte Tresorhülle mit AES-256-GCM; neue Tresore verwenden Argon2id mit 64 MiB Speicher, drei Durchläufen und einer Lane. Bestehende PBKDF2-HMAC-SHA256-Tresore mit 600.000 Iterationen bleiben lesbar. Unter „Masterpasswort ändern“ kannst du sie nach einer Sicherung bewusst neu verschlüsseln; dabei werden Passkeys und Freigaben widerrufen. Alte Sicherungen bleiben im alten Format. Revisionen verhindern stilles Überschreiben aus veralteten Tabs. Der lokale Dienst bindet an Loopback und prüft Host, Origin und sein Prozess- beziehungsweise Kopplungstoken. Details stehen in der [Passwortmanager-Anleitung](docs/PASSWORD-MANAGER.md).
+Das Masterpasswort und der nicht exportierbare Schlüssel bleiben im entsperrten Browser. Der Dienst speichert die verschlüsselte Tresorhülle mit AES-256-GCM; neue Tresore verwenden Argon2id mit 64 MiB Speicher, drei Durchläufen und einer Lane. Bestehende PBKDF2-HMAC-SHA256-Tresore mit 600.000 Iterationen bleiben lesbar. Unter „Masterpasswort ändern“ kannst du sie nach einer Sicherung bewusst neu verschlüsseln; dabei werden Passkeys und Freigaben widerrufen. Alte Sicherungen bleiben im alten Format. Revisionen verhindern stilles Überschreiben aus veralteten Tabs. Die normale Desktop-Oberfläche bindet an Loopback und prüft Host, Origin und ihr Prozess- beziehungsweise Kopplungstoken. Erst eine ausdrückliche Handy-Kopplung öffnet den separaten TLS-Sync-Port im Netzwerk. Details stehen in der [Passwortmanager-Anleitung](docs/PASSWORD-MANAGER.md).
 
 Verlust des Masterpassworts lässt sich nicht durch HeavenKey zurücksetzen. Ein Passkey hilft nur, solange sein verschlüsselter lokaler Umschlag und das Gerät verfügbar sind. Ein Passwortwechsel oder eine gesperrte Wiederherstellung entfernt Passkey-Umschläge und widerruft bestehende Freigaben. Bereits abgerufene Angaben kann ein Empfänger speichern; Ablauf und Widerruf verhindern weitere Serverabrufe. Der vollständige Freigabelink ist vertraulich: Wer ihn zuerst mit einem Passkey beansprucht, wird zum gebundenen Empfänger. JavaScript garantiert keine vollständige physische Speicherlöschung; die Bereinigung der Zwischenablage hängt vom Browser ab. Programme im selben Benutzerkonto und ein kompromittierter Browser gehören zur Vertrauensgrenze.
 
-Die [Release-Abnahme](docs/PASSWORD-MANAGER-VERIFICATION.md) unterscheidet natives Apple Silicon von Rosetta, Wine und QEMU. Die Chromium-Tests verwenden eine ausdrückliche Testfreigabe für localhost; der native Berechtigungsdialog ist nicht automatisiert abgenommen. Firefox wurde auf Paketebene geprüft. Physische Passkeys und ein externes Kryptografie-Audit sind nicht abgenommen. Die Produktionsfreigabe der Handy-App steht aus. Gerätesynchronisation und die Verwaltung von Website-Passkeys sind noch offen. Die responsive Ansicht ersetzt keinen mobilen Credential-Provider.
+Die [Release-Abnahme](docs/RELEASE-0.25.md) unterscheidet natives Apple Silicon von Rosetta, Wine und QEMU. Die Chromium-Tests verwenden eine ausdrückliche Testfreigabe für localhost; der native Berechtigungsdialog der Desktop-Erweiterung ist nicht automatisiert abgenommen. Firefox wurde auf Paketebene geprüft. Android-Synchronisierung und Website-Passkeys sind auf einem API-36-Emulator mit Brave 1.98.60 geprüft; Nachweise stehen im [mobilen Prüfstand](docs/MOBILE-ACCEPTANCE.md). Physische Telefone, iOS und ein externes Kryptografie-Audit bleiben gesonderte Abnahmen. Die Produktionsfreigabe steht aus.
 
 `ACCEPTANCE.json` und `SHA256SUMS` im jeweiligen Release binden die Nachweise an Quellstand und Dateien. Der [Vergleich mit Enpass und 20 weiteren Produkten](docs/PASSWORD-MANAGER-GAPS.md) dokumentiert den früheren Ausgangsstand; er ist kein aktuelles Gesamtranking oder Nachweis eines allgemeinen Funktionsvorsprungs.
 
@@ -150,6 +156,8 @@ just e2e
 
 Der [Startassistent](scripts/first_run.py) baut den Passwortmanager mit `python3 scripts/first_run.py`; `--lab` startet das Zugangslabor. Verwende in Tests ausschließlich synthetische Daten. Das private Repository benötigt eine Zugriffsberechtigung.
 
+Die Binärpakete wurden mit frischen temporären Datenordnern gestartet. Ein vollständiger Quell-Build aus einem neuen Klon ist nicht Teil dieser Paketabnahme.
+
 [Entwicklung](docs/DEVELOPMENT.md) · [API und Sicherheitsverhalten](docs/SPEC.md) · [Änderungen](CHANGELOG.md) · [Sicherheitsmeldungen](SECURITY.md)
 
 ## Lizenz und Rechte
@@ -163,10 +171,12 @@ HeavenKey ist proprietäre Software. Die [HeavenKey Proprietary License 1.0](LIC
 Die [Flutter-App für Android und iPhone](docs/MOBILE.md) ergänzt den Desktop-Tresor
 mit nativer Geräteauthentifizierung und verschlüsselter Sicherung. Android verlangt
 für die gemeldete HTTPS-Domain eine ausdrückliche Einmalfreigabe vor dem Entsperren.
-Die [Android-Vorschau 0.24](https://github.com/Supersynergy/HeavenKey/releases/tag/mobile-v0.24.0-preview.1)
-enthält das APK und SHA256SUMS. Sie verwendet einen Debug-Schlüssel; die signierte
-iOS- und Browser-Geräteabnahme ist offen. Diese Version ist für Testdaten vorgesehen und synchronisiert noch nicht
-mit dem Desktop-Tresor. [Integrationsstand](docs/MIGRATION-20261024.md).
+Die [gemeinsame Vorschau 0.25](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.25.0-preview.1)
+enthält die Android-APK und alle aktuellen Desktop- und Erweiterungspakete.
+Android unterstützt den gekoppelten Desktop-Abgleich sowie Website-Passkeys über
+den geprüften Standardbrowser. Die APK verwendet einen Debug-Schlüssel; iOS und
+physische Telefone stehen aus. Diese Version ist für Testdaten vorgesehen.
+[Einrichtung und Grenzen](docs/MOBILE-SYNC-PASSKEYS.md).
 
 Die [bebilderte Installation](docs/INSTALLATION.md) bleibt ausdrücklich auf
 Desktop-Release 0.12.0 bezogen. Das [Zugangslabor](docs/LAB-INSTALLATION.md) hat eine

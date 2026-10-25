@@ -7,7 +7,7 @@
   "synthetic_fixture_sandbox_override": false,
   "native_hardware": false,
   "binary": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/target/debug/uac-api",
-  "binary_sha256": "6faaf1a1a1a4b08f48c7edd033de12abdb94d500d3bee72e1d48de87b00f82f4",
+  "binary_sha256": "eae4f37da1527b84cc577be4ad02d22d414b64b48bc60ba7735fa517fc62e586",
   "source_sha256": {
     "apps/api/src/password_manager/broker.rs": "ec650a367e90e1024107801239455cd1e3f81fede2a8e354d3bc16f4d3e770ba",
     "apps/api/src/password_manager/browser_executor.rs": "aec99649386b7c65dead7cd0b13d4cfb130584a061d3e58e2a78c550efe9429e",
@@ -203,11 +203,11 @@
   "screenshots": [
     {
       "path": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/docs/evidence/password-broker/screenshots/approval-dark-desktop.png",
-      "sha256": "a7df0ae41f9bb7afaf458067a98b2704edceed9adc0c472839487e5a7342fc94"
+      "sha256": "aeb5e2bc4910140ebf03c21aea7435215369adf9b4f83f4cb512d901a01dec5e"
     },
     {
       "path": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/docs/evidence/password-broker/screenshots/approval-dark-mobile.png",
-      "sha256": "4aee4c5b93a6f244e55f28f1af514e02099d33e3fb462e1ac156421ec92a1e2c"
+      "sha256": "6a2c17175697bf03eb8254f04650b7e8e6d5d4cadb3c523923b113699c7455d4"
     }
   ],
   "login_posts": 7,

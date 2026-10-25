@@ -5,7 +5,7 @@
   "real_chromium": true,
   "native_hardware": false,
   "binary": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/target/debug/uac-api",
-  "binary_sha256": "6faaf1a1a1a4b08f48c7edd033de12abdb94d500d3bee72e1d48de87b00f82f4",
+  "binary_sha256": "eae4f37da1527b84cc577be4ad02d22d414b64b48bc60ba7735fa517fc62e586",
   "source_sha256": {
     "apps/api/src/password_manager/broker/protected.rs": "f05492196b9df8c916542e7ececa1bb672c992eaeea53039c7d5b9bee6eac41a",
     "apps/web/src/passwords-protected.ts": "1abb0a92f00427da5b3a936308acbcc924507e64e2cbd0981337c2f4bcb87a49",
@@ -215,7 +215,7 @@
   "screenshots": [
     {
       "path": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/docs/evidence/protected-flow/screenshots/protected-local-owner-preview.png",
-      "sha256": "b5a418f8060af6e1eff97319904d182cd23ddcb38045d54d71f0eca3cc2113ef"
+      "sha256": "8829e259861f84d5a59426384afdfc6959bbe763432c6309c6c48781c6651802"
     }
   ],
   "login_posts": 2,

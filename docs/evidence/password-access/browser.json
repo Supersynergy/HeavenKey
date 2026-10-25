@@ -1,7 +1,7 @@
 {
   "pass": true,
   "binary": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/target/debug/uac-api",
-  "binary_sha256": "6faaf1a1a1a4b08f48c7edd033de12abdb94d500d3bee72e1d48de87b00f82f4",
+  "binary_sha256": "eae4f37da1527b84cc577be4ad02d22d414b64b48bc60ba7735fa517fc62e586",
   "synthetic_only": true,
   "real_rust": true,
   "real_virtual_webauthn": true,
