@@ -10,14 +10,14 @@ Login-Sicherung bleiben erhalten. Einrichtung und Grenzen stehen unter
 
 ## Android-Vorschau installieren
 
-Das [Release 0.25](https://github.com/Supersynergy/HeavenKey/releases/tag/mobile-v0.25.0-preview.1)
-enthält `HeavenKey-0.25.0-android-preview.apk`, das passende macOS-ARM64-Desktop-Paket
+Das [gemeinsame Release 0.25](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.25.0-preview.1)
+enthält `HeavenKey-0.25.0-android-preview.apk`, alle fünf Desktop-Pakete und beide Erweiterungen
 und `SHA256SUMS`. Lade das APK auf ein
 Android-Gerät und folge dessen Installationsdialog. Erforderlich sind Android
 API 30 oder neuer und eine eingerichtete Gerätesperre. Das APK verwendet einen
 Debug-Schlüssel und ist ausschließlich für Testdaten vorgesehen. Für den Abgleich
-den Desktop aus demselben Release verwenden. Der Desktop-Core führt weiterhin
-die Paketversion 0.21.0; sein Release-Manifest benennt den zugehörigen Quellcommit.
+den Desktop aus demselben Release verwenden. Desktop und Erweiterungen tragen
+jetzt ebenfalls Version 0.25.0; ihre Manifeste benennen den zugehörigen Quellcommit.
 
 ## Funktionen
 

@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "uac-spike",
+      "name": "heavenkey",
       "dependencies": {
         "@noble/hashes": "2.4.0",
       },
@@ -16,7 +16,7 @@
     },
     "apps/web": {
       "name": "heavenkey-web",
-      "version": "0.21.0",
+      "version": "0.25.0",
       "dependencies": {
         "@noble/hashes": "2.4.0",
         "@simplewebauthn/browser": "14.0.0",

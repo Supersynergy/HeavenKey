@@ -72,3 +72,6 @@ _mobile-connected-check:
     bun test apps/web/src/passwords-sync.test.ts
     python3 scripts/mobile_passkey_policy_check.py --evidence /tmp/heavenkey-mobile-policy-check.log
     python3 scripts/mobile_connected_acceptance.py
+
+release-check:
+    python3 scripts/release_acceptance.py --live
