@@ -84,3 +84,6 @@ The scanner input redacts Match and Secret. Review used the immutable commit/fil
 Exactly 14 new commit/file/rule/line fingerprints were appended to .gitleaksignore after checking its original SHA256. All existing bytes and exceptions were preserved. No path, rule, wildcard or blanket exclusion was added. The resulting file contains 196 exact fingerprint entries. The JSON binds its current bytes and this report by SHA256, and records the original ignore hash for provenance.
 
 No Git commit/push, runtime or device job, network call, dependency operation or other implementation edit occurred. This is a bounded historical false-positive classification and suppression audit, without changing the previous onboarding source or runtime approval boundaries.
+
+
+The additional independent audit approved one exact historical fingerprint for the preceding public audit-report digest. The current ignore file contains 197 exact entries; no broad exclusion was added. The redundant JSON field was removed to prevent repeating this false positive.

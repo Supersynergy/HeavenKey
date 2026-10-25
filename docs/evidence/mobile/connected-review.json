@@ -3,7 +3,7 @@
   "version": "0.26.0",
   "scope": "composed source review; runtime receipts separate",
   "source_files": {
-    ".gitleaksignore": "e930b0952dd240fcfab0fd2af4c11465f398ad7dd059f1331f54b946ff62044e",
+    ".gitleaksignore": "a30dcd681dc14bf75d036c9c3d92f66862a1c23bf8f3dcbd429c1985dff9741d",
     "CHANGELOG.md": "8b91145b516241db649e473fb905105bcd45dacf83bac71e7ccd85a66b5a1cb3",
     "Cargo.lock": "7b8a6b3a7b7d5b22f90655f6c8339d64841eed03928e6d96698e004d5b6f767e",
     "Cargo.toml": "9deae833da61e927b80d76f24871984ba87f5a875612bb234e735a4b8f032971",
@@ -96,11 +96,10 @@
     "scripts/onboarding_e2e.ts": "4da0227216f42227dbca13b22235a4b80ccbd1fa879e40563c2afe629133ddb3",
     "scripts/password_manager_e2e.mjs": "9b95121bba905c01d9be58d81f29ce478553b33c4f7cf9f53e1f34e352a2db75"
   },
-  "report_sha256": "a051bd6180e8e08f5073f2d9527e1dba080216075c4a465f989d10902a84d449",
+  "report_sha256": "999f8a049c99a706cf0c13f7f874606e3005917a08dfdfc830705241ff86d4a8",
   "previous_review_commit": "d455603818b227c4f7d8771f9297e111ce4a46ba",
   "previous_review_report_sha256": "b791b34e78dfce42ba1f417d59c718fff1165d1f5601d1d4a2c091fc0f61bfbd",
   "onboarding_review_report_sha256": "60c9cc1eac3a373c43a32368621f77dad541f62be69fa8f351f87234a6df1911",
   "physical_device_acceptance": false,
-  "production_release": false,
-  "secret_audit_report_sha256": "ce65a5a30b199283ee49cb7598e0da406092875b511ead02baf9444f5db53d0e"
+  "production_release": false
 }
