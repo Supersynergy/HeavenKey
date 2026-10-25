@@ -64,6 +64,10 @@ expected_packages |= {
 }
 artifacts = acceptance["artifacts"]
 assert set(artifacts) == expected_packages, "missing or unexpected platform packages"
+assert (
+    artifacts[f"HeavenKey-{version}-android-preview.apk"]["sha256"]
+    == acceptance["android"]["apk_sha256"]
+), "Android APK differs from executed emulator evidence"
 for name, item in artifacts.items():
     path = (ROOT / item["path"]).resolve()
     assert path.is_relative_to(ROOT / "dist") and path.name == name
