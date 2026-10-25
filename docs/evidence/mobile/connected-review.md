@@ -67,3 +67,20 @@ Python AST parsing passed. Seven isolated helper assertions passed with stubbed 
 The remaining runner safeguards were inspected. The serial and owned AVD assertion remain before installation or synthetic app-data clearing. Installed APK bytes must match the candidate hash. Device-credential actions, UI searches, subprocess timeouts and reauthentication sessions remain bounded and synthetic. The old positive receipt is removed at startup; source bindings are checked again before the final success write. The change affects test input handling, without modifying application authentication, persistence, normalization, password replacement, background locking or backup behavior.
 
 The earlier desktop receipt-publication correction and source approval carry forward through unchanged hashes. Runtime evidence is separate. The final Android UI journey is still an integration responsibility; this review does not mark it passed or manufacture its receipt. Current APK acceptance, package assembly, CI and live publication require matching executed evidence. Physical devices, iOS, publisher signatures, professional security audit and production approval retain their previous limits. No provider spending, network calls, implementation edits or Git operations occurred in this review.
+
+
+## Approved exact-fingerprint audit
+
+# HeavenKey onboarding historical secret-scan audit
+
+Approved for the 14 supplied findings at commit d59a194e8b5b494cb2de55d6bbb96990ca255b5b. All are false positives. No unresolved credential or secret was identified in these exact findings. This audit does not clear unrelated history or certify the wider repository.
+
+Eleven findings are source_files JSON values in connected-review.json and desktop-acceptance.json. Each 64-character hexadecimal value was independently compared with SHA256 computed directly from its referenced source Git blob at the exact finding commit. Every comparison matched. The audit JSON records each precise fingerprint, source path, historical receipt blob binding and classification.
+
+Three findings are identical credentialFingerprint values in the synthetic Android passkey receipt at lines 53, 70 and 87. The historical producer scripts/mobile_passkey_e2e.ts defines sha through createHash('sha256'), validates a public-key credential identifier against rawId and the public attested credential ID, and returns sha(payload.id) as credentialFingerprint. The receipt explicitly marks its data synthetic-only. These values fingerprint a public WebAuthn credential identifier; they are not a signing key, private key, bearer secret or device PIN.
+
+The scanner input redacts Match and Secret. Review used the immutable commit/file/line locations and producer trace, rather than guessing the hidden strings. No potential secret or match values were printed. All three input digests match the supplied capsule.
+
+Exactly 14 new commit/file/rule/line fingerprints were appended to .gitleaksignore after checking its original SHA256. All existing bytes and exceptions were preserved. No path, rule, wildcard or blanket exclusion was added. The resulting file contains 196 exact fingerprint entries. The JSON binds its current bytes and this report by SHA256, and records the original ignore hash for provenance.
+
+No Git commit/push, runtime or device job, network call, dependency operation or other implementation edit occurred. This is a bounded historical false-positive classification and suppression audit, without changing the previous onboarding source or runtime approval boundaries.

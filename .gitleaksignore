@@ -185,3 +185,19 @@ ff31ff31541d2a049bd1a2a9ea2dd959f08e6640:docs/vectors/ucan-bridge-v1.json:jwt:63
 
 # Public source hashes in the 0.25 validation log
 423e61578c224ca4ef034d8bc15f1fee6a34a320:docs/evidence/check.log:generic-api-key:1474
+
+# Audited public source and synthetic credential-ID hashes in d59a194 evidence
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/mobile/android-browser-passkeys.json:generic-api-key:53
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/mobile/android-browser-passkeys.json:generic-api-key:70
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/mobile/android-browser-passkeys.json:generic-api-key:87
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/mobile/connected-review.json:generic-api-key:64
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/mobile/connected-review.json:generic-api-key:86
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/mobile/connected-review.json:generic-api-key:88
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/mobile/connected-review.json:generic-api-key:89
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/mobile/connected-review.json:generic-api-key:90
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/mobile/connected-review.json:generic-api-key:97
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/onboarding/desktop-acceptance.json:generic-api-key:10
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/onboarding/desktop-acceptance.json:generic-api-key:11
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/onboarding/desktop-acceptance.json:generic-api-key:12
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/onboarding/desktop-acceptance.json:generic-api-key:8
+d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/onboarding/desktop-acceptance.json:generic-api-key:9
