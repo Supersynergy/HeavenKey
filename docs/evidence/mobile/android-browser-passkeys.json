@@ -8,7 +8,7 @@
   "browser_signers": [
     "9c2db70513515fdbfbbc585b3edf3d7123d4dc67c94ffd306361c1d79bbf18ac"
   ],
-  "apk_sha256": "66a070236893e472f1d7260d1cda3aac97ba78ba14d93894187b8e99888cdb89",
+  "apk_sha256": "83dc872b205b681b42138437c40906c284011062ba6336b8d830e38c595803cd",
   "source_files": {
     "scripts/mobile_passkey_e2e.ts": "754ff4a9aa61f490a1a85cd1c078bfc97a3a3e653be9e9612cf9b7de39ac2105",
     "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/PasskeyStore.kt": "1fa8c58443de2b63dc0c797937433cadb3eabeae426815c6ae845437cc4ea433",
@@ -24,7 +24,7 @@
   "cancellation_rejected": true,
   "wrong_rp_rejected_by_browser": true,
   "app_browser_restart_persistence": true,
-  "mk_observation": "{\"ok\":true,\"url\":\"https://heavenkey.test:8543/\",\"ms\":360,\"delta\":[],\"steps\":[4,3],\"tab\":\"switched 0\",\"value\":\"true\"}\n",
+  "mk_observation": "{\"ok\":true,\"url\":\"https://heavenkey.test:8543/\",\"ms\":410,\"delta\":[{\"role\":\"button\",\"name\":\"Create synthetic passkey\",\"ref\":\"@yi76\"},{\"role\":\"button\",\"name\":\"Use synthetic passkey\",\"ref\":\"@agjn\"}],\"steps\":[6,3],\"tab\":\"switched 1\",\"value\":\"true\"}\n",
   "physical_device_acceptance": false,
   "sync_acceptance": false,
   "synthetic_passkey_retained_for_manual_deletion": true,
@@ -50,7 +50,7 @@
       "terminal": {
         "state": "verified",
         "kind": "create",
-        "credentialFingerprint": "70f6e210596e3c44ee184fd79c573fb5faaf77d4a15fc16f308291f7223af064"
+        "credentialFingerprint": "fc243507d2a761849cffdb2082d0c06bf4343b51008a6c89c571911becfa7a23"
       },
       "observed": [
         "Android selected-provider confirmation",
@@ -67,7 +67,7 @@
       "terminal": {
         "state": "verified",
         "kind": "get",
-        "credentialFingerprint": "70f6e210596e3c44ee184fd79c573fb5faaf77d4a15fc16f308291f7223af064"
+        "credentialFingerprint": "fc243507d2a761849cffdb2082d0c06bf4343b51008a6c89c571911becfa7a23"
       },
       "observed": [
         "Android selected-provider confirmation",
@@ -84,7 +84,7 @@
       "terminal": {
         "state": "verified",
         "kind": "get",
-        "credentialFingerprint": "70f6e210596e3c44ee184fd79c573fb5faaf77d4a15fc16f308291f7223af064"
+        "credentialFingerprint": "fc243507d2a761849cffdb2082d0c06bf4343b51008a6c89c571911becfa7a23"
       },
       "observed": [
         "Android selected-provider confirmation",

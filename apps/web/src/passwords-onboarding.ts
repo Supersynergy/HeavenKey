@@ -47,7 +47,7 @@ export function initOnboarding(ctx: OnboardingContext) {
 		returnFocus = document.activeElement as HTMLElement;
 		refresh();
 		dialog.showModal();
-		get("onboarding-close").focus();
+		get(!ctx.vault() ? "onboarding-vault" : ctx.vault()!.entries.length ? "onboarding-backup" : "onboarding-login").focus();
 	}
 	function go(task: () => void) {
 		close(false);

@@ -1,7 +1,7 @@
 00:00 +0: loading /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/integration_test/native_vault_test.dart
-Running Gradle task 'assembleDebug'...                             13,0s
+Running Gradle task 'assembleDebug'...                             12,5s
 ✓ Built build/app/outputs/flutter-apk/app-debug.apk
-Installing build/app/outputs/flutter-apk/app-debug.apk...          415ms
+Installing build/app/outputs/flutter-apk/app-debug.apk...          431ms
 00:00 +0: actual Android Keystore CRUD, fresh nonce, device auth and background lock
 NATIVE_PHASE_AUTH
 NATIVE_PHASE_AUTH

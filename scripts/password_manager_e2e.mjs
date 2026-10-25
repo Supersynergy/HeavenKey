@@ -140,7 +140,12 @@ try {
   check("invalid later CSV row imports nothing", JSON.stringify(await snapshot()) === JSON.stringify(beforeInvalid));
   await settingsSection("Masterpasswort ändern"); await page.locator("#new-master").fill(newMaster); await page.locator("#new-master-confirm").fill(newMaster); await page.locator("#rekey").click(); await status("Masterpasswort geändert");
   await page.locator("#lock").click(); await ready(); await unlock(master); await status("Passwort falsch"); await unlock(newMaster); await count(2); check("master password change retires old key");
-  await page.locator("[data-testid=edit-entry]").first().click(); await page.locator("#generate").click(); check("generator fills a fresh 24-character password", (await page.locator("#entry-password").inputValue()).length === 24);
+  await page.locator("[data-testid=edit-entry]").first().click();
+  const beforeGeneration = await page.locator("#entry-password").inputValue();
+  await page.locator("#generate").click();
+  check("generator preserves an existing password before confirmation", await page.locator("#entry-password").inputValue() === beforeGeneration);
+  await page.locator("#generate-replace").click();
+  check("confirmed generator fills a fresh 24-character password", (await page.locator("#entry-password").inputValue()).length === 24);
   await page.locator("#cancel-entry").click();
   await stop(); await start(); await page.reload(); await unlock(newMaster); await count(2); check("real process restart preserves encrypted vault");
   const requestsBefore = posts.length;

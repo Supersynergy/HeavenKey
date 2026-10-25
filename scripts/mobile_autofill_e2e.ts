@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const root = resolve(import.meta.dir, '..');
-const candidateApk = process.env.HEAVENKEY_TEST_APK ?? join(root, 'dist/mobile/HeavenKey-0.25.0-android-preview.apk');
+const candidateApk = process.env.HEAVENKEY_TEST_APK ?? join(root, 'dist/mobile/HeavenKey-0.26.0-android-preview.apk');
 const browserPackage = process.env.HEAVENKEY_TEST_BROWSER ?? 'com.brave.browser';
 if (!['com.android.chrome', 'com.brave.browser'].includes(browserPackage)) throw new Error('Unsupported test browser');
 const sdk = process.env.ANDROID_HOME ?? '/opt/homebrew/share/android-commandlinetools';

@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "synthetic_only": true,
+  "apk_sha256": "83dc872b205b681b42138437c40906c284011062ba6336b8d830e38c595803cd",
+  "api": 36,
+  "source_files": {
+    "scripts/mobile_onboarding_e2e.py": "307f014ae0b428e356c9c5891f5e02fce78968158fadd6b0142ee62ce5544ef8",
+    "apps/mobile/lib/main.dart": "8ef86d30c922dcf74e9d7b01efa81c046b0c0045a644bc962e61000436927116",
+    "apps/mobile/lib/website_input.dart": "7d81fe64dd7ddae62b2ec32f9a605e8d14fd3de630ca149eec7a2f9615a6f116",
+    "apps/mobile/lib/vault_entry.dart": "3462682aaabf6346550cd9ab1629abd6cbc476307c1252dad571308405336065",
+    "apps/mobile/lib/vault_controller.dart": "779553f42e766d59f7e91626bddb324ba5c890a918530506b8010525e783d123",
+    "apps/mobile/pubspec.yaml": "7dd263d37d7210a13db5388f2c89c2136f985613ea27b01df88787757395c713",
+    "apps/mobile/pubspec.lock": "ffcdd4478ddf82a8286eca8102c69deb9046abed72d7d838388124669af68eb3"
+  },
+  "actual_device_credential": true,
+  "empty_state_choices": true,
+  "backup_and_desktop_navigation": true,
+  "bare_website_accepted": true,
+  "exact_origin_preview": true,
+  "explicit_http_rejected": true,
+  "existing_password_confirmation": true,
+  "explicit_generation": true,
+  "local_username_suggestion": true,
+  "optional_notes": true,
+  "name_preserved": true,
+  "process_restart_persistence": true,
+  "lock_clears_ui": true,
+  "physical_device_acceptance": false,
+  "human_time_delta_seconds": null,
+  "action_frequency_per_day": null
+}

@@ -1,8 +1,8 @@
 SYNC_DESKTOP_READY
 00:00 +0: loading /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/integration_test/desktop_sync_test.dart
-Running Gradle task 'assembleDebug'...                             11,9s
+Running Gradle task 'assembleDebug'...                             15,5s
 ✓ Built build/app/outputs/flutter-apk/app-debug.apk
-Installing build/app/outputs/flutter-apk/app-debug.apk...          376ms
+Installing build/app/outputs/flutter-apk/app-debug.apk...          429ms
 00:00 +0: actual paired desktop TLS sync, passkeys, deletion and conflict consent
 NATIVE_PHASE_AUTH
 SYNC_PHASE_PAIR
@@ -28,5 +28,5 @@ SYNC_DESKTOP_DONE verify_resolution
 SYNC_PHASE_REVOKE
 SYNC_DESKTOP_DONE revoke
 SYNC_NATIVE_OK
-00:13 +1: (tearDownAll)
-00:14 +1: All tests passed!
+00:16 +1: (tearDownAll)
+00:16 +1: All tests passed!

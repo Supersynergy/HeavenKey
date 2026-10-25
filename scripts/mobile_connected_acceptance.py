@@ -47,7 +47,8 @@ assert sync['physical_device_acceptance'] is False
 autofill = json.loads((evidence / 'android-browser-adaptive.json').read_text())
 sources(autofill['source_files'])
 assert passkeys['apk_sha256'] == autofill['apk_sha256'], 'different normal APKs'
-apk = root / 'dist/mobile/HeavenKey-0.25.0-android-preview.apk'
+version = (root / 'apps/mobile/pubspec.yaml').read_text().split('version: ', 1)[1].split('+', 1)[0].strip()
+apk = root / f'dist/mobile/HeavenKey-{version}-android-preview.apk'
 if apk.is_file():
     assert digest(apk) == passkeys['apk_sha256'], 'candidate APK differs'
 review = json.loads((evidence / 'connected-review.json').read_text())

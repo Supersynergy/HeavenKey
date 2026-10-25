@@ -10,6 +10,7 @@ import { initExtensionUnlock } from "./passwords-extension-unlock";
 import { initPasswordAccess } from "./passwords-access";
 import { initPasswordSharing } from "./passwords-sharing";
 import { initOnboarding } from "./passwords-onboarding";
+import { normalizeWebsite, suggestedUsernames } from "./passwords-entry-assist";
 import { initMobileSync } from "./passwords-mobile-sync";
 import { getPrivacyPreferences, initPrivacy, recordActivity, clearActivities } from "./passwords-privacy";
 const byId = <T extends HTMLElement = HTMLElement>(id: string): T => {
@@ -70,7 +71,7 @@ function setBusy(next: boolean) {
   byId("workspace").setAttribute("aria-busy", String(next));
   passwordAccess?.setBusy(next); passwordSharing?.setBusy(next); passwordBroker?.setBusy(next); transferBroker?.setBusy(next); protectedComposer?.setBusy(next); onboarding?.refresh();
 }
-function clearEditor() { byId("editor-status").textContent = ""; byId("editor-status").hidden = true; form("entry-form").reset(); input("entry-id").value = ""; input("entry-password").type = "password"; byId("reveal-password").setAttribute("aria-pressed", "false"); byId("reveal-password").textContent = "Anzeigen"; byId<HTMLDialogElement>("editor").close(); }
+function clearEditor() { byId("editor-status").textContent = ""; byId("editor-status").hidden = true; form("entry-form").reset(); input("entry-id").value = ""; input("entry-password").type = "password"; input("entry-url").setCustomValidity(""); byId("entry-url-preview").textContent = ""; byId("username-suggestions").replaceChildren(); byId("username-suggestions").hidden = true; byId("generate-confirmation").hidden = true; byId("reveal-password").setAttribute("aria-pressed", "false"); byId("reveal-password").textContent = "Anzeigen"; byId<HTMLDialogElement>("editor").close(); }
 function lock(message = "Tresor gesperrt.", refresh = true) {
   mobileSync?.clear();
   workflows?.clear(); passwordAccess?.clear(); passwordSharing?.clear(); passwordBroker?.clear(); transferBroker?.clear(); protectedComposer?.clear(); onboarding?.clear();
@@ -234,7 +235,7 @@ function detailField(label: string, text: string, buttons: HTMLButtonElement[] =
 function renderDetail(entry?: Login) {
   const detail = byId("detail"); detail.replaceChildren();
   const back = action("Zurück zur Liste", "back-to-list", () => { byId("workspace").classList.remove("show-detail"); byId("entries").querySelector<HTMLButtonElement>("[aria-current=true]")?.focus(); }); back.prepend(createIcon("back")); back.id = "back-to-list"; back.className = "secondary back-to-list"; detail.append(back);
-  if (!entry) { const blank = element("div"); blank.className = "detail-empty"; blank.append(createIcon("vault"),element("h2", vault?.entries.length ? "Kein Login ausgewählt" : "Dein Tresor ist bereit"),element("p", vault?.entries.length ? "Wähle einen Login aus oder erstelle einen neuen Eintrag." : "Mit „Neuer Eintrag“ speicherst du deinen ersten Login. Eine vorhandene Sammlung importierst du in den Einstellungen.")); if (!vault?.entries.length) { const actions = element("div"); actions.className = "actions setup-actions"; const first = action("Ersten Login anlegen", "setup-first-login", () => edit()); first.classList.remove("secondary"); const guide = action("Einrichtung ansehen", "setup-guide", () => onboarding?.open()); actions.append(first, guide); blank.append(actions); } detail.append(blank); return; }
+  if (!entry) { const blank = element("div"); blank.className = "detail-empty"; blank.append(createIcon("vault"),element("h2", vault?.entries.length ? "Kein Login ausgewählt" : "Dein Tresor ist bereit"),element("p", vault?.entries.length ? "Wähle einen Login aus oder erstelle einen neuen Eintrag." : "Mit „Neuer Eintrag“ speicherst du deinen ersten Login. Eine vorhandene Sammlung importierst du in den Einstellungen.")); if (!vault?.entries.length) { const actions = element("div"); actions.className = "actions setup-actions"; const first = action("Ersten Login anlegen", "setup-first-login", () => edit(undefined, true)); first.classList.remove("secondary"); const guide = action("Einrichtung ansehen", "setup-guide", () => onboarding?.open()); const imported = action("Vorhandene Logins importieren", "setup-import", () => { showSettings(); byId<HTMLFormElement>("import-form").closest("details")!.open = true; byId("import-file").focus(); }); actions.append(first, imported, guide); blank.append(actions); } detail.append(blank); return; }
   const discreet = getPrivacyPreferences().discreet;
   const head = element("div"); head.className = "detail-heading";
   const identity = element("div"); identity.className = "detail-identity"; const icon = element("span", entry.title.slice(0,2).toLocaleUpperCase("de")); icon.className = "detail-icon"; icon.setAttribute("aria-hidden", "true");
@@ -267,8 +268,9 @@ function renderDetail(entry?: Login) {
   const share = action("Befristet teilen", "share-entry", () => { if (!getPrivacyPreferences().discreet) passwordSharing?.shareLogin(entry); }); share.disabled = busy || getPrivacyPreferences().discreet; footer.append(share);
   const favorite = action(entry.favorite ? "Favorit entfernen" : "Als Favorit", "toggle-favorite", () => void operation(async run => { if (!vault) return; if (await commit({ ...vault, version: 1, entries: vault.entries.map(item => item.id === entry.id ? { ...item, favorite: !item.favorite } : item) }, run)) { status("Favorit gespeichert."); focusAfter(selectedId ? "detail-title" : "new-entry"); } })); favorite.prepend(createIcon("star")); favorite.setAttribute("aria-pressed", String(entry.favorite));
   const remove = action("Login löschen", "delete-entry", () => { deleting = entry.id; byId("delete-title").textContent = entry.title; byId("delete-dialog-status").textContent = ""; byId("delete-dialog-status").hidden = true; byId<HTMLDialogElement>("delete-dialog").showModal(); }); remove.classList.add("danger"); footer.append(favorite,remove); detail.append(footer);
+  if (vault?.entries.length === 1 && !discreet) { const next = element("aside"); next.className = "onboarding-intro"; next.append(element("h3", "Dein erster Login ist gespeichert"), element("p", "Als Nächstes: eine verschlüsselte Sicherung getrennt aufbewahren. Browser und weitere Geräte richtest du ein, wenn du sie brauchst."), action("Sicherung exportieren", "first-login-backup", () => byId("export-backup").click()), action("Weitere Einrichtung", "first-login-guide", () => onboarding?.open())); detail.append(next); }
 }
-function edit(id?: string) {
+function edit(id?: string, guided = false) {
   if (!vault || busy) return;
   if (getPrivacyPreferences().discreet) { status("Beende die diskrete Ansicht, um Einträge zu bearbeiten."); return; }
   const previous = document.activeElement as HTMLElement;
@@ -279,8 +281,26 @@ function edit(id?: string) {
     for (const name of ["id", "title", "username", "password", "url", "notes", "totp"] as const) (byId(`entry-${name}`) as HTMLInputElement | HTMLTextAreaElement).value = entry[name];
     input("entry-tags").value = entry.tags.join(", "); input("entry-favorite").checked = entry.favorite;
   }
-  byId<HTMLDialogElement>("editor").showModal(); input("entry-title").focus();
+  byId<HTMLDetailsElement>("entry-advanced").open = !guided;
+  const suggestions = byId("username-suggestions");
+  for (const username of suggestedUsernames(vault.entries)) {
+    const button = document.createElement("button"); button.type = "button"; button.className = "secondary"; button.textContent = username;
+    button.addEventListener("click", () => { if (!busy && vault && !value("entry-username")) { input("entry-username").value = username; input("entry-password").focus(); suggestions.hidden = true; } }); suggestions.append(button);
+  }
+  suggestions.hidden = !suggestions.childElementCount || !!value("entry-username");
+  refreshWebsite();
+  byId<HTMLDialogElement>("editor").showModal(); input(guided ? "entry-url" : "entry-title").focus();
 }
+function refreshWebsite(apply = false) {
+  const field = input("entry-url"), website = normalizeWebsite(field.value);
+  field.setCustomValidity(website ? "" : "Gib eine gültige HTTP- oder HTTPS-Website ohne eingebettete Zugangsdaten ein.");
+  byId("entry-url-preview").textContent = website?.url ? `Gespeicherte Webadresse: ${website.url}` : website ? "Optional. Eine Website hilft beim späteren Zuordnen." : "Diese Webadresse ist ungültig. Prüfe Domain und Protokoll.";
+  if (apply && website) { field.value = website.url; if (!value("entry-title").trim() && !value("entry-id")) input("entry-title").value = website.title; }
+}
+input("entry-url").addEventListener("input", () => refreshWebsite());
+input("entry-url").addEventListener("blur", () => refreshWebsite(true));
+input("entry-username").addEventListener("input", () => { byId("username-suggestions").hidden = !!value("entry-username") || !byId("username-suggestions").childElementCount; });
+input("entry-password").addEventListener("input", () => { byId("generate-confirmation").hidden = true; });
 async function showTotp(id: string, row: HTMLElement) {
   const run = generation, entry = vault?.entries.find(item => item.id === id);
   if (!entry || busy || getPrivacyPreferences().discreet) return;
@@ -375,9 +395,17 @@ byId("entries").addEventListener("keydown", event => {
   event.preventDefault(); buttons[Math.max(0,Math.min(buttons.length - 1,index + (event.key === "ArrowDown" ? 1 : -1)))]?.focus();
 });
 byId("reveal-password").addEventListener("click", () => { const reveal = input("entry-password").type === "password"; input("entry-password").type = reveal ? "text" : "password"; byId("reveal-password").setAttribute("aria-pressed", String(reveal)); byId("reveal-password").textContent = reveal ? "Verbergen" : "Anzeigen"; });
-byId("generate").addEventListener("click", () => { try { input("entry-password").value = generatePassword(Number(value("generator-length"))); status("Neues Passwort generiert. Zum Übernehmen verschlüsselt speichern."); } catch (error) { status((error as Error).message, true); } });
+function generateEntryPassword() {
+  if (!vault || busy) return;
+  try { input("entry-password").value = generatePassword(Number(value("generator-length"))); byId("generate-confirmation").hidden = true; status("Passwort generiert. Bei einem bestehenden Konto auch auf der Website ändern; danach verschlüsselt speichern."); input("entry-password").focus(); } catch (error) { status((error as Error).message, true); }
+}
+byId("generate").addEventListener("click", () => { if (value("entry-password")) { byId("generate-confirmation").hidden = false; byId("generate-keep").focus(); } else generateEntryPassword(); });
+byId("generate-replace").addEventListener("click", generateEntryPassword);
+byId("generate-keep").addEventListener("click", () => { byId("generate-confirmation").hidden = true; input("entry-password").focus(); });
 form("entry-form").addEventListener("submit", event => {
   event.preventDefault();
+  refreshWebsite(true);
+  if (!form("entry-form").reportValidity()) return;
   void operation(async run => {
     if (!vault) return;
     const existing = value("entry-id");
@@ -466,7 +494,7 @@ protectedComposer = initProtectedComposer(accessContext, {
   },
 });
 initAccessOverview();
-onboarding = initOnboarding({vault:()=>vault,hasRecord:()=>!!remote,ready:()=>ready,busy:()=>busy,login:()=>edit(),settings:showSettings,backup:()=>byId("export-backup").click()});
+onboarding = initOnboarding({vault:()=>vault,hasRecord:()=>!!remote,ready:()=>ready,busy:()=>busy,login:()=>edit(undefined, true),settings:showSettings,backup:()=>byId("export-backup").click()});
 initBrand();
 initPresentation();
 void load();

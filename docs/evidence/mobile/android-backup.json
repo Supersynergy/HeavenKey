@@ -18,7 +18,7 @@
   "unchanged_merge_skips_write": true,
   "real_file_picker_cancel": true,
   "ios_runtime": false,
-  "test_apk_sha256": "ef94e507fcc7935289353cef593a9c2f096173da968740a1c9960a6ccaa660a0",
+  "test_apk_sha256": "25890e1b7e1b9060b8796ce39a4687da2671c0f4697f22227510568ee136ef5e",
   "source_files": {
     "apps/mobile/android/app/src/main/AndroidManifest.xml": "b4e43a0e5a6bf848ce77538b1d8192d479dafc70f7f8e41c879041b3c0521b51",
     "apps/mobile/android/app/src/main/assets/browser_trust.json": "2261254992e43594e98f51b4cfb825d4e5205119a0373363588eb7b8284e68c5",
@@ -34,15 +34,16 @@
     "apps/mobile/integration_test/backup_native_test.dart": "9a2d4ed49052bcc1ed0d68dbcac24132b3be044690cb040a44e5b1c3debbba0f",
     "apps/mobile/lib/backup_panel.dart": "4a5f4edf07d1943b22e5cac846ac3b048519028932a4b109eb1d34cbf0bb3cbb",
     "apps/mobile/lib/backup_preview.dart": "dea6b07f1c20261a21718956d3fe5e4cc31661206c03ec2f73c63c11c0e1905d",
-    "apps/mobile/lib/main.dart": "e2af828977f37f89712fb749b45e9e43b2d42f55d8c3dcf3d7be4cb3c20c42be",
+    "apps/mobile/lib/main.dart": "8ef86d30c922dcf74e9d7b01efa81c046b0c0045a644bc962e61000436927116",
     "apps/mobile/lib/vault_controller.dart": "779553f42e766d59f7e91626bddb324ba5c890a918530506b8010525e783d123",
     "apps/mobile/lib/vault_entry.dart": "3462682aaabf6346550cd9ab1629abd6cbc476307c1252dad571308405336065",
-    "apps/mobile/pubspec.yaml": "5bc43e268cff1575d917a0879ea2f333ff7de939f875b2b8a8d8a9e8988a75db"
+    "apps/mobile/pubspec.yaml": "7dd263d37d7210a13db5388f2c89c2136f985613ea27b01df88787757395c713"
   },
-  "version": "0.25.0+25",
+  "version": "0.26.0+26",
   "background_clipboard_regression": true,
   "foreign_clipboard_preserved": true,
   "device_authentications": 6,
   "background_test": "31 seconds on Android launcher, then return and input focus; own value absent, foreign value preserved on lock",
-  "native_input_focus_awaited": true
+  "native_input_focus_awaited": true,
+  "executed_log_sha256": "91f4a20a5835d5c96a4561cf6e301e12df6fdfbc3ce37fab819f8790b79a9879"
 }

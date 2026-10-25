@@ -17,10 +17,12 @@
   "browser_signer_verified": true,
   "http_rejected": true,
   "full_field_origin_verified": false,
-  "apk_sha256": "66a070236893e472f1d7260d1cda3aac97ba78ba14d93894187b8e99888cdb89",
+  "apk_sha256": "83dc872b205b681b42138437c40906c284011062ba6336b8d830e38c595803cd",
   "source_files": {
-    "scripts/mobile_autofill_e2e.ts": "7b3aa1b88a7b1a695dff6cf804fca1b52cbb949aa15f08e28590834ccbf2e03b",
+    "scripts/mobile_autofill_e2e.ts": "8a0a1f0855020497c9ca138e61006060a44804838ed80ae7c04037214b34301e",
     "docs/evidence/mobile/test-browser-provenance.json": "ca5f07e1d7a45454209c4e8dc57c8500534ae0a4441d8d97f7636c57f4c8c4f2",
+    "apps/mobile/lib/website_input.dart": "7d81fe64dd7ddae62b2ec32f9a605e8d14fd3de630ca149eec7a2f9615a6f116",
+    "apps/mobile/test/onboarding_test.dart": "d40c6b96167d933565ed1b549a6a1ce16acecd2b84d988ec3f815238391c1e28",
     "apps/mobile/.gitignore": "441eaa1de5b3db9fae056e7503567e9f8dd94173e1389c60f76956abf729015a",
     "apps/mobile/.metadata": "111ca88662a144dcb64aa36b56afadc1c75722d7f71bcf1ef8c9129f56ecd831",
     "apps/mobile/README.md": "a429bec9ea3fac2c6a61bc2b00da5faeec886e21b59b095823dee4eb837fcdb0",
@@ -117,11 +119,11 @@
     "apps/mobile/lib/backup_panel.dart": "4a5f4edf07d1943b22e5cac846ac3b048519028932a4b109eb1d34cbf0bb3cbb",
     "apps/mobile/lib/backup_preview.dart": "dea6b07f1c20261a21718956d3fe5e4cc31661206c03ec2f73c63c11c0e1905d",
     "apps/mobile/lib/connected_panel.dart": "bae2da835b7cbce32dc26cbd0bd6812c16a615a13ae2eb8d6bb06854cc435f48",
-    "apps/mobile/lib/main.dart": "e2af828977f37f89712fb749b45e9e43b2d42f55d8c3dcf3d7be4cb3c20c42be",
+    "apps/mobile/lib/main.dart": "8ef86d30c922dcf74e9d7b01efa81c046b0c0045a644bc962e61000436927116",
     "apps/mobile/lib/vault_controller.dart": "779553f42e766d59f7e91626bddb324ba5c890a918530506b8010525e783d123",
     "apps/mobile/lib/vault_entry.dart": "3462682aaabf6346550cd9ab1629abd6cbc476307c1252dad571308405336065",
     "apps/mobile/pubspec.lock": "ffcdd4478ddf82a8286eca8102c69deb9046abed72d7d838388124669af68eb3",
-    "apps/mobile/pubspec.yaml": "5bc43e268cff1575d917a0879ea2f333ff7de939f875b2b8a8d8a9e8988a75db",
+    "apps/mobile/pubspec.yaml": "7dd263d37d7210a13db5388f2c89c2136f985613ea27b01df88787757395c713",
     "apps/mobile/test/backup_test.dart": "09656bdb2ac3857ebe4d75a772bbfa76a20796ade9efc79f079a2feb9f248222",
     "apps/mobile/test/vault_test.dart": "0d8f6e70d321ecb102c64894275c044664bcb2ff2ef10d19f2e4a9531314bdf1"
   }

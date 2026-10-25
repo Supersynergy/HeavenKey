@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.26.0 Preview
+
+- Vereinfachter erster Login mit vier statt neun gleichzeitig sichtbaren Desktop-Feldern. Website ohne Protokoll wird als HTTPS vorbereitet; eigene Namen bleiben erhalten.
+- Android: Einstieg mit Login-, Sicherungs- und Desktop-Auswahl, genaue Herkunftsvorschau, lokale Nutzernamen und optionale Notizen.
+- Bestätigte Passwortersetzung auf Desktop und Android; Generatorhinweis zur getrennten Änderung beim Website-Konto.
+- Kontextuelle nächste Schritte nach dem ersten Speichern; Schutz-, Import-, Sicherungs- und Kopplungsfreigaben bleiben ausdrücklich.
+
 ## 0.25.0 Vorschau — 2026-10-25
 
 - Gemeinsames Release mit macOS ARM64/Intel, Windows x64, Linux ARM64/x64, Android und Chromium-/Firefox-Erweiterung. Versionsangaben, Download-Verweise und Paket-Manifeste sind zusammengeführt.

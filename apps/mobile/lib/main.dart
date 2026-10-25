@@ -6,6 +6,7 @@ import 'backup_panel.dart';
 import 'connected_panel.dart';
 import 'vault_controller.dart';
 import 'vault_entry.dart';
+import 'website_input.dart';
 
 void main() => runApp(const HeavenKeyApp());
 
@@ -46,7 +47,7 @@ class VaultHome extends StatefulWidget {
 class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
   late final vault = widget.controller ?? VaultController();
   final search = TextEditingController();
-  bool editing = false, covered = false;
+  bool editing = false, covered = false, firstLoginSaved = false;
   VaultEntry? selected;
   int tab = 0;
 
@@ -63,6 +64,7 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
     if (!vault.unlocked) {
       editing = false;
       selected = null;
+      firstLoginSaved = false;
       search.clear();
     }
     setState(() {});
@@ -153,16 +155,24 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
                             ? EntryEditor(
                                 key: ValueKey(selected?.id ?? 'new'),
                                 entry: selected,
+                                usernameHints: vault.entries
+                                    .map((entry) => entry.username)
+                                    .where((value) => value.trim().isNotEmpty)
+                                    .toSet()
+                                    .take(3)
+                                    .toList(),
                                 busy: vault.busy,
                                 onCancel: () => setState(() {
                                   editing = false;
                                   selected = null;
                                 }),
                                 onSave: (entry) async {
+                                  final wasEmpty = vault.entries.isEmpty;
                                   if (await vault.save(entry) && mounted) {
                                     setState(() {
                                       editing = false;
                                       selected = null;
+                                      if (wasEmpty) firstLoginSaved = true;
                                     });
                                   }
                                 },
@@ -305,6 +315,15 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
         label: const Text('Tresor entsperren'),
       ),
       const SizedBox(height: 20),
+      Text(
+        'Tresor öffnen oder zum ersten Mal starten',
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      const SizedBox(height: 8),
+      const Text(
+        'Bestätige deine Gerätesperre. Vorhandene Logins bleiben erhalten. Ist dieser Tresor leer, kannst du einen Login speichern, eine Sicherung wiederherstellen oder deinen Desktop verbinden.',
+      ),
+      const SizedBox(height: 16),
       const Text(
         'Automatische Sperre nach einer Minute und beim Wechsel in den Hintergrund.',
       ),
@@ -329,22 +348,55 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
         ),
       ),
       Expanded(
-        child: entries.isEmpty
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    vault.entries.isEmpty
-                        ? 'Noch keine Logins. Lege deinen ersten Eintrag an.'
-                        : 'Keine passenden Logins.',
+        child: vault.entries.isEmpty
+            ? ListView(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 100),
+                children: [
+                  const Icon(Icons.key_outlined, size: 40),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Dein Tresor ist leer',
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Speichere einen bestehenden Website-Login oder übernimm deine Daten. Alles beginnt mit deiner Auswahl.',
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: vault.busy ? null : () => edit(),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Ersten Login speichern'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: vault.busy
+                        ? null
+                        : () => setState(() => tab = 3),
+                    icon: const Icon(Icons.backup_outlined),
+                    label: const Text('Sicherung wiederherstellen'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: vault.busy
+                        ? null
+                        : () => setState(() => tab = 4),
+                    icon: const Icon(Icons.devices_outlined),
+                    label: const Text('Vom Desktop übernehmen'),
+                  ),
+                ],
+              )
+            : entries.isEmpty
+            ? Center(
+                child: TextButton(
+                  onPressed: () => setState(() => search.clear()),
+                  child: const Text('Keine passenden Logins. Suche leeren'),
                 ),
               )
             : ListView.builder(
                 padding: const EdgeInsets.only(bottom: 96),
-                itemCount: entries.length,
+                itemCount: entries.length + (firstLoginSaved ? 1 : 0),
                 itemBuilder: (context, index) {
-                  final entry = entries[index];
+                  if (firstLoginSaved && index == 0) return firstSaveHelp();
+                  final entry = entries[index - (firstLoginSaved ? 1 : 0)];
                   return ListTile(
                     leading: const CircleAvatar(
                       child: Icon(Icons.key_outlined),
@@ -359,6 +411,43 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
               ),
       ),
     ],
+  );
+
+  Widget firstSaveHelp() => Card(
+    margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Dein erster Login ist gespeichert',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Richte Autofill für den Browser ein und erstelle eine verschlüsselte Sicherung. Speichere den Wiederherstellungsschlüssel getrennt.',
+          ),
+          Wrap(
+            spacing: 8,
+            children: [
+              TextButton(
+                onPressed: () => setState(() => tab = 2),
+                child: const Text('Autofill einrichten'),
+              ),
+              TextButton(
+                onPressed: () => setState(() => tab = 3),
+                child: const Text('Sicherung erstellen'),
+              ),
+              TextButton(
+                onPressed: () => setState(() => firstLoginSaved = false),
+                child: const Text('Hinweis schließen'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
   );
 
   Widget health() {
@@ -443,12 +532,14 @@ class EntryEditor extends StatefulWidget {
     required this.onCancel,
     this.onDelete,
     this.onCopy,
+    this.usernameHints = const [],
   });
   final VaultEntry? entry;
   final bool busy;
   final SaveEntry onSave;
   final VoidCallback onCancel;
   final Future<void> Function()? onDelete, onCopy;
+  final List<String> usernameHints;
   @override
   State<EntryEditor> createState() => _EntryEditorState();
 }
@@ -456,9 +547,7 @@ class EntryEditor extends StatefulWidget {
 class _EntryEditorState extends State<EntryEditor> {
   final form = GlobalKey<FormState>();
   late final title = TextEditingController(text: widget.entry?.title ?? '');
-  late final origin = TextEditingController(
-    text: widget.entry?.origin ?? 'https://',
-  );
+  late final origin = TextEditingController(text: widget.entry?.origin ?? '');
   late final username = TextEditingController(
     text: widget.entry?.username ?? '',
   );
@@ -466,7 +555,52 @@ class _EntryEditorState extends State<EntryEditor> {
     text: widget.entry?.password ?? '',
   );
   late final notes = TextEditingController(text: widget.entry?.notes ?? '');
-  bool reveal = false;
+  bool reveal = false, generated = false;
+  late bool showNotes = notes.text.isNotEmpty;
+
+  String? get storedOrigin {
+    try {
+      return originFromWebsiteInput(origin.text);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  Future<void> generate() async {
+    final previous = password.text;
+    if (previous.isNotEmpty) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Passwort ersetzen?'),
+          content: const Text(
+            'Das eingegebene Passwort wird durch einen zufälligen Wert ersetzt. Dein Konto bei der Website wird dadurch nicht geändert.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Behalten'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Passwort ersetzen'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true ||
+          !mounted ||
+          widget.busy ||
+          password.text != previous) {
+        return;
+      }
+    }
+    setState(() {
+      password.text = generatePassword();
+      generated = true;
+    });
+  }
+
   @override
   void dispose() {
     for (final field in [title, origin, username, password, notes]) {
@@ -479,128 +613,182 @@ class _EntryEditorState extends State<EntryEditor> {
   @override
   Widget build(BuildContext context) => Form(
     key: form,
-    child: ListView(
+    child: SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      children: [
-        Text(
-          widget.entry == null ? 'Neuer Login' : 'Login bearbeiten',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        const SizedBox(height: 20),
-        TextFormField(
-          controller: title,
-          maxLength: 120,
-          decoration: const InputDecoration(labelText: 'Name'),
-          validator: (value) =>
-              value == null || value.trim().isEmpty ? 'Name eingeben.' : null,
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: origin,
-          maxLength: 2048,
-          keyboardType: TextInputType.url,
-          autocorrect: false,
-          decoration: const InputDecoration(
-            labelText: 'HTTPS-Website',
-            hintText: 'https://example.com',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            widget.entry == null ? 'Neuer Login' : 'Login bearbeiten',
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
-          validator: (value) {
-            try {
-              canonicalOrigin(value ?? '');
-              return null;
-            } on FormatException {
-              return 'Gültige HTTPS-Domain ohne Pfad eingeben.';
-            }
-          },
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: username,
-          maxLength: 320,
-          autocorrect: false,
-          enableSuggestions: false,
-          decoration: const InputDecoration(
-            labelText: 'Benutzername oder E-Mail',
+          const SizedBox(height: 20),
+          const Text(
+            'Speichere die Zugangsdaten deines bestehenden Kontos. Ein neues Konto entsteht auf der Website.',
           ),
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: password,
-          maxLength: 1024,
-          obscureText: !reveal,
-          autocorrect: false,
-          enableSuggestions: false,
-          enableIMEPersonalizedLearning: false,
-          decoration: InputDecoration(
-            labelText: 'Passwort',
-            suffixIcon: IconButton(
-              tooltip: reveal ? 'Passwort verbergen' : 'Passwort anzeigen',
-              onPressed: () => setState(() {
-                reveal = !reveal;
-              }),
-              icon: Icon(reveal ? Icons.visibility_off : Icons.visibility),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: title,
+            maxLength: 120,
+            decoration: const InputDecoration(
+              labelText: 'Name',
+              helperText: 'Leer lassen: Website-Domain als Name verwenden.',
+            ),
+            validator: (value) =>
+                (value ?? '').trim().isEmpty &&
+                    storedOrigin != null &&
+                    Uri.parse(storedOrigin!).host.length > 120
+                ? 'Einen Namen mit höchstens 120 Zeichen eingeben.'
+                : null,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: origin,
+            maxLength: 2048,
+            keyboardType: TextInputType.url,
+            autocorrect: false,
+            enableSuggestions: false,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              labelText: 'HTTPS-Website',
+              hintText: 'example.com oder https://example.com/login',
+            ),
+            validator: (value) {
+              try {
+                originFromWebsiteInput(value ?? '');
+                return null;
+              } on FormatException {
+                return 'HTTPS-Domain eingeben, ohne Zugangsdaten oder IP-Adresse.';
+              }
+            },
+          ),
+          if (storedOrigin != null) ...[
+            Text('Gespeichert wird: $storedOrigin'),
+            const Text('Pfad, Suchparameter und Fragment werden weggelassen.'),
+          ],
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: username,
+            maxLength: 320,
+            autocorrect: false,
+            enableSuggestions: false,
+            enableIMEPersonalizedLearning: false,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(
+              labelText: 'Benutzername oder E-Mail',
             ),
           ),
-          validator: (value) => value == null || value.isEmpty
-              ? 'Passwort eingeben oder erzeugen.'
-              : null,
-        ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
+          if (username.text.isEmpty && widget.usernameHints.isNotEmpty) ...[
+            const Text('Benutzernamen aus diesem Tresor auswählen:'),
+            Wrap(
+              spacing: 8,
+              children: [
+                for (final hint in widget.usernameHints)
+                  ActionChip(
+                    label: Text(hint),
+                    onPressed: widget.busy
+                        ? null
+                        : () => setState(() => username.text = hint),
+                  ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: password,
+            maxLength: 1024,
+            obscureText: !reveal,
+            autocorrect: false,
+            enableSuggestions: false,
+            enableIMEPersonalizedLearning: false,
+            onChanged: (_) => setState(() => generated = false),
+            decoration: InputDecoration(
+              labelText: 'Passwort',
+              helperText: 'Das aktuelle Passwort deines Website-Kontos.',
+              helperMaxLines: 2,
+              suffixIcon: IconButton(
+                tooltip: reveal ? 'Passwort verbergen' : 'Passwort anzeigen',
+                onPressed: () => setState(() {
+                  reveal = !reveal;
+                }),
+                icon: Icon(reveal ? Icons.visibility_off : Icons.visibility),
+              ),
+            ),
+            validator: (value) => value == null || value.isEmpty
+                ? 'Passwort eingeben oder erzeugen.'
+                : null,
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: widget.busy ? null : generate,
+              icon: const Icon(Icons.auto_fix_high_outlined),
+              label: const Text('Zufälliges Passwort erzeugen'),
+            ),
+          ),
+          if (generated)
+            const Text(
+              'Ändere das Passwort auch bei der Website. Speichern allein ändert dein Konto nicht.',
+            ),
+          const SizedBox(height: 12),
+          if (!showNotes)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: widget.busy
+                    ? null
+                    : () => setState(() => showNotes = true),
+                icon: const Icon(Icons.notes_outlined),
+                label: const Text('Notiz hinzufügen'),
+              ),
+            ),
+          if (showNotes)
+            TextFormField(
+              controller: notes,
+              maxLength: 4096,
+              maxLines: 3,
+              enableIMEPersonalizedLearning: false,
+              decoration: const InputDecoration(labelText: 'Notizen'),
+            ),
+          const SizedBox(height: 20),
+          FilledButton(
             onPressed: widget.busy
                 ? null
-                : () => setState(() {
-                    password.text = generatePassword();
-                  }),
-            icon: const Icon(Icons.auto_fix_high_outlined),
-            label: const Text('Zufälliges Passwort erzeugen'),
+                : () async {
+                    if (!form.currentState!.validate()) return;
+                    await widget.onSave(
+                      VaultEntry(
+                        id: widget.entry?.id ?? newEntryId(),
+                        title: title.text.trim().isEmpty
+                            ? Uri.parse(storedOrigin!).host
+                            : title.text.trim(),
+                        origin: storedOrigin!,
+                        username: username.text,
+                        password: password.text,
+                        notes: notes.text,
+                        updatedAt: DateTime.now().toUtc().toIso8601String(),
+                      ),
+                    );
+                  },
+            child: const Text('Login speichern'),
           ),
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: notes,
-          maxLength: 4096,
-          maxLines: 3,
-          enableIMEPersonalizedLearning: false,
-          decoration: const InputDecoration(labelText: 'Notizen'),
-        ),
-        const SizedBox(height: 20),
-        FilledButton(
-          onPressed: widget.busy
-              ? null
-              : () async {
-                  if (!form.currentState!.validate()) return;
-                  await widget.onSave(
-                    VaultEntry(
-                      id: widget.entry?.id ?? newEntryId(),
-                      title: title.text.trim(),
-                      origin: canonicalOrigin(origin.text),
-                      username: username.text,
-                      password: password.text,
-                      notes: notes.text,
-                      updatedAt: DateTime.now().toUtc().toIso8601String(),
-                    ),
-                  );
-                },
-          child: const Text('Login speichern'),
-        ),
-        TextButton(
-          onPressed: widget.busy ? null : widget.onCancel,
-          child: const Text('Zurück'),
-        ),
-        if (widget.onCopy != null)
-          OutlinedButton.icon(
-            onPressed: widget.busy ? null : widget.onCopy,
-            icon: const Icon(Icons.copy),
-            label: const Text('Gespeichertes Passwort kopieren'),
-          ),
-        if (widget.onDelete != null)
           TextButton(
-            onPressed: widget.busy ? null : widget.onDelete,
-            child: const Text('Eintrag löschen'),
+            onPressed: widget.busy ? null : widget.onCancel,
+            child: const Text('Zurück'),
           ),
-      ],
+          if (widget.onCopy != null)
+            OutlinedButton.icon(
+              onPressed: widget.busy ? null : widget.onCopy,
+              icon: const Icon(Icons.copy),
+              label: const Text('Gespeichertes Passwort kopieren'),
+            ),
+          if (widget.onDelete != null)
+            TextButton(
+              onPressed: widget.busy ? null : widget.onDelete,
+              child: const Text('Eintrag löschen'),
+            ),
+        ],
+      ),
     ),
   );
 }

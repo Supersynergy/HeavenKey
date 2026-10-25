@@ -18,7 +18,7 @@ source_checks() {
   bun run node_modules/typescript/bin/tsc --noEmit
   bun test apps/web/src/vault.test.ts
   bun test apps/web/src/passwords-crypto.test.ts apps/web/src/passwords-argon2.test.ts apps/web/src/passwords-master-policy.test.ts
-  bun test apps/web/src/passwords-sync.test.ts
+  bun test apps/web/src/passwords-sync.test.ts apps/web/src/passwords-entry-assist.test.ts
   bun test apps/web/src/passwords-privacy.test.ts
   bun test apps/web/src/passwords-profiles.test.ts packages/forms/import-plan.test.ts
   bun test apps/web/src/passwords-access.test.ts apps/web/src/passwords-sharing.test.ts apps/web/src/passwords-broker.test.ts

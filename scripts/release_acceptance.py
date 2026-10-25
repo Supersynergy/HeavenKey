@@ -40,6 +40,7 @@ for name in (
     "android-browser-adaptive.json",
     "android-browser-passkeys.json",
     "android-backup.json",
+    "android-onboarding.json",
 ):
     receipt = json.loads((ROOT / "docs/evidence/mobile" / name).read_text())
     assert receipt["passed"] is True, name
@@ -49,7 +50,12 @@ for name in (
         path = (ROOT / relative).resolve()
         assert path.is_relative_to(ROOT)
         assert hashlib.sha256(path.read_bytes()).hexdigest() == expected, relative
-assert acceptance["android"]["reused_unchanged"] is True
+onboarding = json.loads((ROOT / "docs/evidence/onboarding/desktop-acceptance.json").read_text())
+assert onboarding["passed"] is True and onboarding["real_rust_service"] is True
+assert len(onboarding["visible_editor_fields"]) == 4
+for relative, expected in onboarding["source_files"].items():
+    assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == expected, relative
+assert isinstance(acceptance["android"]["reused_unchanged"], bool)
 assert acceptance["ios_available"] is False
 assert acceptance["production_release"] is False
 

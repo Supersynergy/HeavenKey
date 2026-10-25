@@ -1,11 +1,12 @@
 # HeavenKey Mobile: Prüfstand
 
-Stand: 25. Oktober 2026. Version 0.25.0 ist eine Entwicklungsvorschau für Testdaten.
+Stand: 25. Oktober 2026. Version 0.26.0 ist eine Entwicklungsvorschau für Testdaten.
 
 | Ausgeführt | Ergebnis und Grenze |
 |---|---|
 | Projektprüfungen | `just check` und `just e2e` lokal ausgeführt; Rust, TypeScript, Browser, Abhängigkeiten und Lizenzen grün. GitHub-CI ist ein eigener Nachweis. |
-| Flutter | Statische Analyse und 24 Funktions-/Widgettests. Plattformkanalfehler verwenden einen simulierten Kanal. |
+| Flutter | Statische Analyse und 30 Funktions-/Widgettests. Plattformkanalfehler verwenden einen simulierten Kanal. |
+| Erster Einstieg | Desktop-Journey mit tatsächlichem Rust-Dienst und mk; Android-UI mit Gerätesperre. Sichtbare Felder und Freigaben sind geprüft; menschliche Zeitersparnis bleibt ungemessen. |
 | Android-Regeln | 42 ausgeführte Kotlin-Fälle für HTTPS-Host, Signaturprüfung, Einmalfreigabe, Abbruch, Ablauf und Replay. |
 | Native Android-Sicherung | Echter Keystore und sechs Gerätefreigaben auf API 36; verschlüsseltes Archiv, Fehler ohne Datenverlust, ausdrückliche Konfliktregel, Systemdateidialoge, Abbruch und Hintergrundsperre. |
 | Sicherungsformat | 75 Prüfungen mit WebCrypto und tatsächlich kompiliertem Swift CryptoKit; gegenseitige Entschlüsselung, falscher Schlüssel, manipulierte Daten und Merge-Grenzen. |
@@ -18,7 +19,7 @@ Stand: 25. Oktober 2026. Version 0.25.0 ist eine Entwicklungsvorschau für Testd
 ## Aktuelle Nachweise
 
 `docs/evidence/mobile/android-backup.json`, `android-browser-adaptive.json`,
-`android-browser-passkeys.json` und `android-desktop-sync.json`
+`android-browser-passkeys.json`, `android-desktop-sync.json` und `android-onboarding.json`
 binden die verwendeten Quellen und APKs mit SHA-256. Ihre Protokolle liegen daneben.
 Test-APK und regulärer App-Einstiegspunkt bleiben getrennt. Die Herkunft des
 Browser-APKs, sein Dateihash und die geprüfte Signatur stehen in

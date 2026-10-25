@@ -1,27 +1,11 @@
 {
   "ok": true,
   "url": "http://localhost:18360/passwords/",
-  "ms": 384,
+  "ms": 349,
   "delta": [],
   "steps": [
-    3,
-    1
-  ],
-  "network": [
-    {
-      "s": 200,
-      "m": "GET",
-      "u": "/api/password-broker",
-      "rt": "fetch",
-      "ms": 1
-    },
-    {
-      "s": 200,
-      "m": "GET",
-      "u": "/api/password-broker/protected/workspaces",
-      "rt": "fetch",
-      "ms": 1
-    }
+    4,
+    7
   ],
   "tab": "switched 0",
   "value": "true"
