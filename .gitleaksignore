@@ -182,3 +182,6 @@ ff31ff31541d2a049bd1a2a9ea2dd959f08e6640:docs/vectors/ucan-bridge-v1.json:jwt:23
 ff31ff31541d2a049bd1a2a9ea2dd959f08e6640:docs/vectors/ucan-bridge-v1.json:jwt:2337
 ff31ff31541d2a049bd1a2a9ea2dd959f08e6640:docs/vectors/ucan-bridge-v1.json:jwt:2341
 ff31ff31541d2a049bd1a2a9ea2dd959f08e6640:docs/vectors/ucan-bridge-v1.json:jwt:639
+
+# Public source hashes in the 0.25 validation log
+423e61578c224ca4ef034d8bc15f1fee6a34a320:docs/evidence/check.log:generic-api-key:1474

@@ -2,7 +2,7 @@
   "approved": true,
   "approval_scope": "independent source review; unchanged native implementation and Android APK, version-only Cargo.lock/justfile rebind",
   "source_files": {
-    ".gitleaksignore": "cd94dc33a79ccd1c2e4cc8f85c8415fb7787e0ca94274a61cc6939db18131d50",
+    ".gitleaksignore": "7efaed21257355bc0c5c94046bfa136e4a6694c61c7bf6cc1262acd3bcfe2c42",
     "CHANGELOG.md": "597a02ea0a18c40da580659d27cfb2ff850437edee9c5773c19d19dda6a54ed4",
     "Cargo.lock": "1b9737a638de66c1e0fefb7f2985e21f0d93aa2334161eb23fecbe772fc9300f",
     "Cargo.toml": "c7b2fa038095816dcf10b044747f404fe0802239dd91231b8efb2bc7d77169fe",
@@ -79,8 +79,8 @@
     "scripts/mobile_sync_e2e.ts": "68539ec18c24cc908106404acfb88a75b5123d160710abe3a3c3cce374a7a201",
     "scripts/release_acceptance.py": "3d9b4831a30a5b16ffa872fa217587e7840ef68744368ade4122443e65fa621d"
   },
-  "report_sha256": "ef89a9946ce1679ffd7087ec6fa73ebf213aca7b42c32535e450beac77fdf719",
-  "review_verdict_sha256": "425931210d2d76c662f65f8ab9c3b8deb1464665b4bd29ae27c3feeea7de40e2",
+  "report_sha256": "b791b34e78dfce42ba1f417d59c718fff1165d1f5601d1d4a2c091fc0f61bfbd",
+  "review_verdict_sha256": "7e8b2fbfd3f0698b95c45276c7133ce862be448d1b4f67c70acfab4a87ec7cd1",
   "physical_device_acceptance": false,
   "production_approval": false
 }
