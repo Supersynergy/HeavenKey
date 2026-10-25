@@ -204,3 +204,8 @@ d59a194e8b5b494cb2de55d6bbb96990ca255b5b:docs/evidence/onboarding/desktop-accept
 
 # Public audit-report SHA256 in historical connected review
 1e88e64564e5ed20d742175c741814dbefa94024:docs/evidence/mobile/connected-review.json:generic-api-key:105
+
+# Audited public source hashes in c260dd8 CI evidence
+c260dd80c6a1a9c99e7213f21c5789e5c6ffd264:docs/evidence/mobile/connected-review.json:generic-api-key:89
+c260dd80c6a1a9c99e7213f21c5789e5c6ffd264:docs/evidence/mobile/connected-review.json:generic-api-key:97
+c260dd80c6a1a9c99e7213f21c5789e5c6ffd264:docs/evidence/onboarding/desktop-acceptance.json:generic-api-key:10

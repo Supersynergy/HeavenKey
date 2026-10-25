@@ -106,3 +106,6 @@ The earlier isolation and integrity findings carry forward. Public workflows use
 The reviewer executed current actionlint successfully, Bash syntax checks for both shell scripts, and Shellcheck for hosted_public.sh. All exited zero without findings. The three supplied input digests match. The JSON binds the current six source files and this report by SHA256; source hashes were checked again after report creation.
 
 No Git mutation, network request, native job, build, dependency installation or workflow dispatch occurred in this review. Passing source checks and the supplied isolated regression do not establish a successful GitHub-hosted run. Current hosted CI execution, release packaging and public downloads remain separate integration gates.
+
+
+The final independent scan audit verified three additional public source digests against their exact Git blobs. The current ignore file preserves 200 precise historical entries and has no general exclusion.

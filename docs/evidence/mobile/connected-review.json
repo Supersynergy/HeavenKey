@@ -3,7 +3,7 @@
   "version": "0.26.0",
   "scope": "composed source review; runtime receipts separate",
   "source_files": {
-    ".gitleaksignore": "a30dcd681dc14bf75d036c9c3d92f66862a1c23bf8f3dcbd429c1985dff9741d",
+    ".gitleaksignore": "fe415ca997aef73a690209803dc475150f5952c53a9e72789ecf83bb9c3d57ef",
     "CHANGELOG.md": "8b91145b516241db649e473fb905105bcd45dacf83bac71e7ccd85a66b5a1cb3",
     "Cargo.lock": "7b8a6b3a7b7d5b22f90655f6c8339d64841eed03928e6d96698e004d5b6f767e",
     "Cargo.toml": "9deae833da61e927b80d76f24871984ba87f5a875612bb234e735a4b8f032971",
@@ -99,7 +99,7 @@
     "scripts/ci/hosted_public.sh": "58bc7f8536cc6519ace66ecd7d0927e1d9c450dd9d81662e664cbae51462c34d",
     "scripts/test_ci_evidence.py": "837501bfa3924297fbaed53ca8ac24125e20f6ea9bd302cffaf0d0fc99a55f31"
   },
-  "report_sha256": "ecedea241a6d7ae48fb7c6af31c73aa5ab8b5bbfe1dfd922d76399c72ee211ba",
+  "report_sha256": "be28e45694997548e76ffc808172c3c8bab30fc5ec098b31e83478109cde13ea",
   "previous_review_commit": "d455603818b227c4f7d8771f9297e111ce4a46ba",
   "previous_review_report_sha256": "b791b34e78dfce42ba1f417d59c718fff1165d1f5601d1d4a2c091fc0f61bfbd",
   "onboarding_review_report_sha256": "60c9cc1eac3a373c43a32368621f77dad541f62be69fa8f351f87234a6df1911",
