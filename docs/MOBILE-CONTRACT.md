@@ -1,10 +1,15 @@
 # HeavenKey mobile platform contract
 
 Flutter owns the interface; native code owns encrypted storage, device authentication,
-clipboard expiry and browser credential delivery. No network, analytics, account,
-custom cryptography, plaintext export or automatic desktop vault conversion.
-The existing Argon2id desktop vault remains unchanged.
+clipboard expiry and browser credential delivery. Android additionally supports
+explicitly paired, certificate-pinned TLS synchronization of end-to-end encrypted
+snapshots and Website Passkeys through the system Credential Provider API (34+).
+There is no analytics, cloud account, custom signing primitive or plaintext export.
+The desktop vault keeps its Argon2id encryption; its encrypted payload also contains
+paired-device keys, merge baselines and synchronized website-passkey records.
 Portable backups contain ciphertext only and use a separately retained random key.
+The current mobile backup format contains logins. Website passkeys can be recovered
+through the synchronized desktop vault and its encrypted desktop backup.
 
 Channel: `heavenkey/vault`. All errors use a safe code/message without secret values.
 

@@ -13,6 +13,7 @@ uac-keystore = { path = "../../crates/keystore" }
 uac-recovery = { path = "../../crates/recovery" }
 uac-verifier = { path = "../../crates/verifier" }
 axum.workspace = true
+axum-server = { version = "=0.8.0", features = ["tls-openssl"] }
 tokio.workspace = true
 webauthn-rs.workspace = true
 serde.workspace = true

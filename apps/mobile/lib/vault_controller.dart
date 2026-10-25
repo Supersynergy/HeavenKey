@@ -15,6 +15,8 @@ class VaultController extends ChangeNotifier {
   bool unlocked = false, busy = false;
   Map<Object?, Object?> status = {};
   String? error;
+  Map<Object?, Object?> connection = {};
+  List<Map<Object?, Object?>> websitePasskeys = [];
   int _generation = 0;
   Timer? _expiry;
   Timer? _archiveExpiry;
@@ -40,11 +42,12 @@ class VaultController extends ChangeNotifier {
   Future<bool> _perform(
     Future<void> Function(int generation) action, {
     bool backup = false,
+    bool clearError = true,
   }) async {
     if (busy || _disposed) return false;
     final generation = _generation;
     busy = true;
-    error = null;
+    if (clearError) error = null;
     _notify();
     try {
       await action(generation);
@@ -70,6 +73,21 @@ class VaultController extends ChangeNotifier {
         'backup_busy' => 'Eine Sicherungsaktion läuft bereits. Bitte warten.',
         'browser_untrusted' =>
           'Dieser Standardbrowser ist noch nicht freigegeben.',
+        'sync_conflict' => 'Synchronisierungskonflikt. Beide Stände bleiben erhalten. Prüfe die Änderungen auf beiden Geräten.',
+        'sync_conflict_changed' =>
+          'Der Konfliktstand wurde geändert. Bitte die neue Auswahl prüfen.',
+        'sync_certificate_mismatch' => 'Zertifikat stimmt nicht mit der Kopplung überein. Es wurden keine Daten freigegeben.',
+        'sync_denied' =>
+          'Geräteverbindung ist abgelaufen oder wurde am Desktop widerrufen.',
+        'sync_unavailable' => 'Desktop nicht erreichbar. Öffne HeavenKey dort und prüfe das gemeinsame Netzwerk.',
+        'sync_rollback' => 'Der Desktop meldet einen älteren Synchronisierungsstand. Bitte die Verbindung prüfen.',
+        'sync_busy' => 'Eine Synchronisierung läuft bereits.',
+        'sync_already_connected' =>
+          'Zuerst die vorhandene Desktop-Verbindung lokal entfernen.',
+        'invalid_sync_pairing' =>
+          'Kopplungscode ist ungültig. Erzeuge ihn am Desktop erneut.',
+        'passkeys_unavailable' =>
+          'Website-Passkeys benötigen Android 14 oder neuer.',
         'browser_configuration_unavailable' => 'Bitte im Browser die Einstellungen für Autofill öffnen und HeavenKey auswählen.',
         _ => 'Aktion fehlgeschlagen. Der Tresor bleibt geschützt.',
       };
@@ -82,6 +100,15 @@ class VaultController extends ChangeNotifier {
                 'vault_changed',
                 'backup_busy',
                 'cancelled',
+                'sync_conflict',
+                'sync_conflict_changed',
+                'sync_certificate_mismatch',
+                'sync_denied',
+                'sync_unavailable',
+                'sync_rollback',
+                'sync_busy',
+                'sync_already_connected',
+                'invalid_sync_pairing',
               }.contains(failure.code))) {
         return false;
       }
@@ -167,6 +194,77 @@ class VaultController extends ChangeNotifier {
 
   Future<bool> configureBrowser() => _perform((_) async {
     await _channel.invokeMethod<void>('configureBrowser');
+  });
+
+  Future<bool> refreshConnections() => _perform(
+    (generation) async {
+      if (!unlocked) return;
+      final value = await _channel.invokeMapMethod<Object?, Object?>(
+        'connectedStatus',
+      );
+      if (generation == _generation && !_disposed && value != null) {
+        _acceptConnection(value);
+      }
+    },
+    backup: true,
+    clearError: false,
+  );
+
+  void _acceptConnection(Map<Object?, Object?> value) {
+    final keys = value['passkeys'];
+    if (value['connected'] is! bool ||
+        keys is! List ||
+        keys.length > 500 ||
+        keys.any((key) => key is! Map<Object?, Object?>)) {
+      throw const FormatException('Ungültige Geräteinformationen.');
+    }
+    connection = Map.of(value)
+      ..remove('passkeys')
+      ..remove('entries');
+    websitePasskeys = keys
+        .cast<Map<Object?, Object?>>()
+        .map(Map<Object?, Object?>.of)
+        .toList();
+  }
+
+  Future<bool> synchronize({
+    String? code,
+    String? resolution,
+    String? conflictToken,
+  }) => _perform((generation) async {
+    if (!unlocked) throw PlatformException(code: 'locked');
+    final value = await _channel.invokeMapMethod<Object?, Object?>(
+      code == null ? 'syncDesktop' : 'connectDesktop',
+      code == null
+          ? {'resolution': resolution, 'conflictToken': conflictToken}
+          : {'code': code},
+    );
+    if (generation != _generation || _disposed) return;
+    if (value == null) {
+      throw const FormatException('Ungültige Synchronisierung.');
+    }
+    _entries = _parseEntries((value['entries'] as List).cast<Object?>());
+    _acceptConnection(value);
+    final omitted = value['unsupported'];
+    backupNotice = omitted is int && omitted > 0
+        ? 'Synchronisiert. $omitted Desktop-Einträge außerhalb des mobilen Formats bleiben am Desktop erhalten.'
+        : 'Logins und Website-Passkeys synchronisiert.';
+  }, backup: true);
+
+  Future<bool> disconnectDesktop() => _perform((_) async {
+    if (!unlocked) throw PlatformException(code: 'locked');
+    await _channel.invokeMethod<void>('disconnectDesktop');
+    connection = {'connected': false};
+  }, backup: true);
+
+  Future<bool> deleteWebsitePasskey(String id) => _perform((_) async {
+    if (!unlocked) throw PlatformException(code: 'locked');
+    await _channel.invokeMethod<void>('deleteWebsitePasskey', {'id': id});
+    websitePasskeys.removeWhere((key) => key['id'] == id);
+  }, backup: true);
+
+  Future<bool> enablePasskeys() => _perform((_) async {
+    await _channel.invokeMethod<void>('enablePasskeys');
   });
 
   Future<String?> newBackupKey() async {
@@ -334,6 +432,8 @@ class VaultController extends ChangeNotifier {
     _generation++;
     _expiry?.cancel();
     _entries = [];
+    connection = {};
+    websitePasskeys = [];
     unlocked = false;
     if (!keepError) error = null;
     _notify();

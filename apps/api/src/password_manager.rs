@@ -3,6 +3,7 @@ mod access;
 mod broker;
 mod browser_executor;
 mod extension_unlock;
+mod mobile_sync;
 mod transfer;
 
 pub const MAX_BODY: usize = 2 * 1024 * 1024;
@@ -20,6 +21,7 @@ pub struct VaultApp {
     access: Arc<access::Access>,
     broker: Arc<broker::Broker>,
     transfer: Arc<transfer::TransferBroker>,
+    mobile: Arc<mobile_sync::MobileSync>,
 }
 
 #[derive(Default)]
@@ -353,6 +355,11 @@ pub async fn save(
             .map_err(internal)?;
         tx.execute("UPDATE password_shares SET revoked=1", [])
             .map_err(internal)?;
+        tx.execute(
+            "UPDATE mobile_sync SET enabled=0,auth_hash=NULL,record=NULL",
+            [],
+        )
+        .map_err(internal)?;
     }
     tx.execute(
         "INSERT INTO password_manager(id,revision,record) VALUES(1,?1,?2) ON CONFLICT(id) DO UPDATE SET revision=excluded.revision,record=excluded.record",
@@ -564,9 +571,19 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         access,
         broker: Arc::new(broker::Broker::new()),
         transfer: Arc::new(transfer::TransferBroker::new()),
+        mobile: Arc::new(mobile_sync::MobileSync::new(
+            data,
+            port.checked_add(1).ok_or("invalid sync port")?,
+        )),
     };
     broker::Broker::supervise(&app.broker, app.db.clone());
+    if app.mobile.resume(app.clone()).is_err() {
+        eprintln!(
+            "HeavenKey: paired-device TLS listener could not restart; desktop vault remains available."
+        );
+    }
     let shutdown_broker = app.broker.clone();
+    let shutdown_mobile = app.mobile.clone();
     let router = Router::new()
         .route(
             "/",
@@ -610,6 +627,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         .merge(extension_unlock::routes())
         .merge(broker::routes())
         .merge(transfer::routes())
+        .merge(mobile_sync::routes())
         .layer(DefaultBodyLimit::max(MAX_BODY))
         .layer(middleware::from_fn_with_state(app.clone(), guard))
         .with_state(app);
@@ -628,6 +646,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
     axum::serve(listener, router)
         .with_graceful_shutdown(async move {
             shutdown_signal().await;
+            shutdown_mobile.shutdown();
             let _ = tokio::task::spawn_blocking(move || shutdown_broker.shutdown()).await;
         })
         .await?;

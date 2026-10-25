@@ -1,0 +1,100 @@
+{
+  "passed": true,
+  "synthetic_only": true,
+  "real_browser_credential_provider": true,
+  "virtual_authenticator": false,
+  "browser_package": "com.brave.browser",
+  "browser_version": "1.98.60",
+  "browser_signers": [
+    "9c2db70513515fdbfbbc585b3edf3d7123d4dc67c94ffd306361c1d79bbf18ac"
+  ],
+  "apk_sha256": "66a070236893e472f1d7260d1cda3aac97ba78ba14d93894187b8e99888cdb89",
+  "source_files": {
+    "scripts/mobile_passkey_e2e.ts": "754ff4a9aa61f490a1a85cd1c078bfc97a3a3e653be9e9612cf9b7de39ac2105",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/PasskeyStore.kt": "1fa8c58443de2b63dc0c797937433cadb3eabeae426815c6ae845437cc4ea433",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/PasskeyActivity.kt": "741759944a241b053893c6e7944d9e545edd535394d6039c6a232b3c91255399",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/HeavenCredentialProvider.kt": "0d5e56940eab282e4ec6a48a270fd40b88045808d79b31453b3735d44de5a5e3",
+    "apps/mobile/android/app/src/main/assets/browser_trust.json": "2261254992e43594e98f51b4cfb825d4e5205119a0373363588eb7b8284e68c5",
+    "apps/mobile/android/app/build.gradle.kts": "709c5e072b1848203574dc991392b718248257d96ce6a4bd7ecb77024b584efe",
+    "apps/mobile/android/app/src/main/AndroidManifest.xml": "b4e43a0e5a6bf848ce77538b1d8192d479dafc70f7f8e41c879041b3c0521b51"
+  },
+  "origin": "https://heavenkey.test:8543",
+  "registrations": 1,
+  "authentications": 2,
+  "cancellation_rejected": true,
+  "wrong_rp_rejected_by_browser": true,
+  "app_browser_restart_persistence": true,
+  "mk_observation": "{\"ok\":true,\"url\":\"https://heavenkey.test:8543/\",\"ms\":360,\"delta\":[],\"steps\":[4,3],\"tab\":\"switched 0\",\"value\":\"true\"}\n",
+  "physical_device_acceptance": false,
+  "sync_acceptance": false,
+  "synthetic_passkey_retained_for_manual_deletion": true,
+  "events": [
+    {
+      "kind": "create",
+      "terminal": {
+        "state": "error",
+        "kind": "create",
+        "name": "NotAllowedError"
+      },
+      "observed": [
+        "Android selected-provider confirmation",
+        "HeavenKey activity"
+      ]
+    },
+    {
+      "phase": "native_consent_cancellation",
+      "passed": true
+    },
+    {
+      "kind": "create",
+      "terminal": {
+        "state": "verified",
+        "kind": "create",
+        "credentialFingerprint": "70f6e210596e3c44ee184fd79c573fb5faaf77d4a15fc16f308291f7223af064"
+      },
+      "observed": [
+        "Android selected-provider confirmation",
+        "HeavenKey activity",
+        "Device credential authentication"
+      ]
+    },
+    {
+      "phase": "website_registration",
+      "passed": true
+    },
+    {
+      "kind": "get",
+      "terminal": {
+        "state": "verified",
+        "kind": "get",
+        "credentialFingerprint": "70f6e210596e3c44ee184fd79c573fb5faaf77d4a15fc16f308291f7223af064"
+      },
+      "observed": [
+        "Android selected-provider confirmation",
+        "HeavenKey activity",
+        "Device credential authentication"
+      ]
+    },
+    {
+      "phase": "browser_wrong_rp_rejection",
+      "passed": true
+    },
+    {
+      "kind": "get",
+      "terminal": {
+        "state": "verified",
+        "kind": "get",
+        "credentialFingerprint": "70f6e210596e3c44ee184fd79c573fb5faaf77d4a15fc16f308291f7223af064"
+      },
+      "observed": [
+        "Android selected-provider confirmation",
+        "HeavenKey activity",
+        "Device credential authentication"
+      ]
+    },
+    {
+      "phase": "restart_persistence",
+      "passed": true
+    }
+  ]
+}

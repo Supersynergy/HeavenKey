@@ -1,18 +1,23 @@
 # HeavenKey auf Android und iPhone
 
 Die Flutter-App unter `apps/mobile` ergänzt den vorhandenen Desktop-Passwortmanager.
-Diese Entwicklungsversion ist für synthetische Testdaten vorgesehen. Sie hat einen
-eigenen lokalen Speicher; sie synchronisiert den Desktop-Tresor noch nicht.
-Version 0.24.0 ergänzt adaptive Browserfreigaben. Die verschlüsselte Sicherung
-aus Version 0.23 bleibt erhalten.
+Diese Entwicklungsversion ist für synthetische Testdaten vorgesehen. Der
+Quellstand 0.25 ergänzt auf Android die ausdrücklich gekoppelte, verschlüsselte
+Desktop-Synchronisierung und Website-Passkeys. Der Abgleich wird auf beiden
+Seiten manuell gestartet. Die adaptive Passwortfreigabe und die verschlüsselte
+Login-Sicherung bleiben erhalten. Einrichtung und Grenzen stehen unter
+[Desktop-Verbindung und Website-Passkeys](MOBILE-SYNC-PASSKEYS.md).
 
 ## Android-Vorschau installieren
 
-Das [Release 0.24](https://github.com/Supersynergy/HeavenKey/releases/tag/mobile-v0.24.0-preview.1)
-enthält `HeavenKey-0.24.0-android-preview.apk` und `SHA256SUMS`. Lade das APK auf ein
+Das [Release 0.25](https://github.com/Supersynergy/HeavenKey/releases/tag/mobile-v0.25.0-preview.1)
+enthält `HeavenKey-0.25.0-android-preview.apk`, das passende macOS-ARM64-Desktop-Paket
+und `SHA256SUMS`. Lade das APK auf ein
 Android-Gerät und folge dessen Installationsdialog. Erforderlich sind Android
 API 30 oder neuer und eine eingerichtete Gerätesperre. Das APK verwendet einen
-Debug-Schlüssel und ist ausschließlich für Testdaten vorgesehen.
+Debug-Schlüssel und ist ausschließlich für Testdaten vorgesehen. Für den Abgleich
+den Desktop aus demselben Release verwenden. Der Desktop-Core führt weiterhin
+die Paketversion 0.21.0; sein Release-Manifest benennt den zugehörigen Quellcommit.
 
 ## Funktionen
 
@@ -25,8 +30,9 @@ Android verwendet einen authentifizierungspflichtigen AES-GCM-Schlüssel im
 Keystore und eine atomar geschriebene Datei im privaten, vom Backup ausgeschlossenen
 Speicher. iOS verwendet einen gemeinsamen, durch Geräteauthentifizierung geschützten
 Keychain-Eintrag für App und Credential Provider Extension. Die App implementiert
-keine eigenen Verschlüsselungsprimitive. Der vorhandene Argon2id-Desktop-Tresor
-wird dadurch nicht verändert oder automatisch konvertiert.
+keine eigenen Verschlüsselungsprimitive. Die Argon2id-Verschlüsselung des
+Desktop-Tresors bleibt bestehen. Verbindungsschlüssel und Website-Passkeys werden
+in dessen verschlüsseltem Inhalt mitgeführt; sie stehen nicht im Klartext-Relay.
 
 ## Starten
 
@@ -46,6 +52,11 @@ just mobile-check
 just mobile-android
 ```
 
+`just mobile-connected-check` verlangt die aktuellen quellgebundenen Nachweise
+für Android-Abgleich, Browser-Passkeys, Autofill und Sicherung. Für dessen
+JVM-Komponententest einmalig `bun scripts/mobile_policy_deps.ts` ausführen;
+die kleine JSON-Testbibliothek wird vor Verwendung mit SHA-256 geprüft.
+
 Das Debug-APK liegt danach unter
 `apps/mobile/build/app/outputs/flutter-apk/app-debug.apk`. Es verwendet einen
 Debug-Schlüssel und ist kein signiertes Produktionsrelease.
@@ -58,6 +69,9 @@ Die Extension ist als eigenes Target eingebunden und wird in Runner eingebettet.
 Ein Apple-Team oder eine Herausgebersignatur wird im Repository nicht vorgetäuscht.
 
 ## Sicherung und Wiederherstellung
+
+Die mobile Sicherung enthält Logins. Website-Passkeys zusätzlich mit dem Desktop
+synchronisieren und dessen verschlüsselten Tresor sichern.
 
 Im Tab **Sicherung** einen Wiederherstellungsschlüssel erzeugen und getrennt
 aufbewahren. Nach der Bestätigung speichert der Systemdialog eine verschlüsselte
@@ -128,9 +142,10 @@ mit einem aktuellen Android-Browser auf einem Telefon, die native Sicherheitsrev
 und die Abnahme weiterer Browser. Ohne extern gespeicherte Sicherung und den
 zugehörigen Schlüssel können Daten bei Geräteverlust oder entfernter Gerätesperre
 verloren gehen. Deshalb diese Version ausschließlich mit Testdaten verwenden.
-TOTP, Synchronisierung und das Speichern fremder Passkeys sind in der mobilen App
-noch nicht enthalten. Eine Überlegenheit gegenüber anderen Passwortmanagern wurde
-nicht nachgewiesen.
+TOTP ist in der mobilen Oberfläche noch nicht enthalten. Desktop-Abgleich und
+Website-Passkeys gehören zum Android-Quellstand 0.25; Passkey-Nutzung als Anbieter
+des Desktop-Betriebssystems ist damit nicht umgesetzt. Eine Überlegenheit gegenüber
+anderen Passwortmanagern wurde nicht nachgewiesen.
 
 Der abschließende Geräte-Oracle `python3 scripts/mobile_device_acceptance.py`
 bleibt ohne vollständige, zur Quelle passende Plattformbelege rot. Die laufende

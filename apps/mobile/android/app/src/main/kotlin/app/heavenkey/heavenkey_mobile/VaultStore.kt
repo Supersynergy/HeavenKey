@@ -27,10 +27,16 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
+// One in-process boundary for login, passkey and sync-state files. Network work stays outside.
+internal object MobileStoreTransaction {
+    private val LOCK = Any()
+    fun <T> run(action: () -> T): T = synchronized(LOCK) { action() }
+}
+
 internal class VaultStore(private val context: Context) {
     private val file = AtomicFile(File(context.noBackupFilesDir, "heavenkey-v1.aesgcm"))
     private val alias = "heavenkey-vault-v1"
-    private var expires = 0L
+    @Volatile private var expires = 0L
     private var generation = 0
     private var clipboardLabel: String? = null
     private val handler = Handler(Looper.getMainLooper())
@@ -83,10 +89,10 @@ internal class VaultStore(private val context: Context) {
             lock(); throw VaultFailure("locked")
         }
     }
-    fun lock() { generation++; expires = 0; pendingAuthentication?.cancel(); pendingAuthentication = null; clearClipboard() }
-    fun read(): List<JSONObject> {
+    @Synchronized fun lock() { generation++; expires = 0; pendingAuthentication?.cancel(); pendingAuthentication = null; clearClipboard() }
+    fun read(): List<JSONObject> = MobileStoreTransaction.run {
         requireSession()
-        if (!hasStoredData()) return emptyList()
+        if (!hasStoredData()) return@run emptyList()
         try {
             if (file.baseFile.length() > 16 * 1024 * 1024) throw VaultFailure("corrupt_vault")
             val envelope = JSONObject(String(file.readFully(), Charsets.UTF_8))
@@ -100,7 +106,7 @@ internal class VaultStore(private val context: Context) {
             val values = try { JSONArray(String(plaintext, Charsets.UTF_8)) } finally { plaintext.fill(0) }
             if (values.length() > 500) throw VaultFailure("corrupt_vault")
             val ids = mutableSetOf<String>()
-            return (0 until values.length()).map { i -> values.getJSONObject(i).also {
+            return@run (0 until values.length()).map { i -> values.getJSONObject(i).also {
                 OriginPolicy.validate(it)
                 if (!ids.add(it.getString("id"))) throw VaultFailure("corrupt_vault")
             } }
@@ -124,14 +130,50 @@ internal class VaultStore(private val context: Context) {
         try { output.write(payload); file.finishWrite(output) }
         catch (error: Exception) { file.failWrite(output); throw error }
     }
-    fun save(entry: JSONObject) {
+    fun save(entry: JSONObject) = MobileStoreTransaction.run {
         OriginPolicy.validate(entry)
         val values = read().toMutableList()
         val index = values.indexOfFirst { it.getString("id") == entry.getString("id") }
         if (index >= 0) values[index] = entry else values.add(entry)
         write(values)
     }
-    fun delete(id: String) { write(read().filterNot { it.getString("id") == id }) }
+    fun delete(id: String) = MobileStoreTransaction.run { write(read().filterNot { it.getString("id") == id }) }
+    fun replaceEntries(values: List<JSONObject>) = MobileStoreTransaction.run {
+        read()
+        if (values.map { it.getString("id") }.toSet().size != values.size) throw VaultFailure("invalid_entry")
+        write(values)
+    }
+    fun readSyncState(): JSONObject? = MobileStoreTransaction.run {
+        requireSession()
+        val storage = AtomicFile(File(context.noBackupFilesDir, "heavenkey-sync-v1.aesgcm"))
+        if (!listOf("", ".bak", ".new").any { File(storage.baseFile.path + it).exists() }) return@run null
+        if (storage.baseFile.length() > 4 * 1024 * 1024) throw VaultFailure("corrupt_vault")
+        val envelope = JSONObject(String(storage.readFully(), Charsets.UTF_8))
+        if (envelope.getInt("version") != 1) throw VaultFailure("corrupt_vault")
+        val iv = Base64.decode(envelope.getString("iv"), Base64.NO_WRAP)
+        if (iv.size != 12) throw VaultFailure("corrupt_vault")
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, iv))
+        cipher.updateAAD("HeavenKey/mobile-sync-state/v1".toByteArray(Charsets.UTF_8))
+        val bytes = cipher.doFinal(Base64.decode(envelope.getString("ciphertext"), Base64.NO_WRAP))
+        return@run try { JSONObject(String(bytes, Charsets.UTF_8)) } finally { bytes.fill(0) }
+    }
+    fun writeSyncState(state: JSONObject?) = MobileStoreTransaction.run {
+        requireSession()
+        val storage = AtomicFile(File(context.noBackupFilesDir, "heavenkey-sync-v1.aesgcm"))
+        if (state == null) { storage.delete(); return@run }
+        val bytes = state.toString().toByteArray(Charsets.UTF_8)
+        if (bytes.size > 2 * 1024 * 1024) throw VaultFailure("vault_full")
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE, key())
+        cipher.updateAAD("HeavenKey/mobile-sync-state/v1".toByteArray(Charsets.UTF_8))
+        val encrypted = try { cipher.doFinal(bytes) } finally { bytes.fill(0) }
+        val envelope = JSONObject().put("version", 1).put("iv", Base64.encodeToString(cipher.iv, Base64.NO_WRAP))
+            .put("ciphertext", Base64.encodeToString(encrypted, Base64.NO_WRAP)).toString().toByteArray(Charsets.UTF_8)
+        val output = storage.startWrite()
+        try { output.write(envelope); storage.finishWrite(output) }
+        catch (error: Exception) { storage.failWrite(output); throw error }
+    }
     fun newBackupKey(): String { read(); return MobileBackup.newKey() }
     fun copyBackupKey(recoveryKey: String) {
         read()
@@ -155,7 +197,7 @@ internal class VaultStore(private val context: Context) {
             "entries" to incoming.map { entry -> listOf("id", "title", "origin", "username").associateWith { entry.getString(it) } })
     }
     fun restoreBackup(envelope: String, recoveryKey: String, vaultFingerprint: String,
-                      archiveFingerprint: String, replaceExisting: Boolean): List<JSONObject> {
+                      archiveFingerprint: String, replaceExisting: Boolean): List<JSONObject> = MobileStoreTransaction.run {
         val current = read()
         if (MobileBackup.fingerprint(current) != vaultFingerprint ||
             MobileBackup.archiveFingerprint(envelope) != archiveFingerprint) throw BackupFailure("vault_changed")
@@ -163,7 +205,7 @@ internal class VaultStore(private val context: Context) {
         val merged = MobileBackup.merge(current, incoming, replaceExisting)
         requireSession()
         if (MobileBackup.fingerprint(merged) != vaultFingerprint) write(merged)
-        return merged
+        merged
     }
     fun copy(id: String) {
         val entry = read().find { it.getString("id") == id } ?: throw VaultFailure("invalid_entry")

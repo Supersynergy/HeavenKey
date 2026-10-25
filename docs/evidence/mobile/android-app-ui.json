@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "candidate_apk_ui": true,
+  "create": true,
+  "edit": true,
+  "restart_persistence": true,
+  "delete_cancel_and_confirm": true,
+  "http_origin_validation": true,
+  "password_generation_and_copy_feedback": true,
+  "manual_lock": true,
+  "background_lock": true,
+  "device_pin_authentication": true,
+  "screenshot_blocked_by_secure_window": true,
+  "apk_sha256": "66a070236893e472f1d7260d1cda3aac97ba78ba14d93894187b8e99888cdb89",
+  "synthetic_only": true
+}

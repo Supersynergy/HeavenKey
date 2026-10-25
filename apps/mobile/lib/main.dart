@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'backup_panel.dart';
+import 'connected_panel.dart';
 import 'vault_controller.dart';
 import 'vault_entry.dart';
 
@@ -234,6 +235,7 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
                                 1 => health(),
                                 2 => autofill(),
                                 3 => BackupPanel(vault: vault),
+                                4 => ConnectedPanel(vault: vault),
                                 _ => entryList(entries),
                               },
                       ),
@@ -272,6 +274,10 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
                   icon: Icon(Icons.backup_outlined),
                   label: 'Sicherung',
                 ),
+                NavigationDestination(
+                  icon: Icon(Icons.devices_outlined),
+                  label: 'Geräte',
+                ),
               ],
             )
           : null,
@@ -304,7 +310,7 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
       ),
       const SizedBox(height: 12),
       const Text(
-        'Diese mobile Version speichert auf einem Gerät. Synchronisierung und Wiederherstellung aus dem Desktop-Tresor sind noch nicht verfügbar.',
+        'Android: Verbinde deinen Desktop unter Geräte, um Logins und Website-Passkeys verschlüsselt abzugleichen. Sichere deinen Tresor zusätzlich mit einer verschlüsselten Sicherung.',
       ),
     ],
   );

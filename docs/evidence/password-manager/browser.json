@@ -1,7 +1,7 @@
 {
   "pass": true,
-  "binary": "/Users/master/Documents/Codex/work/heavenkey-password-manager-20261016/target/debug/uac-api",
-  "binary_sha256": "bab496aa82661c47e5dd1711e0670cc095aed42dc9e288e616465c58f21011aa",
+  "binary": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/target/debug/uac-api",
+  "binary_sha256": "6faaf1a1a1a4b08f48c7edd033de12abdb94d500d3bee72e1d48de87b00f82f4",
   "cases": [
     {
       "name": "portable startup redirects to local vault without OS keys",
@@ -17,6 +17,146 @@
     },
     {
       "name": "TOTP displayed",
+      "pass": true
+    },
+    {
+      "name": "design: three-pane desktop navigation uses real decrypted login",
+      "pass": true
+    },
+    {
+      "name": "design: keyboard search selects a real entry and exposes field actions",
+      "pass": true
+    },
+    {
+      "name": "design: selected field copies decrypted synthetic password through browser clipboard",
+      "pass": true
+    },
+    {
+      "name": "design: native editor Escape restores focus, selection and search",
+      "pass": true
+    },
+    {
+      "name": "design: A–Z/Z–A, favorites and tag navigation filter encrypted data",
+      "pass": true
+    },
+    {
+      "name": "design: local health computes 4 short/empty entries, 2 reused nonempty passwords and 4 distinct findings without network",
+      "pass": true
+    },
+    {
+      "name": "design: health opens the affected real entry and recomputes counts after encrypted password mutation",
+      "pass": true
+    },
+    {
+      "name": "design: lock clears health findings, names, summary and counter",
+      "pass": true
+    },
+    {
+      "name": "design: removing health fixtures restores the original encrypted vault and clears all findings",
+      "pass": true
+    },
+    {
+      "name": "design: import, encrypted backup, restore and rekey are reachable from settings",
+      "pass": true
+    },
+    {
+      "name": "design: theme survives reload and encrypted vault unlock",
+      "pass": true
+    },
+    {
+      "name": "design: both themes retain 4.5:1 visible vault text contrast immediately on switching",
+      "pass": true
+    },
+    {
+      "name": "design: quick access, settings and profile editor have readable text and distinct controls in both themes",
+      "pass": true
+    },
+    {
+      "name": "design: original embedded cover, keyboard theme toggle and locked recovery layout work through 320px and 200% CSS zoom",
+      "pass": true
+    },
+    {
+      "name": "design: mobile detail/back preserves search at 320/375/414px; no overflow through 1440px",
+      "pass": true
+    },
+    {
+      "name": "design: lock removes selected detail, revealed password and TOTP",
+      "pass": true
+    },
+    {
+      "name": "polish: discreet mode removes private DOM and accessibility values and blocks reveal, edit and TOTP",
+      "pass": true
+    },
+    {
+      "name": "polish: private-value search still works and disabling discreet restores fields with password masked",
+      "pass": true
+    },
+    {
+      "name": "polish: selected 10-second reveal remasks at its deadline under a controlled browser clock",
+      "pass": true
+    },
+    {
+      "name": "polish: selection, filtering, editor and lock cancel reveal and stale timers cannot restore detail",
+      "pass": true
+    },
+    {
+      "name": "polish: default background lock stays at 30 seconds while strict background setting locks immediately",
+      "pass": true
+    },
+    {
+      "name": "polish: privacy preferences persist only settings and concise success clears after six seconds",
+      "pass": true
+    },
+    {
+      "name": "polish: errors persist; diagnostics allow only bounded session metadata and clear removes all events",
+      "pass": true
+    },
+    {
+      "name": "polish: lock clears prior session activity and unlock does not restore it",
+      "pass": true
+    },
+    {
+      "name": "polish: MacIntel UA keycaps, F1/Escape focus, ModK, native ModL, editor ModEnter and CtrlAltL lock",
+      "pass": true
+    },
+    {
+      "name": "polish: Win32 UA keycaps, F1/Escape focus, ModK, native ModL, editor ModEnter and CtrlAltL lock",
+      "pass": true
+    },
+    {
+      "name": "polish: Linux x86_64 UA keycaps, F1/Escape focus, ModK, native ModL, editor ModEnter and CtrlAltL lock",
+      "pass": true
+    },
+    {
+      "name": "workflow: F2 quick access searches real decrypted logins, opens selection and restores focus",
+      "pass": true
+    },
+    {
+      "name": "workflow: profiles are encrypted, preserved by login mutations and unlock, with cleared editor on Escape",
+      "pass": true
+    },
+    {
+      "name": "workflow: profile survives master-key rotation and encrypted backup restoration",
+      "pass": true
+    },
+    {
+      "name": "workflow: app creates a one-use pairing code; revoke immediately removes it",
+      "pass": true
+    },
+    {
+      "name": "workflow: encrypted backup and quick search include profiles; discreet mode blocks profile editing",
+      "pass": true
+    },
+    {
+      "name": "workflow: import preview and cancel write nothing; explicit confirmation commits the entire selection",
+      "pass": true
+    },
+    {
+      "name": "workflow: exact duplicate reimport is idempotent; explicit conflict replacement preserves entry count",
+      "pass": true
+    },
+    {
+      "name": "workflow: lock clears pending import DOM, selected actions and all profile editor values",
       "pass": true
     },
     {
@@ -104,6 +244,10 @@
       "pass": true
     },
     {
+      "name": "locked recovery is reachable without successful unlock",
+      "pass": true
+    },
+    {
       "name": "locked restore with wrong backup password preserves damaged current file",
       "pass": true
     },
@@ -125,6 +269,30 @@
     },
     {
       "name": "invalid-json can be replaced by validated encrypted backup",
+      "pass": true
+    },
+    {
+      "name": "legacy PBKDF2 backup unlocks without automatic rewrite",
+      "pass": true
+    },
+    {
+      "name": "ordinary legacy save preserves PBKDF2 metadata",
+      "pass": true
+    },
+    {
+      "name": "legacy trust marker explains explicit upgrade",
+      "pass": true
+    },
+    {
+      "name": "explicit same-password migration replaces KDF and salt atomically",
+      "pass": true
+    },
+    {
+      "name": "trust marker reports actual Argon2id parameters",
+      "pass": true
+    },
+    {
+      "name": "legacy credential survives Argon2 migration and process restart",
       "pass": true
     },
     {

@@ -1,0 +1,75 @@
+just _mobile-adaptive-check
+just _mobile-backup-check
+bun scripts/mobile_backup_reference.mjs
+{"ok":true,"assertions":75,"crypto":"WebCrypto ↔ compiled Swift CryptoKit","fixture":"docs/vectors/mobile-backup-v1.json","deviceRuntime":false}
+just _mobile-check
+cd apps/mobile && dart format --output=none --set-exit-if-changed lib test integration_test
+Formatted 12 files (0 changed) in 0.08 seconds.
+cd apps/mobile && flutter analyze --no-pub
+Analyzing mobile...                                             
+No issues found! (ran in 3.7s)
+cd apps/mobile && flutter test --no-pub
+00:00 +0: loading /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart
+00:00 +0: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: preview accepts metadata only and rejects inconsistent archives
+00:00 +1: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: HTTPS origin preserves host and nondefault port boundaries
+00:00 +2: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: wrong key and stale restore preserve the current unlocked vault
+00:00 +3: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: wrong key and stale restore preserve the current unlocked vault
+00:00 +4: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: wrong key and stale restore preserve the current unlocked vault
+00:00 +5: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: CRUD persists through the platform and survives a new controller
+00:00 +6: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: CRUD persists through the platform and survives a new controller
+00:00 +7: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: CRUD persists through the platform and survives a new controller
+00:00 +8: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: CRUD persists through the platform and survives a new controller
+00:00 +9: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: lock fences a delayed restoreBackup response
+00:00 +10: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: lock fences a delayed authentication result
+00:00 +11: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: restore binds both fingerprints and preserves conflicts by default
+00:00 +12: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: restore binds both fingerprints and preserves conflicts by default
+00:00 +13: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: cancellation and corrupt storage fail closed without raw error text
+00:00 +14: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: export picker receives ciphertext after native lock and never unlocks
+00:00 +15: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: session expires and removes secrets from the rendered editor
+00:00 +16: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: session expires and removes secrets from the rendered editor
+00:01 +17: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: export requires separate key storage and clears its key on lock
+00:02 +18: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: export requires separate key storage and clears its key on lock
+00:02 +19: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/vault_test.dart: adaptive autofill setup exposes both native setup actions
+00:02 +20: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: backgrounded file picker needs unlock and fences a stale preview
+00:03 +21: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: editing the key invalidates an in-flight preview
+00:03 +22: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: restore needs confirmation and uses replacement=false
+00:03 +23: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/test/backup_test.dart: restore needs confirmation and uses replacement=true
+00:04 +24: All tests passed!
+python3 scripts/mobile_native_gate.py all
+Swift origin and record policy checks passed
+{"passed": true, "kind": "native-source-configuration-and-policy", "checks": ["Android backup disabled", "Android cleartext disabled", "explicit paired TLS synchronization permission", "system-only credential provider binding", "private passkey consent activity", "autofill service system permission", "adaptive browser service enabled", "authentication activity is private", "explicit browser confirmation activity enabled", "Keystore authentication required", "authenticated encryption configured", "atomic private vault and recovery detection", "Android API 30 minimum", "app and extension share one Keychain access group", "credential provider entitlement", "credential provider entitlement", "matching Keychain group substitutions", "actual extension target", "extension embedded in Runner", "shared native sources in target", "shared native sources in target", "device-only user-presence Keychain policy", "authentication cancellation fencing configured", "executed Swift HTTPS origin and record validation"], "signed_ios_build": false, "real_browser_autofill_acceptance": false}
+python3 scripts/mobile_backup_acceptance.py
+Native Android backup and document-picker receipt matched; iOS runtime acceptance separate
+python3 scripts/mobile_origin_check.py
+Native adaptive host scope and one-time grant: 42 cases passed
+Native adaptive scope policy accepted; current browser receipt matched
+bun test apps/web/src/passwords-sync.test.ts
+bun test v1.4.3 (c6da4a4d3)
+
+apps/web/src/passwords-sync.test.ts:
+(pass) three-way sync carries additions, edits and deletions without resurrection [0.68ms]
+(pass) simultaneous modification and edit/delete conflicts preserve both inputs [0.11ms]
+(pass) ciphertext authenticates channel, revision, key and contents with fresh IV [1.30ms]
+(pass) desktop rejects an older authenticated relay snapshot after accepting a newer baseline [0.13ms]
+(pass) accepted revision floor survives encrypted desktop vault persistence [1680.17ms]
+
+ 5 pass
+ 0 fail
+ 19 expect() calls
+Ran 5 tests across 1 file. [2.78s]
+python3 scripts/mobile_passkey_policy_check.py --evidence /tmp/heavenkey-mobile-policy-check.log
+PASS replay history expires after 2000 successful operations
+PASS live replay duplicate is rejected
+PASS live history capacity rejects admissions but recovers at exact expiry
+PASS legacy lifetime history migrates without permanent exhaustion
+PASS provider tickets remain single-use, request-bound, expiring and cancelled
+PASS atomic sync preserves concurrent passkey create
+PASS atomic sync preserves concurrent passkey delete
+PASS atomic sync preserves concurrent login save
+PASS atomic sync preserves concurrent login delete
+PASS stale sync state cannot reconnect a disconnected link
+PASS partial local failure preserves durable old baseline for retry
+Production-source JVM component policy accepted; native storage/runtime acceptance separate
+Evidence: /tmp/heavenkey-mobile-policy-check.log
+python3 scripts/mobile_connected_acceptance.py
+Connected Android emulator acceptance matched: browser passkeys, encrypted desktop sync, mk, identical normal APK and independent review; physical devices/iOS separate

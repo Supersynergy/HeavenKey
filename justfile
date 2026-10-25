@@ -63,3 +63,12 @@ mobile-adaptive-check:
 _mobile-adaptive-check:
     just _mobile-backup-check
     python3 scripts/mobile_origin_check.py
+
+mobile-connected-check:
+    python3 scripts/run.py mobile-connected-check 300 -- just _mobile-connected-check
+
+_mobile-connected-check:
+    just _mobile-adaptive-check
+    bun test apps/web/src/passwords-sync.test.ts
+    python3 scripts/mobile_passkey_policy_check.py --evidence /tmp/heavenkey-mobile-policy-check.log
+    python3 scripts/mobile_connected_acceptance.py

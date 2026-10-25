@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const root = resolve(import.meta.dir, '..');
+const candidateApk = process.env.HEAVENKEY_TEST_APK ?? join(root, 'dist/mobile/HeavenKey-0.25.0-android-preview.apk');
 const browserPackage = process.env.HEAVENKEY_TEST_BROWSER ?? 'com.brave.browser';
 if (!['com.android.chrome', 'com.brave.browser'].includes(browserPackage)) throw new Error('Unsupported test browser');
 const sdk = process.env.ANDROID_HOME ?? '/opt/homebrew/share/android-commandlinetools';
@@ -219,7 +220,7 @@ try {
     check(await expired.locator('#p').inputValue() === '', 'Expired request cannot fill');
     const appSources = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', 'apps/mobile'], {cwd: root, encoding: 'utf8'}).trim().split('\n');
     const sourceFiles = [...new Set(['scripts/mobile_autofill_e2e.ts', 'docs/evidence/mobile/test-browser-provenance.json', ...appSources])];
-    receipt = { passed: true, synthetic_only: true, kind: 'actual Android Autofill and verified browser with pinned synthetic TLS certificate', browser_package: browserPackage, browser: browserVersion, engine_version: context!.browser()?.version(), legacy_test_flag: legacyTestFlag ? legacyFeature : null, current_phone_browser_acceptance: false, explicit_host_consent_before_auth: true, no_fill_without_consent: true, same_host_other_port_requires_consent: true, foreign_host_rejected: true, foreign_frame_rejected: true, same_host_frame_requires_consent: true, cancellation_rejected: true, device_authentication_cancelled: true, browser_signer_verified: true, http_rejected: true, full_field_origin_verified: false, apk_sha256: createHash('sha256').update(readFileSync(join(root, 'dist/mobile/HeavenKey-0.24.0-android-preview.apk'))).digest('hex'), source_files: Object.fromEntries(sourceFiles.map(p => [p, createHash('sha256').update(readFileSync(join(root, p))).digest('hex')])) };
+    receipt = { passed: true, synthetic_only: true, kind: 'actual Android Autofill and verified browser with pinned synthetic TLS certificate', browser_package: browserPackage, browser: browserVersion, engine_version: context!.browser()?.version(), legacy_test_flag: legacyTestFlag ? legacyFeature : null, current_phone_browser_acceptance: false, explicit_host_consent_before_auth: true, no_fill_without_consent: true, same_host_other_port_requires_consent: true, foreign_host_rejected: true, foreign_frame_rejected: true, same_host_frame_requires_consent: true, cancellation_rejected: true, device_authentication_cancelled: true, browser_signer_verified: true, http_rejected: true, full_field_origin_verified: false, apk_sha256: createHash('sha256').update(readFileSync(candidateApk)).digest('hex'), source_files: Object.fromEntries(sourceFiles.map(p => [p, createHash('sha256').update(readFileSync(join(root, p))).digest('hex')])) };
 
   }
  } finally {

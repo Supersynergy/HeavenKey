@@ -1,194 +1,479 @@
 HEAVENKEY_ADVISORIES_OFFLINE=1 bash scripts/ci.sh check
-..........................................ssssssssss
+........sssssssssssss.{"phase": "prepare-image", "cpus": 4, "memory_gib": 6, "timeout_seconds": 900}
+........................sssss............ssssssssss
 ----------------------------------------------------------------------
-Ran 52 tests in 0.206s
+Ran 73 tests in 0.233s
 
-OK (skipped=10)
+OK (skipped=28)
 $ python3 scripts/build_web.py
-Bundled 22 modules in 18ms
+Bundled 22 modules in 4ms
 
   main.js  62.46 KB  (entry point)
 
-bun test v1.4.2 (744846f84)
+Bundled 36 modules in 6ms
+
+  passwords.js  0.34 MB  (entry point)
+
+Bundled 18 modules in 4ms
+
+  share.js  16.30 KB  (entry point)
+
+chromium 0.21.0: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/dist/extension-source-chromium
+firefox 0.21.0: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/dist/extension-source-firefox
+bun test v1.4.3 (c6da4a4d3)
 
 apps/web/src/vault.test.ts:
-(pass) vault rejects wrong key, changed account, wrong credential and modified ciphertext [14.56ms]
-(pass) multiple independent passkeys and offline recovery wrap the same vault key [0.61ms]
+(pass) vault rejects wrong key, changed account, wrong credential and modified ciphertext [1.53ms]
+(pass) multiple independent passkeys and offline recovery wrap the same vault key [0.30ms]
 
  2 pass
  0 fail
  12 expect() calls
-Ran 2 tests across 1 file. [236.00ms]
-bun test v1.4.2 (744846f84)
+Ran 2 tests across 1 file. [317.00ms]
+bun test v1.4.3 (c6da4a4d3)
+
+apps/web/src/passwords-master-policy.test.ts:
+(pass) new vault rejects obvious repeated and common master passwords [0.14ms]
+(pass) legacy weak master still unlocks so the user can rotate without data loss [75.71ms]
+(pass) new policy accepts a long synthetic independent phrase [978.49ms]
+
+apps/web/src/passwords-crypto.test.ts:
+(pass) authenticated encrypted password vault > roundtrip, nonextractable key, fresh IV and salt [1927.72ms]
+(pass) authenticated encrypted password vault > wrong master and modifications fail authentication [2507.44ms]
+(pass) authenticated encrypted password vault > strict envelope bounds reject before key derivation [491.79ms]
+(pass) authenticated encrypted password vault > entry and plaintext bounds [0.21ms]
+(pass) password generator length, alphabet and invalid arguments [0.42ms]
+(pass) RFC6238 appendix B vectors for SHA1/SHA256/SHA512 [0.83ms]
+(pass) CSV Bitwarden and Enpass quoted fields, multiline notes and aliases [0.20ms]
+(pass) CSV invalid final row fails whole import and bounds hold [0.42ms]
+
+apps/web/src/passwords-argon2.test.ts:
+(pass) Argon2id v19 native reference vector decrypts and scheme is authenticated [978.89ms]
+(pass) v2 rejects every unapproved cost, mixed scheme, missing or extra field [0.18ms]
+(pass) fixed legacy backup unlocks with old master and remains legacy on save [78.05ms]
+(pass) Argon2 yields to host tasks, bounds its queue and recovers afterwards [1947.30ms]
+
+ 15 pass
+ 0 fail
+ 360 expect() calls
+Ran 15 tests across 3 files. [9.25s]
+bun test v1.4.3 (c6da4a4d3)
+
+apps/web/src/passwords-sync.test.ts:
+(pass) three-way sync carries additions, edits and deletions without resurrection [0.55ms]
+(pass) simultaneous modification and edit/delete conflicts preserve both inputs [0.08ms]
+(pass) ciphertext authenticates channel, revision, key and contents with fresh IV [1.04ms]
+(pass) desktop rejects an older authenticated relay snapshot after accepting a newer baseline [0.14ms]
+(pass) accepted revision floor survives encrypted desktop vault persistence [988.62ms]
+
+ 5 pass
+ 0 fail
+ 19 expect() calls
+Ran 5 tests across 1 file. [1292.00ms]
+bun test v1.4.3 (c6da4a4d3)
+
+apps/web/src/passwords-privacy.test.ts:
+(pass) strict local privacy metadata > malformed preferences fall back to bounded defaults [0.47ms]
+(pass) strict local privacy metadata > activity accepts only allowed action, state and bounded count [0.14ms]
+(pass) strict local privacy metadata > session ring remains bounded, copies events and clears completely [0.13ms]
+(pass) strict local privacy metadata > diagnostics rebuild strict metadata and exclude caller extras [0.04ms]
+
+ 4 pass
+ 0 fail
+ 48 expect() calls
+Ran 4 tests across 1 file. [255.00ms]
+bun test v1.4.3 (c6da4a4d3)
+
+packages/forms/import-plan.test.ts:
+(pass) duplicates and conflicts are previewed; no mutation until confirmation [0.37ms]
+(pass) explicit replacement retains id and prevents ambiguous double replacement [0.09ms]
+(pass) within-file exact duplicates skip by default; conflicting usernames remain distinct [0.01ms]
+(pass) exact duplicate detection ignores object key order
+
+apps/web/src/passwords-profiles.test.ts:
+(pass) profile payloads require a version old clients reject; login-only vaults retain version1 [0.09ms]
+(pass) form profiles roundtrip inside authenticated vault; values never leave in envelope [985.22ms]
+(pass) old vaults remain valid and bounded profile schema rejects unknown data [0.10ms]
+
+ 7 pass
+ 0 fail
+ 24 expect() calls
+Ran 7 tests across 2 files. [1256.00ms]
+bun test v1.4.3 (c6da4a4d3)
+
+apps/web/src/passwords-broker.test.ts:
+(pass) sealed handoff roundtrips only chosen login, ciphertext binds request/epoch/revision [2.96ms]
+(pass) late guard cancellation prevents sealed result [0.05ms]
+(pass) approval requires exact-origin account plus independent consent; no untrusted markup [34.05ms]
+(pass) cancel clears selection and restores focus while busy [2.72ms]
+(pass) lock during encryption never dispatches approval or retains dialog values [28.04ms]
+(pass) pairing code appears only explicitly and is wiped on settings close [53.61ms]
+(pass) protected approval labels scope, preselects only published source and rejects changed source [1.93ms]
+(pass) protected request with missing bound login cannot approve [1.14ms]
+(pass) concurrent broker unlock callers wait for the same ready lease [29.13ms]
+(pass) revoked protected history without source does not hide a fresh approval [1.20ms]
+
+apps/web/src/passwords-access.test.ts:
+(pass) PRF wrapping binds origin, credential, vault and salt [0.49ms]
+(pass) serialized credential never transports PRF output [0.02ms]
+(pass) generation cancellation prevents wrap operation completion [0.02ms]
+
+apps/web/src/passwords-sharing.test.ts:
+(pass) selected-field snapshot authenticates and binds share id [0.21ms]
+(pass) strict snapshot and fragment bounds [0.11ms]
+(pass) Unix server expiry uses seconds, rejects invalid timestamps [0.02ms]
+
+ 16 pass
+ 0 fail
+ 65 expect() calls
+Ran 16 tests across 3 files. [705.00ms]
+bun test v1.4.3 (c6da4a4d3)
+
+packages/transfers/clients.test.ts:
+(pass) transfer client handoffs > ten clients and ten source-linked providers including netcup [0.17ms]
+(pass) transfer client handoffs > all ten handoffs exclude credential fields and password [0.48ms]
+(pass) transfer client handoffs > unsupported protocol fails rather than downgrades [0.06ms]
+(pass) transfer client handoffs > TLS and host verification remain enabled [0.03ms]
+(pass) transfer client handoffs > lftp export rejects executable interpolation [0.01ms]
+
+packages/transfers/import.test.ts:
+(pass) FileZilla preview retains server metadata and discards passwords and keyfiles [1.14ms]
+(pass) import fails atomically on insecure protocol, DTD, oversized data or malformed XML [0.94ms]
+(pass) FileZilla export has no credentials or private keys, and escapes untrusted labels [0.27ms]
+(pass) transfer schema denies unknown fields, duplicates, invalid auth combinations and paths [0.14ms]
+(pass) optional CA remains backward-compatible, accepts public PEM only for FTPES and never exports it [0.09ms]
+
+apps/web/src/passwords-transfer.test.ts:
+(pass) encrypted approval binds profile, action, exact path and owner epoch/revision with real NUL AAD [2.51ms]
+(pass) put approval includes exact hash and rejects a missing hash [0.58ms]
+(pass) owner WebCrypto key pair uses importable Ed25519 PKCS8 and OpenSSH public key [0.19ms]
+(pass) get approval requires explicit disclosure, renders untrusted text safely and sends only sealed credentials [39.01ms]
+(pass) lock during encryption cancels approval, wipes secret dialog fields and revokes grants [37.64ms]
+(pass) cancel remains available while busy and restores focus [3.93ms]
+(pass) profile editor clears secret inputs on cancel and provider defaults require no fabricated host [2.99ms]
+(pass) profile save delegates transaction to persistence without nesting the owner's busy operation [34.20ms]
+(pass) provider dropdown applies actual provider port and documents restricted access [3.14ms]
+(pass) FTPES owner CA is explicit, saved through vault adapter, shown as own trust and wiped on protocol switch [34.76ms]
+(pass) custom CA stays inside sealed FTPES approval, with system trust explicit when absent [4.03ms]
+
+ 21 pass
+ 0 fail
+ 171 expect() calls
+Ran 21 tests across 3 files. [545.00ms]
+bun test v1.4.3 (c6da4a4d3)
+
+apps/web/src/passwords-ssh.test.ts:
+(pass) vault rejects malformed encrypted SSH identity collections [0.06ms]
+(pass) SSH pair is verified, fingerprinted, and deduplicated independently of label [0.49ms]
+(pass) encrypted backup retains SSH references and refuses orphaned or malformed identities [1050.18ms]
+(pass) only owner-resolved key material enters the existing transfer wire format [0.24ms]
+(pass) connection preview extracts fields without interpreting shell commands or importing credentials [0.11ms]
+(pass) unused SSH removal requires explicit confirmation and cancellation preserves the identity [15.40ms]
+(pass) locking during SSH generation prevents storage and clears the dialog and key list [24.05ms]
+
+ 7 pass
+ 0 fail
+ 42 expect() calls
+Ran 7 tests across 1 file. [1453.00ms]
+bun test v1.4.3 (c6da4a4d3)
+
+packages/protected/schema.test.ts:
+(pass) recipient endpoint is optional, canonical, and retained only in private record [0.49ms]
+(pass) private schema binds exact source and rejects unknown fields, duplicate or missing kinds, ids, oversized originals [0.08ms]
+(pass) published references and deterministic prompt never contain private original values [0.07ms]
+(pass) preview resolves exact allowed tokens once and rejects unknown or malformed tokens, markup, URLs, controls [0.24ms]
+
+apps/web/src/passwords-protected-crypto.test.ts:
+(pass) delivery seals only exact preview content and endpoint with source-bound authenticated metadata [39.92ms]
+
+apps/web/src/passwords-protected.test.ts:
+(pass) composer saves encrypted private model before publishing only pseudonyms, binds fresh revision and protected client [33.87ms]
+(pass) lock during save discards continuation and pagehide clears private fields [31.89ms]
+(pass) save then publish failure reports saved-only state and never backend error body [28.37ms]
+(pass) private originals and optional pseudonym draft roundtrip only inside authenticated vault ciphertext [109.48ms]
+(pass) native optional null fields remain usable and discreet mode clears all private controls [29.28ms]
+(pass) failed encrypted save retains editor values and gives local recovery feedback [28.70ms]
+(pass) typed local profile requires explicit choice, touched errors and polling preserve controls [31.26ms]
+(pass) open composer synchronizes paired clients while retaining explicit valid selection, original fields and focus [2.27ms]
+(pass) owner previews exact content and recipient before a single sealed send, without retry on uncertain dispatch [78.06ms]
+(pass) approval without actual ready website permits local preview but no delivery and epoch refresh clears consent [28.26ms]
+(pass) closed browser after accepted delivery does not claim the still-live owner grant expired [27.76ms]
+
+ 16 pass
+ 0 fail
+ 138 expect() calls
+Ran 16 tests across 3 files. [836.00ms]
+bun test v1.4.3 (c6da4a4d3)
 
 apps/web/src/interface.test.ts:
-(pass) actual interface wires navigation, passkey login, sensitive confirmation and logout [20.12ms]
+(pass) actual interface wires navigation, passkey login, sensitive confirmation and logout [17.72ms]
 
  1 pass
  0 fail
  15 expect() calls
-Ran 1 test across 1 file. [183.00ms]
-bun test v1.4.2 (744846f84)
+Ran 1 test across 1 file. [388.00ms]
+bun test v1.4.3 (c6da4a4d3)
 
 apps/extension/popup.test.ts:
-(pass) popup discards unsafe saved settings, opens the exact destination and stores no session [17.57ms]
+(pass) popup discards unsafe saved settings, opens the exact destination and stores no session [17.81ms]
 
- 1 pass
+apps/extension/unlock-channel.test.ts:
+(pass) one-use channel encrypts only to the requesting key and authenticates origin, revision, salt and request [2.37ms]
+
+ 2 pass
  0 fail
- 5 expect() calls
-Ran 1 test across 1 file. [144.00ms]
+ 16 expect() calls
+Ran 2 tests across 2 files. [392.00ms]
 Extension connection and destination validation passed.
+Production manifest privilege boundaries, complete bundles and reviewed extraction passed.
 {"passed":147,"fixtures":56,"cases":55,"invalid_json":31,"equivalent_json":4,"independent":"Node crypto Ed25519/SHA256 with separate binary encoder"}
 {"passed":108,"fixtures":29,"cases":34,"independent":"Node crypto Ed25519/SHA256 with separate serde_json encoder"}
-    Checking uac-verifier v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/crates/verifier)
-   Compiling uac-api v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/api)
-    Checking uac-keystore v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/crates/keystore)
-    Checking uac-recovery v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/crates/recovery)
-    Checking uac-tenancy v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/crates/tenancy)
-    Checking uac-ucan-bridge v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/crates/ucan-bridge)
-    Checking uac-gate v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/gate)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.10s
-   Compiling uac-api v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/api)
-   Compiling uac-gate v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/gate)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.82s
-     Running unittests src/main.rs (target/debug/build/uac-api/62f39eae976ff416/out/uac_api-62f39eae976ff416)
+   Compiling uac-api v0.21.0 (/Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/api)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.11s
+   Compiling uac-api v0.21.0 (/Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/api)
+   Compiling uac-gate v0.21.0 (/Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/gate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.83s
+     Running unittests src/main.rs (target/debug/build/uac-api/c422b0c31c6e48ef/out/uac_api-c422b0c31c6e48ef)
 
-running 37 tests
+running 111 tests
+test agent_sandbox::tests::host_cannot_enter_guest_mode ... ok
+test broker_agent::tests::fixed_operations_and_no_header_injection ... ok
+test broker_agent::tests::cancellation_prevents_network_dispatch ... ok
+test agent_sandbox::tests::immutable_images_only ... ok
 test desktop::tests::platform_data_paths ... ok
-test desktop::tests::xdg_data_home_overrides_home ... ok
-test hosting::tests::public_mode_requires_private_document ... ok
-test hosting::tests::local_default_is_preserved ... ok
 test desktop::tests::missing_or_relative_data_root_fails ... ok
-test hosting::tests::insecure_or_ambiguous_public_origins_are_rejected ... ok
+test agent_sandbox::tests::transfer_relay_never_accepts_credentials_or_endpoints ... ok
+test agent_sandbox::tests::image_environment_is_closed_allowlist ... ok
+test agent_sandbox::tests::relay_rejects_owner_ops_and_untyped_fields ... ok
+test desktop::tests::xdg_data_home_overrides_home ... ok
+test hosting::tests::local_default_is_preserved ... ok
+test hosting::tests::public_mode_requires_private_document ... ok
+test agent_sandbox::tests::protected_relay_scopes_only_workspace_operations ... ok
 test hosting::tests::public_origin_binds_host_and_rp_exactly ... ok
-test store::tests::key_dir_prefers_xdg_config ... ok
-test store::tests::custody_conflict_detects_changed_file ... ok
-test store::tests::issuer_file_migrates_into_meta_and_is_removed ... ok
-test store::tests::query_returns_rows_and_affected ... ok
-test store::tests::generated_issuer_is_stable_across_reopen ... ok
-test store::tests::issuer_file_conflicting_with_meta_fails_closed ... ok
-test store::tests::new_store_is_encrypted_and_rejects_wrong_key ... ok
-test store::tests::plaintext_database_migrates_and_loses_plaintext_sidecars ... ok
-test platform::tests::rp_identity_is_durable_and_rejects_unsafe_origins ... ok
-test tests::active_key_rechecks_and_zero_key_authentication_fail_closed ... ok
-test tests::credential_cap_counts_active_keys_and_rejects_retired_duplicates ... ok
-test platform::tests::vault_writes_bind_ciphertext_revision_and_active_account_keys ... ok
-test tests::management_schema_rejects_ambiguous_or_extra_fields ... ok
+test hosting::tests::insecure_or_ambiguous_public_origins_are_rejected ... ok
+test agent_sandbox::tests::bounded_frames_and_relative_reads ... ok
+test password_manager::broker::protected::tests::protected_approval_is_source_bound_before_unseal ... ok
+test password_manager::broker::protected::tests::protected_approval_projection_is_independent_of_site_and_delivery ... ok
+test password_manager::broker::protected::tests::protected_draft_and_typed_input_validation_fails_closed ... ok
+test password_manager::access::tests::wrap_and_recipient_origin_are_strict ... ok
+test password_manager::broker::protected::tests::protected_drafts_require_owner_approval_and_exact_refs_and_are_once_only ... ok
+test password_manager::access::tests::passkey_rename_binds_owner_revision_and_vault_without_mutating_credentials ... ok
+test password_manager::access::tests::owner_extension_and_wrong_token_are_denied_and_input_bounds_hold ... ok
+test password_manager::broker::protected::tests::recipient_paths_are_canonical_and_cannot_override_origin ... ok
+test password_manager::access::tests::rekey_invalidates_atomically_ordinary_save_retains_and_stale_cas_rolls_back ... ok
+test password_manager::access::tests::owner_share_crud_exposes_only_cipher_and_metadata ... ok
+test password_manager::access::tests::public_host_serves_only_exact_recipient_paths ... ok
+test password_manager::broker::protected::tests::protected_identity_cannot_upgrade_or_read_even_a_guessed_live_session ... ok
+test password_manager::broker::tests::expired_session_and_client_cancel_executor_without_waiting ... ok
+test password_manager::access::tests::ceremonies_are_bounded_expire_and_are_consumed_once ... ok
+test password_manager::broker::tests::lock_invalidates_unconsumed_pairing ... ok
+test password_manager::broker::protected::tests::protected_namespace_hides_private_routing_and_denies_cross_client_and_replay ... ok
+test password_manager::broker::tests::origins_are_exact_secure_and_no_credentials ... ok
+test agent_sandbox::tests::escaped_control_output_cannot_exceed_serialized_limit ... ok
+test agent_sandbox::output_lifecycle_tests::stalled_output_queue_is_bounded_and_nonblocking ... ok
+test password_manager::broker::tests::pairing_is_single_use_and_eight_failures_destroy_it ... ok
+test password_manager::broker::tests::protected_transport_is_explicit_and_does_not_allow_arbitrary_actions ... ok
+test password_manager::broker::tests::disconnect_ignores_exhausted_budget_but_requires_scoped_client ... ok
+test password_manager::broker::tests::revision_heartbeat_and_restart_invalidate_sessions ... ok
+test password_manager::broker::tests::transport_has_no_browser_origin_or_raw_api ... ok
+test password_manager::broker::tests::owner_and_agent_capabilities_are_separate ... ok
+test password_manager::broker::tests::unknown_input_fields_are_denied ... ok
+test password_manager::browser_executor::tests::dns_all_answers_must_be_public_and_chromium_is_pinned_to_one ... ok
+test password_manager::browser_executor::tests::origin_comparison_rejects_credentials_and_cross_origin ... ok
+test agent_sandbox::tests::paired_client_revokes_on_early_failure ... ok
+test password_manager::browser_executor::tests::private_browser_command_avoids_host_keychain_without_relaxing_isolation ... ok
+test password_manager::browser_executor::tests::synthetic_pipe_login_read_and_cleanup ... ignored, requires installed Chromium; uses only synthetic localhost credentials
+test agent_sandbox::tests::owned_cleanup_revokes_before_removal_and_is_idempotent ... ok
+test password_manager::broker::tests::requests_are_client_scoped_and_bound_to_lock ... ok
+test password_manager::broker::protected::tests::protected_publication_checks_owner_revision_reference_shape_and_bounds ... ok
+test password_manager::browser_executor::tests::redaction_handles_mixed_case_encoding_and_marker_credentials ... ok
+test password_manager::tests::extension_origins_and_pairing_expiry_are_strict ... ok
+test password_manager::tests::versioned_argon2_envelope_is_strict ... ok
+test password_manager::tests::strict_envelope_bounds_before_storage ... ok
+test password_manager::broker::tests::pending_requests_and_audit_are_bounded ... ok
+test password_manager::broker::tests::revocation_clears_unobserved_jobs_and_pending_requests_atomically ... ok
+test password_manager::extension_unlock::tests::approval_cannot_survive_expiry_pairing_replacement_or_vault_change ... ok
+test password_manager::mobile_sync::tests::sync_rejects_malformed_records_before_storage ... ok
+test password_manager::mobile_sync::tests::sync_cas_preserves_snapshot_on_conflict_and_revocation ... ok
+test password_manager::transfer::protocol::sftp_integration::transfer_sftp_pkcs8_roundtrip_pin_symlink_and_write ... ignored, requires local sshd; synthetic localhost keys only
+test password_manager::broker::tests::valid_client_operation_flood_has_a_bounded_budget ... ok
+test password_manager::broker::protected::tests::protected_grants_expire_on_all_lifecycle_boundaries ... ok
+test password_manager::transfer::protocol::tests::transfer_rejects_ftp_symlinks_and_missing_facts ... ok
+test password_manager::transfer::review_regressions::transfer_rejects_profile_subroots_for_both_protocols ... ok
+test password_manager::transfer::tests::transfer_paths_reject_traversal_and_command_injection ... ok
+test password_manager::transfer::review_regressions::transfer_worker_permits_survive_revocation_and_request_removal_until_thread_exit ... ok
+test password_manager::transfer::tests::transfer_request_digest_binds_upload_and_forbids_unexpected_fields ... ok
+test password_manager::transfer::tests::transfer_revocation_drops_results_and_cancels_active_work ... ok
+test password_manager::transfer::protocol::tests::transfer_bounded_reads_reject_oversized_files_and_cancel ... ok
 test platform::tests::recovery_setup_requires_fresh_exact_approval_and_only_stores_a_digest ... ok
-test tests::bearer_sessions_cannot_perform_any_management_mutation ... ok
 test platform::tests::agent_proof_is_required_one_use_and_bound_to_exact_action_and_authority ... ok
-test tests::every_operation_parameter_is_exact_and_mismatches_consume_approval ... ok
-test tests::duplicate_approved_mutations_commit_once ... ok
-test tests::delegation_mutations_require_exact_fresh_approvals ... ok
-test tests::invalid_parameters_and_wrong_sessions_burn_supplied_approvals ... ok
-test platform::tests::session_reads_recheck_live_delegation_and_logout_invalidates_approvals ... ok
-test tests::existing_grant_keeps_initial_subject_after_original_key_revocation ... ok
+test platform::tests::rp_identity_is_durable_and_rejects_unsafe_origins ... ok
+test store::tests::custody_conflict_detects_changed_file ... ok
 test platform::tests::delegated_agent_cannot_bypass_parent_budget_expiry_or_ancestor_revocation ... ok
-test tests::revoke_is_account_scoped_invalidates_sessions_and_preserves_last_key ... ok
+test store::tests::issuer_file_conflicting_with_meta_fails_closed ... ok
+test platform::tests::vault_writes_bind_ciphertext_revision_and_active_account_keys ... ok
+test store::tests::key_dir_prefers_xdg_config ... ok
+test platform::tests::session_reads_recheck_live_delegation_and_logout_invalidates_approvals ... ok
+test store::tests::generated_issuer_is_stable_across_reopen ... ok
+test store::tests::issuer_file_migrates_into_meta_and_is_removed ... ok
+test password_manager::transfer::protocol::dns_regressions::transfer_dns_cancellation_releases_credential_worker_without_releasing_stalled_resolver ... ok
+test store::tests::query_returns_rows_and_affected ... ok
+test store::tests::new_store_is_encrypted_and_rejects_wrong_key ... ok
+test password_manager::access::tests::expired_shares_and_storage_capacity_fail_closed ... ok
+test store::tests::plaintext_database_migrates_and_loses_plaintext_sidecars ... ok
+test agent_sandbox::tests::newline_only_output_cannot_exceed_serialized_limit ... ok
+test password_manager::transfer::protocol::dns_regressions::transfer_dns_timeouts_keep_global_slots_until_resolver_exit ... ok
+test password_manager::broker::tests::encrypted_handoff_is_bound_to_request_epoch_and_revision ... ok
+test tests::active_key_rechecks_and_zero_key_authentication_fail_closed ... ok
+test password_manager::transfer::protocol::ca_tests::transfer_private_ca_accepts_valid_chain_but_never_wrong_hostname_or_missing_anchor ... ok
+test tests::credential_cap_counts_active_keys_and_rejects_retired_duplicates ... ok
+test tests::bearer_sessions_cannot_perform_any_management_mutation ... ok
+test tests::management_schema_rejects_ambiguous_or_extra_fields ... ok
+test tests::duplicate_approved_mutations_commit_once ... ok
+test password_manager::transfer::protocol::ftpes_integration::transfer_ftpes_rejects_tls_downgrade_and_untrusted_certificate_before_password ... ok
+test tests::every_operation_parameter_is_exact_and_mismatches_consume_approval ... ok
+test tests::invalid_parameters_and_wrong_sessions_burn_supplied_approvals ... ok
+test tests::existing_grant_keeps_initial_subject_after_original_key_revocation ... ok
+test tests::delegation_mutations_require_exact_fresh_approvals ... ok
 test tests::monotonic_expiry_and_signer_state_are_checked_at_consumption ... ok
 test tests::management_checks_authority_and_bounds_outstanding_approvals ... ok
+test tests::revoke_is_account_scoped_invalidates_sessions_and_preserves_last_key ... ok
 test tests::legacy_migration_survives_restart_without_resurrecting_revoked_keys ... ok
 test tests::signed_database_tokens_cannot_skip_or_replace_their_parent_metadata ... ok
 test tests::ancestor_revocation_invalidates_descendants_and_preapproved_writes_after_restart ... ok
 test tests::delegation_attenuation_and_visibility_are_account_bound ... ok
+test password_manager::broker::tests::invalid_token_bursts_are_throttled_without_blocking_real_owner_or_client ... ok
+test password_manager::broker::protected::tests::retired_protected_requests_preserve_tombstones_without_poisoning_owner_projection ... ok
+test password_manager::broker::protected::tests::sealed_delivery_is_owner_only_aad_bound_exact_recipient_and_once_only ... ok
+test password_manager::transfer::approval_tests::transfer_approval_is_bound_to_request_epoch_revision_and_known_profile_fields ... ok
+test agent_sandbox::output_lifecycle_tests::stalled_output_cannot_block_bounded_finish ... ok
 
-test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+test result: ok. 109 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.26s
 
-     Running unittests src/main.rs (target/debug/build/uac-gate/c3b504982e83c8c0/out/uac_gate-c3b504982e83c8c0)
+     Running unittests src/lib.rs (target/debug/build/uac-browser-pipe/5d91a2451279b7ed/out/uac_browser_pipe-5d91a2451279b7ed)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running ../../apps/api/src/password_manager/browser_executor.rs (target/debug/build/uac-browser-pipe/a03a4e126c129a57/out/browser_executor-a03a4e126c129a57)
+
+running 5 tests
+test tests::synthetic_pipe_login_read_and_cleanup ... ignored, requires installed Chromium; uses only synthetic localhost credentials
+test tests::dns_all_answers_must_be_public_and_chromium_is_pinned_to_one ... ok
+test tests::private_browser_command_avoids_host_keychain_without_relaxing_isolation ... ok
+test tests::origin_comparison_rejects_credentials_and_cross_origin ... ok
+test tests::redaction_handles_mixed_case_encoding_and_marker_credentials ... ok
+
+test result: ok. 4 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/build/uac-gate/7b62e747c612aeb8/out/uac_gate-7b62e747c612aeb8)
 
 running 16 tests
 test tests::issuer_key_accepts_hex_and_raw_32_bytes ... ok
-test tests::malformed_request_body_is_rejected ... ok
 test tests::empty_chain_is_denied ... ok
-test tests::tampered_signature_is_denied ... ok
-test tests::non_read_action_is_denied ... ok
-test tests::unreadable_snapshot_denies_closed ... ok
-test tests::wrong_holder_is_denied ... ok
-test tests::revoked_ancestor_denies_descendants ... ok
-test tests::directly_revoked_leaf_is_denied ... ok
-test tests::expired_chain_is_denied ... ok
-test tests::budget_violation_is_denied ... ok
+test tests::malformed_request_body_is_rejected ... ok
 test tests::invalid_snapshot_content_denies_closed ... ok
+test tests::budget_violation_is_denied ... ok
+test tests::wrong_holder_is_denied ... ok
+test tests::expired_chain_is_denied ... ok
+test tests::tampered_signature_is_denied ... ok
 test tests::valid_chain_is_authorized ... ok
 test tests::chain_deeper_than_five_links_is_denied ... ok
+test tests::revoked_ancestor_denies_descendants ... ok
+test tests::directly_revoked_leaf_is_denied ... ok
+test tests::non_read_action_is_denied ... ok
+test tests::unreadable_snapshot_denies_closed ... ok
 test tests::http_gate_grants_and_denies ... ok
 test tests::maximum_revocation_count_fits_the_snapshot_byte_budget ... ok
 
-test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
 
-     Running unittests src/lib.rs (target/debug/build/uac-keystore/8979eba84f297696/out/uac_keystore-8979eba84f297696)
+     Running unittests src/lib.rs (target/debug/build/uac-keystore/5682bb79ca5ab7a9/out/uac_keystore-5682bb79ca5ab7a9)
 
 running 2 tests
 test tests::authenticated_envelope_rejects_wrong_keys_tampering_and_versions ... ok
 test tests::migration_preserves_issuer_and_restart_requires_the_same_external_key ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 
-     Running unittests src/lib.rs (target/debug/build/uac-recovery/d4a70231cd652cf5/out/uac_recovery-d4a70231cd652cf5)
+     Running unittests src/lib.rs (target/debug/build/uac-recovery/7e0555d44b952a7e/out/uac_recovery-7e0555d44b952a7e)
 
 running 1 test
 test tests::codes_are_random_canonical_and_account_bound ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/lib.rs (target/debug/build/uac-tenancy/165c130a0288bcf8/out/uac_tenancy-165c130a0288bcf8)
+     Running unittests src/lib.rs (target/debug/build/uac-tenancy/a28b2490853ac838/out/uac_tenancy-a28b2490853ac838)
 
 running 9 tests
 test tests::unknown_tenant_and_operator_views ... ok
 test tests::ids_roundtrip_through_serde_and_strings ... ok
-test tests::revoke_then_invoke_fails_closed ... ok
-test tests::runtime_check_rejects_forged_records ... ok
 test tests::no_shared_sequences_and_per_tenant_names ... ok
+test tests::runtime_check_rejects_forged_records ... ok
 test tests::writes_cannot_cross_tenants ... ok
-test tests::reads_cannot_cross_tenants ... ok
-test tests::delegation_cannot_cross_tenants ... ok
+test tests::revoke_then_invoke_fails_closed ... ok
 test tests::invocation_cannot_cross_tenants ... ok
+test tests::delegation_cannot_cross_tenants ... ok
+test tests::reads_cannot_cross_tenants ... ok
 
 test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
-     Running unittests src/lib.rs (target/debug/build/uac-ucan-bridge/487231a8493a1794/out/uac_ucan_bridge-487231a8493a1794)
+     Running unittests src/lib.rs (target/debug/build/uac-ucan-bridge/18b7fd33aa188703/out/uac_ucan_bridge-18b7fd33aa188703)
 
-running 1 test
-test tests::skeleton_compiles ... ok
+running 5 tests
+test tests::did_key_and_cid_have_stable_shapes ... ok
+test tests::vectors_declare_cases_and_invalid_tokens ... ok
+test tests::export_requires_valid_chain_and_matching_key ... ok
+test tests::export_is_byte_deterministic ... ok
+test tests::independent_javascript_tokens_and_payloads_match ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/lib.rs (target/debug/build/uac-verifier/84fee44c8f9f08da/out/uac_verifier-84fee44c8f9f08da)
+     Running unittests src/lib.rs (target/debug/build/uac-verifier/5826ed031126a28c/out/uac_verifier-5826ed031126a28c)
 
 running 29 tests
-test tests::rejects_clock_rollback_within_process ... ok
 test tests::rejects_descendant_of_revoked_parent ... ok
-test tests::rejects_broken_parent_binding ... ok
-test tests::rejects_child_with_earlier_validity ... ok
-test tests::rejects_delegation_when_parent_forbids_it ... ok
-test tests::rejects_different_resource ... ok
-test tests::offline_verifier_cannot_know_remote_revocation ... ok
-test tests::accepts_valid_attenuated_chain ... ok
+test tests::rejects_clock_rollback_within_process ... ok
 test tests::rejects_changed_request_arguments ... ok
-test tests::rejects_child_outliving_parent ... ok
 test tests::rejects_empty_and_excessive_chains ... ok
 test tests::rejects_delegation_budget_expansion ... ok
+test tests::rejects_different_resource ... ok
+test tests::accepts_valid_attenuated_chain ... ok
+test tests::rejects_child_outliving_parent ... ok
+test tests::rejects_delegation_when_parent_forbids_it ... ok
 test tests::rejects_expired_grant_at_boundary ... ok
-test tests::rejects_oversized_and_unknown_fields_before_verification ... ok
-test tests::rejects_old_invocation_at_boundary ... ok
+test tests::offline_verifier_cannot_know_remote_revocation ... ok
+test tests::rejects_broken_parent_binding ... ok
 test tests::rejects_future_grant ... ok
+test tests::rejects_oversized_and_unknown_fields_before_verification ... ok
+test delegation::tests::reordered_json_and_whitespace_do_not_change_signature_or_id ... ok
+test tests::rejects_child_with_earlier_validity ... ok
+test delegation::tests::raw_json_duplicate_fields_and_size_are_rejected ... ok
+test tests::rejects_signed_rights_escalation ... ok
+test tests::rejects_request_action_outside_context ... ok
+test tests::rejects_replayed_invocation ... ok
 test tests::rejects_untrusted_root ... ok
 test tests::rejects_tampered_signature ... ok
-test delegation::tests::reordered_json_and_whitespace_do_not_change_signature_or_id ... ok
+test tests::rejects_old_invocation_at_boundary ... ok
 test delegation::tests::nullable_fields_are_required_and_all_byte_lengths_are_strict ... ok
-test tests::rejects_signed_rights_escalation ... ok
-test delegation::tests::raw_json_duplicate_fields_and_size_are_rejected ... ok
-test tests::rejects_replayed_invocation ... ok
+test tests::rejects_unknown_challenge ... ok
 test tests::rejects_wrong_intermediate_issuer ... ok
 test tests::requires_holder_proof_even_with_valid_chain ... ok
-test tests::rejects_request_action_outside_context ... ok
-test tests::rejects_unknown_challenge ... ok
 test delegation::tests::independent_typescript_messages_ids_and_signatures_match ... ok
 test delegation::tests::independent_typescript_chain_allow_and_deny_cases_match ... ok
 
-test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 
-     Running tests/delegation_v1_edge.rs (target/debug/build/uac-verifier/61e027186ac7e997/out/delegation_v1_edge-61e027186ac7e997)
+     Running unittests src/bin/hkv.rs (target/debug/build/uac-verifier/0cfb6516a1aa2125/out/hkv-0cfb6516a1aa2125)
+
+running 2 tests
+test cli_tests::canonical_base64url_only ... ok
+test cli_tests::input_is_bounded_before_parsing ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/delegation_v1_edge.rs (target/debug/build/uac-verifier/c9febb3816a32de2/out/delegation_v1_edge-c9febb3816a32de2)
 
 running 5 tests
 test edge_invalid_json_vectors_are_rejected ... ok
@@ -199,12 +484,18 @@ test edge_chain_allow_and_deny_cases_match ... ok
 
 test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 
-     Running tests/grant_v0.rs (target/debug/build/uac-verifier/3b51d871a5156add/out/grant_v0-3b51d871a5156add)
+     Running tests/grant_v0.rs (target/debug/build/uac-verifier/99180674f609edd8/out/grant_v0-99180674f609edd8)
 
 running 1 test
 test grant_v0_conformance ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+   Doc-tests uac_browser_pipe
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
    Doc-tests uac_keystore
 
@@ -221,10 +512,10 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
    Doc-tests uac_tenancy
 
 running 2 tests
-test crates/tenancy/src/lib.rs - (line 18) - compile fail ... ok
 test crates/tenancy/src/lib.rs - (line 36) - compile fail ... ok
+test crates/tenancy/src/lib.rs - (line 18) - compile fail ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 
    Doc-tests uac_ucan_bridge
 
@@ -238,32 +529,34 @@ running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-{"exit_code": 1, "elapsed_seconds": 0.03, "completed": false, "fatal_error": "server spawn failed: ENOENT: no such file or directory, stat '/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-startup-probe-pjifdwa9/target/debug/uac-api'", "passed": true}
+{"exit_code": 1, "elapsed_seconds": 0.02, "completed": false, "fatal_error": "server spawn failed: ENOENT: no such file or directory, stat '/private/var/folders/bm/0dt5fcdn56vg7pnkkzptmlkh0000gn/T/heavenkey-startup-probe-w58pmip9/target/debug/uac-api'", "passed": true}
 warning[license-not-encountered]: license was not encountered
-  ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/deny.toml:5:64
+  ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/deny.toml:5:64
   │
 5 │ allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "Unicode-3.0", "MPL-2.0", "OpenSSL", "Zlib"]
   │                                                                ━━━ unmatched license allowance
 
 warning[license-not-encountered]: license was not encountered
-  ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/deny.toml:5:97
+  ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/deny.toml:5:97
   │
 5 │ allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "Unicode-3.0", "MPL-2.0", "OpenSSL", "Zlib"]
   │                                                                                                 ━━━━━━━ unmatched license allowance
 
 warning[duplicate]: found 2 duplicate entries for crate 'base64'
-   ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:9:1
-   │
- 9 │ ╭ base64 0.21.7 registry+https://github.com/rust-lang/crates.io-index
-10 │ │ base64 0.22.1 registry+https://github.com/rust-lang/crates.io-index
+   ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/Cargo.lock:13:1
+   │  
+13 │ ╭ base64 0.21.7 registry+https://github.com/rust-lang/crates.io-index
+14 │ │ base64 0.22.1 registry+https://github.com/rust-lang/crates.io-index
    │ ╰───────────────────────────────────────────────────────────────────┘ lock entries
-   │
+   │  
    ├ base64 v0.21.7
      ├── base64urlsafedata v0.5.5
      │   ├── webauthn-attestation-ca v0.5.5
      │   │   └── webauthn-rs-core v0.5.5
      │   │       └── webauthn-rs v0.5.5
-     │   │           └── uac-api v0.7.0
+     │   │           ├── uac-api v0.21.0
+     │   │           └── (dev) uac-browser-pipe v0.21.0
+     │   │               └── uac-api v0.21.0 (*)
      │   ├── webauthn-rs v0.5.5 (*)
      │   ├── webauthn-rs-core v0.5.5 (*)
      │   └── webauthn-rs-proto v0.5.5
@@ -271,111 +564,187 @@ warning[duplicate]: found 2 duplicate entries for crate 'base64'
      ├── webauthn-rs-core v0.5.5 (*)
      └── webauthn-rs-proto v0.5.5 (*)
    ├ base64 v0.22.1
-     ├── uac-api v0.7.0
-     ├── uac-keystore v0.7.0
-     │   └── uac-api v0.7.0 (*)
-     └── uac-recovery v0.7.0
-         └── uac-api v0.7.0 (*)
+     ├── uac-api v0.21.0
+     ├── (dev) uac-browser-pipe v0.21.0
+     │   └── uac-api v0.21.0 (*)
+     ├── uac-keystore v0.21.0
+     │   └── uac-api v0.21.0 (*)
+     ├── uac-recovery v0.21.0
+     │   └── uac-api v0.21.0 (*)
+     ├── uac-ucan-bridge v0.21.0
+     └── uac-verifier v0.21.0
+         ├── uac-api v0.21.0 (*)
+         ├── uac-gate v0.21.0
+         └── uac-ucan-bridge v0.21.0 (*)
+
+warning[duplicate]: found 2 duplicate entries for crate 'core-foundation'
+   ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/Cargo.lock:27:1
+   │  
+27 │ ╭ core-foundation 0.9.4 registry+https://github.com/rust-lang/crates.io-index
+28 │ │ core-foundation 0.10.1 registry+https://github.com/rust-lang/crates.io-index
+   │ ╰────────────────────────────────────────────────────────────────────────────┘ lock entries
+   │  
+   ├ core-foundation v0.9.4
+     └── security-framework v2.11.1
+         └── keyring v3.6.3
+             └── uac-keystore v0.21.0
+                 └── uac-api v0.21.0
+   ├ core-foundation v0.10.1
+     └── security-framework v3.7.0
+         └── native-tls v0.2.18
+             ├── suppaftp v12.1.0
+             │   └── uac-api v0.21.0
+             └── uac-api v0.21.0 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'getrandom'
-   ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:52:1
-   │
-52 │ ╭ getrandom 0.3.4 registry+https://github.com/rust-lang/crates.io-index
-53 │ │ getrandom 0.4.3 registry+https://github.com/rust-lang/crates.io-index
+   ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/Cargo.lock:64:1
+   │  
+64 │ ╭ getrandom 0.3.4 registry+https://github.com/rust-lang/crates.io-index
+65 │ │ getrandom 0.4.3 registry+https://github.com/rust-lang/crates.io-index
    │ ╰─────────────────────────────────────────────────────────────────────┘ lock entries
-   │
+   │  
    ├ getrandom v0.3.4
      └── rand_core v0.9.5
          ├── rand v0.9.5
-         │   ├── uac-api v0.7.0
-         │   ├── uac-keystore v0.7.0
-         │   │   └── uac-api v0.7.0 (*)
-         │   ├── uac-recovery v0.7.0
-         │   │   └── uac-api v0.7.0 (*)
+         │   ├── uac-api v0.21.0
+         │   ├── uac-keystore v0.21.0
+         │   │   └── uac-api v0.21.0 (*)
+         │   ├── uac-recovery v0.21.0
+         │   │   └── uac-api v0.21.0 (*)
          │   └── webauthn-rs-core v0.5.5
          │       └── webauthn-rs v0.5.5
-         │           └── uac-api v0.7.0 (*)
+         │           ├── uac-api v0.21.0 (*)
+         │           └── (dev) uac-browser-pipe v0.21.0
+         │               └── uac-api v0.21.0 (*)
          └── rand_chacha v0.9.0
              ├── rand v0.9.5 (*)
              └── webauthn-rs-core v0.5.5 (*)
    ├ getrandom v0.4.3
+     ├── tempfile v3.27.0
+     │   └── native-tls v0.2.18
+     │       ├── suppaftp v12.1.0
+     │       │   └── uac-api v0.21.0
+     │       └── uac-api v0.21.0 (*)
      └── uuid v1.26.1
-         ├── uac-api v0.7.0
-         ├── uac-tenancy v0.7.0
+         ├── uac-api v0.21.0 (*)
+         ├── (dev) uac-browser-pipe v0.21.0
+         │   └── uac-api v0.21.0 (*)
+         ├── uac-tenancy v0.21.0
          ├── webauthn-attestation-ca v0.5.5
          │   └── webauthn-rs-core v0.5.5
          │       └── webauthn-rs v0.5.5
-         │           └── uac-api v0.7.0 (*)
+         │           ├── uac-api v0.21.0 (*)
+         │           └── (dev) uac-browser-pipe v0.21.0 (*)
          ├── webauthn-rs v0.5.5 (*)
          └── webauthn-rs-core v0.5.5 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'hashbrown'
-   ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:55:1
-   │
-55 │ ╭ hashbrown 0.16.1 registry+https://github.com/rust-lang/crates.io-index
-56 │ │ hashbrown 0.17.1 registry+https://github.com/rust-lang/crates.io-index
+   ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/Cargo.lock:68:1
+   │  
+68 │ ╭ hashbrown 0.16.1 registry+https://github.com/rust-lang/crates.io-index
+69 │ │ hashbrown 0.17.1 registry+https://github.com/rust-lang/crates.io-index
    │ ╰──────────────────────────────────────────────────────────────────────┘ lock entries
-   │
+   │  
    ├ hashbrown v0.16.1
      └── rsqlite-vfs v0.1.1
          └── sqlite-wasm-rs v0.5.5
              └── rusqlite v0.40.2
-                 ├── uac-api v0.7.0
-                 └── uac-tenancy v0.7.0
+                 ├── uac-api v0.21.0
+                 └── uac-tenancy v0.21.0
    ├ hashbrown v0.17.1
-     └── hashlink v0.12.2
-         └── rusqlite v0.40.2
-             ├── uac-api v0.7.0
-             └── uac-tenancy v0.7.0
+     ├── hashlink v0.12.2
+     │   └── rusqlite v0.40.2
+     │       ├── uac-api v0.21.0
+     │       └── uac-tenancy v0.21.0
+     └── indexmap v2.14.2
+         └── h2 v0.4.20
+             └── hyper v1.12.0
+                 ├── axum v0.8.9
+                 │   ├── uac-api v0.21.0 (*)
+                 │   └── uac-gate v0.21.0
+                 ├── axum-server v0.8.0
+                 │   └── uac-api v0.21.0 (*)
+                 └── hyper-util v0.1.21
+                     ├── axum v0.8.9 (*)
+                     └── axum-server v0.8.0 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'r-efi'
-    ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:115:1
-    │
-115 │ ╭ r-efi 5.3.0 registry+https://github.com/rust-lang/crates.io-index
-116 │ │ r-efi 6.0.0 registry+https://github.com/rust-lang/crates.io-index
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/Cargo.lock:141:1
+    │  
+141 │ ╭ r-efi 5.3.0 registry+https://github.com/rust-lang/crates.io-index
+142 │ │ r-efi 6.0.0 registry+https://github.com/rust-lang/crates.io-index
     │ ╰─────────────────────────────────────────────────────────────────┘ lock entries
-    │
+    │  
     ├ r-efi v5.3.0
       └── getrandom v0.3.4
           └── rand_core v0.9.5
               ├── rand v0.9.5
-              │   ├── uac-api v0.7.0
-              │   ├── uac-keystore v0.7.0
-              │   │   └── uac-api v0.7.0 (*)
-              │   ├── uac-recovery v0.7.0
-              │   │   └── uac-api v0.7.0 (*)
+              │   ├── uac-api v0.21.0
+              │   ├── uac-keystore v0.21.0
+              │   │   └── uac-api v0.21.0 (*)
+              │   ├── uac-recovery v0.21.0
+              │   │   └── uac-api v0.21.0 (*)
               │   └── webauthn-rs-core v0.5.5
               │       └── webauthn-rs v0.5.5
-              │           └── uac-api v0.7.0 (*)
+              │           ├── uac-api v0.21.0 (*)
+              │           └── (dev) uac-browser-pipe v0.21.0
+              │               └── uac-api v0.21.0 (*)
               └── rand_chacha v0.9.0
                   ├── rand v0.9.5 (*)
                   └── webauthn-rs-core v0.5.5 (*)
     ├ r-efi v6.0.0
       └── getrandom v0.4.3
+          ├── tempfile v3.27.0
+          │   └── native-tls v0.2.18
+          │       ├── suppaftp v12.1.0
+          │       │   └── uac-api v0.21.0
+          │       └── uac-api v0.21.0 (*)
           └── uuid v1.26.1
-              ├── uac-api v0.7.0
-              ├── uac-tenancy v0.7.0
+              ├── uac-api v0.21.0 (*)
+              ├── (dev) uac-browser-pipe v0.21.0
+              │   └── uac-api v0.21.0 (*)
+              ├── uac-tenancy v0.21.0
               ├── webauthn-attestation-ca v0.5.5
               │   └── webauthn-rs-core v0.5.5
               │       └── webauthn-rs v0.5.5
-              │           └── uac-api v0.7.0 (*)
+              │           ├── uac-api v0.21.0 (*)
+              │           └── (dev) uac-browser-pipe v0.21.0 (*)
               ├── webauthn-rs v0.5.5 (*)
               └── webauthn-rs-core v0.5.5 (*)
 
+warning[duplicate]: found 2 duplicate entries for crate 'security-framework'
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/Cargo.lock:159:1
+    │  
+159 │ ╭ security-framework 2.11.1 registry+https://github.com/rust-lang/crates.io-index
+160 │ │ security-framework 3.7.0 registry+https://github.com/rust-lang/crates.io-index
+    │ ╰──────────────────────────────────────────────────────────────────────────────┘ lock entries
+    │  
+    ├ security-framework v2.11.1
+      └── keyring v3.6.3
+          └── uac-keystore v0.21.0
+              └── uac-api v0.21.0
+    ├ security-framework v3.7.0
+      └── native-tls v0.2.18
+          ├── suppaftp v12.1.0
+          │   └── uac-api v0.21.0
+          └── uac-api v0.21.0 (*)
+
 warning[duplicate]: found 2 duplicate entries for crate 'syn'
-    ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:146:1
-    │
-146 │ ╭ syn 2.0.119 registry+https://github.com/rust-lang/crates.io-index
-147 │ │ syn 3.0.8 registry+https://github.com/rust-lang/crates.io-index
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/Cargo.lock:182:1
+    │  
+182 │ ╭ syn 2.0.119 registry+https://github.com/rust-lang/crates.io-index
+183 │ │ syn 3.0.8 registry+https://github.com/rust-lang/crates.io-index
     │ ╰───────────────────────────────────────────────────────────────┘ lock entries
-    │
+    │  
     ├ syn v2.0.119
       ├── asn1-rs-derive v0.5.1
       │   └── asn1-rs v0.6.2
       │       ├── der-parser v9.0.0
       │       │   ├── webauthn-rs-core v0.5.5
       │       │   │   └── webauthn-rs v0.5.5
-      │       │   │       └── uac-api v0.7.0
+      │       │   │       ├── uac-api v0.21.0
+      │       │   │       └── (dev) uac-browser-pipe v0.21.0
+      │       │   │           └── uac-api v0.21.0 (*)
       │       │   └── x509-parser v0.16.0
       │       │       └── webauthn-rs-core v0.5.5 (*)
       │       ├── oid-registry v0.7.1
@@ -386,14 +755,25 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       ├── curve25519-dalek-derive v0.1.1
       │   └── curve25519-dalek v4.1.3
       │       └── ed25519-dalek v2.2.0
-      │           ├── uac-api v0.7.0 (*)
-      │           └── uac-verifier v0.7.0
-      │               ├── uac-api v0.7.0 (*)
-      │               └── uac-gate v0.7.0
+      │           ├── uac-api v0.21.0 (*)
+      │           ├── uac-ucan-bridge v0.21.0
+      │           └── uac-verifier v0.21.0
+      │               ├── uac-api v0.21.0 (*)
+      │               ├── uac-gate v0.21.0
+      │               └── uac-ucan-bridge v0.21.0 (*)
       ├── openssl-macros v0.1.1
       │   └── openssl v0.10.81
-      │       ├── uac-keystore v0.7.0
-      │       │   └── uac-api v0.7.0 (*)
+      │       ├── axum-server v0.8.0
+      │       │   └── uac-api v0.21.0 (*)
+      │       ├── native-tls v0.2.18
+      │       │   ├── suppaftp v12.1.0
+      │       │   │   └── uac-api v0.21.0 (*)
+      │       │   └── uac-api v0.21.0 (*)
+      │       ├── tokio-openssl v0.6.5
+      │       │   └── axum-server v0.8.0 (*)
+      │       ├── uac-api v0.21.0 (*)
+      │       ├── uac-keystore v0.21.0
+      │       │   └── uac-api v0.21.0 (*)
       │       ├── webauthn-attestation-ca v0.5.5
       │       │   └── webauthn-rs-core v0.5.5 (*)
       │       └── webauthn-rs-core v0.5.5 (*)
@@ -409,13 +789,14 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │   │   │   └── webauthn-rs-core v0.5.5 (*)
       │   │   ├── serde_urlencoded v0.7.1
       │   │   │   └── axum v0.8.9
-      │   │   │       ├── uac-api v0.7.0 (*)
-      │   │   │       └── uac-gate v0.7.0 (*)
-      │   │   ├── uac-api v0.7.0 (*)
-      │   │   ├── uac-gate v0.7.0 (*)
-      │   │   ├── uac-keystore v0.7.0 (*)
-      │   │   ├── uac-tenancy v0.7.0
-      │   │   ├── uac-verifier v0.7.0 (*)
+      │   │   │       ├── uac-api v0.21.0 (*)
+      │   │   │       └── uac-gate v0.21.0 (*)
+      │   │   ├── uac-api v0.21.0 (*)
+      │   │   ├── uac-gate v0.21.0 (*)
+      │   │   ├── uac-keystore v0.21.0 (*)
+      │   │   ├── uac-tenancy v0.21.0
+      │   │   ├── uac-ucan-bridge v0.21.0 (*)
+      │   │   ├── uac-verifier v0.21.0 (*)
       │   │   ├── url v2.5.8
       │   │   │   ├── webauthn-rs v0.5.5 (*)
       │   │   │   ├── webauthn-rs-core v0.5.5 (*)
@@ -437,11 +818,25 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │       ├── axum v0.8.9 (*)
       │       ├── axum-core v0.5.6
       │       │   └── axum v0.8.9 (*)
+      │       ├── h2 v0.4.20
+      │       │   └── hyper v1.12.0
+      │       │       ├── axum v0.8.9 (*)
+      │       │       ├── axum-server v0.8.0 (*)
+      │       │       └── hyper-util v0.1.21
+      │       │           ├── axum v0.8.9 (*)
+      │       │           └── axum-server v0.8.0 (*)
       │       ├── tower v0.5.3
       │       │   └── axum v0.8.9 (*)
       │       ├── webauthn-attestation-ca v0.5.5 (*)
       │       ├── webauthn-rs v0.5.5 (*)
       │       └── webauthn-rs-core v0.5.5 (*)
+      ├── windows-implement v0.60.2
+      │   └── windows-core v0.62.2
+      │       └── iana-time-zone v0.1.65
+      │           └── chrono v0.4.45
+      │               └── suppaftp v12.1.0 (*)
+      ├── windows-interface v0.59.3
+      │   └── windows-core v0.62.2 (*)
       ├── zerocopy-derive v0.8.62
       │   └── zerocopy v0.8.62
       │       ├── half v2.7.1
@@ -449,10 +844,10 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │       └── ppv-lite86 v0.2.21
       │           └── rand_chacha v0.9.0
       │               ├── rand v0.9.5
-      │               │   ├── uac-api v0.7.0 (*)
-      │               │   ├── uac-keystore v0.7.0 (*)
-      │               │   ├── uac-recovery v0.7.0
-      │               │   │   └── uac-api v0.7.0 (*)
+      │               │   ├── uac-api v0.21.0 (*)
+      │               │   ├── uac-keystore v0.21.0 (*)
+      │               │   ├── uac-recovery v0.21.0
+      │               │   │   └── uac-api v0.21.0 (*)
       │               │   └── webauthn-rs-core v0.5.5 (*)
       │               └── webauthn-rs-core v0.5.5 (*)
       └── zeroize_derive v1.5.0
@@ -460,17 +855,21 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
               ├── curve25519-dalek v4.1.3 (*)
               ├── dbus-secret-service v4.1.0
               │   └── keyring v3.6.3
-              │       └── uac-keystore v0.7.0 (*)
+              │       └── uac-keystore v0.21.0 (*)
               ├── ed25519-dalek v2.2.0 (*)
               ├── keyring v3.6.3 (*)
-              └── uac-keystore v0.7.0 (*)
+              ├── uac-api v0.21.0 (*)
+              ├── (dev) uac-browser-pipe v0.21.0 (*)
+              └── uac-keystore v0.21.0 (*)
     ├ syn v3.0.8
       ├── displaydoc v0.2.7
       │   ├── asn1-rs v0.6.2
       │   │   ├── der-parser v9.0.0
       │   │   │   ├── webauthn-rs-core v0.5.5
       │   │   │   │   └── webauthn-rs v0.5.5
-      │   │   │   │       └── uac-api v0.7.0
+      │   │   │   │       ├── uac-api v0.21.0
+      │   │   │   │       └── (dev) uac-browser-pipe v0.21.0
+      │   │   │   │           └── uac-api v0.21.0 (*)
       │   │   │   └── x509-parser v0.16.0
       │   │   │       └── webauthn-rs-core v0.5.5 (*)
       │   │   ├── oid-registry v0.7.1
@@ -500,6 +899,10 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │   └── zerotrie v0.2.5
       │       ├── icu_properties v2.3.0 (*)
       │       └── icu_provider v2.3.1 (*)
+      ├── lazy-regex-proc_macros v3.6.2
+      │   └── lazy-regex v3.6.2
+      │       └── suppaftp v12.1.0
+      │           └── uac-api v0.21.0 (*)
       ├── synstructure v0.14.0
       │   ├── yoke-derive v0.8.4
       │   │   └── yoke v0.8.3
@@ -524,29 +927,46 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
       │           └── zerovec v0.11.8 (*)
       ├── thiserror-impl v2.0.21
       │   └── thiserror v2.0.21
-      │       └── rsqlite-vfs v0.1.1
-      │           └── sqlite-wasm-rs v0.5.5
-      │               └── rusqlite v0.40.2
-      │                   ├── uac-api v0.7.0 (*)
-      │                   └── uac-tenancy v0.7.0
+      │       ├── rsqlite-vfs v0.1.1
+      │       │   └── sqlite-wasm-rs v0.5.5
+      │       │       └── rusqlite v0.40.2
+      │       │           ├── uac-api v0.21.0 (*)
+      │       │           └── uac-tenancy v0.21.0
+      │       └── suppaftp v12.1.0 (*)
       ├── tokio-macros v2.7.2
-      │   └── tokio v1.53.2
+      │   └── tokio v1.53.3
       │       ├── axum v0.8.9
-      │       │   ├── uac-api v0.7.0 (*)
-      │       │   └── uac-gate v0.7.0
-      │       ├── hyper v1.12.0
-      │       │   ├── axum v0.8.9 (*)
-      │       │   └── hyper-util v0.1.21
-      │       │       └── axum v0.8.9 (*)
+      │       │   ├── uac-api v0.21.0 (*)
+      │       │   └── uac-gate v0.21.0
+      │       ├── axum-server v0.8.0
+      │       │   └── uac-api v0.21.0 (*)
+      │       ├── fs-err v3.3.2
+      │       │   └── axum-server v0.8.0 (*)
+      │       ├── h2 v0.4.20
+      │       │   └── hyper v1.12.0
+      │       │       ├── axum v0.8.9 (*)
+      │       │       ├── axum-server v0.8.0 (*)
+      │       │       └── hyper-util v0.1.21
+      │       │           ├── axum v0.8.9 (*)
+      │       │           └── axum-server v0.8.0 (*)
+      │       ├── hyper v1.12.0 (*)
       │       ├── hyper-util v0.1.21 (*)
+      │       ├── tokio-openssl v0.6.5
+      │       │   └── axum-server v0.8.0 (*)
+      │       ├── tokio-util v0.7.20
+      │       │   └── h2 v0.4.20 (*)
       │       ├── tower v0.5.3
       │       │   └── axum v0.8.9 (*)
-      │       ├── uac-api v0.7.0 (*)
-      │       └── uac-gate v0.7.0 (*)
+      │       ├── uac-api v0.21.0 (*)
+      │       └── uac-gate v0.21.0 (*)
       ├── wasm-bindgen-macro-support v0.2.129
       │   └── wasm-bindgen-macro v0.2.129
       │       └── wasm-bindgen v0.2.129
+      │           ├── iana-time-zone v0.1.65
+      │           │   └── chrono v0.4.45
+      │           │       └── suppaftp v12.1.0 (*)
       │           ├── js-sys v0.3.106
+      │           │   ├── iana-time-zone v0.1.65 (*)
       │           │   └── sqlite-wasm-rs v0.5.5 (*)
       │           └── sqlite-wasm-rs v0.5.5 (*)
       ├── yoke-derive v0.8.4 (*)
@@ -555,19 +975,21 @@ warning[duplicate]: found 2 duplicate entries for crate 'syn'
           └── zerovec v0.11.8 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'synstructure'
-    ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:149:1
-    │
-149 │ ╭ synstructure 0.13.2 registry+https://github.com/rust-lang/crates.io-index
-150 │ │ synstructure 0.14.0 registry+https://github.com/rust-lang/crates.io-index
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/Cargo.lock:185:1
+    │  
+185 │ ╭ synstructure 0.13.2 registry+https://github.com/rust-lang/crates.io-index
+186 │ │ synstructure 0.14.0 registry+https://github.com/rust-lang/crates.io-index
     │ ╰─────────────────────────────────────────────────────────────────────────┘ lock entries
-    │
+    │  
     ├ synstructure v0.13.2
       └── asn1-rs-derive v0.5.1
           └── asn1-rs v0.6.2
               ├── der-parser v9.0.0
               │   ├── webauthn-rs-core v0.5.5
               │   │   └── webauthn-rs v0.5.5
-              │   │       └── uac-api v0.7.0
+              │   │       ├── uac-api v0.21.0
+              │   │       └── (dev) uac-browser-pipe v0.21.0
+              │   │           └── uac-api v0.21.0 (*)
               │   └── x509-parser v0.16.0
               │       └── webauthn-rs-core v0.5.5 (*)
               ├── oid-registry v0.7.1
@@ -582,7 +1004,9 @@ warning[duplicate]: found 2 duplicate entries for crate 'synstructure'
       │       │   │       └── idna v1.1.0
       │       │   │           └── url v2.5.8
       │       │   │               ├── webauthn-rs v0.5.5
-      │       │   │               │   └── uac-api v0.7.0
+      │       │   │               │   ├── uac-api v0.21.0
+      │       │   │               │   └── (dev) uac-browser-pipe v0.21.0
+      │       │   │               │       └── uac-api v0.21.0 (*)
       │       │   │               ├── webauthn-rs-core v0.5.5
       │       │   │               │   └── webauthn-rs v0.5.5 (*)
       │       │   │               └── webauthn-rs-proto v0.5.5
@@ -616,18 +1040,20 @@ warning[duplicate]: found 2 duplicate entries for crate 'synstructure'
               └── zerovec v0.11.8 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'thiserror'
-    ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:151:1
-    │
-151 │ ╭ thiserror 1.0.69 registry+https://github.com/rust-lang/crates.io-index
-152 │ │ thiserror 2.0.21 registry+https://github.com/rust-lang/crates.io-index
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/Cargo.lock:188:1
+    │  
+188 │ ╭ thiserror 1.0.69 registry+https://github.com/rust-lang/crates.io-index
+189 │ │ thiserror 2.0.21 registry+https://github.com/rust-lang/crates.io-index
     │ ╰──────────────────────────────────────────────────────────────────────┘ lock entries
-    │
+    │  
     ├ thiserror v1.0.69
       ├── asn1-rs v0.6.2
       │   ├── der-parser v9.0.0
       │   │   ├── webauthn-rs-core v0.5.5
       │   │   │   └── webauthn-rs v0.5.5
-      │   │   │       └── uac-api v0.7.0
+      │   │   │       ├── uac-api v0.21.0
+      │   │   │       └── (dev) uac-browser-pipe v0.21.0
+      │   │   │           └── uac-api v0.21.0 (*)
       │   │   └── x509-parser v0.16.0
       │   │       └── webauthn-rs-core v0.5.5 (*)
       │   ├── oid-registry v0.7.1
@@ -636,26 +1062,30 @@ warning[duplicate]: found 2 duplicate entries for crate 'thiserror'
       ├── webauthn-rs-core v0.5.5 (*)
       └── x509-parser v0.16.0 (*)
     ├ thiserror v2.0.21
-      └── rsqlite-vfs v0.1.1
-          └── sqlite-wasm-rs v0.5.5
-              └── rusqlite v0.40.2
-                  ├── uac-api v0.7.0
-                  └── uac-tenancy v0.7.0
+      ├── rsqlite-vfs v0.1.1
+      │   └── sqlite-wasm-rs v0.5.5
+      │       └── rusqlite v0.40.2
+      │           ├── uac-api v0.21.0
+      │           └── uac-tenancy v0.21.0
+      └── suppaftp v12.1.0
+          └── uac-api v0.21.0 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'thiserror-impl'
-    ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:153:1
-    │
-153 │ ╭ thiserror-impl 1.0.69 registry+https://github.com/rust-lang/crates.io-index
-154 │ │ thiserror-impl 2.0.21 registry+https://github.com/rust-lang/crates.io-index
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/Cargo.lock:190:1
+    │  
+190 │ ╭ thiserror-impl 1.0.69 registry+https://github.com/rust-lang/crates.io-index
+191 │ │ thiserror-impl 2.0.21 registry+https://github.com/rust-lang/crates.io-index
     │ ╰───────────────────────────────────────────────────────────────────────────┘ lock entries
-    │
+    │  
     ├ thiserror-impl v1.0.69
       └── thiserror v1.0.69
           ├── asn1-rs v0.6.2
           │   ├── der-parser v9.0.0
           │   │   ├── webauthn-rs-core v0.5.5
           │   │   │   └── webauthn-rs v0.5.5
-          │   │   │       └── uac-api v0.7.0
+          │   │   │       ├── uac-api v0.21.0
+          │   │   │       └── (dev) uac-browser-pipe v0.21.0
+          │   │   │           └── uac-api v0.21.0 (*)
           │   │   └── x509-parser v0.16.0
           │   │       └── webauthn-rs-core v0.5.5 (*)
           │   ├── oid-registry v0.7.1
@@ -665,69 +1095,385 @@ warning[duplicate]: found 2 duplicate entries for crate 'thiserror-impl'
           └── x509-parser v0.16.0 (*)
     ├ thiserror-impl v2.0.21
       └── thiserror v2.0.21
-          └── rsqlite-vfs v0.1.1
-              └── sqlite-wasm-rs v0.5.5
-                  └── rusqlite v0.40.2
-                      ├── uac-api v0.7.0
-                      └── uac-tenancy v0.7.0
+          ├── rsqlite-vfs v0.1.1
+          │   └── sqlite-wasm-rs v0.5.5
+          │       └── rusqlite v0.40.2
+          │           ├── uac-api v0.21.0
+          │           └── uac-tenancy v0.21.0
+          └── suppaftp v12.1.0
+              └── uac-api v0.21.0 (*)
 
 warning[duplicate]: found 2 duplicate entries for crate 'windows-sys'
-    ┌─ /Users/master/Documents/Codex/work/heavenkey-integrated-20261016/Cargo.lock:192:1
-    │
-192 │ ╭ windows-sys 0.60.2 registry+https://github.com/rust-lang/crates.io-index
-193 │ │ windows-sys 0.61.2 registry+https://github.com/rust-lang/crates.io-index
+    ┌─ /Users/master/Documents/Codex/work/heavenkey-ci-20261012/Cargo.lock:237:1
+    │  
+237 │ ╭ windows-sys 0.60.2 registry+https://github.com/rust-lang/crates.io-index
+238 │ │ windows-sys 0.61.2 registry+https://github.com/rust-lang/crates.io-index
     │ ╰────────────────────────────────────────────────────────────────────────┘ lock entries
-    │
+    │  
     ├ windows-sys v0.60.2
       └── keyring v3.6.3
-          └── uac-keystore v0.7.0
-              └── uac-api v0.7.0
+          └── uac-keystore v0.21.0
+              └── uac-api v0.21.0
     ├ windows-sys v0.61.2
       ├── dbus v0.9.12
       │   └── dbus-secret-service v4.1.0
       │       └── keyring v3.6.3
-      │           └── uac-keystore v0.7.0
-      │               └── uac-api v0.7.0
+      │           └── uac-keystore v0.21.0
+      │               └── uac-api v0.21.0
       ├── errno v0.3.14
+      │   ├── rustix v1.1.5
+      │   │   └── tempfile v3.27.0
+      │   │       └── native-tls v0.2.18
+      │   │           ├── suppaftp v12.1.0
+      │   │           │   └── uac-api v0.21.0 (*)
+      │   │           └── uac-api v0.21.0 (*)
       │   └── signal-hook-registry v1.4.8
-      │       └── tokio v1.53.2
+      │       └── tokio v1.53.3
       │           ├── axum v0.8.9
-      │           │   ├── uac-api v0.7.0 (*)
-      │           │   └── uac-gate v0.7.0
-      │           ├── hyper v1.12.0
-      │           │   ├── axum v0.8.9 (*)
-      │           │   └── hyper-util v0.1.21
-      │           │       └── axum v0.8.9 (*)
+      │           │   ├── uac-api v0.21.0 (*)
+      │           │   └── uac-gate v0.21.0
+      │           ├── axum-server v0.8.0
+      │           │   └── uac-api v0.21.0 (*)
+      │           ├── fs-err v3.3.2
+      │           │   └── axum-server v0.8.0 (*)
+      │           ├── h2 v0.4.20
+      │           │   └── hyper v1.12.0
+      │           │       ├── axum v0.8.9 (*)
+      │           │       ├── axum-server v0.8.0 (*)
+      │           │       └── hyper-util v0.1.21
+      │           │           ├── axum v0.8.9 (*)
+      │           │           └── axum-server v0.8.0 (*)
+      │           ├── hyper v1.12.0 (*)
       │           ├── hyper-util v0.1.21 (*)
+      │           ├── tokio-openssl v0.6.5
+      │           │   └── axum-server v0.8.0 (*)
+      │           ├── tokio-util v0.7.20
+      │           │   └── h2 v0.4.20 (*)
       │           ├── tower v0.5.3
       │           │   └── axum v0.8.9 (*)
-      │           ├── uac-api v0.7.0 (*)
-      │           └── uac-gate v0.7.0 (*)
+      │           ├── uac-api v0.21.0 (*)
+      │           └── uac-gate v0.21.0 (*)
       ├── mio v1.2.4
-      │   └── tokio v1.53.2 (*)
+      │   └── tokio v1.53.3 (*)
+      ├── rustix v1.1.5 (*)
+      ├── schannel v0.1.30
+      │   └── native-tls v0.2.18 (*)
       ├── socket2 v0.6.5
-      │   └── tokio v1.53.2 (*)
-      └── tokio v1.53.2 (*)
+      │   └── tokio v1.53.3 (*)
+      ├── tempfile v3.27.0 (*)
+      ├── tokio v1.53.3 (*)
+      └── uac-browser-pipe v0.21.0
+          └── uac-api v0.21.0 (*)
 
 advisories ok, bans ok, licenses ok, sources ok
-      Loaded 1329 security advisories (from /Users/master/.cargo/advisory-db)
-    Scanning Cargo.lock for vulnerabilities (291 crate dependencies)
-bun audit v1.4.2 (744846f84)
+      Loaded 1352 security advisories (from /Users/master/.cargo/advisory-db)
+    Scanning Cargo.lock for vulnerabilities (328 crate dependencies)
+Crate:     zbus_names
+Version:   3.0.0
+Warning:   unmaintained
+Title:     `zbus_names` is unmaintained
+Date:      2026-10-16
+ID:        RUSTSEC-2026-0371
+URL:       https://rustsec.org/advisories/RUSTSEC-2026-0371
 
-No vulnerabilities found (checked 42 packages) [302.00ms]
+Crate:     zvariant
+Version:   4.2.0
+Warning:   unmaintained
+Title:     `zvariant` is unmaintained
+Date:      2026-10-16
+ID:        RUSTSEC-2026-0370
+URL:       https://rustsec.org/advisories/RUSTSEC-2026-0370
+
+Crate:     zvariant_derive
+Version:   4.2.0
+Warning:   unmaintained
+Title:     `zvariant_derive` is unmaintained
+Date:      2026-10-16
+ID:        RUSTSEC-2026-0372
+URL:       https://rustsec.org/advisories/RUSTSEC-2026-0372
+
+warning: 3 allowed warnings found
+bun audit v1.4.3 (c6da4a4d3)
+
+No vulnerabilities found (checked 43 packages) [561.00ms]
 $ python3 scripts/build_web.py
-Bundled 22 modules in 5ms
+Bundled 22 modules in 7ms
 
   main.js  62.46 KB  (entry point)
 
-   Compiling uac-api v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/api)
-   Compiling uac-gate v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/gate)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.67s
+Bundled 36 modules in 8ms
+
+  passwords.js  0.34 MB  (entry point)
+
+Bundled 18 modules in 9ms
+
+  share.js  16.30 KB  (entry point)
+
+chromium 0.21.0: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/dist/extension-source-chromium
+firefox 0.21.0: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/dist/extension-source-firefox
+   Compiling uac-api v0.21.0 (/Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/api)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.88s
 ..........
 ----------------------------------------------------------------------
-Ran 10 tests in 0.807s
+Ran 10 tests in 0.883s
 
 OK
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.391s
+
+OK
+.............
+----------------------------------------------------------------------
+Ran 13 tests in 121.109s
+
+OK
+PASS portable startup redirects to local vault without OS keys
+PASS create vault without account or passkey
+PASS structured credential saved and title is rendered as text
+PASS TOTP displayed
+PASS design: three-pane desktop navigation uses real decrypted login
+PASS design: keyboard search selects a real entry and exposes field actions
+PASS design: selected field copies decrypted synthetic password through browser clipboard
+PASS design: native editor Escape restores focus, selection and search
+PASS design: A–Z/Z–A, favorites and tag navigation filter encrypted data
+PASS design: local health computes 4 short/empty entries, 2 reused nonempty passwords and 4 distinct findings without network
+PASS design: health opens the affected real entry and recomputes counts after encrypted password mutation
+PASS design: lock clears health findings, names, summary and counter
+PASS design: removing health fixtures restores the original encrypted vault and clears all findings
+PASS design: import, encrypted backup, restore and rekey are reachable from settings
+PASS design: theme survives reload and encrypted vault unlock
+PASS design: both themes retain 4.5:1 visible vault text contrast immediately on switching
+PASS design: quick access, settings and profile editor have readable text and distinct controls in both themes
+PASS design: original embedded cover, keyboard theme toggle and locked recovery layout work through 320px and 200% CSS zoom
+PASS design: mobile detail/back preserves search at 320/375/414px; no overflow through 1440px
+PASS design: lock removes selected detail, revealed password and TOTP
+PASS polish: discreet mode removes private DOM and accessibility values and blocks reveal, edit and TOTP
+PASS polish: private-value search still works and disabling discreet restores fields with password masked
+PASS polish: selected 10-second reveal remasks at its deadline under a controlled browser clock
+PASS polish: selection, filtering, editor and lock cancel reveal and stale timers cannot restore detail
+PASS polish: default background lock stays at 30 seconds while strict background setting locks immediately
+PASS polish: privacy preferences persist only settings and concise success clears after six seconds
+PASS polish: errors persist; diagnostics allow only bounded session metadata and clear removes all events
+PASS polish: lock clears prior session activity and unlock does not restore it
+PASS polish: MacIntel UA keycaps, F1/Escape focus, ModK, native ModL, editor ModEnter and CtrlAltL lock
+PASS polish: Win32 UA keycaps, F1/Escape focus, ModK, native ModL, editor ModEnter and CtrlAltL lock
+PASS polish: Linux x86_64 UA keycaps, F1/Escape focus, ModK, native ModL, editor ModEnter and CtrlAltL lock
+POLISH_HANDOFF {"visibilityOverride":false,"dateNow":1792940723740,"wallNow":1792940723740}
+PASS workflow: F2 quick access searches real decrypted logins, opens selection and restores focus
+PASS workflow: profiles are encrypted, preserved by login mutations and unlock, with cleared editor on Escape
+PASS workflow: profile survives master-key rotation and encrypted backup restoration
+PASS workflow: app creates a one-use pairing code; revoke immediately removes it
+PASS workflow: encrypted backup and quick search include profiles; discreet mode blocks profile editing
+PASS workflow: import preview and cancel write nothing; explicit confirmation commits the entire selection
+PASS workflow: exact duplicate reimport is idempotent; explicit conflict replacement preserves entry count
+PASS workflow: lock clears pending import DOM, selected actions and all profile editor values
+PASS search includes encrypted tags after unlock
+PASS edit restores secret only inside unlocked editor
+PASS backup contains ciphertext and no credential plaintext
+PASS lock clears credentials and form state
+PASS wrong master rejected
+PASS correct master restores persisted login
+PASS stale tab cannot overwrite current revision
+PASS delete persists with confirmation
+PASS encrypted backup restored
+PASS tampered restore leaves stored vault unchanged
+PASS quoted synthetic Bitwarden CSV imports atomically
+PASS invalid later CSV row imports nothing
+PASS master password change retires old key
+PASS generator fills a fresh 24-character password
+PASS real process restart preserves encrypted vault
+PASS TOTP needs no network after unlock
+PASS no plaintext secret or master sent to API
+PASS mobile-width layout has no horizontal overflow
+PASS 1000 synthetic logins imported with external web requests blocked
+PASS 1000-entry vault lock and decrypt roundtrip
+PASS 1000-entry backup restore and cold process restart
+PASS locked recovery is reachable without successful unlock
+PASS locked restore with wrong backup password preserves damaged current file
+PASS valid backup recovers corrupted vault from locked screen and survives restart
+PASS invalid-base64 prevents ordinary unlock
+PASS invalid-base64 can be replaced by validated encrypted backup
+PASS invalid-json prevents ordinary unlock
+PASS invalid-json can be replaced by validated encrypted backup
+PASS legacy PBKDF2 backup unlocks without automatic rewrite
+PASS ordinary legacy save preserves PBKDF2 metadata
+PASS legacy trust marker explains explicit upgrade
+PASS explicit same-password migration replaces KDF and salt atomically
+PASS trust marker reports actual Argon2id parameters
+PASS legacy credential survives Argon2 migration and process restart
+PASS lock returns focus to master
+PASS no uncaught browser errors
+PASS stored file contains no plaintext credentials
+{"pass":true,"binary":"/Users/master/Documents/Codex/work/heavenkey-ci-20261012/target/debug/uac-api","binary_sha256":"6faaf1a1a1a4b08f48c7edd033de12abdb94d500d3bee72e1d48de87b00f82f4","cases":[{"name":"portable startup redirects to local vault without OS keys","pass":true},{"name":"create vault without account or passkey","pass":true},{"name":"structured credential saved and title is rendered as text","pass":true},{"name":"TOTP displayed","pass":true},{"name":"design: three-pane desktop navigation uses real decrypted login","pass":true},{"name":"design: keyboard search selects a real entry and exposes field actions","pass":true},{"name":"design: selected field copies decrypted synthetic password through browser clipboard","pass":true},{"name":"design: native editor Escape restores focus, selection and search","pass":true},{"name":"design: A–Z/Z–A, favorites and tag navigation filter encrypted data","pass":true},{"name":"design: local health computes 4 short/empty entries, 2 reused nonempty passwords and 4 distinct findings without network","pass":true},{"name":"design: health opens the affected real entry and recomputes counts after encrypted password mutation","pass":true},{"name":"design: lock clears health findings, names, summary and counter","pass":true},{"name":"design: removing health fixtures restores the original encrypted vault and clears all findings","pass":true},{"name":"design: import, encrypted backup, restore and rekey are reachable from settings","pass":true},{"name":"design: theme survives reload and encrypted vault unlock","pass":true},{"name":"design: both themes retain 4.5:1 visible vault text contrast immediately on switching","pass":true},{"name":"design: quick access, settings and profile editor have readable text and distinct controls in both themes","pass":true},{"name":"design: original embedded cover, keyboard theme toggle and locked recovery layout work through 320px and 200% CSS zoom","pass":true},{"name":"design: mobile detail/back preserves search at 320/375/414px; no overflow through 1440px","pass":true},{"name":"design: lock removes selected detail, revealed password and TOTP","pass":true},{"name":"polish: discreet mode removes private DOM and accessibility values and blocks reveal, edit and TOTP","pass":true},{"name":"polish: private-value search still works and disabling discreet restores fields with password masked","pass":true},{"name":"polish: selected 10-second reveal remasks at its deadline under a controlled browser clock","pass":true},{"name":"polish: selection, filtering, editor and lock cancel reveal and stale timers cannot restore detail","pass":true},{"name":"polish: default background lock stays at 30 seconds while strict background setting locks immediately","pass":true},{"name":"polish: privacy preferences persist only settings and concise success clears after six seconds","pass":true},{"name":"polish: errors persist; diagnostics allow only bounded session metadata and clear removes all events","pass":true},{"name":"polish: lock clears prior session activity and unlock does not restore it","pass":true},{"name":"polish: MacIntel UA keycaps, F1/Escape focus, ModK, native ModL, editor ModEnter and CtrlAltL lock","pass":true},{"name":"polish: Win32 UA keycaps, F1/Escape focus, ModK, native ModL, editor ModEnter and CtrlAltL lock","pass":true},{"name":"polish: Linux x86_64 UA keycaps, F1/Escape focus, ModK, native ModL, editor ModEnter and CtrlAltL lock","pass":true},{"name":"workflow: F2 quick access searches real decrypted logins, opens selection and restores focus","pass":true},{"name":"workflow: profiles are encrypted, preserved by login mutations and unlock, with cleared editor on Escape","pass":true},{"name":"workflow: profile survives master-key rotation and encrypted backup restoration","pass":true},{"name":"workflow: app creates a one-use pairing code; revoke immediately removes it","pass":true},{"name":"workflow: encrypted backup and quick search include profiles; discreet mode blocks profile editing","pass":true},{"name":"workflow: import preview and cancel write nothing; explicit confirmation commits the entire selection","pass":true},{"name":"workflow: exact duplicate reimport is idempotent; explicit conflict replacement preserves entry count","pass":true},{"name":"workflow: lock clears pending import DOM, selected actions and all profile editor values","pass":true},{"name":"search includes encrypted tags after unlock","pass":true},{"name":"edit restores secret only inside unlocked editor","pass":true},{"name":"backup contains ciphertext and no credential plaintext","pass":true},{"name":"lock clears credentials and form state","pass":true},{"name":"wrong master rejected","pass":true},{"name":"correct master restores persisted login","pass":true},{"name":"stale tab cannot overwrite current revision","pass":true},{"name":"delete persists with confirmation","pass":true},{"name":"encrypted backup restored","pass":true},{"name":"tampered restore leaves stored vault unchanged","pass":true},{"name":"quoted synthetic Bitwarden CSV imports atomically","pass":true},{"name":"invalid later CSV row imports nothing","pass":true},{"name":"master password change retires old key","pass":true},{"name":"generator fills a fresh 24-character password","pass":true},{"name":"real process restart preserves encrypted vault","pass":true},{"name":"TOTP needs no network after unlock","pass":true},{"name":"no plaintext secret or master sent to API","pass":true},{"name":"mobile-width layout has no horizontal overflow","pass":true},{"name":"1000 synthetic logins imported with external web requests blocked","pass":true},{"name":"1000-entry vault lock and decrypt roundtrip","pass":true},{"name":"1000-entry backup restore and cold process restart","pass":true},{"name":"locked recovery is reachable without successful unlock","pass":true},{"name":"locked restore with wrong backup password preserves damaged current file","pass":true},{"name":"valid backup recovers corrupted vault from locked screen and survives restart","pass":true},{"name":"invalid-base64 prevents ordinary unlock","pass":true},{"name":"invalid-base64 can be replaced by validated encrypted backup","pass":true},{"name":"invalid-json prevents ordinary unlock","pass":true},{"name":"invalid-json can be replaced by validated encrypted backup","pass":true},{"name":"legacy PBKDF2 backup unlocks without automatic rewrite","pass":true},{"name":"ordinary legacy save preserves PBKDF2 metadata","pass":true},{"name":"legacy trust marker explains explicit upgrade","pass":true},{"name":"explicit same-password migration replaces KDF and salt atomically","pass":true},{"name":"trust marker reports actual Argon2id parameters","pass":true},{"name":"legacy credential survives Argon2 migration and process restart","pass":true},{"name":"lock returns focus to master","pass":true},{"name":"no uncaught browser errors","pass":true},{"name":"stored file contains no plaintext credentials","pass":true}],"errors":[],"online_service_used":false,"synthetic_only":true}
+PASS onboarding: first visit explains setup, offers recovery and has no native passkey prompt
+PASS onboarding: agent and transfer shortcuts focus the settings without granting access
+PASS onboarding: guide Escape restores the entry path and first login persists in real encrypted vault
+PASS passkey: actual PRF creation and verified assertion enroll without exporting master to API
+PASS passkey: rename rejects stale revisions and changes only the label, preserving credential and encrypted vault
+PASS passkey: real native assertion decrypts the original master vault
+PASS passkey: persisted credential and encrypted wrap unlock after a real Rust process restart
+PASS passkey: explicit lock cancels pending native enrollment and keeps the existing credential
+PASS passkey: missing native PRF fails without activation and master fallback remains usable
+PASS sharing: owner explicitly selects one real login field and receives a fragment-only encrypted link
+PASS sharing: independent recipient claims with its own verified passkey and decrypts only the selected field
+PASS sharing: an empty recipient authenticator releases no fields while awaiting native verification; cancel clears it
+PASS sharing: a consumed genuine recipient assertion cannot be replayed
+PASS sharing: wrong access token is rejected without releasing ciphertext
+PASS sharing: returning recipient verifies its existing bound passkey before another server release
+PASS sharing: server revocation denies a fresh recipient access and releases no fields
+PASS sharing: real short server TTL expires and rejects access without a clock mock
+PASS passkey: master rotation atomically invalidates passkey wraps and revokes outstanding snapshots
+PASS onboarding: responsive views fit and rekeyed master unlocks with a clear passkey setup state
+PASS security: stored bytes and API bodies contain no plaintext, PRF outputs or fragment keys; no page errors
+{"pass":true,"cases":20,"report":"/Users/master/Documents/Codex/work/heavenkey-ci-20261012/docs/evidence/password-access/browser.json"}
+PASS real owner vault unlock activates transfer broker
+PASS ten provider presets including netcup set documented protocol and port
+PASS owner-generated Ed25519 and FTPES CA profiles save in encrypted vault
+PASS generated connection key is stored once and accessible through the focused SSH shortcut
+PASS connection preview rejects URL passwords, applies reviewed fields, and reuses an existing protected SSH identity
+PASS actual private-file import verifies the pair, rejects duplicate keys, clears file controls and never renders private key text
+PASS unused key removal requests confirmation and cancellation preserves the stored key
+PASS real encrypted backup retains SSH identities and shared connection references
+PASS packaged CLI transfer request and status use scoped stdin capability
+PASS sftp list requires exact owner approval
+PASS sftp stat requires exact owner approval
+PASS sftp get requires exact owner approval
+PASS sftp put writes the approved hash and path
+PASS ftpes list requires exact owner approval
+PASS ftpes stat requires exact owner approval
+PASS ftpes get requires exact owner approval
+PASS ftpes put writes the approved hash and path
+PASS reused SSH identity authenticates a second real SFTP connection through the sealed broker
+PASS traversal rejected before any connection
+PASS sftp rejects escape without content disclosure
+PASS sftp rejects large.bin without content disclosure
+PASS ftpes rejects escape without content disclosure
+PASS ftpes rejects large.bin without content disclosure
+PASS cross-client result access and revoked requests denied
+PASS ten client handoffs download through actual UI without secrets
+PASS FileZilla preview discards embedded credentials
+PASS trust markers reflect completed verified transfers in the current owner session
+PASS dark and mobile UI has no horizontal page overflow
+PASS acknowledged vault lock revokes transfer authorization and clears SSH identity metadata
+PASS encrypted profiles and SSH identities survive lock and unlock
+PASS no credential plaintext in approval transport, agent output or clipboard
+{"pass":true,"cases":31,"report":"/Users/master/Documents/Codex/work/heavenkey-ci-20261012/docs/evidence/transfer-broker/browser.json"}
+PASS real Rust broker endpoint and supported private Chrome available
+PASS owner real encrypted vault creation unlocks broker only after local unlock
+PASS synthetic logins saved through existing product UI with wrong-origin control
+PASS explicit owner pairing creates client through real native broker CLI
+PASS one-use pairing replay denied
+PASS second client receives independent scoped capability
+PASS agent token cannot access owner vault/config/status/pairing routes
+PASS invalid client token denied
+PASS browser Origin on agent transport denied
+PASS unknown agent request fields denied
+PASS noncanonical origins/credentials/remote insecure origin/file scheme denied
+PASS unsupported write scope denied
+PASS unknown raw browser operation has no agent route
+PASS native CLI reports pending until explicit human approval
+PASS cross-client request status denied
+PASS approval has no default selection and lists exact-origin login only
+PASS honest client/trust/action/origin/session boundaries shown to owner
+PASS choosing account alone neither consents nor starts login
+PASS Escape cancels selection and restores requesting control focus
+PASS reopened approval retains no account choice or consent
+PASS actual dark approval renders with text contrast at least 4.5:1
+PASS actual 390px mobile dialog fits viewport and has no horizontal overflow
+PASS explicit consent runs one real private Chromium pipe form login
+PASS owner HTTP handoff transports authenticated ciphertext and metadata only
+PASS native CLI reads fixed projection from persisted private cookie session
+PASS read bounds and redactions exclude secrets/cookies/controls/hidden/scripts/external links
+PASS cross-client session read denied
+PASS absolute URLs/protocol-relative/query/fragment/backslash/control read paths denied
+PASS arbitrary read selectors/unknown fields denied
+PASS sealed approval replay denied after dispatch
+PASS native CLI closes owned session
+PASS closed session rejects replay reads
+PASS cross-origin iframe traffic blocked or session fails closed in actual private Chrome
+PASS cross-origin navigation fails closed without contacting destination
+PASS local vault lock cancels an in-progress private browser read
+PASS locked broker rejects existing session and new requests
+PASS owner UI client revoke invalidates its token and running browser
+PASS real vault revision save cancels prior granted browser session
+PASS owner UI denies pending request without login
+PASS process restart clears clients/grants/sessions and revokes prior capability
+PASS all private Chromium profiles created by this run are removed
+PASS owner flows perform zero clipboard writes
+PASS all captured agent responses and owner API bodies contain no credential/cookie plaintext or encoded password
+PASS actual owner browser completes with no page errors
+PASS source and binary hashes remain bound throughout integrated acceptance
+{"pass":true,"cases":45,"report":"/Users/master/Documents/Codex/work/heavenkey-ci-20261012/docs/evidence/password-broker/browser.json"}
+PASS real owner composer saves encrypted originals before publishing fixed references
+PASS draft preview and encrypted draft save work; vault revision revokes the old grant
+PASS referenced login cannot be removed before its encrypted protected records
+PASS 32 retired protected request tombstones preserve ordinary owner approval through the real checkedBroker decoder
+PASS 24 planned cases mapped with explicit partial, delegated and residual statuses
+{"pass":true,"report":"/Users/master/Documents/Codex/work/heavenkey-ci-20261012/docs/evidence/protected-flow/browser.json","mapped_cases":24}
+PASS unpacked extension with declared test-only localhost grant; real Rust one-use pairing
+PASS real Rust encrypted snapshot decrypted in popup
+PASS native virtual PRF authenticator enrolls through real Rust verifier
+PASS real PRF passkey unlock crosses single-use encrypted channel into paired extension without clipboard
+PASS passkey enrollment and handoff API bodies contain neither master nor login plaintext
+PASS browser storage has connection/token only
+PASS popup requires fresh explicit target-origin confirmation
+PASS real popup selective profile fill changes only selected field
+PASS popup rejects login saved for a different exact origin
+PASS exact-origin login and fresh TOTP fill through real popup
+PASS text extraction/edit/encrypted CAS profile save preserves all logins and profiles
+PASS real persisted SQLite has no profile plaintext or login secrets
+PASS stale extension revision cannot overwrite vault; popup locks on conflict
+PASS popup reload discards decrypted session and key
+Cancellation fixture: lock scan
+Cancellation fixture: lock dispatch
+PASS lock keeps source and consent controls disabled during pending fill
+PASS lock cancels pending fill before plaintext dispatch and preserves locked status
+Cancellation fixture: pagehide scan
+Cancellation fixture: pagehide dispatch
+PASS pagehide keeps source and consent controls disabled during pending fill
+PASS pagehide cancels pending fill before plaintext dispatch and preserves locked status
+Cancellation fixture: disconnect scan
+Cancellation fixture: disconnect dispatch
+PASS disconnect keeps source and consent controls disabled during pending fill
+PASS disconnect cancels pending fill before plaintext dispatch and preserves locked status
+PASS scan excludes hidden/honeypot/disabled/readonly/off/consent/payment
+PASS bank-name target is independently classified as sensitive
+PASS select/date/split date/number/textarea/contenteditable/native event fill
+PASS open shadow roots filled; frame remains untouched
+PASS secret and sensitive fields denied without opt-ins
+PASS checkbox/radio values matched while consent/payment remain untouched
+PASS existing values preserved and no submission
+PASS undo restores empty select/number/contenteditable and preserves subsequent edits
+PASS explicit exact sensitive and secret opt-ins work
+PASS reverse capture excludes secrets and sensitive values by default
+PASS capture opt-in permits exact financial values but never passwords
+PASS sensitivity cannot be downgraded; high values cannot use generic fallback
+PASS changed field identity invalidates preview
+PASS SPA navigation invalidates scan and undo origin binding
+PASS SPA field replacement rejects stale DOM reference
+PASS isolated coordinator rejects an origin mismatch
+PASS saved login password never fills a new-password registration field
+PASS wrong master cannot unlock actual Rust ciphertext
+PASS server revoke disconnects paired popup and clears persisted token
+PASS real Rust process restart invalidates pairing and requires explicit re-pair
+{"source_sha256":{"scripts/extension_autofill_e2e.ts":"a5d5bc5ae936d1cecd29477f1097a75a8313927084e1db3098aba6540d852007","apps/extension/popup.html":"95525d4b376d7ad69f27bf5553b8306b5f663c1d9dfb4c09da3c3cc69962bdec","apps/extension/popup.css":"c829ef05162a7000f1ddf968d9caa5bb87d1d494062b4844b52e6d22f4c2e560","apps/extension/popup.js":"b855d0ac03f34f58c10a4f020a2ffeba113c0e12d11bbefcbeebec22af31d311","apps/extension/settings.js":"70f141d7acbe11fbaf3580f6f677c133cf9e024d6f26d8c078e3565c43b0f298","apps/extension/content.ts":"4db9ac17b8c02c90f4cb9ebb2c8a1b8a0279fd85662315ac1dde88b64e7419ff","apps/extension/smart-popup.ts":"8ec7ab86889fb930bf7bafa280d615eae66ff5af52c9a9a720224a7169002a6e","apps/extension/background.ts":"6c01b3d3209e50a27e3f3ecf3ea1c71769b5c70db1d9038047c0edc3900fb952","apps/extension/unlock-channel.ts":"725909ff09734d7b105540d68ecaeb6bb3b9b35113bc0971b033050347c04e33","apps/web/src/passwords-extension-unlock.ts":"f0be2f0e5583e221e96c23abea1936eeb1855f7cd79a741bb3448149f8b441b6","apps/web/src/passwords-access.ts":"7c412d18ce2e468cf8a237dd99e28ceac25b38f6aa3d043a4ee9db7beca4c3ef","apps/extension/vendor/extract.js":"3a805267b059623908a86cb1138a5bf85f84aa5cabd3c52fbb231e07658d6213","apps/extension/vendor/fill.js":"9e7d4b05aa3f72a54260c20d7e424718bac094605f492e1db5e9ea3dbc41163a","apps/web/src/passwords-crypto.ts":"31f58ee9be409041a64b0152e3f35309a0adc479232bb7692b494122bcfe9e79","packages/forms/schema.ts":"297f40e3ec1c9c1332945f5d9d5bed8fd728ee2adf8cb5534b250907ea6fba29","scripts/build_extension.ts":"99df489d64f4591cf584fc731b89637dc001b4b53bb24c2a4a93cb24469481fd"},"pass":true,"browser":"/Users/master/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing","real_unpacked_extension":true,"real_rust_pairing":true,"mocks":false,"test_only_manifest_grant":"http://localhost/*","native_optional_permission_prompt":"not automated: headless request waits for browser UI","synthetic_only":true,"binary_sha256":"6faaf1a1a1a4b08f48c7edd033de12abdb94d500d3bee72e1d48de87b00f82f4","manifest_sha256":"2b37f841384c842e480d7eb8766b02ecb0acd480dd4f3fef66e450174769495a","cases":[{"name":"unpacked extension with declared test-only localhost grant; real Rust one-use pairing","pass":true},{"name":"real Rust encrypted snapshot decrypted in popup","pass":true},{"name":"native virtual PRF authenticator enrolls through real Rust verifier","pass":true},{"name":"real PRF passkey unlock crosses single-use encrypted channel into paired extension without clipboard","pass":true},{"name":"passkey enrollment and handoff API bodies contain neither master nor login plaintext","pass":true},{"name":"browser storage has connection/token only","pass":true},{"name":"popup requires fresh explicit target-origin confirmation","pass":true},{"name":"real popup selective profile fill changes only selected field","pass":true},{"name":"popup rejects login saved for a different exact origin","pass":true},{"name":"exact-origin login and fresh TOTP fill through real popup","pass":true},{"name":"text extraction/edit/encrypted CAS profile save preserves all logins and profiles","pass":true},{"name":"real persisted SQLite has no profile plaintext or login secrets","pass":true},{"name":"stale extension revision cannot overwrite vault; popup locks on conflict","pass":true},{"name":"popup reload discards decrypted session and key","pass":true},{"name":"lock keeps source and consent controls disabled during pending fill","pass":true},{"name":"lock cancels pending fill before plaintext dispatch and preserves locked status","pass":true},{"name":"pagehide keeps source and consent controls disabled during pending fill","pass":true},{"name":"pagehide cancels pending fill before plaintext dispatch and preserves locked status","pass":true},{"name":"disconnect keeps source and consent controls disabled during pending fill","pass":true},{"name":"disconnect cancels pending fill before plaintext dispatch and preserves locked status","pass":true},{"name":"scan excludes hidden/honeypot/disabled/readonly/off/consent/payment","pass":true},{"name":"bank-name target is independently classified as sensitive","pass":true},{"name":"select/date/split date/number/textarea/contenteditable/native event fill","pass":true},{"name":"open shadow roots filled; frame remains untouched","pass":true},{"name":"secret and sensitive fields denied without opt-ins","pass":true},{"name":"checkbox/radio values matched while consent/payment remain untouched","pass":true},{"name":"existing values preserved and no submission","pass":true},{"name":"undo restores empty select/number/contenteditable and preserves subsequent edits","pass":true},{"name":"explicit exact sensitive and secret opt-ins work","pass":true},{"name":"reverse capture excludes secrets and sensitive values by default","pass":true},{"name":"capture opt-in permits exact financial values but never passwords","pass":true},{"name":"sensitivity cannot be downgraded; high values cannot use generic fallback","pass":true},{"name":"changed field identity invalidates preview","pass":true},{"name":"SPA navigation invalidates scan and undo origin binding","pass":true},{"name":"SPA field replacement rejects stale DOM reference","pass":true},{"name":"isolated coordinator rejects an origin mismatch","pass":true},{"name":"saved login password never fills a new-password registration field","pass":true},{"name":"wrong master cannot unlock actual Rust ciphertext","pass":true},{"name":"server revoke disconnects paired popup and clears persisted token","pass":true},{"name":"real Rust process restart invalidates pairing and requires explicit re-pair","pass":true}],"errors":[]}
+PASS browser vault creation
+PASS CRUD create/search/tags/favorite/TOTP and DOM injection rejection; API ciphertext only
+PASS edit/persistence and lock clears DOM; wrong master rejected
+PASS CSV import and invalid-file atomicity
+PASS encrypted backup restore and wrong backup password preserves current data
+PASS master rotation with new salt and re-unlock
+PASS clipboard permission denial, unchanged cleanup and changed-content preservation (stubbed clipboard)
+PASS delete modal Escape and confirmed deletion
+PASS stale async encrypt/decrypt results cannot save or unlock after lock/pagehide
+PASS restored page reloads gate after BFCache pageshow
+PASS responsive widths 320/375/414/768/1440
+PASS 5min idle lock (controlled clock)
+fixture browser acceptance passed {
+  writes: 7,
+  backupRevision: 2,
+}
 PASS operator bootstrap provisions owner; guest enrolls without ownership
 PASS real Rust verifier rejects correctly signed assertions for a foreign origin
 PASS cross-origin writes fail before reaching application handlers

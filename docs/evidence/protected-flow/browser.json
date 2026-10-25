@@ -1,0 +1,225 @@
+{
+  "pass": true,
+  "synthetic_only": true,
+  "real_rust": true,
+  "real_chromium": true,
+  "native_hardware": false,
+  "binary": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/target/debug/uac-api",
+  "binary_sha256": "6faaf1a1a1a4b08f48c7edd033de12abdb94d500d3bee72e1d48de87b00f82f4",
+  "source_sha256": {
+    "apps/api/src/password_manager/broker/protected.rs": "f05492196b9df8c916542e7ececa1bb672c992eaeea53039c7d5b9bee6eac41a",
+    "apps/web/src/passwords-protected.ts": "1abb0a92f00427da5b3a936308acbcc924507e64e2cbd0981337c2f4bcb87a49",
+    "packages/protected/schema.ts": "ef5317f5e33f5630bf7f62da4f943571def52312e15448c64c10031d81e49be6",
+    "apps/api/src/password_manager/broker.rs": "ec650a367e90e1024107801239455cd1e3f81fede2a8e354d3bc16f4d3e770ba",
+    "apps/api/src/password_manager/browser_executor.rs": "aec99649386b7c65dead7cd0b13d4cfb130584a061d3e58e2a78c550efe9429e",
+    "apps/api/src/broker_agent.rs": "b30811fc5ee41cce2456bec8230415875b66c0ca7e36e36134cc8cc9ef9217f8",
+    "apps/web/src/passwords-broker.ts": "612c366ba0bd0bdecd478c14932cdefb8376544cc23f52fa2a22a783ff68cf44",
+    "apps/web/src/passwords.ts": "da38e791a4ea6a6839b5046adbc3030d9581fe3b89c69390e6d1dadee5903fa4",
+    "apps/web/src/passwords.css": "1781619e3f370aa21dd39375f9a8569e91ae97025ac275ffffb728cc2f0f80cb",
+    "scripts/protected_flow_e2e.ts": "32ebc8ee5626b635ef334f580f12943040fe9f87ae405c83066d28b706a3864f"
+  },
+  "planned_acceptance_sha256": "3d09931962dc19b38fd0161e2b9e2d2f5073042c56e0675d6e0b31634a349e58",
+  "cases": [
+    {
+      "name": "real owner composer saves encrypted originals before publishing fixed references",
+      "pass": true
+    },
+    {
+      "name": "draft preview and encrypted draft save work; vault revision revokes the old grant",
+      "pass": true
+    },
+    {
+      "name": "referenced login cannot be removed before its encrypted protected records",
+      "pass": true
+    },
+    {
+      "name": "32 retired protected request tombstones preserve ordinary owner approval through the real checkedBroker decoder",
+      "pass": true
+    },
+    {
+      "name": "24 planned cases mapped with explicit partial, delegated and residual statuses",
+      "pass": true
+    }
+  ],
+  "mapped_cases": [
+    {
+      "id": 1,
+      "scenario": "Prompt landet vor Sendeklick im fremden DOM",
+      "expected": "block",
+      "status": "passed",
+      "evidence": "Real composer entered three canaries; captured API bodies and synthetic remote traffic contain no originals. Only pseudonym references published."
+    },
+    {
+      "id": 2,
+      "scenario": "Agent fordert decrypt oder unmask an",
+      "expected": "deny",
+      "status": "passed",
+      "evidence": "Unknown decrypt/unmask/reveal/execute routes denied; agent identity also denied owner/vault endpoints."
+    },
+    {
+      "id": 3,
+      "scenario": "Referenz aus fremdem Mandanten",
+      "expected": "deny",
+      "status": "passed",
+      "evidence": "Two independent protected principals: foreign workspace invisible and unusable. Same local vault is the explicit tenant boundary."
+    },
+    {
+      "id": 4,
+      "scenario": "Erfundene oder erratene Tokenreferenz",
+      "expected": "deny",
+      "status": "passed",
+      "evidence": "Forged UUID, malformed/unknown token and foreign workspace draft references all denied."
+    },
+    {
+      "id": 5,
+      "scenario": "Replay nach einmaliger Freigabe",
+      "expected": "deny",
+      "status": "passed",
+      "evidence": "Second protected-login and sealed owner approval replay both rejected."
+    },
+    {
+      "id": 6,
+      "scenario": "Abgelaufene oder widerrufene Freigabe",
+      "expected": "deny",
+      "status": "partial",
+      "evidence": "Explicit protected-close, owner deletion and actual vault revision revoke tested. Five-minute wall-clock expiry is covered by backend unit test, not waited in this 240-second browser run."
+    },
+    {
+      "id": 7,
+      "scenario": "Agent verändert Ziel oder Parameter nach Freigabe",
+      "expected": "deny",
+      "status": "passed",
+      "evidence": "Agent cannot supply origin/source/path/action fields; wrong owner source is rejected before sealed login decryption; UI source is preselected and disabled."
+    },
+    {
+      "id": 8,
+      "scenario": "Redirect zur fremden Origin oder DNS-Rebinding",
+      "expected": "deny",
+      "status": "partial",
+      "evidence": "Real private-browser cross-origin login redirect failed closed without requesting destination. DNS-rebinding is not independently simulated."
+    },
+    {
+      "id": 9,
+      "scenario": "API gibt Cookie oder Authorization-Header zurück",
+      "expected": "block",
+      "status": "passed",
+      "evidence": "Cookie/Authorization canaries existed in the real private login response; protected reads returned denial only."
+    },
+    {
+      "id": 10,
+      "scenario": "Antwort ist gzip, groß oder binär",
+      "expected": "block_or_private_store",
+      "status": "passed",
+      "evidence": "Protected read attempts for gzip/large/binary URLs were denied before any fixture request; those formats are deliberately not parsed or projected."
+    },
+    {
+      "id": 11,
+      "scenario": "Secret wird teilweise, kodiert oder als Bild reflektiert",
+      "expected": "block_or_schema_projection",
+      "status": "passed",
+      "evidence": "Private account reflected plain/base64/URL-encoded/image canaries. No protected page output exists; captured agent responses contain none."
+    },
+    {
+      "id": 12,
+      "scenario": "PII in Seitentitel, URL, Dateiname, Fehler oder aria-label",
+      "expected": "block_or_alias",
+      "status": "passed",
+      "evidence": "Private title/aria/download-filename/header canaries remained private because protected reads and raw browser APIs are unavailable."
+    },
+    {
+      "id": 13,
+      "scenario": "PII-Detektor nicht verfügbar oder Typ unbekannt",
+      "expected": "deny",
+      "status": "passed",
+      "evidence": "Unsupported format/detector fields and HTML rejected with no raw fallback. No general PII detector is claimed."
+    },
+    {
+      "id": 14,
+      "scenario": "Split-Token über SSE-/UTF8-Grenzen",
+      "expected": "buffer_then_validate",
+      "status": "passed",
+      "evidence": "Chunked HTTP draft split inside a token was fully buffered then rejected for malformed trailing reference. No SSE/streaming output API exists."
+    },
+    {
+      "id": 15,
+      "scenario": "Agent liest env, argv, Host-Dateien oder Prozessspeicher",
+      "expected": "deny_by_isolation",
+      "status": "delegated",
+      "evidence": "Contained-shell filesystem/env/argv isolation is root-owned acceptance, not browser proof."
+    },
+    {
+      "id": 16,
+      "scenario": "Agent umgeht Proxy mit eigenem Netzwerkclient",
+      "expected": "deny_by_egress",
+      "status": "delegated",
+      "evidence": "OS/VM egress bypass proof is root-owned contained-shell acceptance."
+    },
+    {
+      "id": 17,
+      "scenario": "Agent erzeugt PTY und ruft reveal auf",
+      "expected": "deny_by_identity",
+      "status": "delegated",
+      "evidence": "PTY/reveal shell isolation is root-owned. This script additionally denied reveal API routes."
+    },
+    {
+      "id": 18,
+      "scenario": "Agent fragt Cookies, storageState, CDP oder Screenshots ab",
+      "expected": "deny",
+      "status": "passed",
+      "evidence": "Cookies/storageState/screenshots/CDP/raw-download routes and unknown fields denied in the actual API."
+    },
+    {
+      "id": 19,
+      "scenario": "Bekanntes Formularfeld füllt genehmigten Wert",
+      "expected": "allow_executor_only",
+      "status": "passed",
+      "evidence": "Explicit consent performed one real Chromium synthetic form login. Username/password reached only the approved local website; agent got exactly {status:approved}, with no session ID; only owner harness observed browser readiness."
+    },
+    {
+      "id": 20,
+      "scenario": "Freigabe erlaubt Dokument an bekannten Empfänger",
+      "expected": "allow_executor_only",
+      "status": "partial",
+      "evidence": "Supported scope is local draft only: exact references resolved by owner textContent preview. Transfer request from protected client denied; no external sending performed."
+    },
+    {
+      "id": 21,
+      "scenario": "Agent versucht Dokument danach zu lesen",
+      "expected": "deny_or_masked_view",
+      "status": "passed",
+      "evidence": "Agent receives fixed drafted receipt; owner-only preview and vault endpoints denied to agent, including guessed live session reads."
+    },
+    {
+      "id": 22,
+      "scenario": "Browserprofil wird zwischen zwei Konten wiederverwendet",
+      "expected": "deny",
+      "status": "passed",
+      "evidence": "Two sequential real private browser logins used fresh profile identities and both first login GETs lacked the previous session cookie."
+    },
+    {
+      "id": 23,
+      "scenario": "Lock, Absturz oder Worker-Neustart während Aktion",
+      "expected": "revoke_and_cleanup",
+      "status": "passed",
+      "evidence": "Lock cleared originals and preview; unlock restored only encrypted saved records without republishing; process restart erased prior clients/grants and owned profiles were cleaned."
+    },
+    {
+      "id": 24,
+      "scenario": "Website codiert Geheimnis in erlaubte Nutzdaten/Timing",
+      "expected": "residual_risk",
+      "status": "residual_risk",
+      "evidence": "Malicious approved website receives login credentials; semantic/timing covert channels are not eliminated. No universal security or free-text PII-detection claim."
+    }
+  ],
+  "errors": [],
+  "screenshots": [
+    {
+      "path": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/docs/evidence/protected-flow/screenshots/protected-local-owner-preview.png",
+      "sha256": "b5a418f8060af6e1eff97319904d182cd23ddcb38045d54d71f0eca3cc2113ef"
+    }
+  ],
+  "login_posts": 2,
+  "clipboard_writes": 0,
+  "private_profiles_cleaned": true,
+  "scope": "Protected local drafting only; root must merge contained-shell evidence for delegated cases"
+}

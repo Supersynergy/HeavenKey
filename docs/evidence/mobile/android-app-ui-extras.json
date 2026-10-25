@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "search_and_empty_result": true,
+  "password_health_reuse": true,
+  "backup_key_generation": true,
+  "separated_key_confirmation_required": true,
+  "lock_clears_backup_key_ui": true,
+  "system_autofill_settings_link": true,
+  "verified_browser_settings_link": true,
+  "apk_sha256": "66a070236893e472f1d7260d1cda3aac97ba78ba14d93894187b8e99888cdb89",
+  "synthetic_only": true
+}
