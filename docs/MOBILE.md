@@ -1,6 +1,9 @@
 # HeavenKey auf Android und iPhone
 
-Die Flutter-App unter `apps/mobile` ergänzt den vorhandenen Desktop-Passwortmanager.
+Die Flutter-App unter `apps/mobile` ist auf Android ein eigenständiger lokaler Tresor.
+Ein Computer und ein Cloudkonto sind für Logins und Website-Passkeys nicht erforderlich.
+Die Kopplung mit dem Desktop ist optional. Die Oberfläche bietet einen direkten Passkey-Tab
+und ein Material-3-Design für Hell- und Dunkelmodus.
 Diese Entwicklungsversion ist für synthetische Testdaten vorgesehen. Der
 Quellstand 0.25 ergänzt auf Android die ausdrücklich gekoppelte, verschlüsselte
 Desktop-Synchronisierung und Website-Passkeys. Der Abgleich wird auf beiden
@@ -70,8 +73,23 @@ Ein Apple-Team oder eine Herausgebersignatur wird im Repository nicht vorgetäus
 
 ## Sicherung und Wiederherstellung
 
-Die mobile Sicherung enthält Logins. Website-Passkeys zusätzlich mit dem Desktop
-synchronisieren und dessen verschlüsselten Tresor sichern.
+Der neue Android-Quellstand erstellt **V2-Sicherungen mit Logins und Website-Passkeys**.
+Die Schlüsselpaare werden ausschließlich im nativen Android-Code verarbeitet; Flutter erhält
+verschlüsselte Dateien und eine Vorschau mit Anzahlen. Ein Desktop ist für Export oder
+Wiederherstellung nicht erforderlich. Alte V1-Login-Sicherungen bleiben auf Android lesbar.
+V2 lässt sich nur mit einem Android-Client wiederherstellen, der dieses Format unterstützt;
+iOS und frühere APKs lesen weiterhin nur V1. Die verlinkte Release-APK 0.26 enthält diese
+noch unveröffentlichte Erweiterung nicht.
+
+Die Vorschau bindet sowohl Login- als auch Passkey-Bestand. Geänderte Daten verlangen
+eine neue Vorschau. Passkeys mit gleicher ID und anderen Schlüssel- oder Herkunftsdaten
+werden vor jeder Änderung abgewiesen. Bestehende Passkeys werden beim Import nicht gelöscht.
+Die beiden Speicherdateien werden einzeln atomar geschrieben. Ein später Dateifehler kann
+einen Teilimport hinterlassen; die App meldet das ausdrücklich und sperrt den Tresor.
+Erneut entsperren, eine neue Vorschau prüfen und den zusammenführenden Import wiederholen.
+Ein geräteübergreifend atomarer Import wird damit nicht behauptet.
+
+Auf iOS enthält die V1-Sicherung weiterhin nur Logins.
 
 Im Tab **Sicherung** einen Wiederherstellungsschlüssel erzeugen und getrennt
 aufbewahren. Nach der Bestätigung speichert der Systemdialog eine verschlüsselte

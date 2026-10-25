@@ -18,7 +18,7 @@ Die macOS-App hat ein eigenes Fenster, native Datei-Dialoge und Tastaturmenüs. 
 
 ## Beim ersten Start
 
-Erstelle einen Tresor oder wähle die Wiederherstellung deiner Sicherung. Der erste Login braucht Website, Nutzername und das aktuelle Passwort; der Name lässt sich aus der Domain übernehmen. Android akzeptiert auch eine vollständige HTTPS-Adresse und zeigt vor dem Speichern die genaue Herkunft ohne Pfad.
+Erstelle einen Tresor oder wähle die Wiederherstellung deiner Sicherung. Der erste Login braucht Website, Nutzername und das aktuelle Passwort; der Name lässt sich aus der Domain übernehmen. Android zeigt zunächst nur drei Login-Felder; eigene Namen und Notizen sind optional. Ein eigener Passkey-Tab, wählbare Generatorlängen und ein neues Hell-/Dunkel-Design erleichtern den Einstieg. Der unveröffentlichte Android-Quellstand ergänzt zudem V2-Sicherungen einschließlich Website-Passkeys ohne Desktop; die verlinkte 0.26-APK enthält diese Änderungen noch nicht. Android akzeptiert auch eine vollständige HTTPS-Adresse und zeigt vor dem Speichern die genaue Herkunft ohne Pfad.
 
 Ein neues Passwort erzeugst du ausdrücklich. Bereits eingegebene Passwörter werden erst nach Bestätigung ersetzt. Vorschläge für Nutzernamen stammen aus dem entsperrten lokalen Tresor. Nach dem ersten Login führen passende Aktionen zur Sicherung, Browserintegration und Gerätekopplung. [Einstieg und Grenzen](docs/ONBOARDING.md).
 
@@ -32,7 +32,7 @@ Die ursprüngliche Idee steckt jetzt im Passwortmanager: den lokalen Tresor mit 
 
 1. Lade das Paket aus dem [gemeinsamen Release 0.26](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1). Prüfe es mit der dortigen `SHA256SUMS` und entpacke Desktop-Pakete vollständig. Die Android-APK wird auf dem Handy installiert.
 2. Öffne auf macOS `HeavenKey.app`. Die App verwaltet ihren lokalen Dienst und zeigt den Tresor im eigenen Fenster. Unter Windows und Linux öffnet der Starter den lokalen Tresor im Browser.
-3. Lege ein Masterpasswort mit mindestens 14 Zeichen fest. Exportiere anschließend eine verschlüsselte Sicherung und prüfe ihre Wiederherstellung.
+3. Desktop: Lege ein Masterpasswort mit mindestens 14 Zeichen fest. Android: Bestätige deine Gerätesperre; ein zusätzliches Masterpasswort ist nicht erforderlich. Exportiere anschließend eine verschlüsselte Sicherung und prüfe ihre Wiederherstellung.
 
 | System | Paket | Starter |
 | --- | --- | --- |

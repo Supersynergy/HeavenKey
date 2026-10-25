@@ -47,7 +47,7 @@ class _ConnectedPanelState extends State<ConnectedPanel> {
         ),
         const SizedBox(height: 16),
         const Text(
-          'Öffne am Desktop die Einstellungen „Handy synchronisieren“. Beide Geräte müssen den angegebenen Computer erreichen können. Kopiere den einmaligen Code hierher; er enthält den geheimen Schlüssel.',
+          'Optional: Dein Handy funktioniert auch ohne Desktop. Öffne am Desktop die Einstellungen „Handy synchronisieren“. Beide Geräte müssen den angegebenen Computer erreichen können. Kopiere den einmaligen Code hierher; er enthält den geheimen Schlüssel.',
         ),
         const SizedBox(height: 16),
         if (!connected) ...[
@@ -172,56 +172,6 @@ class _ConnectedPanelState extends State<ConnectedPanel> {
         const Text(
           'Synchronisiere auch am Desktop, damit er Änderungen vom Handy übernimmt. Gleichzeitige Änderungen desselben Eintrags werden als Konflikt angezeigt. Es gibt kein stilles Überschreiben.',
         ),
-        const SizedBox(height: 24),
-        Text(
-          'Website-Passkeys',
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'Android 14 oder neuer: Wähle HeavenKey als Passkey-Anbieter. Neue Passkeys entstehen beim Registrieren auf einer Website und werden erst nach deiner Freigabe verwendet. Danach kannst du sie mit dem Desktop synchronisieren.',
-        ),
-        FilledButton(
-          onPressed: vault.busy ? null : () => vault.enablePasskeys(),
-          child: const Text('Passkey-Anbieter einrichten'),
-        ),
-        for (final key in vault.websitePasskeys)
-          ListTile(
-            title: Text('${key['rpId']}'),
-            subtitle: Text('${key['userName']}'),
-            trailing: IconButton(
-              tooltip: 'Website-Passkey löschen',
-              icon: const Icon(Icons.delete_outline),
-              onPressed: vault.busy
-                  ? null
-                  : () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Website-Passkey löschen?'),
-                          content: const Text(
-                            'Die Registrierung bei der Website bleibt bestehen. Synchronisiere danach die verbundenen Geräte.',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('Behalten'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text('Löschen'),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (confirmed == true) {
-                        await vault.deleteWebsitePasskey('${key['id']}');
-                      }
-                    },
-            ),
-          ),
-        if (vault.websitePasskeys.isEmpty)
-          const Text('Noch keine Website-Passkeys auf diesem Gerät.'),
       ],
     );
   }

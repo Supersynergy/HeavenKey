@@ -246,6 +246,7 @@ def main():
     assert visible("https://example.com:8443"), (
         "Stored origin must retain the exact port"
     )
+    click("Eigenen Namen vergeben")
     fill("Name", "Synthetic onboarding custom")
     fill("HTTPS-Website", "http://example.com")
     save()

@@ -8,6 +8,7 @@ import 'package:heavenkey_mobile/website_input.dart';
 
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
   await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
   await tester.tap(finder);
   await tester.pumpAndSettle();
 }
@@ -159,6 +160,7 @@ void main() {
       expect(saved?.origin, 'https://example.com:8443');
       expect(saved?.title, 'example.com');
       expect(saved?.password, 'my-existing-password');
+      await tapVisible(tester, find.text('Eigenen Namen vergeben'));
       await tester.ensureVisible(field('Name'));
       await tester.enterText(field('Name'), 'Mein eigener Name');
       await tester.enterText(field('HTTPS-Website'), 'login.example.org');

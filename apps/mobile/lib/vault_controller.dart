@@ -71,6 +71,7 @@ class VaultController extends ChangeNotifier {
         'vault_changed' =>
           'Tresor wurde geändert. Bitte die Vorschau neu laden.',
         'backup_busy' => 'Eine Sicherungsaktion läuft bereits. Bitte warten.',
+        'backup_incomplete' => 'Wiederherstellung unvollständig. Entsperre erneut, prüfe eine neue Vorschau und wiederhole die Wiederherstellung. Die Sicherungsdatei bleibt unverändert.',
         'browser_untrusted' =>
           'Dieser Standardbrowser ist noch nicht freigegeben.',
         'sync_conflict' => 'Synchronisierungskonflikt. Beide Stände bleiben erhalten. Prüfe die Änderungen auf beiden Geräten.',
@@ -171,6 +172,7 @@ class VaultController extends ChangeNotifier {
     }
     await _channel.invokeMethod<void>('save', entry.toMap());
     if (generation != _generation || _disposed) return;
+    status = {...status, 'hasVault': true};
     if (index == -1) {
       _entries.add(entry);
     } else {
@@ -194,6 +196,10 @@ class VaultController extends ChangeNotifier {
 
   Future<bool> configureBrowser() => _perform((_) async {
     await _channel.invokeMethod<void>('configureBrowser');
+  });
+
+  Future<bool> configureDeviceSecurity() => _perform((_) async {
+    await _channel.invokeMethod<void>('configureDeviceSecurity');
   });
 
   Future<bool> refreshConnections() => _perform(

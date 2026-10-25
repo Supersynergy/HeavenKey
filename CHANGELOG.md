@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — Android ohne Desktop
+
+- Eigener Passkey-Bereich, kompakterer Sperrbildschirm und ruhiges Material-3-Design mit Hell-/Dunkelmodus, größeren Bedienelementen und Login-Karten.
+- Drei sichtbare Login-Felder beim Einstieg; eigener Name und Notizen bei Bedarf. Passwortlängen 16/24/32/48 direkt wählbar; bestehende Passwörter werden weiterhin nur nach Bestätigung ersetzt.
+- Android bietet die Einrichtung einer fehlenden Gerätesperre direkt an. Zurück im Editor führt in den Tresor. Die Desktop-Kopplung bleibt optional.
+- Android-V2-Sicherungen enthalten Logins und Website-Passkeys einschließlich verschlüsselter privater Schlüssel. Import prüft beide Bestände, Schlüsselpaare, Duplikate und die Vorschau-Bindung; bestehende Passkeys bleiben erhalten. V1-Login-Sicherungen bleiben lesbar. V2 erfordert einen neuen Android-Client; iOS und alte Clients unterstützen das Format nicht.
+- Native Schlüssel verlassen den Android-Teil nur innerhalb der verschlüsselten Datei. Geräteverlust erfordert weiterhin eine extern gespeicherte Sicherung und ihren getrennt aufbewahrten Wiederherstellungsschlüssel. Telefon- und externe Sicherheitsabnahme bleiben offen.
+
+
 ## 0.26.0 Preview
 
 - Vereinfachter erster Login mit vier statt neun gleichzeitig sichtbaren Desktop-Feldern. Website ohne Protokoll wird als HTTPS vorbereitet; eigene Namen bleiben erhalten.

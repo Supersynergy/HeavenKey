@@ -27,3 +27,15 @@ Die Bilddateien sind unbearbeitete Browseraufnahmen. Sie belegen die abgebildete
 Der Freigabedialog startet ohne ausgewähltes Konto. Die Zustimmung bleibt zunächst offen.
 
 `native-macos.png`: reales AppKit/WebKit-Fenster des 0.20-Builds auf macOS, eigener synthetischer Testtresor unter Port 18243. Der Login wurde in einer früheren lokalen Ausgabe angelegt und im aktualisierten Build entsperrt; keine echten Zugangsdaten.
+
+## Android ohne Desktop (unveröffentlichter Quellstand)
+
+`android-standalone-start.png`, `android-standalone-vault.png`,
+`android-standalone-editor.png`, `android-standalone-passkeys.png` und
+`android-standalone-dark.png` zeigen die tatsächlichen Flutter-Widgets bei
+390 × 844 logischen Pixeln und zweifacher Renderauflösung. Gerendert mit Flutter
+3.47.2/Dart 3.13.2 und den mit Flutter gelieferten Roboto- und Material-Icon-Schriften.
+Alle Einträge und Geräteantworten sind synthetische Testdaten. Dies sind
+Widget-Renders, keine Bildschirmaufnahmen eines physischen Android-Geräts und
+kein Nachweis nativer Anmeldung oder Wiederherstellung. Der Editor verdeckt
+Passwörter. Der vorhandene Release 0.26 enthält dieses Design noch nicht.

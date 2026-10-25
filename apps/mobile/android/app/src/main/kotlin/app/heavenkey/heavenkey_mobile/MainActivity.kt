@@ -57,6 +57,9 @@ class MainActivity : FlutterActivity() {
                     "status" -> {
                         val browser = FillPolicy.defaultBrowser(this)
                         result.success(mapOf("available" to true, "secureDevice" to vault.secureDevice(),
+                            "hasVault" to vault.hasVault(),
+                            "passkeysSupported" to (android.os.Build.VERSION.SDK_INT >= 34),
+                            "backupIncludesPasskeys" to true,
                             "autofillEnabled" to (getSystemService(AutofillManager::class.java)?.hasEnabledAutofillServices() == true),
                             "browserTrusted" to (browser != null && BrowserTrust.trusted(this, browser)),
                             "windowFocused" to hasWindowFocus(), "platform" to "android"))
@@ -72,23 +75,27 @@ class MainActivity : FlutterActivity() {
                     "copyPassword" -> { vault.copy(call.argument<String>("id") ?: throw VaultFailure("invalid_entry")); result.success(null) }
                     "newBackupKey" -> result.success(vault.newBackupKey())
                     "copyBackupKey" -> { vault.copyBackupKey(call.argument<String>("recoveryKey") ?: throw BackupFailure("invalid_key")); result.success(null) }
-                    "createBackup" -> result.success(vault.createBackup(call.argument<String>("recoveryKey") ?: throw BackupFailure("invalid_key")))
+                    "createBackup" -> result.success(PortableVaultBackup(this, vault).create(call.argument<String>("recoveryKey") ?: throw BackupFailure("invalid_key")))
                     "saveBackupFile" -> backupFiles.save(call.argument<String>("envelope") ?: throw BackupFailure("invalid_archive")) { value, error ->
                         if (error == null) result.success(value) else fail(error)
                     }
                     "loadBackupFile" -> backupFiles.load { value, error -> if (error == null) result.success(value) else fail(error) }
-                    "inspectBackup" -> result.success(vault.inspectBackup(call.argument<String>("envelope") ?: throw BackupFailure("invalid_archive"),
+                    "inspectBackup" -> result.success(PortableVaultBackup(this, vault).inspect(call.argument<String>("envelope") ?: throw BackupFailure("invalid_archive"),
                         call.argument<String>("recoveryKey") ?: throw BackupFailure("invalid_key")))
                     "restoreBackup" -> {
                         val replace = call.argument<Any>("replaceExisting")
                         if (replace != null && replace !is Boolean) throw BackupFailure("invalid_archive")
-                        val restored = vault.restoreBackup(call.argument<String>("envelope") ?: throw BackupFailure("invalid_archive"),
+                        val restored = PortableVaultBackup(this, vault).restore(call.argument<String>("envelope") ?: throw BackupFailure("invalid_archive"),
                             call.argument<String>("recoveryKey") ?: throw BackupFailure("invalid_key"),
                             call.argument<String>("vaultFingerprint") ?: throw BackupFailure("vault_changed"),
                             call.argument<String>("archiveFingerprint") ?: throw BackupFailure("vault_changed"), replace == true)
                         result.success(restored.map { value -> value.keys().asSequence().associateWith { value.getString(it) } })
                     }
                     "lock" -> { vault.lock(); result.success(null) }
+                    "configureDeviceSecurity" -> {
+                        startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))
+                        result.success(null)
+                    }
                     "enableAutofill" -> {
                         startActivity(Intent(Settings.ACTION_REQUEST_SET_AUTOFILL_SERVICE,
                             Uri.parse("package:${ComponentName(this, HeavenAutofillService::class.java).packageName}")))
