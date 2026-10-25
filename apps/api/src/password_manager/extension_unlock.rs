@@ -222,6 +222,7 @@ mod tests {
         )
         .unwrap();
         let app = VaultApp {
+            mobile: Arc::new(mobile_sync::MobileSync::default()),
             db: Arc::new(Mutex::new(db)),
             origin: "http://localhost:18240".into(),
             host: "localhost:18240".into(),

@@ -99,6 +99,7 @@ impl Access {
 }
 
 pub(super) fn schema(db: &Connection) -> rusqlite::Result<()> {
+    mobile_sync::schema(db)?;
     db.execute_batch("CREATE TABLE IF NOT EXISTS password_passkeys(id TEXT PRIMARY KEY,label TEXT NOT NULL,vault_salt TEXT NOT NULL,passkey TEXT NOT NULL,wrap TEXT NOT NULL,counter INTEGER NOT NULL DEFAULT 0);
     CREATE TABLE IF NOT EXISTS password_shares(id TEXT PRIMARY KEY,source_id TEXT NOT NULL,kind TEXT NOT NULL,token_hash TEXT NOT NULL,nonce TEXT NOT NULL,ciphertext TEXT NOT NULL,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,revoked INTEGER NOT NULL DEFAULT 0,passkey TEXT,counter INTEGER NOT NULL DEFAULT 0);")
 }
@@ -802,6 +803,7 @@ mod tests {
         )
         .unwrap();
         VaultApp {
+            mobile: Arc::new(mobile_sync::MobileSync::default()),
             db: Arc::new(Mutex::new(db)),
             origin: "http://localhost:18240".into(),
             host: "localhost:18240".into(),

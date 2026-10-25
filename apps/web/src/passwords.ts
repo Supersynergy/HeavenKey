@@ -10,6 +10,7 @@ import { initExtensionUnlock } from "./passwords-extension-unlock";
 import { initPasswordAccess } from "./passwords-access";
 import { initPasswordSharing } from "./passwords-sharing";
 import { initOnboarding } from "./passwords-onboarding";
+import { initMobileSync } from "./passwords-mobile-sync";
 import { getPrivacyPreferences, initPrivacy, recordActivity, clearActivities } from "./passwords-privacy";
 const byId = <T extends HTMLElement = HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
@@ -31,6 +32,7 @@ function cancelReveal() { clearTimeout(revealTimer); revealedId = null; }
 let editorReturnFocus: HTMLElement | null = null;
 let workflows: ReturnType<typeof initWorkflows> | undefined;
 let passwordAccess: ReturnType<typeof initPasswordAccess> | undefined;
+let mobileSync: ReturnType<typeof initMobileSync> | undefined;
 let passwordSharing: ReturnType<typeof initPasswordSharing> | undefined;
 let passwordBroker: ReturnType<typeof initPasswordBroker> | undefined;
 let transferBroker: ReturnType<typeof initTransferBroker> | undefined;
@@ -70,6 +72,7 @@ function setBusy(next: boolean) {
 }
 function clearEditor() { byId("editor-status").textContent = ""; byId("editor-status").hidden = true; form("entry-form").reset(); input("entry-id").value = ""; input("entry-password").type = "password"; byId("reveal-password").setAttribute("aria-pressed", "false"); byId("reveal-password").textContent = "Anzeigen"; byId<HTMLDialogElement>("editor").close(); }
 function lock(message = "Tresor gesperrt.", refresh = true) {
+  mobileSync?.clear();
   workflows?.clear(); passwordAccess?.clear(); passwordSharing?.clear(); passwordBroker?.clear(); transferBroker?.clear(); protectedComposer?.clear(); onboarding?.clear();
   cancelReveal(); clearActivities();
   clearTimeout(clipboardTimer); void cleanupClipboard();
@@ -161,6 +164,7 @@ function selectEntry(id: string, focus = false) {
   else byId("entries").querySelector<HTMLButtonElement>("[aria-current=true]")?.focus();
 }
 function render() {
+  void mobileSync?.refresh();
   const list = byId("entries"); const scrollTop = list.scrollTop; list.replaceChildren();
   if (!vault) return;
   byId("vault-kdf").textContent = envelope?.version === 2 ? "Argon2id · 64 MiB · 3 Durchläufe · AES-256-GCM" : "PBKDF2-SHA256 · 600.000 Durchläufe · AES-256-GCM. Unter „Masterpasswort ändern“ auf Argon2id umstellen.";
@@ -416,8 +420,9 @@ form("rekey-form").addEventListener("submit", event => { event.preventDefault();
   const master = value("new-master");
   if (master !== value("new-master-confirm")) throw new Error("Die neuen Masterpasswörter stimmen nicht überein.");
   form("rekey-form").reset();
-  const rekeyed = await createVault(master, vault); if (!unlocked(run)) return;
-  if (await commit(vault!, run, rekeyed.key, rekeyed.envelope)) status("Masterpasswort geändert. Richte deine Passkeys erneut ein; offene Freigaben wurden widerrufen. Alte Sicherungen brauchen ihr damaliges Passwort.");
+  const next = { ...vault, mobile_sync: [] };
+  const rekeyed = await createVault(master, next); if (!unlocked(run)) return;
+  if (await commit(next, run, rekeyed.key, rekeyed.envelope)) status("Masterpasswort geändert. Entsperr-Passkeys und Geräteverbindungen bitte neu einrichten; offene Freigaben wurden widerrufen. Alte Sicherungen brauchen ihr damaliges Passwort.");
 }); });
 for (const name of ["pointerdown", "keydown", "input"] as const) document.addEventListener(name, () => { lastActivity = Date.now(); }, { passive: true });
 setInterval(() => { if (vault && Date.now() - lastActivity >= 300_000) lock("Nach 5 Minuten ohne Eingabe gesperrt."); }, 1000);
@@ -432,6 +437,9 @@ const accessContext = {
   announce: status,
 };
 passwordAccess = initPasswordAccess(accessContext);
+mobileSync = initMobileSync({ vault: () => vault, token: () => token, current: unlocked, run: operation, commit, announce: status });
+for (const id of ["close-settings", "nav-all", "nav-favorites", "nav-health"]) byId(id).addEventListener("click", () => mobileSync?.clear());
+byId("nav-settings").addEventListener("click", () => void mobileSync?.refresh());
 initExtensionUnlock(accessContext);
 passwordSharing = initPasswordSharing(accessContext);
 passwordBroker = initPasswordBroker(accessContext);

@@ -1,9 +1,19 @@
 bun run build
 $ python3 scripts/build_web.py
-Bundled 22 modules in 13ms
+Bundled 22 modules in 10ms
 
   main.js  62.46 KB  (entry point)
 
+Bundled 36 modules in 8ms
+
+  passwords.js  0.34 MB  (entry point)
+
+Bundled 18 modules in 5ms
+
+  share.js  16.30 KB  (entry point)
+
+chromium 0.21.0: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/dist/extension-source-chromium
+firefox 0.21.0: /Users/master/Documents/Codex/work/heavenkey-ci-20261012/dist/extension-source-firefox
 cargo build --locked --offline
-   Compiling uac-api v0.7.0 (/Users/master/Documents/Codex/work/heavenkey-integrated-20261016/apps/api)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.01s
+   Compiling uac-api v0.21.0 (/Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/api)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.43s

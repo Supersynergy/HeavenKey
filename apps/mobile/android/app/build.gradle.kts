@@ -38,3 +38,10 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+// AndroidX (Google Maven) and cbor-java (Maven Central), both Apache-2.0.
+// CBOR is used only to encode authenticator outputs; crypto uses platform JCA.
+dependencies {
+    implementation("androidx.credentials:credentials:1.6.0")
+    implementation("co.nstant.in:cbor:0.9")
+}

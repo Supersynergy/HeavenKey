@@ -1,0 +1,94 @@
+{
+  "pass": true,
+  "binary": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/target/debug/uac-api",
+  "binary_sha256": "6faaf1a1a1a4b08f48c7edd033de12abdb94d500d3bee72e1d48de87b00f82f4",
+  "synthetic_only": true,
+  "real_rust": true,
+  "real_virtual_webauthn": true,
+  "prf_not_mocked": true,
+  "native_hardware": false,
+  "screenshots": [],
+  "cases": [
+    {
+      "name": "onboarding: first visit explains setup, offers recovery and has no native passkey prompt",
+      "pass": true
+    },
+    {
+      "name": "onboarding: agent and transfer shortcuts focus the settings without granting access",
+      "pass": true
+    },
+    {
+      "name": "onboarding: guide Escape restores the entry path and first login persists in real encrypted vault",
+      "pass": true
+    },
+    {
+      "name": "passkey: actual PRF creation and verified assertion enroll without exporting master to API",
+      "pass": true
+    },
+    {
+      "name": "passkey: rename rejects stale revisions and changes only the label, preserving credential and encrypted vault",
+      "pass": true
+    },
+    {
+      "name": "passkey: real native assertion decrypts the original master vault",
+      "pass": true
+    },
+    {
+      "name": "passkey: persisted credential and encrypted wrap unlock after a real Rust process restart",
+      "pass": true
+    },
+    {
+      "name": "passkey: explicit lock cancels pending native enrollment and keeps the existing credential",
+      "pass": true
+    },
+    {
+      "name": "passkey: missing native PRF fails without activation and master fallback remains usable",
+      "pass": true
+    },
+    {
+      "name": "sharing: owner explicitly selects one real login field and receives a fragment-only encrypted link",
+      "pass": true
+    },
+    {
+      "name": "sharing: independent recipient claims with its own verified passkey and decrypts only the selected field",
+      "pass": true
+    },
+    {
+      "name": "sharing: an empty recipient authenticator releases no fields while awaiting native verification; cancel clears it",
+      "pass": true
+    },
+    {
+      "name": "sharing: a consumed genuine recipient assertion cannot be replayed",
+      "pass": true
+    },
+    {
+      "name": "sharing: wrong access token is rejected without releasing ciphertext",
+      "pass": true
+    },
+    {
+      "name": "sharing: returning recipient verifies its existing bound passkey before another server release",
+      "pass": true
+    },
+    {
+      "name": "sharing: server revocation denies a fresh recipient access and releases no fields",
+      "pass": true
+    },
+    {
+      "name": "sharing: real short server TTL expires and rejects access without a clock mock",
+      "pass": true
+    },
+    {
+      "name": "passkey: master rotation atomically invalidates passkey wraps and revokes outstanding snapshots",
+      "pass": true
+    },
+    {
+      "name": "onboarding: responsive views fit and rekeyed master unlocks with a clear passkey setup state",
+      "pass": true
+    },
+    {
+      "name": "security: stored bytes and API bodies contain no plaintext, PRF outputs or fragment keys; no page errors",
+      "pass": true
+    }
+  ],
+  "errors": []
+}

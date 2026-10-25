@@ -1,7 +1,7 @@
 name: heavenkey_mobile
-description: HeavenKey local vault with native browser autofill.
+description: HeavenKey encrypted vault with paired desktop sync, browser autofill and website passkeys.
 publish_to: none
-version: 0.24.0+24
+version: 0.25.0+25
 environment:
   sdk: ^3.13.2
 dependencies:

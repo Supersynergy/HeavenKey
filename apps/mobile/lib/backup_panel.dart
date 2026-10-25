@@ -153,6 +153,9 @@ class _BackupPanelState extends State<BackupPanel> {
       padding: const EdgeInsets.all(24),
       children: [
         Text('Sicherung', style: Theme.of(context).textTheme.headlineMedium),
+        const Text(
+          'Diese Sicherung enthält Logins. Website-Passkeys werden separat gespeichert. Synchronisiere sie mit dem Desktop und sichere dessen verschlüsselten Tresor.',
+        ),
         const SizedBox(height: 12),
         const Text(
           'Speichere eine verschlüsselte Datei für den Umzug oder die Wiederherstellung auf einem Mobilgerät. Bewahre den Schlüssel getrennt von der Datei auf.',

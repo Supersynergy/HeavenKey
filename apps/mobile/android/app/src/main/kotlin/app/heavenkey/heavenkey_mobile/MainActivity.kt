@@ -11,8 +11,12 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import org.json.JSONObject
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 class MainActivity : FlutterActivity() {
+    private val connectedWorker = ThreadPoolExecutor(1, 1, 0, TimeUnit.MILLISECONDS, ArrayBlockingQueue(1))
     private lateinit var vault: VaultStore
     private lateinit var backupFiles: BackupFiles
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,6 +31,29 @@ class MainActivity : FlutterActivity() {
             fun fail(code: String) = result.error(code, "HeavenKey konnte die Aktion nicht ausführen.", null)
             try {
                 when (call.method) {
+                    "connectedStatus" -> result.success(DesktopSync(this, vault).status())
+                    "connectDesktop", "syncDesktop" -> {
+                        if (connectedWorker.activeCount != 0 || connectedWorker.queue.isNotEmpty()) throw VaultFailure("sync_busy")
+                        vault.read()
+                        val code = call.argument<String>("code")
+                        val resolution = call.argument<String>("resolution")
+                        val conflictToken = call.argument<String>("conflictToken")
+                        connectedWorker.execute {
+                            try {
+                                val sync = DesktopSync(this, vault)
+                                val value = if (call.method == "connectDesktop") sync.connect(code ?: throw VaultFailure("invalid_sync_pairing")) else sync.synchronize(resolution, conflictToken)
+                                runOnUiThread { if (!isDestroyed) result.success(value) }
+                            } catch (failure: VaultFailure) { runOnUiThread { if (!isDestroyed) fail(failure.code) } }
+                              catch (_: Exception) { runOnUiThread { if (!isDestroyed) fail("sync_failed") } }
+                        }
+                    }
+                    "disconnectDesktop" -> { DesktopSync(this, vault).disconnect(); result.success(null) }
+                    "deleteWebsitePasskey" -> { DesktopSync(this, vault).deletePasskey(call.argument<String>("id") ?: throw VaultFailure("invalid_entry")); result.success(null) }
+                    "enablePasskeys" -> {
+                        if (android.os.Build.VERSION.SDK_INT < 34) throw VaultFailure("passkeys_unavailable")
+                        startActivity(Intent("android.settings.CREDENTIAL_PROVIDER", Uri.parse("package:$packageName")))
+                        result.success(null)
+                    }
                     "status" -> {
                         val browser = FillPolicy.defaultBrowser(this)
                         result.success(mapOf("available" to true, "secureDevice" to vault.secureDevice(),
@@ -94,5 +121,5 @@ class MainActivity : FlutterActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         backupFiles.onActivityResult(requestCode, resultCode, data)
     }
-    override fun onDestroy() { backupFiles.destroy(); vault.lock(); super.onDestroy() }
+    override fun onDestroy() { connectedWorker.shutdownNow(); backupFiles.destroy(); vault.lock(); super.onDestroy() }
 }

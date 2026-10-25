@@ -1038,6 +1038,7 @@ mod tests {
         let db = Connection::open_in_memory().unwrap();
         db.execute_batch("CREATE TABLE password_manager(id INTEGER PRIMARY KEY,revision INTEGER NOT NULL,record TEXT NOT NULL); INSERT INTO password_manager VALUES(1,1,'{}');").unwrap();
         VaultApp {
+            mobile: Arc::new(mobile_sync::MobileSync::default()),
             db: Arc::new(Mutex::new(db)),
             origin: "http://localhost:18268".into(),
             host: "localhost:18268".into(),

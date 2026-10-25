@@ -1,0 +1,156 @@
+{
+  "pass": true,
+  "platform": "darwin",
+  "binary_sha256": "6faaf1a1a1a4b08f48c7edd033de12abdb94d500d3bee72e1d48de87b00f82f4",
+  "source_hashes": {
+    "scripts/transfer_broker_e2e.ts": "073b1726746cb63fe063a984222242786b5b8bea728423e3b9751e46621610cf",
+    "scripts/transfer_fixture.py": "f26fe98e4db24384a53156a934b9ae0e56a0776f2b022fde6ed1d6d4a1552552",
+    "apps/api/src/password_manager/transfer.rs": "7539358c134e138ebc1813e310d05e6957d51b9ab6c290db6ac04773326ebd6f",
+    "apps/api/src/password_manager/transfer/protocol.rs": "9d6ca74d049b4a7779de070d2c4eecd7a379a5dd1dd26730640d428f9d6aea43",
+    "apps/api/src/agent_sandbox.rs": "86384d54020a5d2add1fff0ae00400068b2bf59c6a94296dfc877ccb8d0e493c",
+    "apps/api/src/broker_agent.rs": "b30811fc5ee41cce2456bec8230415875b66c0ca7e36e36134cc8cc9ef9217f8",
+    "apps/api/src/password_manager.rs": "c9041dd375b2f3861498345fa177a53d2c0d3790f3408aab956a05e053d55522",
+    "apps/api/src/password_manager/broker.rs": "ec650a367e90e1024107801239455cd1e3f81fede2a8e354d3bc16f4d3e770ba",
+    "apps/web/src/passwords-transfer.ts": "6c6b808311829f7c03719c31d8379005afe0a65ad048317eb7bf1d9bcc327e57",
+    "apps/web/src/passwords-ssh.ts": "2e08cf79c9b963befef4b3f5b9969e3acb752f53f568a080235db9b7ff9fef6d",
+    "apps/web/src/passwords-access-overview.ts": "51da421d9dd629afc50f37d0ea54da353f034684fd919a272149d05d99167956",
+    "apps/web/src/passwords.ts": "da38e791a4ea6a6839b5046adbc3030d9581fe3b89c69390e6d1dadee5903fa4",
+    "apps/web/src/passwords-crypto.ts": "31f58ee9be409041a64b0152e3f35309a0adc479232bb7692b494122bcfe9e79",
+    "packages/transfers/ssh.ts": "bfb3c8d9c4c1865b4483da73f74b348ec7462efc34f621b9c385bd08eb627460",
+    "packages/transfers/smart-connection.ts": "b55b893660279f91c7972d1644b2027ca3cc907d69aa8e5d63c0d6db90d1aaa7",
+    "packages/transfers/schema.ts": "1d89d72f2b29af5d1571cd6a31c170d5f2b9b6c6ef53061707023af42ea4686c",
+    "packages/transfers/import.ts": "3d20c338c9f2c6a9a8b043b2e4fa7c481c6ce55ff8ec3bf486a1c038e5ffa18b",
+    "packages/transfers/clients.ts": "d18a7ccc76262f07173ad4d9185523fae58d9b64fa41462708c9925e4f46ab82",
+    "packages/transfers/catalog.ts": "588c063fb646fbf23b5ca1c387ab6a61e573c2e3c6695f341ac25a20becb6ecf"
+  },
+  "cases": [
+    {
+      "name": "real owner vault unlock activates transfer broker",
+      "pass": true
+    },
+    {
+      "name": "ten provider presets including netcup set documented protocol and port",
+      "pass": true
+    },
+    {
+      "name": "owner-generated Ed25519 and FTPES CA profiles save in encrypted vault",
+      "pass": true
+    },
+    {
+      "name": "generated connection key is stored once and accessible through the focused SSH shortcut",
+      "pass": true
+    },
+    {
+      "name": "connection preview rejects URL passwords, applies reviewed fields, and reuses an existing protected SSH identity",
+      "pass": true
+    },
+    {
+      "name": "actual private-file import verifies the pair, rejects duplicate keys, clears file controls and never renders private key text",
+      "pass": true
+    },
+    {
+      "name": "unused key removal requests confirmation and cancellation preserves the stored key",
+      "pass": true
+    },
+    {
+      "name": "real encrypted backup retains SSH identities and shared connection references",
+      "pass": true
+    },
+    {
+      "name": "packaged CLI transfer request and status use scoped stdin capability",
+      "pass": true
+    },
+    {
+      "name": "sftp list requires exact owner approval",
+      "pass": true
+    },
+    {
+      "name": "sftp stat requires exact owner approval",
+      "pass": true
+    },
+    {
+      "name": "sftp get requires exact owner approval",
+      "pass": true
+    },
+    {
+      "name": "sftp put writes the approved hash and path",
+      "pass": true
+    },
+    {
+      "name": "ftpes list requires exact owner approval",
+      "pass": true
+    },
+    {
+      "name": "ftpes stat requires exact owner approval",
+      "pass": true
+    },
+    {
+      "name": "ftpes get requires exact owner approval",
+      "pass": true
+    },
+    {
+      "name": "ftpes put writes the approved hash and path",
+      "pass": true
+    },
+    {
+      "name": "reused SSH identity authenticates a second real SFTP connection through the sealed broker",
+      "pass": true
+    },
+    {
+      "name": "traversal rejected before any connection",
+      "pass": true
+    },
+    {
+      "name": "sftp rejects escape without content disclosure",
+      "pass": true
+    },
+    {
+      "name": "sftp rejects large.bin without content disclosure",
+      "pass": true
+    },
+    {
+      "name": "ftpes rejects escape without content disclosure",
+      "pass": true
+    },
+    {
+      "name": "ftpes rejects large.bin without content disclosure",
+      "pass": true
+    },
+    {
+      "name": "cross-client result access and revoked requests denied",
+      "pass": true
+    },
+    {
+      "name": "ten client handoffs download through actual UI without secrets",
+      "pass": true
+    },
+    {
+      "name": "FileZilla preview discards embedded credentials",
+      "pass": true
+    },
+    {
+      "name": "trust markers reflect completed verified transfers in the current owner session",
+      "pass": true
+    },
+    {
+      "name": "dark and mobile UI has no horizontal page overflow",
+      "pass": true
+    },
+    {
+      "name": "acknowledged vault lock revokes transfer authorization and clears SSH identity metadata",
+      "pass": true
+    },
+    {
+      "name": "encrypted profiles and SSH identities survive lock and unlock",
+      "pass": true
+    },
+    {
+      "name": "no credential plaintext in approval transport, agent output or clipboard",
+      "pass": true
+    }
+  ],
+  "browser_errors": [],
+  "client_handoffs": 10,
+  "provider_presets": 10,
+  "scope": "actual loopback SFTP and FTPES; owner Chromium UI; synthetic accounts, not hosting-provider acceptance"
+}

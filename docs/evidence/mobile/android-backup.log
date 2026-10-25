@@ -1,7 +1,7 @@
 00:00 +0: loading /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/integration_test/backup_native_test.dart
-Running Gradle task 'assembleDebug'...                             15,1s
+Running Gradle task 'assembleDebug'...                             12,1s
 ✓ Built build/app/outputs/flutter-apk/app-debug.apk
-Installing build/app/outputs/flutter-apk/app-debug.apk...        1.102ms
+Installing build/app/outputs/flutter-apk/app-debug.apk...          351ms
 00:00 +0: native portable backup, merge guards and actual document pickers
 NATIVE_PHASE_AUTH
 BACKUP_PHASE_CLIPBOARD_BACKGROUND
@@ -14,5 +14,5 @@ NATIVE_PHASE_AUTH
 BACKUP_PHASE_CANCEL_FILE
 NATIVE_PHASE_AUTH
 BACKUP_NATIVE_OK
-01:09 +1: (tearDownAll)
-01:09 +1: All tests passed!
+00:58 +1: (tearDownAll)
+00:58 +1: All tests passed!

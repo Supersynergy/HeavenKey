@@ -1,0 +1,32 @@
+SYNC_DESKTOP_READY
+00:00 +0: loading /Users/master/Documents/Codex/work/heavenkey-ci-20261012/apps/mobile/integration_test/desktop_sync_test.dart
+Running Gradle task 'assembleDebug'...                             11,9s
+✓ Built build/app/outputs/flutter-apk/app-debug.apk
+Installing build/app/outputs/flutter-apk/app-debug.apk...          376ms
+00:00 +0: actual paired desktop TLS sync, passkeys, deletion and conflict consent
+NATIVE_PHASE_AUTH
+SYNC_PHASE_PAIR
+SYNC_DESKTOP_DONE pair
+SYNC_PHASE_DESKTOP_RECEIVE
+SYNC_DESKTOP_DONE receive
+SYNC_PHASE_DESKTOP_EDIT
+SYNC_DESKTOP_DONE edit
+NATIVE_PHASE_AUTH
+SYNC_PHASE_VERIFY_DELETED
+SYNC_DESKTOP_DONE verify_deleted
+SYNC_PHASE_DELETE_PROBE
+SYNC_DESKTOP_DONE delete_probe
+SYNC_PHASE_CONFLICT_SEED
+SYNC_DESKTOP_DONE conflict_seed
+NATIVE_PHASE_AUTH
+SYNC_PHASE_CONFLICT_EDIT
+SYNC_DESKTOP_DONE conflict_edit
+SYNC_PHASE_CONFLICT_ADVANCE
+SYNC_DESKTOP_DONE conflict_advance
+SYNC_PHASE_VERIFY_RESOLUTION
+SYNC_DESKTOP_DONE verify_resolution
+SYNC_PHASE_REVOKE
+SYNC_DESKTOP_DONE revoke
+SYNC_NATIVE_OK
+00:13 +1: (tearDownAll)
+00:14 +1: All tests passed!

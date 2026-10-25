@@ -1,0 +1,15 @@
+{
+  "cases": [
+    "pair",
+    "receive",
+    "edit",
+    "verify_deleted",
+    "delete_probe",
+    "conflict_seed",
+    "conflict_edit",
+    "conflict_advance",
+    "verify_resolution",
+    "revoke"
+  ],
+  "synthetic_only": true
+}

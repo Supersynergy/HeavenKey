@@ -1,0 +1,216 @@
+{
+  "pass": true,
+  "synthetic_only": true,
+  "real_rust": true,
+  "real_chromium": true,
+  "browser_sandbox": true,
+  "synthetic_fixture_sandbox_override": false,
+  "native_hardware": false,
+  "binary": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/target/debug/uac-api",
+  "binary_sha256": "6faaf1a1a1a4b08f48c7edd033de12abdb94d500d3bee72e1d48de87b00f82f4",
+  "source_sha256": {
+    "apps/api/src/password_manager/broker.rs": "ec650a367e90e1024107801239455cd1e3f81fede2a8e354d3bc16f4d3e770ba",
+    "apps/api/src/password_manager/browser_executor.rs": "aec99649386b7c65dead7cd0b13d4cfb130584a061d3e58e2a78c550efe9429e",
+    "apps/api/src/broker_agent.rs": "b30811fc5ee41cce2456bec8230415875b66c0ca7e36e36134cc8cc9ef9217f8",
+    "apps/web/src/passwords-broker.ts": "612c366ba0bd0bdecd478c14932cdefb8376544cc23f52fa2a22a783ff68cf44",
+    "apps/web/src/passwords.ts": "da38e791a4ea6a6839b5046adbc3030d9581fe3b89c69390e6d1dadee5903fa4",
+    "apps/web/src/passwords.css": "1781619e3f370aa21dd39375f9a8569e91ae97025ac275ffffb728cc2f0f80cb",
+    "scripts/password_broker_e2e.ts": "6926251a3c2ca8a09900762eb422a036d4582fba1997c80b5c051352c0e4e425"
+  },
+  "cases": [
+    {
+      "name": "real Rust broker endpoint and supported private Chrome available",
+      "pass": true
+    },
+    {
+      "name": "owner real encrypted vault creation unlocks broker only after local unlock",
+      "pass": true
+    },
+    {
+      "name": "synthetic logins saved through existing product UI with wrong-origin control",
+      "pass": true
+    },
+    {
+      "name": "explicit owner pairing creates client through real native broker CLI",
+      "pass": true
+    },
+    {
+      "name": "one-use pairing replay denied",
+      "pass": true
+    },
+    {
+      "name": "second client receives independent scoped capability",
+      "pass": true
+    },
+    {
+      "name": "agent token cannot access owner vault/config/status/pairing routes",
+      "pass": true
+    },
+    {
+      "name": "invalid client token denied",
+      "pass": true
+    },
+    {
+      "name": "browser Origin on agent transport denied",
+      "pass": true
+    },
+    {
+      "name": "unknown agent request fields denied",
+      "pass": true
+    },
+    {
+      "name": "noncanonical origins/credentials/remote insecure origin/file scheme denied",
+      "pass": true
+    },
+    {
+      "name": "unsupported write scope denied",
+      "pass": true
+    },
+    {
+      "name": "unknown raw browser operation has no agent route",
+      "pass": true
+    },
+    {
+      "name": "native CLI reports pending until explicit human approval",
+      "pass": true
+    },
+    {
+      "name": "cross-client request status denied",
+      "pass": true
+    },
+    {
+      "name": "approval has no default selection and lists exact-origin login only",
+      "pass": true
+    },
+    {
+      "name": "honest client/trust/action/origin/session boundaries shown to owner",
+      "pass": true
+    },
+    {
+      "name": "choosing account alone neither consents nor starts login",
+      "pass": true
+    },
+    {
+      "name": "Escape cancels selection and restores requesting control focus",
+      "pass": true
+    },
+    {
+      "name": "reopened approval retains no account choice or consent",
+      "pass": true
+    },
+    {
+      "name": "actual dark approval renders with text contrast at least 4.5:1",
+      "pass": true
+    },
+    {
+      "name": "actual 390px mobile dialog fits viewport and has no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "explicit consent runs one real private Chromium pipe form login",
+      "pass": true
+    },
+    {
+      "name": "owner HTTP handoff transports authenticated ciphertext and metadata only",
+      "pass": true
+    },
+    {
+      "name": "native CLI reads fixed projection from persisted private cookie session",
+      "pass": true
+    },
+    {
+      "name": "read bounds and redactions exclude secrets/cookies/controls/hidden/scripts/external links",
+      "pass": true
+    },
+    {
+      "name": "cross-client session read denied",
+      "pass": true
+    },
+    {
+      "name": "absolute URLs/protocol-relative/query/fragment/backslash/control read paths denied",
+      "pass": true
+    },
+    {
+      "name": "arbitrary read selectors/unknown fields denied",
+      "pass": true
+    },
+    {
+      "name": "sealed approval replay denied after dispatch",
+      "pass": true
+    },
+    {
+      "name": "native CLI closes owned session",
+      "pass": true
+    },
+    {
+      "name": "closed session rejects replay reads",
+      "pass": true
+    },
+    {
+      "name": "cross-origin iframe traffic blocked or session fails closed in actual private Chrome",
+      "pass": true
+    },
+    {
+      "name": "cross-origin navigation fails closed without contacting destination",
+      "pass": true
+    },
+    {
+      "name": "local vault lock cancels an in-progress private browser read",
+      "pass": true
+    },
+    {
+      "name": "locked broker rejects existing session and new requests",
+      "pass": true
+    },
+    {
+      "name": "owner UI client revoke invalidates its token and running browser",
+      "pass": true
+    },
+    {
+      "name": "real vault revision save cancels prior granted browser session",
+      "pass": true
+    },
+    {
+      "name": "owner UI denies pending request without login",
+      "pass": true
+    },
+    {
+      "name": "process restart clears clients/grants/sessions and revokes prior capability",
+      "pass": true
+    },
+    {
+      "name": "all private Chromium profiles created by this run are removed",
+      "pass": true
+    },
+    {
+      "name": "owner flows perform zero clipboard writes",
+      "pass": true
+    },
+    {
+      "name": "all captured agent responses and owner API bodies contain no credential/cookie plaintext or encoded password",
+      "pass": true
+    },
+    {
+      "name": "actual owner browser completes with no page errors",
+      "pass": true
+    },
+    {
+      "name": "source and binary hashes remain bound throughout integrated acceptance",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "screenshots": [
+    {
+      "path": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/docs/evidence/password-broker/screenshots/approval-dark-desktop.png",
+      "sha256": "a7df0ae41f9bb7afaf458067a98b2704edceed9adc0c472839487e5a7342fc94"
+    },
+    {
+      "path": "/Users/master/Documents/Codex/work/heavenkey-ci-20261012/docs/evidence/password-broker/screenshots/approval-dark-mobile.png",
+      "sha256": "4aee4c5b93a6f244e55f28f1af514e02099d33e3fb462e1ac156421ec92a1e2c"
+    }
+  ],
+  "login_posts": 7,
+  "clipboard_writes": 0,
+  "private_profiles_cleaned": true
+}
