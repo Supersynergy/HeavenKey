@@ -1,0 +1,51 @@
+name: HeavenKey Android
+
+on:
+  pull_request:
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile.yml'
+      - 'scripts/mobile_native_gate.py'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CI: 'true'
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+      DASH__SUPPRESS_ANALYTICS: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned Flutter
+        run: |
+          git clone --depth=1 --branch 3.47.2 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = d3b14c876900e553bc736ca19295fc09e3853e8e
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - name: Resolve locked dependencies
+        working-directory: apps/mobile
+        run: flutter pub get --enforce-lockfile
+      - name: Analyze and test UI and controller
+        working-directory: apps/mobile
+        run: |
+          dart format --output=none --set-exit-if-changed lib test integration_test
+          flutter analyze --no-pub
+          flutter test --no-pub
+      - name: Check Android security configuration
+        run: python3 scripts/mobile_native_gate.py android
+      - name: Build Android and execute portable backup tests
+        working-directory: apps/mobile
+        run: |
+          flutter build apk --debug --no-pub
+          cd android
+          ./gradlew :app:testDebugUnitTest --no-daemon

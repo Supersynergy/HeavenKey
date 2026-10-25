@@ -4,11 +4,11 @@
 
 Am Desktop wählst du ein langes Masterpasswort für einen neuen Tresor. Wenn du bereits eine verschlüsselte Sicherung hast, öffne die Wiederherstellung. Prüfe Datei und Passwort, bevor du den vorhandenen Inhalt ausdrücklich ersetzt. HeavenKey kann dein Masterpasswort nicht zurücksetzen.
 
-Android verwendet die Gerätesperre. Nach der Freigabe zeigt ein leerer Tresor drei Wege: ersten Login speichern, Sicherung wiederherstellen oder vom Desktop übernehmen. Vorhandene Einträge bleiben beim Entsperren erhalten.
+Android funktioniert eigenständig ohne Desktop oder Cloudkonto und verwendet die Gerätesperre. Ein zusätzliches Masterpasswort ist nicht erforderlich. Fehlt die Gerätesperre, führt eine Aktion direkt zu den Android-Sicherheitseinstellungen. Nach der Freigabe zeigt ein leerer Tresor drei Wege: ersten Login speichern, Sicherung wiederherstellen oder vom Desktop übernehmen. Vorhandene Einträge bleiben beim Entsperren erhalten.
 
 ## Einen bestehenden Login speichern
 
-Gib die Website, deinen Nutzernamen und das aktuelle Passwort ein. Eine Domain wie `example.com` wird als HTTPS-Adresse vorbereitet. Ein leerer Name kann aus der Domain entstehen; einen selbst eingegebenen Namen ersetzt HeavenKey nicht.
+Gib die Website, deinen Nutzernamen und das aktuelle Passwort ein. Eine Domain wie `example.com` wird als HTTPS-Adresse vorbereitet. Android zeigt zunächst nur Website, Benutzername und Passwort. „Eigenen Namen vergeben“ öffnet das optionale Namensfeld. Ein leerer Name kann aus der Domain entstehen; einen selbst eingegebenen Namen ersetzt HeavenKey nicht.
 
 Android zeigt die genaue gespeicherte Herkunft vor dem Speichern: `https://example.com:8443`. Pfad, Suchparameter und Fragment werden weggelassen. HTTPS, Domain und Port bleiben die Grenze für die Browserzuordnung. HTTP, IP-Adressen und eingebettete Zugangsdaten werden auf Android abgewiesen. Der Desktop unterstützt weiterhin ausdrücklich eingegebene HTTP-Adressen für bestehende lokale Anwendungen.
 
@@ -16,11 +16,13 @@ Nutzernamen-Vorschläge stammen ausschließlich aus dem aktuell entsperrten Tres
 
 ## Ein neues Passwort erzeugen
 
-Nutze den Generator ausdrücklich für ein neues oder zu änderndes Website-Passwort. Bei einem bereits gefüllten Passwortfeld bestätigst du die Ersetzung. Speichern in HeavenKey ändert das Passwort deines Kontos bei der Website nicht. Führe diese Änderung auch dort durch.
+Auf Android wählst du bei Bedarf 16, 24, 32 oder 48 Zeichen. Die Auswahl allein ändert das Passwort noch nicht. Nutze den Generator ausdrücklich für ein neues oder zu änderndes Website-Passwort. Bei einem bereits gefüllten Passwortfeld bestätigst du die Ersetzung. Speichern in HeavenKey ändert das Passwort deines Kontos bei der Website nicht. Führe diese Änderung auch dort durch.
 
 ## Danach
 
 Nach dem ersten Speichern führen Aktionen zur verschlüsselten Sicherung und weiteren Einrichtung. Bewahre die Sicherung getrennt auf und prüfe die Wiederherstellung. Auf Android benötigst du zusätzlich den getrennt aufzubewahrenden Wiederherstellungsschlüssel. Ein gestarteter Download bestätigt keine sichere Aufbewahrung.
+
+Im Android-Tab **Passkeys** wählst du HeavenKey ab Android 14 als Anbieter. Die Registrierung erfolgt bei der jeweiligen Website; die Desktopkopplung ist dafür nicht erforderlich.
 
 Richte Autofill und die Browsererweiterung ein, wenn du sie verwenden möchtest. Die Desktopkopplung, Website-Passkeys und jede sensible Freigabe bleiben ausdrückliche Entscheidungen. Der Einstieg ist keine Kontoerstellung bei anderen Websites.
 

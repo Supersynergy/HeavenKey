@@ -44,6 +44,8 @@ internal class VaultStore(private val context: Context) {
     private fun hasStoredData(): Boolean = listOf("", ".bak", ".new")
         .any { File(file.baseFile.path + it).exists() }
 
+    fun hasVault(): Boolean = hasStoredData()
+
     fun secureDevice(): Boolean = context.getSystemService(KeyguardManager::class.java).isDeviceSecure
     private fun key(): SecretKey {
         val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }

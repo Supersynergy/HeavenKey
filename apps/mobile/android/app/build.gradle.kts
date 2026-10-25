@@ -44,4 +44,6 @@ flutter {
 dependencies {
     implementation("androidx.credentials:credentials:1.6.0")
     implementation("co.nstant.in:cbor:0.9")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.16.1")
 }

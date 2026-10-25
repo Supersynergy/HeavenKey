@@ -153,8 +153,10 @@ class _BackupPanelState extends State<BackupPanel> {
       padding: const EdgeInsets.all(24),
       children: [
         Text('Sicherung', style: Theme.of(context).textTheme.headlineMedium),
-        const Text(
-          'Diese Sicherung enthält Logins. Website-Passkeys werden separat gespeichert. Synchronisiere sie mit dem Desktop und sichere dessen verschlüsselten Tresor.',
+        Text(
+          widget.vault.status['backupIncludesPasskeys'] == true
+              ? 'Sichere Logins und Website-Passkeys direkt vom Handy. Du brauchst dafür keinen Desktop. Android-V2-Sicherungen lassen sich auf einem Android-Gerät mit dieser Version wiederherstellen.'
+              : 'Diese Sicherung enthält Logins. Website-Passkeys werden separat gespeichert. Synchronisiere sie mit dem Desktop und sichere dessen verschlüsselten Tresor.',
         ),
         const SizedBox(height: 12),
         const Text(
@@ -271,6 +273,10 @@ class _BackupPanelState extends State<BackupPanel> {
               '${preview.total} Logins: ${preview.newCount} neu, ${preview.existing} bereits vorhanden.',
             ),
           ),
+          if (preview.passkeyCount > 0)
+            Text(
+              '${preview.passkeyCount} Website-Passkeys: ${preview.newPasskeys} neu, ${preview.existingPasskeys} bereits vorhanden. Bestehende Passkeys bleiben erhalten.',
+            ),
           ExpansionTile(
             tilePadding: EdgeInsets.zero,
             title: const Text('Enthaltene Logins ansehen'),
@@ -308,8 +314,8 @@ class _BackupPanelState extends State<BackupPanel> {
             const SizedBox(height: 12),
             Text(
               _replaceExisting
-                  ? '${preview.newCount} neue Logins hinzufügen und ${preview.existing} vorhandene Logins ersetzen?'
-                  : '${preview.newCount} neue Logins hinzufügen? Vorhandene Logins bleiben erhalten.',
+                  ? '${preview.newCount} neue Logins und ${preview.newPasskeys} neue Passkeys hinzufügen; ${preview.existing} vorhandene Logins ersetzen?'
+                  : '${preview.newCount} neue Logins und ${preview.newPasskeys} neue Passkeys hinzufügen? Vorhandene Einträge bleiben erhalten.',
             ),
             const SizedBox(height: 12),
             FilledButton(

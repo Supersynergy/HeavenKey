@@ -188,6 +188,31 @@ internal class PasskeyStore(private val context: Context, private val authentica
         for (field in listOf("id", "rpId", "userName", "userDisplayName", "createdAt")) put(field, record.get(field))
     } } }
     fun exportRecords(): List<JSONObject> = MobileStoreTransaction.run { records(read()).map { JSONObject(it.toString()) } }
+    fun previewRestore(incoming: List<JSONObject>): List<JSONObject> = MobileStoreTransaction.run {
+        require(incoming.size <= 500)
+        incoming.forEach(::validateRecord)
+        require(incoming.map { it.getString("id") }.toSet().size == incoming.size)
+        val current = records(read()).associateBy { it.getString("id") }.toMutableMap()
+        for (record in incoming) {
+            val old = current[record.getString("id")]
+            if (old != null) require(listOf("rpId", "userHandle", "publicKey", "privateKey").all { old.getString(it) == record.getString(it) })
+            else current[record.getString("id")] = record
+        }
+        require(current.size <= 500)
+        // Include the serialization overhead before either file can be changed during restoration.
+        require(JSONArray(current.values.toList()).toString().toByteArray(Charsets.UTF_8).size < MAX_FILE / 2 - 100_000)
+        current.values.toList()
+    }
+    fun restoreRecords(incoming: List<JSONObject>) = MobileStoreTransaction.run {
+        val next = previewRestore(incoming)
+        val data = read()
+        val backedUp = data.optJSONArray("backedUpIds") ?: JSONArray()
+        val ids = (0 until backedUp.length()).map { backedUp.getString(it) }.toMutableSet()
+        ids.retainAll(next.map { it.getString("id") }.toSet())
+        ids.addAll(incoming.map { it.getString("id") })
+        data.put("records", JSONArray(next)).put("backedUpIds", JSONArray(ids.toList()))
+        write(data)
+    }
     fun replaceRecords(incoming: List<JSONObject>) = MobileStoreTransaction.run {
         require(incoming.size <= 500)
         incoming.forEach(::validateRecord)

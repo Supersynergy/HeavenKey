@@ -45,18 +45,22 @@ class BackupPreview {
     required this.total,
     required this.newCount,
     required this.existing,
+    required this.passkeyCount,
+    required this.newPasskeys,
+    required this.existingPasskeys,
     required this.vaultFingerprint,
     required this.archiveFingerprint,
     required List<BackupEntry> entries,
   }) : entries = List.unmodifiable(entries);
 
   final int total, newCount, existing;
+  final int passkeyCount, newPasskeys, existingPasskeys;
   final String vaultFingerprint, archiveFingerprint;
   final List<BackupEntry> entries;
 
   factory BackupPreview.fromMap(Map<Object?, Object?> map) {
-    int count(String name) {
-      final value = map[name];
+    int count(String name, {bool optional = false}) {
+      final value = optional && !map.containsKey(name) ? 0 : map[name];
       if (value is! int || value < 0 || value > 500) {
         throw const FormatException('Ungültige Vorschau.');
       }
@@ -74,8 +78,12 @@ class BackupPreview {
     final total = count('total');
     final newCount = count('new');
     final existing = count('existing');
+    final passkeyCount = count('passkeyCount', optional: true);
+    final newPasskeys = count('newPasskeys', optional: true);
+    final existingPasskeys = count('existingPasskeys', optional: true);
     final values = map['entries'];
     if (newCount + existing != total ||
+        newPasskeys + existingPasskeys != passkeyCount ||
         values is! List ||
         values.length != total) {
       throw const FormatException('Ungültige Vorschau.');
@@ -94,6 +102,9 @@ class BackupPreview {
       total: total,
       newCount: newCount,
       existing: existing,
+      passkeyCount: passkeyCount,
+      newPasskeys: newPasskeys,
+      existingPasskeys: existingPasskeys,
       vaultFingerprint: fingerprint('vaultFingerprint'),
       archiveFingerprint: fingerprint('archiveFingerprint'),
       entries: entries,

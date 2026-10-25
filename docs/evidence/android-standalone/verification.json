@@ -1,0 +1,60 @@
+{
+  "recorded_at": "2026-10-25T21:45:28.217765+00:00",
+  "base_commit": "298eaa5a1f4f29a2b0b4d0393f916e8c5d93fc4b",
+  "source_sha256": {
+    ".github/workflows/mobile.yml": "aae3d93ce2dde45f5f157fa09e6427ad6ca531838f49bfabf7564ee7e7cc1fc6",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/PortableVaultBackup.kt": "5263e59dde7c3e49e629186bd5845c036ba4abaa79992c5821ece4bea140eccc",
+    "apps/mobile/android/app/src/test/kotlin/app/heavenkey/heavenkey_mobile/PortableBackupTest.kt": "c69cfee41d6150b3c565e6d1c97153ce81c5bcdfa3f8b197daac5b9181d70cd3",
+    "apps/mobile/lib/mobile_theme.dart": "02e5f63bb26cb8698cb60510f7851e957bc4cfdfa12cc38013f491abc2b4e3a3",
+    "apps/mobile/lib/passkeys_panel.dart": "c4d625b375c93d0d0bf53ef2f388bc54a63dba55630f7f3078a8cfd3857d20ba",
+    "apps/mobile/test/standalone_test.dart": "9b5a892799830ce07b85a4c6b4eef09e24a634eaefd6f3964c6a937e12a81f60",
+    "apps/mobile/android/app/build.gradle.kts": "212aa376a5cbf7b37fdb0d4da38da9bc6a5837a8a0e89be0f41ed42828d92fa3",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/MainActivity.kt": "e4cfa6df5449b4a6384eb166ec8c7480a3b1126528b12d2429e9c59ef85d4b71",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/MobileBackup.kt": "2b1ae5b078debe31126df3bc1f62eb4de32bb9a6a47b28bc70f8ea078ceb5b89",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/PasskeyStore.kt": "e8fff340013cba6685f7f7a729a4be7a6dd87a9d03911c8d0d77ddf98ccc06fc",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/VaultStore.kt": "687450b24bc6d0289aba71d6ab02006979e1380e48d09abdd852305683ed452f",
+    "apps/mobile/lib/backup_panel.dart": "95c61f26edc9c9b6bed23315b918e19f692a538667f59f59a728f4e01fb18560",
+    "apps/mobile/lib/backup_preview.dart": "7392c08eab506aa8ea477fe96c726e6c4db251d098f1ffa4ca81202bc65c040a",
+    "apps/mobile/lib/connected_panel.dart": "7bdee5e7933d85d0667633d53a544f439d7f56c5da8c6c5057443031bbbb4a6d",
+    "apps/mobile/lib/main.dart": "0837cf7670309bcbf52f7009c548954edc53b35f66395104109d0b8579a1cc60",
+    "apps/mobile/lib/vault_controller.dart": "a3f67b82be72edd04a9b6284053dbc35bd904ae6b67a5a7ddda6f28725f49eaa",
+    "apps/mobile/test/onboarding_test.dart": "a89301522ff7b74a042cd65f0fba331ad5a774cc2fa5516d4cb92733e44ab04c"
+  },
+  "flutter": "3.47.2",
+  "dart": "3.13.2",
+  "format": "pass",
+  "analyze": "No issues found",
+  "flutter_tests": {
+    "passed": 37,
+    "failed": 0
+  },
+  "android_backup_jvm_tests": {
+    "passed": 6,
+    "failed": 0,
+    "runtime": "Robolectric 4.16.1 API 30; platform artifact checksum verified; runtime dependency loaded offline"
+  },
+  "android_security_configuration": "pass",
+  "python_regressions": {
+    "total": 74,
+    "skipped": 28,
+    "failed": 0
+  },
+  "android_apk": {
+    "build": "debug",
+    "sha256": "915774a6194e002ea3285e33c3d404ee562a6b0782e8e058e72f477f801c30a9",
+    "production_release": false
+  },
+  "ui_previews": {
+    "render": "actual Flutter widgets with synthetic method-channel responses",
+    "logical_size": "390x844",
+    "pixel_ratio": 2,
+    "physical_phone": false
+  },
+  "not_run": [
+    "Full desktop just check/e2e: just, Bun and Rust tooling are not installed in this environment",
+    "Physical Android phone and real browser flow for this change",
+    "Android Keystore and file-picker device integration for V2 restore",
+    "iOS build and hardware validation",
+    "External security audit"
+  ]
+}
