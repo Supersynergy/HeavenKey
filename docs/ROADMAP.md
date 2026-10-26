@@ -23,7 +23,7 @@ Stand: 26.10.2026. Bestandsprüfung auf `ac37ca5` (nach PR #36).
 
 | Phase | Ergebnis | Stand / Freigabekriterium |
 | --- | --- | --- |
-| P0 — Login-Pilot | Registrierung ohne Nutzerpasswort, Passkey, zwei OIDC-Demos und verschiedene Dienstkennungen | Lokal sechs Browserprüfungen und zehn Sicherheitsregressionen bestanden; [Beleg](evidence/identity/pilot.json) an Quellhashes gebunden. CI gesondert prüfen. Kein produktiver Betrieb. |
+| P0 — Login-Pilot | Registrierung ohne Nutzerpasswort, Passkey, zwei OIDC-Demos und verschiedene Dienstkennungen | Sechs Browserprüfungen und zehn Sicherheitsregressionen lokal sowie [in der Identity-CI](https://github.com/Supersynergy/HeavenKey/actions/runs/40250235572) bestanden (`cef6bef`); [Beleg](evidence/identity/pilot.json) an Runtime-Quellhashes gebunden. Kein produktiver Betrieb. |
 | P1 — App und echtes Ziel | Android-Anbieter und tatsächliches Supersynergy Office nutzen denselben geprüften Loginanbieter | Physisches Android-Gerät, exakte Zielversion, Tenant-Zuordnung und Logout/Widerruf nachweisen. |
 | P1 — Geräte und Recovery | Neues Gerät hinzufügen; verlorenes sperren; Zugriff sicher wiederherstellen | Keine Recovery allein durch E-Mail, SMS oder beliebiges Selfie; Verlustfälle ausführen. |
 | P2 — Verifizierte Identität | Herkunft, Prüfmethode, Aktualität und Vertrauensniveau ausgewählter Angaben | Akzeptierter Identitätsnachweis; serverseitige Bindung an Konto/Passkey; keine Selbstauskunft als KYC ausgeben. |

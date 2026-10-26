@@ -18,7 +18,7 @@ Stand: 26.10.2026. Reihenfolge nach Abhängigkeit, nicht nach Begeisterung für 
   - [x] Sitzung nach Anmeldung erneuern; kurzlebige serverseitige Sitzungen; Tokens nicht an Browser/API ausgeben.
   - [x] Pairwise-Mapper für dienstspezifische Kennungen konfigurieren.
   - [x] Identitätsprüfung im Pilot ausdrücklich als nicht vorhanden ausgeben.
-- [ ] **HK-ID-003 — Pilot verifizieren und CI abschließen.**
+- [x] **HK-ID-003 — Pilot verifizieren und CI binden.**
   - [x] Zehn Sicherheitsregressionen einschließlich falscher Signatur, Issuer, Audience, Nonce, Replay und Ablauf bestanden.
   - [x] Dependency-Audit des neuen Node-Pakets: keine bekannten gemeldeten Schwachstellen beim Lauf.
   - [x] Registrierung bis erstem Anwendungseinstieg ohne Nutzerpasswort ausführen.
@@ -26,7 +26,7 @@ Stand: 26.10.2026. Reihenfolge nach Abhängigkeit, nicht nach Begeisterung für 
   - [x] Neue Browsersitzung mit bestehendem synthetischem Passkey anmelden.
   - [x] Lokales Abmelden und ungeprüften Identitätsstatus im echten Flow nachweisen.
   - [x] Frischen Beleg mit Quellhashes erzeugen; bei Fehlschlag keinen alten Erfolgsbeleg behalten.
-  - [ ] CI-Lauf an denselben Commit binden. Virtuelle CTAP2-Abnahme ausdrücklich von Hardware trennen.
+  - [x] [Identity-CI bestanden](https://github.com/Supersynergy/HeavenKey/actions/runs/40250235572) am Runtime-Stand `cef6bef`; virtuelle CTAP2-Abnahme ausdrücklich von Hardware getrennt.
 
 **Abnahme:** `npm test --prefix apps/identity-pilot` und `python3 scripts/identity_pilot.py --e2e`; frisches `docs/evidence/identity/pilot.json`. Der Pilot ist weder ein echtes Office-Login noch ein Android-Hardwaretest.
 
