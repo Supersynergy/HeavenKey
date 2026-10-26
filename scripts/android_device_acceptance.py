@@ -93,8 +93,9 @@ def main():
                 for setting in ("window_animation_scale", "transition_animation_scale", "animator_duration_scale"):
                     adb("shell", "settings", "put", "global", setting, "0")
                 # This PIN belongs only to this newly created disposable emulator.
-                output = adb("shell", "locksettings", "set-pin", "417926")
-                assert "success" in output.lower(), "Synthetic emulator PIN could not be set"
+                adb("shell", "locksettings", "set-pin", "417926")
+                verified = adb("shell", "locksettings", "verify", "--old", "417926")
+                assert "Lock credential verified successfully" in verified, "Synthetic emulator PIN could not be verified: " + verified
                 adb("install", "--no-streaming", "-r", "-t", str(APP), timeout=180)
                 adb("install", "--no-streaming", "-r", "-t", str(TEST), timeout=90)
                 output = adb("shell", "am", "instrument", "-w", "-r", "-e", "class",
@@ -103,10 +104,12 @@ def main():
                              timeout=300)
                 (EVIDENCE / "instrumentation.txt").write_text(output)
                 if "OK (2 tests)" not in output or "FAILURES!!!" in output:
+                    print(output, flush=True)
                     # XML/logs include synthetic fixtures only.
                     try:
                         adb("shell", "uiautomator", "dump", "/sdcard/heavenkey-test-ui.xml")
                         (EVIDENCE / "failure-ui.xml").write_text(adb("shell", "cat", "/sdcard/heavenkey-test-ui.xml"))
+                        print((EVIDENCE / "failure-ui.xml").read_text()[:12000], flush=True)
                         (EVIDENCE / "logcat.txt").write_text(adb("logcat", "-d", "-t", "1500"))
                     except subprocess.SubprocessError:
                         pass
