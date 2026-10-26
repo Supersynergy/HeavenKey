@@ -51,6 +51,10 @@ def main():
              "--force", "--name", NAME, "--package",
              "system-images;android-36;google_apis;x86_64",
              "--path", str(Path(scratch) / "device")], input="no\n", env=env)
+        config = Path(scratch) / "device/config.ini"
+        lines = [line for line in config.read_text().splitlines()
+                 if not line.startswith("disk.dataPartition.size=")]
+        config.write_text("\n".join([*lines, "disk.dataPartition.size=2G"]) + "\n")
         # A dedicated serial avoids selecting any other attached device.
         run([ADB, "start-server"])
         devices = run([ADB, "devices"])
@@ -58,7 +62,8 @@ def main():
             raise RuntimeError("The dedicated emulator serial is already occupied; no existing device will be changed.")
         command = [EMULATOR, "-avd", NAME, "-port", "5556", "-no-window",
                    "-no-audio", "-no-boot-anim", "-no-snapshot", "-no-metrics",
-                   "-show-kernel", "-gpu", "swiftshader", "-memory", "2048", "-cores", "2"]
+                   "-show-kernel", "-gpu", "swiftshader", "-memory", "2560", "-cores", "2",
+                   "-partition-size", "2048"]
         if not Path("/dev/kvm").exists():
             command += ["-accel", "off"]
         with (EVIDENCE / "emulator.log").open("w") as log:
