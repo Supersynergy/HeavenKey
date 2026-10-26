@@ -1,9 +1,11 @@
 """Exercise the production signing guard using disposable, non-production keys."""
 
+import argparse
 import hashlib
 import os
 from pathlib import Path
 import secrets
+import shutil
 import subprocess
 import tempfile
 
@@ -14,6 +16,10 @@ PREFIX = "HEAVENKEY_ANDROID_"
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--release-artifacts", action="store_true",
+                        help="Also build and verify all APK/AAB artifacts with the disposable fixture identity.")
+    args = parser.parse_args()
     base = {name: value for name, value in os.environ.items() if not name.startswith(PREFIX)}
     with tempfile.TemporaryDirectory(prefix="heavenkey-signing-test-") as scratch:
         password = secrets.token_urlsafe(32)
@@ -50,7 +56,33 @@ def main():
         check("incorrect private key password rejected", good | {PREFIX + "KEY_PASSWORD": "incorrect-fixture-password"}, False)
         check("debug certificate under a different alias rejected",
               key("debug", "CN=Android Debug,O=Android,C=US"), False, "debug certificates cannot")
-        print("Production signing guard: 6 cases passed; all fixture keys deleted on exit.")
+        if args.release_artifacts:
+            import re
+            text = (ROOT / "apps/mobile/pubspec.yaml").read_text()
+            match = re.search(r"^version: (\d+\.\d+\.\d+)\+(\d+)$", text, re.M)
+            assert match, "A release version is required"
+            version, code = match.groups()
+            mobile = ROOT / "apps/mobile"
+            for command in (["flutter", "build", "apk", "--release", "--split-per-abi"],
+                            ["flutter", "build", "appbundle", "--release"]):
+                # Do not pass --no-pub: release mode must regenerate the native
+                # plugin registrant without integration_test/dev dependencies.
+                subprocess.run(command, cwd=mobile, env=good, check=True, timeout=900)
+            subprocess.run(["git", "diff", "--exit-code", "--", "apps/mobile/pubspec.lock"], cwd=ROOT, check=True)
+            artifacts = Path(scratch) / "artifacts"
+            artifacts.mkdir()
+            for abi in ("arm64-v8a", "armeabi-v7a", "x86_64"):
+                shutil.copyfile(mobile / f"build/app/outputs/flutter-apk/app-{abi}-release.apk",
+                                artifacts / f"HeavenKey-{version}-android-{abi}.apk")
+            shutil.copyfile(mobile / "build/app/outputs/bundle/release/app-release.aab",
+                            artifacts / f"HeavenKey-{version}-android.aab")
+            commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+            subprocess.run(["python3", "scripts/android_release.py", str(artifacts), "--version", version,
+                            "--code", code, "--commit", commit, "--device-evidence",
+                            str(ROOT / "dist/android-device-acceptance/acceptance.json")],
+                           cwd=ROOT, env=good, check=True, timeout=300)
+            print("PASS: all release APK/AAB signatures, manifests and provenance verified with a disposable identity.")
+        print("Production signing guard: 6 cases passed; all fixture keys/artifacts deleted on exit.")
 
 
 if __name__ == "__main__":

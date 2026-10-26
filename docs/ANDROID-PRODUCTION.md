@@ -39,6 +39,8 @@ wenn alle folgenden Schritte erfolgreich sind:
    Flutter-Tests.
 2. Native Android-Konfiguration, Debug-Build, portable Kryptografie-/Format-Tests
    und sechs Tests der Produktionssignaturprüfung mit temporären Testschlüsseln.
+   Auch alle Release-APKs und das App Bundle werden mit einer solchen Testidentität
+   gebaut und vollständig geprüft; diese Testpakete werden anschließend gelöscht.
 3. Zwei Instrumentierungstests auf einem eigens erstellten, isolierten API-36-
    Emulator mit echter Android-PIN-Abfrage und echtem Android Keystore. Geprüft
    werden Wiederherstellung einschließlich nutzbarer Passkey-Signatur, falscher

@@ -53,15 +53,19 @@ def main():
              "--path", str(Path(scratch) / "device")], input="no\n", env=env)
         # A dedicated serial avoids selecting any other attached device.
         run([ADB, "start-server"])
+        devices = run([ADB, "devices"])
+        if any(line.split() and line.split()[0] == SERIAL for line in devices.splitlines()[1:]):
+            raise RuntimeError("The dedicated emulator serial is already occupied; no existing device will be changed.")
         command = [EMULATOR, "-avd", NAME, "-port", "5556", "-no-window",
                    "-no-audio", "-no-boot-anim", "-no-snapshot", "-no-metrics",
-                   "-gpu", "swiftshader", "-memory", "2048", "-cores", "2"]
+                   "-show-kernel", "-gpu", "swiftshader", "-memory", "2048", "-cores", "2"]
         if not Path("/dev/kvm").exists():
             command += ["-accel", "off"]
         with (EVIDENCE / "emulator.log").open("w") as log:
             process = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
             try:
                 deadline = time.monotonic() + 600
+                next_status = 0
                 while time.monotonic() < deadline:
                     if process.poll() is not None:
                         raise RuntimeError("Disposable emulator stopped; inspect emulator.log.")
@@ -70,6 +74,9 @@ def main():
                             break
                     except (subprocess.SubprocessError, OSError):
                         pass
+                    if time.monotonic() >= next_status:
+                        print("Waiting for the owned Android emulator to finish booting...", flush=True)
+                        next_status = time.monotonic() + 30
                     time.sleep(3)
                 else:
                     raise TimeoutError("Disposable emulator did not finish booting.")
@@ -121,6 +128,7 @@ def main():
                                      for p in sorted(source_paths)},
                 }
                 (EVIDENCE / "acceptance.json").write_text(json.dumps(receipt, indent=2) + "\n")
+                print("ANDROID_DEVICE_ACCEPTANCE=" + json.dumps(receipt, sort_keys=True), flush=True)
                 print("PASS: actual device authentication, Keystore recovery and rejection checks (2 tests).")
             finally:
                 process.terminate()

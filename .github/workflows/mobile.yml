@@ -26,7 +26,7 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 35
     env:
       CI: 'true'
       FLUTTER_SUPPRESS_ANALYTICS: 'true'
@@ -58,8 +58,6 @@ jobs:
           cd android
           ./gradlew :app:testDebugUnitTest --no-daemon
           ./gradlew :app:assembleDebugAndroidTest --no-daemon
-      - name: Exercise production signing rejection rules with disposable keys
-        run: python3 scripts/android_signing_test.py
       - name: Install isolated Android emulator
         run: |
           sdkmanager 'system-images;android-36;google_apis;x86_64' 'build-tools;36.0.0'
@@ -67,6 +65,8 @@ jobs:
           sudo chmod a+rw /dev/kvm
       - name: Execute actual Keystore and portable passkey recovery
         run: python3 scripts/android_device_acceptance.py
+      - name: Build and verify release artifacts with disposable keys
+        run: python3 scripts/android_signing_test.py --release-artifacts
       - name: Preserve source-bound native test evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
