@@ -1,0 +1,14 @@
+{
+  "name": "heavenkey-identity-pilot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "start": "python3 ../../scripts/identity_pilot.py",
+    "e2e": "python3 ../../scripts/identity_pilot.py --e2e"
+  },
+  "dependencies": { "openid-client": "6.8.8" },
+  "devDependencies": { "jose": "6.2.12", "playwright-core": "1.62.1" }
+}

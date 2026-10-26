@@ -1,0 +1,53 @@
+name: HeavenKey Identity Pilot
+
+on:
+  pull_request:
+    paths:
+      - 'apps/identity-pilot/**'
+      - 'scripts/identity_pilot.py'
+      - '.github/workflows/identity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/identity-pilot/**'
+      - 'scripts/identity_pilot.py'
+      - '.github/workflows/identity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  passwordless-pilot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Resolve locked dependencies and run security regressions
+        run: |
+          npm ci --ignore-scripts --prefix apps/identity-pilot
+          npm test --prefix apps/identity-pilot
+          npm audit --prefix apps/identity-pilot
+          python3 -m py_compile scripts/identity_pilot.py
+      - name: Install verified Keycloak and browser
+        run: |
+          curl --fail --location --retry 2 --max-time 120 https://github.com/keycloak/keycloak/releases/download/26.8.1/keycloak-26.8.1.tar.gz -o "$RUNNER_TEMP/keycloak.tar.gz"
+          printf '%s  %s\n' 4e2740b181faa2ea623a1c2ecf00855935311e546046e2f857615a47ed24cbe8 "$RUNNER_TEMP/keycloak.tar.gz" | sha256sum --check
+          tar --no-same-owner --no-same-permissions -xzf "$RUNNER_TEMP/keycloak.tar.gz" -C "$RUNNER_TEMP"
+          node apps/identity-pilot/node_modules/playwright-core/cli.js install --with-deps chromium --only-shell
+      - name: Verify real passkey registration and two-client OIDC flow
+        run: |
+          export JAVA_HOME="$JAVA_HOME_21_X64"
+          export KEYCLOAK_HOME="$RUNNER_TEMP/keycloak-26.8.1"
+          python3 scripts/identity_pilot.py --e2e --seconds 300
+          cat docs/evidence/identity/pilot.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: identity-pilot-evidence
+          path: docs/evidence/identity/pilot.json
+          if-no-files-found: error
