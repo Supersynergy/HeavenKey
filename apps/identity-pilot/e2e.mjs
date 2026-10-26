@@ -37,7 +37,7 @@ try {
   // The account receives no tokens before the required passkey registration finishes.
   page.on('dialog', dialog => dialog.accept('Synthetic pilot passkey'));
   const register = page.locator('#registerWebAuthn, #registerWebAuthnButton');
-  if (await register.count()) await register.first().click();
+  await register.first().click();
   // Keycloak asks for an authenticator label through a browser prompt.
   await page.waitForURL(applications[0].origin + '/', { timeout: 30_000 });
   assert.match(await page.getByTestId('status').innerText(), /Angemeldet/);
