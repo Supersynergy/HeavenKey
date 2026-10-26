@@ -48,7 +48,8 @@ wenn alle folgenden Schritte erfolgreich sind:
 4. Produktionsbuild mit privatem Herausgeberschlüssel. Fehlende Konfiguration,
    Android-Debug-Identität, falsches Schlüsselpasswort, abgelaufenes Zertifikat und
    abweichende Zertifikatskennung sperren den Build.
-5. Prüfung jedes APKs mit `apksigner`, jedes App Bundles mit `jarsigner -strict`,
+5. Prüfung jedes APKs mit `apksigner`, jedes App Bundles mit `jarsigner -strict`
+   und einem per SHA-256 gepinnten offiziellen Google-`bundletool`,
    der Zertifikatskennung, Architektur, Version und des kompilierten Manifests.
    `debuggable`, `testOnly`, Systembackup und Klartextverkehr sind deaktiviert.
 6. Veröffentlichung mit SHA-256-Prüfsummen und `RELEASE.json`, das den exakten
@@ -89,6 +90,9 @@ Nach Einrichtung den Workflow auf `main` erneut ausführen.
 Der Release-Tag lautet `android-v0.27.0`. Ein Tag wird nie überschrieben; für eine
 weitere Version müssen Versionsname und Buildnummer in `apps/mobile/pubspec.yaml`
 erhöht werden. Der Workflow ersetzt nicht die globale Desktop-Release-Markierung.
+Flutter ergänzt bei getrennten APKs die ABI-Offsets 1000 (ARMv7), 2000 (ARM64)
+und 4000 (x86-64) zur Basis-Buildnummer; `RELEASE.json` enthält für jede Datei die
+tatsächlich geprüfte Buildnummer. Das App Bundle verwendet die Basisnummer.
 
 | Datei | Zweck |
 | --- | --- |

@@ -12,6 +12,7 @@ from pathlib import Path
 import re
 import ssl
 import subprocess
+import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -19,7 +20,9 @@ import zipfile
 ROOT = Path(__file__).resolve().parent.parent
 ANDROID = "{http://schemas.android.com/apk/res/android}"
 ABIS = ("arm64-v8a", "armeabi-v7a", "x86_64")
+ABI_CODES = {"armeabi-v7a": 1000, "arm64-v8a": 2000, "x86_64": 4000}
 PACKAGE = "app.heavenkey.heavenkey_mobile"
+BUNDLETOOL_SHA256 = "a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29"
 
 
 def run(*command):
@@ -34,6 +37,32 @@ def require(condition, message):
 def digest(path):
     with path.open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def bundletool():
+    path = ROOT / "dist/tooling/bundletool-all-1.18.3.jar"
+    if not path.exists():
+        url = "https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar"
+        with urllib.request.urlopen(url, timeout=60) as response:
+            data = response.read()
+        require(hashlib.sha256(data).hexdigest() == BUNDLETOOL_SHA256, "Unexpected bundletool download digest")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+    require(digest(path) == BUNDLETOOL_SHA256, "Unexpected bundletool tool digest")
+    return str(path)
+
+
+def verify_manifest(manifest, version, code):
+    require(manifest.get("package") == PACKAGE, "Unexpected application ID")
+    require(manifest.get(ANDROID + "versionName") == version and
+            manifest.get(ANDROID + "versionCode") == str(code), "Unexpected Android version")
+    app = manifest.find("application")
+    require(app is not None, "Missing application manifest")
+    for attribute in ("debuggable", "testOnly"):
+        require(app.get(ANDROID + attribute, "false") == "false", "Test/debug APK is forbidden")
+    for attribute in ("allowBackup", "usesCleartextTraffic"):
+        require(app.get(ANDROID + attribute) == "false", "Unsafe manifest: " + attribute)
+    require(manifest.find("uses-sdk").get(ANDROID + "minSdkVersion") == "30", "Unexpected minimum API")
 
 
 def verify(directory, version, code, commit, pin, device_evidence):
@@ -76,16 +105,8 @@ def verify(directory, version, code, commit, pin, device_evidence):
         require([value.lower() for value in signers] == [pin], "Unexpected APK signing certificate")
         require("CN=Android Debug" not in report, "Debug-signed APK is forbidden")
         manifest = ET.fromstring(run(analyzer, "manifest", "print", str(apk)))
-        require(manifest.get("package") == PACKAGE, "Unexpected application ID")
-        require(manifest.get(ANDROID + "versionName") == version and
-                manifest.get(ANDROID + "versionCode") == str(code), "Unexpected Android version")
-        app = manifest.find("application")
-        require(app is not None, "Missing application manifest")
-        for attribute in ("debuggable", "testOnly"):
-            require(app.get(ANDROID + attribute, "false") == "false", "Test/debug APK is forbidden")
-        for attribute in ("allowBackup", "usesCleartextTraffic"):
-            require(app.get(ANDROID + attribute) == "false", "Unsafe manifest: " + attribute)
-        require(manifest.find("uses-sdk").get(ANDROID + "minSdkVersion") == "30", "Unexpected minimum API")
+        # Flutter's --split-per-abi applies these documented Gradle offsets.
+        verify_manifest(manifest, version, ABI_CODES[abi] + code)
         with zipfile.ZipFile(apk) as archive:
             require(archive.testzip() is None, "Damaged APK")
             architectures = {p.split("/")[1] for p in archive.namelist() if p.startswith("lib/")}
@@ -106,9 +127,16 @@ def verify(directory, version, code, commit, pin, device_evidence):
         require(archive.testzip() is None and "base/manifest/AndroidManifest.xml" in archive.namelist(), "Damaged app bundle")
         for abi in ABIS:
             require(f"base/lib/{abi}/libapp.so" in archive.namelist(), "Incomplete app bundle")
+    tool = bundletool()
+    run("java", "-jar", tool, "validate", "--bundle=" + str(bundle))
+    manifest = ET.fromstring(run("java", "-jar", tool, "dump", "manifest", "--bundle=" + str(bundle)))
+    verify_manifest(manifest, version, code)
 
     artifacts = {name: {"sha256": digest(directory / name), "bytes": (directory / name).stat().st_size}
                  for name in sorted(expected)}
+    for abi in ABIS:
+        artifacts[f"HeavenKey-{version}-android-{abi}.apk"]["version_code"] = ABI_CODES[abi] + code
+    artifacts[bundle_name]["version_code"] = code
     provenance = {
         "version": version, "version_code": code, "package": PACKAGE,
         "source_commit": commit, "signing_certificate_sha256": pin,
