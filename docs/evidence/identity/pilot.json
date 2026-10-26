@@ -1,0 +1,31 @@
+{
+  "schema": "heavenkey-identity-pilot-evidence-v1",
+  "passed": true,
+  "timestamp": "2026-10-26T00:35:52.644Z",
+  "keycloak": "26.8.1",
+  "node": "v24.22.1",
+  "browser": "156.0.8078.47",
+  "mode": "local-loopback-synthetic-virtual-ctap2",
+  "checks": [
+    "registration_and_first_login_without_user_password",
+    "passkey_login_does_not_assert_verified_identity",
+    "single_sign_on_to_second_application",
+    "different_pairwise_subjects_for_separate_applications",
+    "explicit_local_session_logout",
+    "fresh_browser_login_with_existing_passkey_without_password"
+  ],
+  "sourceHashes": {
+    "apps/identity-pilot/config.mjs": "da2242cc090061ad99dfbc6d4effaea309bb84bfa8c8bcd2c04bbbc9c25de129",
+    "apps/identity-pilot/server.mjs": "765aafedf86fdd9b48ecdb6a6a6b5de2b78b11656d7a8bde8e9987d0c3a6a38f",
+    "apps/identity-pilot/e2e.mjs": "b913d4e05550960d28f9a6c22638b808f6ef5bb2e2e300a2ef27546c4d0f9b39",
+    "apps/identity-pilot/package.json": "96c13b39a8e9dc38878bf51c2f6d49be456cccc23e53ae2114a3a86433c46247",
+    "apps/identity-pilot/package-lock.json": "53076aeb24f36b617184fe30a6e6d5fff0040b3dd1c765c95362b43c93f395a7",
+    "scripts/identity_pilot.py": "3eb346fb1a7fe9e765148d4c30b62081e85bf449c6d568c82c83703196ccc645"
+  },
+  "hardwareVerified": false,
+  "androidProviderVerified": false,
+  "bioidIntegrated": false,
+  "kycApproved": false,
+  "realSupersynergyIntegrated": false,
+  "productionDeployment": false
+}

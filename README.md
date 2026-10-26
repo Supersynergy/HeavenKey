@@ -2,6 +2,13 @@
 
 **Zugang beginnt mit Zustimmung.**
 
+Die Weiterentwicklung zum passwortlosen Identitäts- und Loginanbieter ist in der
+[Roadmap](docs/ROADMAP.md) mit [Due Diligence und Pro/Contra](docs/IDENTITY-DUE-DILIGENCE.md)
+und [To-dos samt Unteraufgaben](docs/IDENTITY-BACKLOG.md) festgehalten. Der getrennte
+[lokale Identity-Pilot](apps/identity-pilot/README.md) verbindet zwei Demo-Anwendungen
+über Passkeys und OpenID Connect. Er ist keine veröffentlichte App-Funktion,
+keine echte Office-Anbindung und kein KYC-Nachweis.
+
 ![Das ursprüngliche HeavenKey-Motiv: ein Schlüssel vor einem leuchtenden Himmelstor](docs/assets/heavenkey-hero.png)
 
 Passwörter auf dem Desktop und auf Android lokal verwalten. HeavenKey verschlüsselt den Tresor auf deinem Gerät. Desktop und Handy lassen sich ausdrücklich koppeln und manuell abgleichen; Android erstellt und verwendet Website-Passkeys. Für den Passwortmanager brauchst du kein Cloudkonto.

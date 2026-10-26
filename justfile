@@ -75,3 +75,14 @@ _mobile-connected-check:
 
 release-check:
     python3 scripts/release_acceptance.py --live
+
+identity-check:
+    npm test --prefix apps/identity-pilot
+    npm audit --prefix apps/identity-pilot
+    python3 -m py_compile scripts/identity_pilot.py
+
+identity-pilot:
+    python3 scripts/identity_pilot.py
+
+identity-e2e:
+    python3 scripts/identity_pilot.py --e2e --seconds 300
