@@ -1,16 +1,24 @@
 name: HeavenKey Android
 
 on:
+  workflow_call:
   pull_request:
     paths:
       - 'apps/mobile/**'
       - '.github/workflows/mobile.yml'
       - 'scripts/mobile_native_gate.py'
+      - 'scripts/android_device_acceptance.py'
+      - 'scripts/android_release.py'
+      - 'scripts/android_signing_test.py'
+      - '.github/workflows/android-release.yml'
   push:
     branches: [main]
     paths:
       - 'apps/mobile/**'
       - '.github/workflows/mobile.yml'
+      - 'scripts/android_device_acceptance.py'
+      - 'scripts/android_release.py'
+      - 'scripts/android_signing_test.py'
 
 permissions:
   contents: read
@@ -49,3 +57,21 @@ jobs:
           flutter build apk --debug --no-pub
           cd android
           ./gradlew :app:testDebugUnitTest --no-daemon
+          ./gradlew :app:assembleDebugAndroidTest --no-daemon
+      - name: Exercise production signing rejection rules with disposable keys
+        run: python3 scripts/android_signing_test.py
+      - name: Install isolated Android emulator
+        run: |
+          sdkmanager 'system-images;android-36;google_apis;x86_64' 'build-tools;36.0.0'
+          test -e /dev/kvm
+          sudo chmod a+rw /dev/kvm
+      - name: Execute actual Keystore and portable passkey recovery
+        run: python3 scripts/android_device_acceptance.py
+      - name: Preserve source-bound native test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-device-acceptance-${{ github.sha }}
+          path: dist/android-device-acceptance/
+          if-no-files-found: error
+          retention-days: 14
