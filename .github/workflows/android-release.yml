@@ -1,0 +1,151 @@
+name: HeavenKey Android production release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/pubspec.yaml'
+      - '.github/workflows/android-release.yml'
+      - 'scripts/android_release.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: heavenkey-android-production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/mobile.yml
+
+  package:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    environment: android-production
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    env:
+      CI: 'true'
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+      DASH__SUPPRESS_ANALYTICS: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Read release version
+        id: version
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os, re
+          text = Path('apps/mobile/pubspec.yaml').read_text()
+          match = re.search(r'^version: (\d+\.\d+\.\d+)\+(\d+)$', text, re.M)
+          if not match:
+              raise SystemExit('A release version and positive build number are required.')
+          version, code = match.groups()
+          assert int(code) > 0
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'version={version}\ncode={code}\ntag=android-v{version}\n')
+          PY
+      - name: Reject an existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$RELEASE_TAG" > "$RUNNER_TEMP/android-existing-tags.json"
+          python3 - <<'PY'
+          import json, os
+          refs = json.load(open(os.environ['RUNNER_TEMP'] + '/android-existing-tags.json'))
+          if refs:
+              raise SystemExit('Release tag already exists. Increase the Android version; artifacts are never overwritten.')
+          PY
+      - name: Install pinned Flutter and Android tools
+        run: |
+          git clone --depth=1 --branch 3.47.2 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = d3b14c876900e553bc736ca19295fc09e3853e8e
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Resolve locked dependencies
+        working-directory: apps/mobile
+        run: flutter pub get --enforce-lockfile
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: android-device-acceptance-${{ github.sha }}
+          path: dist/android-device-acceptance/
+      - name: Build with the pinned production identity and verify every artifact
+        env:
+          HEAVENKEY_ANDROID_KEYSTORE_BASE64: ${{ secrets.HEAVENKEY_ANDROID_KEYSTORE_BASE64 }}
+          HEAVENKEY_ANDROID_STORE_PASSWORD: ${{ secrets.HEAVENKEY_ANDROID_STORE_PASSWORD }}
+          HEAVENKEY_ANDROID_KEY_ALIAS: ${{ secrets.HEAVENKEY_ANDROID_KEY_ALIAS }}
+          HEAVENKEY_ANDROID_KEY_PASSWORD: ${{ secrets.HEAVENKEY_ANDROID_KEY_PASSWORD }}
+          HEAVENKEY_ANDROID_CERT_SHA256: ${{ vars.HEAVENKEY_ANDROID_CERT_SHA256 }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_CODE: ${{ steps.version.outputs.code }}
+        run: |
+          set -euo pipefail
+          export HEAVENKEY_ANDROID_KEYSTORE="$RUNNER_TEMP/heavenkey-release-signing.p12"
+          trap 'rm -f "$HEAVENKEY_ANDROID_KEYSTORE"' EXIT
+          python3 - <<'PY'
+          import base64, os
+          required = ['HEAVENKEY_ANDROID_KEYSTORE_BASE64', 'HEAVENKEY_ANDROID_STORE_PASSWORD',
+                      'HEAVENKEY_ANDROID_KEY_ALIAS', 'HEAVENKEY_ANDROID_KEY_PASSWORD', 'HEAVENKEY_ANDROID_CERT_SHA256']
+          missing = [name for name in required if not os.environ.get(name, '').strip()]
+          if missing:
+              raise SystemExit('Production signing configuration missing: ' + ', '.join(missing) + '. See docs/ANDROID-PRODUCTION.md; no unsigned/debug release is published.')
+          data = base64.b64decode(os.environ['HEAVENKEY_ANDROID_KEYSTORE_BASE64'], validate=True)
+          with open(os.open(os.environ['HEAVENKEY_ANDROID_KEYSTORE'], os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'wb') as output:
+              output.write(data)
+          PY
+          unset HEAVENKEY_ANDROID_KEYSTORE_BASE64
+          (cd apps/mobile/android && ./gradlew :app:verifyProductionSigning --no-daemon)
+          # Release mode must regenerate Flutter's registrant without dev plugins.
+          (cd apps/mobile && flutter build apk --release --split-per-abi)
+          (cd apps/mobile && flutter build appbundle --release)
+          git diff --exit-code -- apps/mobile/pubspec.lock
+          mkdir -p dist/android-release
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            cp "apps/mobile/build/app/outputs/flutter-apk/app-$abi-release.apk" "dist/android-release/HeavenKey-$RELEASE_VERSION-android-$abi.apk"
+          done
+          cp apps/mobile/build/app/outputs/bundle/release/app-release.aab "dist/android-release/HeavenKey-$RELEASE_VERSION-android.aab"
+          python3 scripts/android_release.py dist/android-release --version "$RELEASE_VERSION" --code "$RELEASE_CODE" --commit "$GITHUB_SHA" --device-evidence dist/android-device-acceptance/acceptance.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: signed-android-${{ github.sha }}
+          path: dist/android-release/
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    needs: package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: signed-android-${{ github.sha }}
+          path: release/
+      - name: Publish verified Android release
+        working-directory: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.package.outputs.tag }}
+        run: |
+          set -euo pipefail
+          sha256sum --check SHA256SUMS
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          data = json.loads(Path('RELEASE.json').read_text())
+          assert data['source_commit'] == os.environ['GITHUB_SHA']
+          text = f"HeavenKey Android {data['version']}\n\nStandalone Android vault, simpler onboarding, website passkeys and encrypted portable recovery for logins and passkeys.\n\nRequires Android 11/API 30; website passkey provider requires Android 14/API 34. Choose arm64-v8a for most current phones; AAB is for store submission.\n\nSource: {data['source_commit']}\nSigning certificate SHA-256: {data['signing_certificate_sha256']}\n\nAll artifacts passed signature, certificate, manifest and version checks. The source passed UI, native unit and isolated Android Keystore recovery tests. Physical-device and Play Store acceptance are separate and are not claimed. See RELEASE.json and SHA256SUMS.\n\nBack up existing vaults before changing installation channels. Android requires the same signing identity for an in-place update; do not uninstall a vault without an independently saved, tested recovery archive and key."
+          Path('release-notes.txt').write_text(text + '\n')
+          PY
+          gh release create "$RELEASE_TAG" HeavenKey-*.apk HeavenKey-*.aab SHA256SUMS RELEASE.json --target "$GITHUB_SHA" --title "HeavenKey Android ${RELEASE_TAG#android-v}" --notes-file release-notes.txt --latest=false

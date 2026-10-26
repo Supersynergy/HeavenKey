@@ -10,6 +10,10 @@ Passwörter auf dem Desktop und auf Android lokal verwalten. HeavenKey verschlü
 
 [Alle aktuellen Downloads](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1) · [Desktop einrichten](docs/DISTRIBUTION.md) · [Handy und Synchronisierung](docs/MOBILE-SYNC-PASSKEYS.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Lizenz](LICENSE)
 
+Android 0.27.0 hat einen eigenen [Produktions-Release-Ablauf](docs/ANDROID-PRODUCTION.md)
+für die eigenständige Handy-Nutzung. Der Ablauf veröffentlicht erst nach nativen
+Wiederherstellungstests und Prüfung der konfigurierten Herausgebersignatur.
+
 ![HeavenKey als native macOS-App mit einem synthetischen Testkonto](docs/screenshots/native-macos.png)
 
 *Die Bilder zeigen die echte lokale App mit ausschließlich erfundenen Beispieldaten. Passwörter bleiben verdeckt.*
