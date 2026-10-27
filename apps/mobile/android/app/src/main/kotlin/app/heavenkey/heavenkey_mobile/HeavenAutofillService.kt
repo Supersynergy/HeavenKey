@@ -121,7 +121,7 @@ class HeavenAutofillService : AutofillService() {
     override fun onDestroy() { attribution?.cancel(); super.onDestroy() }
     override fun onConnected() { super.onConnected(); trace(this, "connected") }
     override fun onFillRequest(request: FillRequest, cancellationSignal: CancellationSignal, callback: FillCallback) {
-        trace(this, "fill request contexts=${request.fillContexts.size} cancelled=${cancellationSignal.isCanceled}")
+        trace(this, "fill request contexts=${request.fillContexts.size} flags=${request.flags} cancelled=${cancellationSignal.isCanceled}")
         if (cancellationSignal.isCanceled) { callback.onSuccess(null); return }
         val target = request.fillContexts.lastOrNull()?.structure?.let { FillPolicy.target(this, it) }
         if (target == null) { callback.onSuccess(null); return }
@@ -141,7 +141,10 @@ class HeavenAutofillService : AutofillService() {
         try {
             val inline = request.inlineSuggestionsRequest
             val spec = inline?.inlinePresentationSpecs?.firstOrNull()
-            if (inline != null && inline.maxSuggestionCount > 0 && spec != null &&
+            // Explicit requests (including long-press Autofill) must remain usable
+            // with a closed IME. Offer the dropdown instead of a keyboard-only chip.
+            val manual = request.flags and FillRequest.FLAG_MANUAL_REQUEST != 0
+            if (!manual && inline != null && inline.maxSuggestionCount > 0 && spec != null &&
                 UiVersions.INLINE_UI_VERSION_1 in UiVersions.getVersions(spec.style)) {
                 val source = attribution ?: PendingIntent.getActivity(this, 7130,
                     Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)

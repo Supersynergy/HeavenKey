@@ -61,6 +61,10 @@ public class AutofillFixtureActivity extends Activity {
             for (Map.Entry<String, EditText> entry : inputs.entrySet()) values.put(entry.getKey(), entry.getValue().getText().toString());
             result.setText(new JSONObject(values).toString());
         });
-        form.addView(inspect); form.addView(result); setContentView(form); first.requestFocus();
+        form.addView(inspect); form.addView(result); setContentView(form);
+        // Each fixture is an independent form, not a continuation of an earlier
+        // login/address partition kept alive by the Android autofill framework.
+        getSystemService(AutofillManager.class).cancel();
+        first.requestFocus();
     }
 }

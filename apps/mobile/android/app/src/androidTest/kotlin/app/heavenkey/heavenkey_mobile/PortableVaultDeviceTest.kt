@@ -223,7 +223,19 @@ class PortableVaultDeviceTest {
     private fun missingUi(action: String): Nothing {
         val snapshot = java.io.ByteArrayOutputStream()
         device.dumpWindowHierarchy(snapshot)
-        error("Missing UI action: $action; foreground=${device.currentPackageName}; UI=${snapshot.toString("UTF-8").take(12000)}")
+        val parser = android.util.Xml.newPullParser()
+        parser.setInput(java.io.StringReader(snapshot.toString("UTF-8")))
+        val rows = mutableListOf<String>()
+        while (parser.eventType != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
+            if (parser.eventType == org.xmlpull.v1.XmlPullParser.START_TAG && parser.name == "node") {
+                val text = parser.getAttributeValue(null, "text").orEmpty()
+                val description = parser.getAttributeValue(null, "content-desc").orEmpty()
+                if (text.isNotEmpty() || description.isNotEmpty()) rows.add(
+                    "${parser.getAttributeValue(null, "package")} | $text | $description | ${parser.getAttributeValue(null, "resource-id")}")
+            }
+            parser.next()
+        }
+        error("Missing UI action: $action; foreground=${device.currentPackageName}; UI=${rows.joinToString("\n").take(12000)}")
     }
     private fun tap(text: String) {
         val selector = By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(text), java.util.regex.Pattern.CASE_INSENSITIVE or java.util.regex.Pattern.UNICODE_CASE))
@@ -240,6 +252,7 @@ class PortableVaultDeviceTest {
     private fun consent() {
         // Either the standard dropdown or the neutral inline keyboard chip.
         val offer = device.wait(Until.findObject(By.text(java.util.regex.Pattern.compile("Mit HeavenKey ausfüllen|HeavenKey", java.util.regex.Pattern.CASE_INSENSITIVE))), 15_000)
+            ?: device.wait(Until.findObject(By.desc("Mit HeavenKey ausfüllen")), 3_000)
             ?: missingUi("System HeavenKey Autofill offer")
         offer.click(); device.waitForIdle()
         tap("Weiter"); enterPin()
