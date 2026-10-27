@@ -107,7 +107,7 @@ void main() {
         isTrue,
       );
       expect(vault.profiles.single.values['city'], 'Hamburg');
-    expect(vault.status['hasVault'], isTrue);
+      expect(vault.status['hasVault'], isTrue);
       expect(await vault.revokeApp('app.example.client'), isTrue);
       expect(vault.appBindings, isEmpty);
       expect(await vault.deleteProfile('synthetic-profile'), isTrue);
