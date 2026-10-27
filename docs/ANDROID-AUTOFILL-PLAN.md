@@ -57,6 +57,10 @@ abgelehnt. Native WebViews erhalten keine Ersatzfreigabe als vermeintlich native
   Geräteauthentifizierung. Android-Systembackup und Klartextverkehr bleiben aus.
 - Generator, Feldklassifizierung und Profilwahl senden keine Daten an einen Server
   oder ein Sprachmodell. Bestehender Desktop-Sync bleibt ausdrücklich gekoppelt.
+- Die Android-Paketsichtbarkeit umfasst Launcher- und Browser-Intents, damit die
+  Signatur der gerade anfragenden App geprüft werden kann. Kein `QUERY_ALL_PACKAGES`
+  und kein Sammeln eines App-Inventars. Ist ein Paket nicht sichtbar/verifizierbar,
+  wird die Freigabe abgelehnt.
 - Backup V3 verwendet Plattform-AES-GCM mit eigener Versionsbindung. Der zufällige
   Wiederherstellungsschlüssel bleibt getrennt von der Datei. Falsche Schlüssel,
   Manipulation und veraltete Vorschauen dürfen nichts überschreiben.

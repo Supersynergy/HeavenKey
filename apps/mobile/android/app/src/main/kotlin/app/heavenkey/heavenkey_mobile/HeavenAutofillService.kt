@@ -90,7 +90,7 @@ internal object FillPolicy {
                 attribute.first?.lowercase()?.let { it to attribute.second.orEmpty() }
             }?.toMap().orEmpty()
             val field = AutofillFields.classify(node.autofillHints?.toList().orEmpty(), attributes, node.inputType)
-            if (field != null && node.visibility == View.VISIBLE && node.isEnabled && node.autofillType == View.AUTOFILL_TYPE_TEXT && node.autofillId != null) {
+            if (field != null && node.visibility == View.VISIBLE && node.isEnabled && (browser || node.isFocusable) && node.autofillType == View.AUTOFILL_TYPE_TEXT && node.autofillId != null) {
                 // A browser must supply a valid origin on every actual field; never infer it from an ancestor.
                 if (browser && (scope == null || node.htmlInfo == null)) { invalid = true; return }
                 val id = node.autofillId!!

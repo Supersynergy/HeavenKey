@@ -180,6 +180,8 @@ class PortableVaultDeviceTest {
             try { vault.bindApp(id, app.copy(certificates = "0".repeat(64))); fail("Changed app certificate accepted") }
             catch (error: VaultFailure) { assertEquals("app_changed", error.code) }
             vault.bindApp(id, app); assertEquals(1, vault.associatedEntries(app).size)
+            vault.save(entry(id).put("origin", "https://other.test")); assertTrue(vault.associatedEntries(app).isEmpty())
+            vault.save(entry(id)); vault.bindApp(id, app)
             val backup = PortableVaultBackup(context, vault); val recovery = vault.newBackupKey(); val archive = backup.create(recovery)
             assertEquals(3, JSONObject(archive).getInt("version"))
             val stale = backup.inspect(archive, recovery)
@@ -201,7 +203,8 @@ class PortableVaultDeviceTest {
     }
     private fun fixture(form: String) {
         val pkg = instrumentation.context.packageName
-        device.executeShellCommand("am start -W -n $pkg/app.heavenkey.heavenkey_mobile.fixture.AutofillFixtureActivity --es form $form --activity-clear-task --activity-new-task")
+        val started = device.executeShellCommand("am start -W -n $pkg/app.heavenkey.heavenkey_mobile.fixture.AutofillFixtureActivity --es form $form -f 0x10008000")
+        check("Status: ok" in started && "Error" !in started) { "Synthetic fixture launch failed: $started" }
         device.waitForIdle()
         tap("Request synthetic autofill")
     }

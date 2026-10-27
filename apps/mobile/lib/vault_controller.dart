@@ -214,6 +214,9 @@ class VaultController extends ChangeNotifier {
     profile.validate();
     await _channel.invokeMethod<void>('saveProfile', profile.values);
     await _refreshFormData(generation);
+    if (generation == _generation && !_disposed) {
+      status = {...status, 'hasVault': true};
+    }
   });
   Future<bool> deleteProfile(String id) => _perform((generation) async {
     if (!unlocked) throw PlatformException(code: 'locked');

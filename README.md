@@ -15,7 +15,7 @@ Passwörter auf dem Desktop und auf Android lokal verwalten. HeavenKey verschlü
 
 [![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.26.0 Vorschau](https://img.shields.io/badge/version-0.26.0_preview-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1)
 
-[Alle aktuellen Downloads](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1) · [Desktop einrichten](docs/DISTRIBUTION.md) · [Handy und Synchronisierung](docs/MOBILE-SYNC-PASSKEYS.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Lizenz](LICENSE)
+[Desktop und Erweiterungen 0.26](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1) · [Desktop einrichten](docs/DISTRIBUTION.md) · [Handy und Synchronisierung](docs/MOBILE-SYNC-PASSKEYS.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Lizenz](LICENSE)
 
 Android 0.28.0 hat einen eigenen [Produktions-Release-Ablauf](docs/ANDROID-PRODUCTION.md)
 für die eigenständige Handy-Nutzung. Der Ablauf veröffentlicht erst nach nativen
@@ -23,7 +23,7 @@ Wiederherstellungstests und Prüfung der konfigurierten Herausgebersignatur.
 
 Android 0.28 erweitert die App um [Formularprofile, native App-Autofill-Zuordnungen,
 Registrierungsgenerator und merkbare Passphrasen](docs/ANDROID-AUTOFILL-PLAN.md).
-Die neue Testvorschau nutzt eine getrennte App-Kennung; Desktop und Erweiterungen
+[Android-Vorschau 0.28](https://github.com/Supersynergy/HeavenKey/releases/tag/android-v0.28.0-preview.1) nutzt eine getrennte App-Kennung; Desktop und Erweiterungen
 bleiben unabhängig versioniert. Produktionssignierung und aktuelle Geräteabnahmen
 werden im verlinkten Release-Plan getrennt ausgewiesen.
 
@@ -35,7 +35,7 @@ Die macOS-App hat ein eigenes Fenster, native Datei-Dialoge und Tastaturmenüs. 
 
 ## Beim ersten Start
 
-Erstelle einen Tresor oder wähle die Wiederherstellung deiner Sicherung. Der erste Login braucht Website, Nutzername und das aktuelle Passwort; der Name lässt sich aus der Domain übernehmen. Android zeigt zunächst nur drei Login-Felder; eigene Namen und Notizen sind optional. Ein eigener Passkey-Tab, wählbare Generatorlängen und ein neues Hell-/Dunkel-Design erleichtern den Einstieg. Der unveröffentlichte Android-Quellstand ergänzt zudem V2-Sicherungen einschließlich Website-Passkeys ohne Desktop; die verlinkte 0.26-APK enthält diese Änderungen noch nicht. Android akzeptiert auch eine vollständige HTTPS-Adresse und zeigt vor dem Speichern die genaue Herkunft ohne Pfad.
+Erstelle einen Tresor oder wähle die Wiederherstellung deiner Sicherung. Der erste Login braucht Website, Nutzername und das aktuelle Passwort; der Name lässt sich aus der Domain übernehmen. Android zeigt zunächst nur drei Login-Felder; eigene Namen und Notizen sind optional. Ein eigener Passkey-Tab, wählbare Generatorlängen und ein neues Hell-/Dunkel-Design erleichtern den Einstieg. Android 0.28 ergänzt V3-Sicherungen einschließlich Website-Passkeys und Formularprofilen ohne Desktop. Die getrennte 0.28-Vorschau enthält diese Änderungen; die gemeinsame 0.26-APK ist der ältere Stand. Android akzeptiert auch eine vollständige HTTPS-Adresse und zeigt vor dem Speichern die genaue Herkunft ohne Pfad.
 
 Ein neues Passwort erzeugst du ausdrücklich. Bereits eingegebene Passwörter werden erst nach Bestätigung ersetzt. Vorschläge für Nutzernamen stammen aus dem entsperrten lokalen Tresor. Nach dem ersten Login führen passende Aktionen zur Sicherung, Browserintegration und Gerätekopplung. [Einstieg und Grenzen](docs/ONBOARDING.md).
 

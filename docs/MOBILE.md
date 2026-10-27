@@ -18,7 +18,7 @@ nativer Apps, Passworterzeugung im Registrierungsformular, Inline-Vorschläge un
 merkbare Passphrasen. V3-Sicherungen enthalten Logins, Website-Passkeys und Profile.
 App-Freigaben werden auf einem neuen Gerät neu erteilt; Profile sind noch nicht im
 Desktop-Sync. [Bedienung, Grenzen und nächste Schritte](ANDROID-AUTOFILL-PLAN.md).
-Die getrennte neue Vorschau heißt `android-v0.28.0-preview.1` und verwendet eine eigene
+Die [getrennte neue Vorschau](https://github.com/Supersynergy/HeavenKey/releases/tag/android-v0.28.0-preview.1) heißt `android-v0.28.0-preview.1` und verwendet eine eigene
 App-Kennung. Die folgenden gemeinsamen Desktop-Downloads bleiben bei 0.26.
 
 ## Android-Vorschau installieren
