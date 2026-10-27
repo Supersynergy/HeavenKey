@@ -113,12 +113,16 @@ def main():
                         adb("shell", "uiautomator", "dump", "/sdcard/heavenkey-test-ui.xml")
                         (EVIDENCE / "failure-ui.xml").write_text(adb("shell", "cat", "/sdcard/heavenkey-test-ui.xml"))
                         print((EVIDENCE / "failure-ui.xml").read_text()[:12000], flush=True)
-                        (EVIDENCE / "logcat.txt").write_text(adb("logcat", "-d", "-t", "6000"))
-                    except subprocess.SubprocessError:
-                        pass
+                    except subprocess.SubprocessError as failure:
+                        (EVIDENCE / "ui-dump-error.txt").write_text(str(failure))
+                    try:
+                        (EVIDENCE / "logcat.txt").write_text(adb("shell", "logcat", "-d", "-t", "3000"))
+                    except subprocess.SubprocessError as failure:
+                        (EVIDENCE / "logcat-error.txt").write_text(str(failure) + "\n" + str(getattr(failure, "stderr", "")))
                     raise RuntimeError("Native device acceptance failed; inspect instrumentation.txt.")
                 source_paths = [*MOBILE.glob("android/app/src/main/**/*.kt"),
                                 *MOBILE.glob("android/app/src/androidTest/**/*.kt"),
+                    *MOBILE.glob("android/app/src/androidTest/**/*.java"),
                                 *MOBILE.glob("lib/**/*.dart"), *MOBILE.glob("assets/*"),
                                 *MOBILE.glob("android/app/src/main/res/xml/*.xml"),
                                 MOBILE / "android/app/src/androidTest/AndroidManifest.xml",

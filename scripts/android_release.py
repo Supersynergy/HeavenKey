@@ -77,6 +77,7 @@ def verify_device_evidence(device_evidence, commit):
     mobile = ROOT / "apps/mobile"
     source_paths = [*mobile.glob("android/app/src/main/**/*.kt"),
                     *mobile.glob("android/app/src/androidTest/**/*.kt"),
+                    *mobile.glob("android/app/src/androidTest/**/*.java"),
                     *mobile.glob("lib/**/*.dart"), *mobile.glob("assets/*"),
                     *mobile.glob("android/app/src/main/res/xml/*.xml"),
                     mobile / "android/app/src/androidTest/AndroidManifest.xml",
