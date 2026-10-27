@@ -33,7 +33,7 @@ internal data class FillField(val id: AutofillId, val maximum: Int?)
 internal data class FillTarget(val scope: WebHostScope?, val app: NativeAppIdentity,
     val fields: Map<String, List<FillField>>) {
     val signup: Boolean get() = "newPassword" in fields
-    val hasLogin: Boolean get() = signup || "password" in fields
+    val hasLogin: Boolean get() = signup || "password" in fields || "username" in fields
     val profileFields: Set<String> get() = fields.keys.intersect(FormProfiles.dataFields)
     val label: String get() = scope?.host ?: app.packageName
     fun current(context: Context): Boolean = app.current(context) &&
@@ -78,7 +78,7 @@ internal object FillPolicy {
         var focused = false
         var count = 0
         var invalid = false
-        fun visit(node: AssistStructure.ViewNode, depth: Int) {
+        fun visit(node: AssistStructure.ViewNode, depth: Int, ancestorsVisible: Boolean = true) {
             if (invalid) return
             if (++count > 4096 || depth > 32) { invalid = true; return }
             val scope = if (node.webDomain != null) WebOriginPolicy.legacy(node.webScheme, node.webDomain) else null
@@ -89,8 +89,9 @@ internal object FillPolicy {
             val attributes = node.htmlInfo?.attributes?.mapNotNull { attribute ->
                 attribute.first?.lowercase()?.let { it to attribute.second.orEmpty() }
             }?.toMap().orEmpty()
+            val visible = ancestorsVisible && node.visibility == View.VISIBLE && node.isEnabled
             val field = AutofillFields.classify(node.autofillHints?.toList().orEmpty(), attributes, node.inputType)
-            if (field != null && node.visibility == View.VISIBLE && node.isEnabled && (browser || node.isFocusable) && node.autofillType == View.AUTOFILL_TYPE_TEXT && node.autofillId != null) {
+            if (field != null && visible && (browser || node.isFocusable) && node.autofillType == View.AUTOFILL_TYPE_TEXT && node.autofillId != null) {
                 // A browser must supply a valid origin on every actual field; never infer it from an ancestor.
                 if (browser && (scope == null || node.htmlInfo == null)) { invalid = true; return }
                 val id = node.autofillId!!
@@ -101,7 +102,7 @@ internal object FillPolicy {
             }
             for (index in 0 until node.childCount) {
                 if (invalid) break
-                visit(node.getChildAt(index), depth + 1)
+                visit(node.getChildAt(index), depth + 1, visible)
             }
         }
         for (index in 0 until structure.windowNodeCount) {

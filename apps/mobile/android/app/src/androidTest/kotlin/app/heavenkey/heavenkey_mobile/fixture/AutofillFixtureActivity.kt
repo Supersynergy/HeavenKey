@@ -34,6 +34,14 @@ class AutofillFixtureActivity : Activity() {
             "login" -> { field("username", "username"); field("password", "password", true) }
             else -> { field("given-name", "personGivenName"); field("email", "emailAddress"); field("city", "postalAddressLocality") }
         }
+        // A visible child inside a GONE parent must never be considered fillable.
+        val hidden = LinearLayout(this).apply { visibility = View.GONE }
+        val hiddenName = EditText(this).apply {
+            id = View.generateViewId(); setAutofillHints("personGivenName")
+            inputType = InputType.TYPE_CLASS_TEXT
+            importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_YES
+        }
+        inputs["hidden-name"] = hiddenName; hidden.addView(hiddenName); form.addView(hidden)
         form.addView(Button(this).apply {
             text = "Request synthetic autofill"
             setOnClickListener { first?.let { it.requestFocus(); getSystemService(AutofillManager::class.java).requestAutofill(it) } }

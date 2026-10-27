@@ -92,6 +92,9 @@ def main():
                 adb("shell", "wm", "dismiss-keyguard")
                 for setting in ("window_animation_scale", "transition_animation_scale", "animator_duration_scale"):
                     adb("shell", "settings", "put", "global", setting, "0")
+                # Keep this disposable test screen awake; authentication is still real OS PIN entry.
+                adb("shell", "settings", "put", "system", "screen_off_timeout", "1800000")
+                adb("shell", "svc", "power", "stayon", "true")
                 # This PIN belongs only to this newly created disposable emulator.
                 adb("shell", "locksettings", "set-pin", "417926")
                 verified = adb("shell", "locksettings", "verify", "--old", "417926")
@@ -110,7 +113,7 @@ def main():
                         adb("shell", "uiautomator", "dump", "/sdcard/heavenkey-test-ui.xml")
                         (EVIDENCE / "failure-ui.xml").write_text(adb("shell", "cat", "/sdcard/heavenkey-test-ui.xml"))
                         print((EVIDENCE / "failure-ui.xml").read_text()[:12000], flush=True)
-                        (EVIDENCE / "logcat.txt").write_text(adb("logcat", "-d", "-t", "1500"))
+                        (EVIDENCE / "logcat.txt").write_text(adb("logcat", "-d", "-t", "6000"))
                     except subprocess.SubprocessError:
                         pass
                     raise RuntimeError("Native device acceptance failed; inspect instrumentation.txt.")

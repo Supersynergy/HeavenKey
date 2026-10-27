@@ -7,6 +7,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.json.JSONObject
 import org.json.JSONArray
+import android.app.KeyguardManager
 import android.util.AtomicFile
 import android.util.Base64
 import javax.crypto.Cipher
@@ -33,6 +34,18 @@ class PortableVaultDeviceTest {
     @Before fun requireOwnedEmulator() {
         assertEquals("heavenkey_production_test", device.executeShellCommand("getprop ro.boot.qemu.avd_name").trim())
         assertEquals("1", device.executeShellCommand("getprop ro.kernel.qemu").trim())
+        device.wakeUp()
+        val keyguard = context.getSystemService(KeyguardManager::class.java)
+        if (keyguard.isKeyguardLocked) {
+            // Real keyguard entry on this owned emulator; no dismissal/auth bypass.
+            device.swipe(device.displayWidth / 2, device.displayHeight * 3 / 4,
+                device.displayWidth / 2, device.displayHeight / 4, 30)
+            device.executeShellCommand("input text 417926")
+            device.pressEnter(); device.waitForIdle()
+            val deadline = System.currentTimeMillis() + 5_000
+            while (keyguard.isKeyguardLocked && System.currentTimeMillis() < deadline) Thread.sleep(100)
+        }
+        assertFalse("Unlock the synthetic emulator through its real PIN UI before app authentication", keyguard.isKeyguardLocked)
     }
 
     private fun authenticate(vault: VaultStore, scenario: ActivityScenario<MainActivity>) {
@@ -47,7 +60,7 @@ class PortableVaultDeviceTest {
 
     private fun enterPin() {
         val pin = device.wait(Until.findObject(By.clazz("android.widget.EditText").pkg("com.android.systemui")), 20_000)
-            ?: error("The actual Android device credential dialog did not appear.")
+            ?: error("The actual Android device credential dialog did not appear; foreground=${device.currentPackageName}, keyguard=${context.getSystemService(KeyguardManager::class.java).isKeyguardLocked}.")
         pin.text = "417926" // Synthetic emulator PIN, set by the device test runner.
         device.pressEnter()
         device.waitForIdle()
@@ -230,6 +243,7 @@ class PortableVaultDeviceTest {
             val profileValues = values()
             assertEquals("Synthetisch", profileValues.getString("given-name")); assertEquals("Berlin", profileValues.getString("city"))
             assertEquals("", profileValues.getString("email"))
+            assertEquals("", profileValues.getString("hidden-name"))
 
             fixture("login"); consent(); tap("Gespeicherten Login ausfüllen")
             val login = device.wait(Until.findObject(By.textContains("Synthetic device acceptance")), 10_000) ?: error("Synthetic login not offered")

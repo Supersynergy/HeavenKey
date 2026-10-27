@@ -49,6 +49,7 @@ class AutofillPolicyTest {
         assertTrue(AutofillFields.unambiguous(mapOf("newPassword" to 2, "email" to 1)))
         assertTrue(AutofillFields.unambiguous(mapOf("givenName" to 1, "postalCode" to 1)))
         assertTrue(AutofillFields.unambiguous(mapOf("password" to 1)))
+        assertTrue(AutofillFields.unambiguous(mapOf("username" to 1)))
         for (counts in listOf(emptyMap(), mapOf("password" to 2), mapOf("email" to 2),
             mapOf("newPassword" to 3), mapOf("password" to 1, "newPassword" to 1),
             mapOf("password" to 1, "username" to 1, "email" to 1))) assertFalse(AutofillFields.unambiguous(counts))
