@@ -1,4 +1,4 @@
-# HeavenKey Android 0.27.0 – Produktionsveröffentlichung
+# HeavenKey Android 0.28.0 – Produktionsveröffentlichung
 
 Die Android-App arbeitet eigenständig: kein Desktop-Tresor und kein Cloudkonto
 sind für die lokale Nutzung erforderlich. Die tägliche Freigabe verwendet die
@@ -19,7 +19,7 @@ werden unabhängig versioniert.
 - Native, über Android Keystore geschützte Speicherung. Die App speichert ihre
   Tresordateien außerhalb von Android-Systembackups.
 - Verschlüsselte portable Sicherung von Logins **und Passkey-Schlüsseln** im
-  Archivformat v2. Ältere Login-Archive v1 bleiben lesbar.
+  Archivformat v3 einschließlich Formularprofilen. Ältere Archive v1/v2 bleiben lesbar.
 - Wiederherstellung mit Vorschau, Konfliktprüfung und Bindung an den aktuellen
   Tresorstand. Bei einem unterbrochenen Speichern beider Dateien wird ausdrücklich
   gesperrt und eine erneute Vorschau/Wiederherstellung verlangt.
@@ -41,10 +41,10 @@ wenn alle folgenden Schritte erfolgreich sind:
    und sechs Tests der Produktionssignaturprüfung mit temporären Testschlüsseln.
    Auch alle Release-APKs und das App Bundle werden mit einer solchen Testidentität
    gebaut und vollständig geprüft; diese Testpakete werden anschließend gelöscht.
-3. Zwei Instrumentierungstests auf einem eigens erstellten, isolierten API-36-
+3. Vier Instrumentierungstests auf einem eigens erstellten, isolierten API-36-
    Emulator mit echter Android-PIN-Abfrage und echtem Android Keystore. Geprüft
    werden Wiederherstellung einschließlich nutzbarer Passkey-Signatur, falscher
-   Schlüssel, Manipulation, veraltete Vorschau und gesperrter Export.
+   Schlüssel, Manipulation, veraltete Vorschau und gesperrter Export. Hinzu kommen V1-Tresormigration, Profile/Backup/App-Vertrauen sowie tatsächlicher Android-Autofill für Profile, Login und Registrierung.
 4. Produktionsbuild mit privatem Herausgeberschlüssel. Fehlende Konfiguration,
    Android-Debug-Identität, falsches Schlüsselpasswort, abgelaufenes Zertifikat und
    abweichende Zertifikatskennung sperren den Build.
@@ -87,7 +87,7 @@ Nach Einrichtung den Workflow auf `main` erneut ausführen.
 
 ## Downloads und Installationskanäle
 
-Der Release-Tag lautet `android-v0.27.0`. Ein Tag wird nie überschrieben; für eine
+Der Release-Tag lautet `android-v0.28.0`. Ein Tag wird nie überschrieben; für eine
 weitere Version müssen Versionsname und Buildnummer in `apps/mobile/pubspec.yaml`
 erhöht werden. Der Workflow ersetzt nicht die globale Desktop-Release-Markierung.
 Flutter ergänzt bei getrennten APKs die ABI-Offsets 1000 (ARMv7), 2000 (ARM64)
@@ -131,3 +131,18 @@ Der Gerätetest benötigt das Android-SDK-Systemimage
 `system-images;android-36;google_apis;x86_64`, `ANDROID_HOME`, JDK 17 und die
 SDK-Werkzeuge im Pfad. Er erstellt und löscht seinen eigenen Emulator; echte oder
 bereits angeschlossene Geräte werden nicht ausgewählt.
+
+## Getrennte Testvorschau 0.28
+
+Der verifizierte Android-CI-Stand erzeugt zusätzlich drei APKs mit der separaten
+App-Kennung `app.heavenkey.heavenkey_mobile.preview`, sichtbarer Vorschau-Kennzeichnung
+und Release-/AOT-Laufzeit ohne Debugger/Testcode. Eine kurzlebige Android-Debug-
+Signatur macht dies ausdrücklich **nicht** zum Produktionskanal. Nur Testdaten;
+keine stabile Update-Identität. Der Main-Release-Workflow veröffentlicht diese
+Pakete unabhängig von der Produktionskonfiguration als GitHub-Prerelease
+`android-v0.28.0-preview.1` mit Prüfsummen und `PREVIEW.json`. Bestehende Installationen
+werden nicht ersetzt. Vor Migration verschlüsselte Sicherung, separaten Schlüssel
+und erfolgreiche Wiederherstellung prüfen. Produktionsprüfer lehnen die Vorschau-
+App-Kennung weiterhin ab.
+
+[Autofill- und Formularumfang mit Grenzen und To-dos](ANDROID-AUTOFILL-PLAN.md).

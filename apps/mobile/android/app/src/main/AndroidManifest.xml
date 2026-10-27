@@ -1,8 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
     <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="HeavenKey"
+        android:label="${heavenKeyLabel}"
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
         android:name="${applicationName}"

@@ -60,6 +60,8 @@ class MainActivity : FlutterActivity() {
                             "hasVault" to vault.hasVault(),
                             "passkeysSupported" to (android.os.Build.VERSION.SDK_INT >= 34),
                             "backupIncludesPasskeys" to true,
+                            "formsSupported" to true, "backupIncludesProfiles" to true,
+                            "preview" to packageName.endsWith(".preview"),
                             "autofillEnabled" to (getSystemService(AutofillManager::class.java)?.hasEnabledAutofillServices() == true),
                             "browserTrusted" to (browser != null && BrowserTrust.trusted(this, browser)),
                             "windowFocused" to hasWindowFocus(), "platform" to "android"))
@@ -71,6 +73,12 @@ class MainActivity : FlutterActivity() {
                           catch (_: Exception) { vault.lock(); fail("corrupt_vault") }
                     }
                     "save" -> { vault.save(JSONObject(call.arguments as? Map<*, *> ?: throw VaultFailure("invalid_entry"))); result.success(null) }
+                    "formData" -> result.success(mapOf(
+                        "profiles" to vault.profiles().map { value -> value.keys().asSequence().associateWith { value.getString(it) } },
+                        "appBindings" to vault.appBindings().map { value -> value.keys().asSequence().associateWith { value.getString(it) } }))
+                    "saveProfile" -> { vault.saveProfile(JSONObject(call.arguments as? Map<*, *> ?: throw VaultFailure("invalid_profile"))); result.success(null) }
+                    "deleteProfile" -> { vault.deleteProfile(call.argument<String>("id") ?: throw VaultFailure("invalid_profile")); result.success(null) }
+                    "revokeApp" -> { vault.revokeApp(call.argument<String>("packageName") ?: throw VaultFailure("invalid_entry")); result.success(null) }
                     "delete" -> { vault.delete(call.argument<String>("id") ?: throw VaultFailure("invalid_entry")); result.success(null) }
                     "copyPassword" -> { vault.copy(call.argument<String>("id") ?: throw VaultFailure("invalid_entry")); result.success(null) }
                     "newBackupKey" -> result.success(vault.newBackupKey())

@@ -101,9 +101,9 @@ def main():
                 output = adb("shell", "am", "instrument", "-w", "-r", "-e", "class",
                              "app.heavenkey.heavenkey_mobile.PortableVaultDeviceTest",
                              "app.heavenkey.heavenkey_mobile.test/androidx.test.runner.AndroidJUnitRunner",
-                             timeout=300)
+                             timeout=480)
                 (EVIDENCE / "instrumentation.txt").write_text(output)
-                if "OK (2 tests)" not in output or "FAILURES!!!" in output:
+                if "OK (4 tests)" not in output or "FAILURES!!!" in output:
                     print(output, flush=True)
                     # XML/logs include synthetic fixtures only.
                     try:
@@ -116,17 +116,23 @@ def main():
                     raise RuntimeError("Native device acceptance failed; inspect instrumentation.txt.")
                 source_paths = [*MOBILE.glob("android/app/src/main/**/*.kt"),
                                 *MOBILE.glob("android/app/src/androidTest/**/*.kt"),
+                                *MOBILE.glob("lib/**/*.dart"), *MOBILE.glob("assets/*"),
+                                *MOBILE.glob("android/app/src/main/res/xml/*.xml"),
+                                MOBILE / "android/app/src/androidTest/AndroidManifest.xml",
                                 MOBILE / "android/app/build.gradle.kts",
                                 MOBILE / "android/app/src/main/AndroidManifest.xml",
                                 Path(__file__).resolve()]
                 receipt = {
                     "passed": True, "kind": "isolated Android API 36 emulator",
-                    "synthetic_only": True, "tests": 2,
+                    "synthetic_only": True, "tests": 4,
                     "device_credential_authentication": True,
                     "real_android_keystore": True,
                     "portable_passkey_restore_and_signature": True,
                     "wrong_key_tamper_and_stale_preview_rejected": True,
                     "locked_export_rejected": True,
+                    "legacy_vault_migration": True,
+                    "profiles_backup_and_new_app_trust": True,
+                    "native_system_autofill_profiles_logins_signup": True,
                     "physical_device": False, "browser_passkey_flow": False,
                     "production_signed_app": False,
                     "source_commit": run(["git", "rev-parse", "HEAD"], cwd=ROOT).strip(),
@@ -137,7 +143,7 @@ def main():
                 }
                 (EVIDENCE / "acceptance.json").write_text(json.dumps(receipt, indent=2) + "\n")
                 print("ANDROID_DEVICE_ACCEPTANCE=" + json.dumps(receipt, sort_keys=True), flush=True)
-                print("PASS: actual device authentication, Keystore recovery and rejection checks (2 tests).")
+                print("PASS: actual device authentication, Keystore recovery and rejection checks (4 tests).")
             finally:
                 process.terminate()
                 try:

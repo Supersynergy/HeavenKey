@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import 'backup_panel.dart';
 import 'connected_panel.dart';
@@ -8,9 +10,19 @@ import 'mobile_theme.dart';
 import 'passkeys_panel.dart';
 import 'vault_controller.dart';
 import 'vault_entry.dart';
+import 'passphrase.dart';
+import 'form_profiles_panel.dart';
 import 'website_input.dart';
 
-void main() => runApp(const HeavenKeyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks([
+      'EFF Long Wordlist',
+    ], await rootBundle.loadString('assets/NOTICE.md'));
+  });
+  runApp(const HeavenKeyApp());
+}
 
 class HeavenKeyApp extends StatelessWidget {
   const HeavenKeyApp({super.key, this.controller});
@@ -147,6 +159,13 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
                             ),
                           ),
                         if (vault.busy) const LinearProgressIndicator(),
+                        if (vault.status['preview'] == true)
+                          const Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Text(
+                              'Vorschau für Testdaten · getrennte App-Installation',
+                            ),
+                          ),
                         Expanded(
                           child: !vault.unlocked
                               ? locked()
@@ -611,7 +630,7 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
     padding: const EdgeInsets.all(24),
     children: [
       Text(
-        'Im Browser ausfüllen',
+        'Apps und Formulare ausfüllen',
         style: Theme.of(context).textTheme.headlineMedium,
       ),
       const SizedBox(height: 16),
@@ -628,6 +647,10 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
       const Text(
         'Android prüft den Browser und die gemeldete HTTPS-Domain. Vor jeder Passwortfreigabe bestätigst du die Domain einmalig. Ports und eingebettete Formulare derselben Domain kann der Browser dabei nicht zuverlässig unterscheiden. Es entsteht keine dauerhafte Ausnahme.',
       ),
+      if (vault.status['formsSupported'] == true) ...[
+        const SizedBox(height: 24),
+        FormProfilesPanel(vault: vault),
+      ],
       const SizedBox(height: 24),
       FilledButton.icon(
         onPressed: vault.busy ? null : () => vault.enableAutofill(),
@@ -650,9 +673,14 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
             ? 'HeavenKey ist im System als Autofill-Dienst ausgewählt.'
             : 'Wähle HeavenKey in den Systemeinstellungen als Autofill-Dienst.',
       ),
+      TextButton(
+        onPressed: () =>
+            showLicensePage(context: context, applicationName: 'HeavenKey'),
+        child: const Text('Lizenzen und EFF-Wortliste'),
+      ),
       const SizedBox(height: 16),
       const Text(
-        'Chrome: In den Browsereinstellungen Autofill mit einem anderen Dienst aktivieren. Fehlt die Herkunft einzelner Eingabefelder, bleibt die Passwortfreigabe gesperrt. Ein aktueller Browser ist erforderlich.\n\niPhone: HeavenKey benötigt eine eindeutige HTTPS-Adresse. Bei unvollständigen Angaben bleibt die Passwortfreigabe gesperrt. Die iPhone-Geräteabnahme steht noch aus.',
+        'Android-Apps: Tippe ein Feld an und wähle HeavenKey. Unterstützt werden erkennbare Login-, Registrierungs-, Kontakt- und Adressfelder. Bei einer Registrierung kannst du ein neues Passwort erzeugen und vor dem Ausfüllen im Tresor sichern. Apps ohne Autofill-Schnittstelle, unklare Felder und fremde eingebettete Domains werden nicht ausgefüllt.\n\nChrome: In den Browsereinstellungen Autofill mit einem anderen Dienst aktivieren. Fehlt die Herkunft einzelner Eingabefelder, bleibt die Passwortfreigabe gesperrt. Ein aktueller Browser ist erforderlich.\n\niPhone: HeavenKey benötigt eine eindeutige HTTPS-Adresse. Bei unvollständigen Angaben bleibt die Passwortfreigabe gesperrt. Die iPhone-Geräteabnahme steht noch aus.',
       ),
     ],
   );
@@ -692,7 +720,8 @@ class _EntryEditorState extends State<EntryEditor> {
     text: widget.entry?.password ?? '',
   );
   late final notes = TextEditingController(text: widget.entry?.notes ?? '');
-  bool reveal = false, generated = false;
+  bool reveal = false, generated = false, generating = false;
+  int phraseWords = 0;
   int passwordLength = 24;
   late bool showName = widget.entry != null;
   late bool showNotes = notes.text.isNotEmpty;
@@ -734,10 +763,30 @@ class _EntryEditorState extends State<EntryEditor> {
         return;
       }
     }
-    setState(() {
-      password.text = generatePassword(passwordLength);
-      generated = true;
-    });
+    if (generating) return;
+    setState(() => generating = true);
+    try {
+      final value = phraseWords == 0
+          ? generatePassword(passwordLength)
+          : await generatePassphrase(phraseWords);
+      if (!mounted || widget.busy || password.text != previous) return;
+      setState(() {
+        password.text = value;
+        generated = true;
+      });
+    } on FormatException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Wortliste konnte nicht geladen werden. Bitte erneut versuchen.',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => generating = false);
+    }
   }
 
   @override
@@ -860,24 +909,55 @@ class _EntryEditorState extends State<EntryEditor> {
                 ),
                 Wrap(
                   spacing: 8,
-                  runSpacing: 4,
                   children: [
-                    for (final length in [16, 24, 32, 48])
+                    ChoiceChip(
+                      label: const Text('Zufällige Zeichen'),
+                      selected: phraseWords == 0,
+                      onSelected: widget.busy || generating
+                          ? null
+                          : (_) => setState(() => phraseWords = 0),
+                    ),
+                    for (final count in [6, 8])
                       ChoiceChip(
-                        label: Text('$length Zeichen'),
-                        selected: passwordLength == length,
-                        onSelected: widget.busy
+                        label: Text('$count merkbare Wörter'),
+                        selected: phraseWords == count,
+                        onSelected: widget.busy || generating
                             ? null
-                            : (_) => setState(() => passwordLength = length),
+                            : (_) => setState(() => phraseWords = count),
                       ),
                   ],
                 ),
+                if (phraseWords > 0)
+                  Text(
+                    '${phraseWords == 6 ? '77,5' : '103,4'} Bit aus unabhängigen Wörtern. Englische EFF-Wortliste (CC BY 4.0). Merke dir eine Geschichte dazu. Prüfe die erlaubte Länge auf der Website.',
+                  ),
+                if (phraseWords == 0)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      for (final length in [16, 24, 32, 48])
+                        ChoiceChip(
+                          label: Text('$length Zeichen'),
+                          selected: passwordLength == length,
+                          onSelected: widget.busy
+                              ? null
+                              : (_) => setState(() => passwordLength = length),
+                        ),
+                    ],
+                  ),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
-                    onPressed: widget.busy ? null : generate,
+                    onPressed: widget.busy || generating ? null : generate,
                     icon: const Icon(Icons.auto_fix_high_outlined),
-                    label: const Text('Zufälliges Passwort erzeugen'),
+                    label: Text(
+                      generating
+                          ? 'Wird erzeugt …'
+                          : phraseWords == 0
+                          ? 'Zufälliges Passwort erzeugen'
+                          : 'Merkbares Passwort erzeugen',
+                    ),
                   ),
                 ),
                 if (generated)

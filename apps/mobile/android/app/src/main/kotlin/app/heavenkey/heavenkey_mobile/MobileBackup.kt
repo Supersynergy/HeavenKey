@@ -82,28 +82,31 @@ internal object MobileBackup {
         if (envelope.length > maxEnvelope || envelope.toByteArray(Charsets.UTF_8).size > maxEnvelope) throw BackupFailure("too_large")
         // Only the header is inspected here; authentication and strict payload validation follow on import.
         val version = try { JSONObject(envelope).getInt("version") } catch (_: Exception) { throw BackupFailure("invalid_archive") }
-        if (version !in 1..2) throw BackupFailure("invalid_archive")
+        if (version !in 1..3) throw BackupFailure("invalid_archive")
         parts(envelope, version)
     }
 
     // V2 uses the same reviewed platform AES-GCM primitive and independent domain separation.
-    fun sealFull(entries: List<JSONObject>, passkeys: List<JSONObject>, recoveryKey: String): String {
+    fun sealFull(entries: List<JSONObject>, passkeys: List<JSONObject>, recoveryKey: String, profiles: List<JSONObject>? = null): String {
         validate(entries); validatePasskeys(passkeys)
-        val plaintext = JSONObject().put("entries", JSONArray(entries)).put("passkeys", JSONArray(passkeys))
-            .toString().toByteArray(Charsets.UTF_8)
+        if (profiles != null) validateProfiles(profiles)
+        val version = if (profiles == null) 2 else 3
+        val payload = JSONObject().put("entries", JSONArray(entries)).put("passkeys", JSONArray(passkeys))
+        if (profiles != null) payload.put("profiles", JSONArray(profiles))
+        val plaintext = payload.toString().toByteArray(Charsets.UTF_8)
         val key = keyBytes(recoveryKey)
         try {
             if (plaintext.size > maxPlaintext) throw BackupFailure("too_large")
             val iv = ByteArray(12).also { random.nextBytes(it) }
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "AES"), GCMParameterSpec(128, iv))
-            cipher.updateAAD("HeavenKey/mobile-backup/v2".toByteArray(Charsets.UTF_8))
-            return JSONObject().put("format", "heavenkey-mobile-backup").put("version", 2)
+            cipher.updateAAD("HeavenKey/mobile-backup/v$version".toByteArray(Charsets.UTF_8))
+            return JSONObject().put("format", "heavenkey-mobile-backup").put("version", version)
                 .put("iv", encoder.encodeToString(iv)).put("ciphertext", encoder.encodeToString(cipher.doFinal(plaintext))).toString()
         } finally { key.fill(0); plaintext.fill(0) }
     }
 
-    data class Contents(val entries: List<JSONObject>, val passkeys: List<JSONObject>)
+    data class Contents(val entries: List<JSONObject>, val passkeys: List<JSONObject>, val profiles: List<JSONObject> = emptyList())
 
     private fun readRows(reader: JsonReader, allowed: Set<String>): List<JSONObject> {
         val rows = mutableListOf<JSONObject>()
@@ -129,15 +132,21 @@ internal object MobileBackup {
         catch (_: Exception) { throw BackupFailure("invalid_archive") }
     }
 
+    private fun validateProfiles(profiles: List<JSONObject>) {
+        try { FormProfiles.validateAll(profiles) }
+        catch (_: Exception) { throw BackupFailure("invalid_archive") }
+    }
+
     fun openFull(envelope: String, recoveryKey: String): Contents {
         checkArchive(envelope)
-        if (JSONObject(envelope).getInt("version") == 1) return Contents(open(envelope, recoveryKey), emptyList())
+        val version = JSONObject(envelope).getInt("version")
+        if (version == 1) return Contents(open(envelope, recoveryKey), emptyList())
         val key = keyBytes(recoveryKey)
         try {
-            val (iv, encrypted) = parts(envelope, 2)
+            val (iv, encrypted) = parts(envelope, version)
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(key, "AES"), GCMParameterSpec(128, iv))
-            cipher.updateAAD("HeavenKey/mobile-backup/v2".toByteArray(Charsets.UTF_8))
+            cipher.updateAAD("HeavenKey/mobile-backup/v$version".toByteArray(Charsets.UTF_8))
             val plain = cipher.doFinal(encrypted)
             try {
                 val text = Charsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(plain)).toString()
@@ -146,28 +155,41 @@ internal object MobileBackup {
                     reader.isLenient = false; reader.beginObject()
                     while (reader.hasNext()) {
                         val name = reader.nextName()
-                        if (name !in setOf("entries", "passkeys") || payload.containsKey(name)) throw BackupFailure("invalid_archive")
-                        val allowed = if (name == "entries") fields.toSet() else setOf("id", "rpId", "userHandle", "userName", "userDisplayName", "privateKey", "publicKey", "createdAt")
+                        if (name !in (if (version == 3) setOf("entries", "passkeys", "profiles") else setOf("entries", "passkeys")) || payload.containsKey(name)) throw BackupFailure("invalid_archive")
+                        val allowed = if (name == "entries") fields.toSet() else if (name == "profiles") FormProfiles.limits.keys else setOf("id", "rpId", "userHandle", "userName", "userDisplayName", "privateKey", "publicKey", "createdAt")
                         payload[name] = readRows(reader, allowed)
                     }
                     reader.endObject()
-                    if (reader.peek() != JsonToken.END_DOCUMENT || payload.size != 2) throw BackupFailure("invalid_archive")
+                    if (reader.peek() != JsonToken.END_DOCUMENT || payload.size != (if (version == 3) 3 else 2)) throw BackupFailure("invalid_archive")
                 }
                 val entries = payload.getValue("entries"); val passkeys = payload.getValue("passkeys")
                 validate(entries); validatePasskeys(passkeys)
-                return Contents(entries, passkeys)
+                val profiles = payload["profiles"].orEmpty(); validateProfiles(profiles)
+                return Contents(entries, passkeys, profiles)
             } finally { plain.fill(0) }
         } catch (failure: BackupFailure) { throw failure }
           catch (_: Exception) { throw BackupFailure("invalid_archive") }
         finally { key.fill(0) }
     }
 
-    fun fullFingerprint(entries: List<JSONObject>, passkeys: List<JSONObject>): String {
+    fun fullFingerprint(entries: List<JSONObject>, passkeys: List<JSONObject>, profiles: List<JSONObject> = emptyList(), bindings: List<JSONObject> = emptyList()): String {
         val digest = MessageDigest.getInstance("SHA-256")
         digest.update(fingerprint(entries).toByteArray(Charsets.UTF_8))
         // Fixed field order, length prefixes and sorted IDs bind all private material without exposing it.
         for (record in passkeys.sortedBy { it.getString("id") }) {
             for (name in listOf("id", "rpId", "userHandle", "userName", "userDisplayName", "privateKey", "publicKey", "createdAt")) {
+                val bytes = record.getString(name).toByteArray(Charsets.UTF_8)
+                digest.update(ByteBuffer.allocate(4).putInt(bytes.size).array()); digest.update(bytes); bytes.fill(0)
+            }
+        }
+        validateProfiles(profiles)
+        AppBindings.validateAll(bindings, entries)
+        for ((category, records, names) in listOf(
+            Triple("profiles", profiles.sortedBy { it.getString("id") }, FormProfiles.limits.keys.toList()),
+            Triple("bindings", bindings.sortedBy { it.getString("entryId") + "/" + it.getString("packageName") }, listOf("entryId", "packageName", "certificates")))) {
+            digest.update(category.toByteArray(Charsets.UTF_8))
+            digest.update(ByteBuffer.allocate(4).putInt(records.size).array())
+            for (record in records) for (name in names) {
                 val bytes = record.getString(name).toByteArray(Charsets.UTF_8)
                 digest.update(ByteBuffer.allocate(4).putInt(bytes.size).array()); digest.update(bytes); bytes.fill(0)
             }

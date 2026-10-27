@@ -154,7 +154,9 @@ class _BackupPanelState extends State<BackupPanel> {
       children: [
         Text('Sicherung', style: Theme.of(context).textTheme.headlineMedium),
         Text(
-          widget.vault.status['backupIncludesPasskeys'] == true
+          widget.vault.status['backupIncludesProfiles'] == true
+              ? 'Sichere Logins, Website-Passkeys und Formularprofile direkt vom Handy. Android-V3-Sicherungen benötigen HeavenKey 0.28 oder neuer auf Android. Ältere Android-Sicherungen bleiben lesbar. App-Freigaben erteilst du auf einem neuen Gerät erneut. Formularprofile werden derzeit nicht mit dem Desktop synchronisiert.'
+              : widget.vault.status['backupIncludesPasskeys'] == true
               ? 'Sichere Logins und Website-Passkeys direkt vom Handy. Du brauchst dafür keinen Desktop. Android-V2-Sicherungen lassen sich auf einem Android-Gerät mit dieser Version wiederherstellen.'
               : 'Diese Sicherung enthält Logins. Website-Passkeys werden separat gespeichert. Synchronisiere sie mit dem Desktop und sichere dessen verschlüsselten Tresor.',
         ),
@@ -277,6 +279,10 @@ class _BackupPanelState extends State<BackupPanel> {
             Text(
               '${preview.passkeyCount} Website-Passkeys: ${preview.newPasskeys} neu, ${preview.existingPasskeys} bereits vorhanden. Bestehende Passkeys bleiben erhalten.',
             ),
+          if (preview.profileCount > 0)
+            Text(
+              '${preview.profileCount} Formularprofile: ${preview.newProfiles} neu, ${preview.existingProfiles} bereits vorhanden.',
+            ),
           ExpansionTile(
             tilePadding: EdgeInsets.zero,
             title: const Text('Enthaltene Logins ansehen'),
@@ -293,9 +299,11 @@ class _BackupPanelState extends State<BackupPanel> {
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             controlAffinity: ListTileControlAffinity.leading,
-            title: const Text('Vorhandene Logins mit gleicher ID ersetzen'),
+            title: const Text(
+              'Vorhandene Logins und Profile mit gleicher ID ersetzen',
+            ),
             subtitle: const Text(
-              'Ohne Auswahl bleiben vorhandene Logins erhalten.',
+              'Ohne Auswahl bleiben vorhandene Logins und Profile erhalten.',
             ),
             value: _replaceExisting,
             onChanged: busy
@@ -314,8 +322,8 @@ class _BackupPanelState extends State<BackupPanel> {
             const SizedBox(height: 12),
             Text(
               _replaceExisting
-                  ? '${preview.newCount} neue Logins und ${preview.newPasskeys} neue Passkeys hinzufügen; ${preview.existing} vorhandene Logins ersetzen?'
-                  : '${preview.newCount} neue Logins und ${preview.newPasskeys} neue Passkeys hinzufügen? Vorhandene Einträge bleiben erhalten.',
+                  ? '${preview.newCount} neue Logins, ${preview.newPasskeys} neue Passkeys und ${preview.newProfiles} neue Profile hinzufügen; ${preview.existing} vorhandene Logins und ${preview.existingProfiles} Profile ersetzen?'
+                  : '${preview.newCount} neue Logins, ${preview.newPasskeys} neue Passkeys und ${preview.newProfiles} neue Profile hinzufügen? Vorhandene Einträge bleiben erhalten.',
             ),
             const SizedBox(height: 12),
             FilledButton(

@@ -11,6 +11,16 @@ Seiten manuell gestartet. Die adaptive Passwortfreigabe und die verschlüsselte
 Login-Sicherung bleiben erhalten. Einrichtung und Grenzen stehen unter
 [Desktop-Verbindung und Website-Passkeys](MOBILE-SYNC-PASSKEYS.md).
 
+## Android 0.28: Formulare und App-Autofill
+
+Der neue Android-Quellstand ergänzt verschlüsselte Formularprofile, Signaturbindung
+nativer Apps, Passworterzeugung im Registrierungsformular, Inline-Vorschläge und
+merkbare Passphrasen. V3-Sicherungen enthalten Logins, Website-Passkeys und Profile.
+App-Freigaben werden auf einem neuen Gerät neu erteilt; Profile sind noch nicht im
+Desktop-Sync. [Bedienung, Grenzen und nächste Schritte](ANDROID-AUTOFILL-PLAN.md).
+Die getrennte neue Vorschau heißt `android-v0.28.0-preview.1` und verwendet eine eigene
+App-Kennung. Die folgenden gemeinsamen Desktop-Downloads bleiben bei 0.26.
+
 ## Android-Vorschau installieren
 
 Das [gemeinsame Release 0.26](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1)

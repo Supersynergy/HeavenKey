@@ -6,6 +6,12 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.json.JSONObject
+import org.json.JSONArray
+import android.util.AtomicFile
+import android.util.Base64
+import javax.crypto.Cipher
+import javax.crypto.SecretKey
+import java.security.KeyStore
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -33,12 +39,17 @@ class PortableVaultDeviceTest {
         val complete = CountDownLatch(1)
         var failure: String? = "pending"
         scenario.onActivity { activity -> vault.authenticate(activity) { failure = it; complete.countDown() } }
+        enterPin()
+        assertTrue("Device authentication did not finish", complete.await(15, TimeUnit.SECONDS))
+        assertNull("Device authentication failed", failure)
+        device.waitForIdle()
+    }
+
+    private fun enterPin() {
         val pin = device.wait(Until.findObject(By.clazz("android.widget.EditText").pkg("com.android.systemui")), 20_000)
             ?: error("The actual Android device credential dialog did not appear.")
         pin.text = "417926" // Synthetic emulator PIN, set by the device test runner.
         device.pressEnter()
-        assertTrue("Device authentication did not finish", complete.await(15, TimeUnit.SECONDS))
-        assertNull("Device authentication failed", failure)
         device.waitForIdle()
     }
 
@@ -139,4 +150,110 @@ class PortableVaultDeviceTest {
             catch (error: VaultFailure) { assertEquals("locked", error.code) }
         }
     }
+    private fun profile(id: String) = JSONObject(FormProfiles.limits.keys.associateWith { when(it) {
+        "id" -> id; "label" -> "Synthetic profile"; "givenName" -> "Synthetisch";
+        "email" -> "synthetic@example.test"; "city" -> "Berlin"; "country" -> "DE";
+        "updatedAt" -> "2026-10-27T00:00:00Z"; else -> ""
+    } })
+
+    @Test fun legacyVaultMigratesProfilesAreEncryptedAndRestoreRequiresNewAppTrust() {
+        val vault = VaultStore(context)
+        val id = "migration-${UUID.randomUUID()}"
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            authenticate(vault, scenario)
+            // Recreate the exact V1 on-disk format using the real authenticated Keystore key.
+            // Only the owned emulator and synthetic rows are touched.
+            val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+            cipher.init(Cipher.ENCRYPT_MODE, keyStore.getKey("heavenkey-vault-v1", null) as SecretKey)
+            cipher.updateAAD("HeavenKey/mobile/v1".toByteArray(Charsets.UTF_8))
+            val legacy = JSONObject().put("version", 1).put("iv", Base64.encodeToString(cipher.iv, Base64.NO_WRAP))
+                .put("ciphertext", Base64.encodeToString(cipher.doFinal(JSONArray(listOf(entry(id))).toString().toByteArray(Charsets.UTF_8)), Base64.NO_WRAP))
+            val storage = AtomicFile(File(context.noBackupFilesDir, "heavenkey-v1.aesgcm"))
+            val output = storage.startWrite(); output.write(legacy.toString().toByteArray(Charsets.UTF_8)); storage.finishWrite(output)
+            assertEquals(id, vault.read().single().getString("id")); assertTrue(vault.profiles().isEmpty())
+            vault.saveProfile(profile(id))
+            assertEquals(2, JSONObject(storage.readFully().toString(Charsets.UTF_8)).getInt("version"))
+            assertEquals(id, vault.read().single().getString("id"))
+            assertFalse(storage.readFully().toString(Charsets.UTF_8).contains("Synthetisch"))
+            val app = NativeAppIdentity.read(context, instrumentation.context.packageName) ?: error("Test app signer unavailable")
+            try { vault.bindApp(id, app.copy(certificates = "0".repeat(64))); fail("Changed app certificate accepted") }
+            catch (error: VaultFailure) { assertEquals("app_changed", error.code) }
+            vault.bindApp(id, app); assertEquals(1, vault.associatedEntries(app).size)
+            val backup = PortableVaultBackup(context, vault); val recovery = vault.newBackupKey(); val archive = backup.create(recovery)
+            assertEquals(3, JSONObject(archive).getInt("version"))
+            val stale = backup.inspect(archive, recovery)
+            vault.saveProfile(profile(id).put("city", "Hamburg"))
+            failure("vault_changed") { restore(backup, archive, recovery, stale) }
+            vault.delete(id); vault.deleteProfile(id)
+            val preview = backup.inspect(archive, recovery)
+            assertEquals(1, preview["newProfiles"])
+            restore(backup, archive, recovery, preview)
+            assertEquals("Berlin", vault.profiles().single().getString("city"))
+            assertTrue(vault.appBindings().isEmpty())
+            vault.delete(id); vault.deleteProfile(id); vault.lock()
+        }
+    }
+
+    private fun tap(text: String) {
+        val item = device.wait(Until.findObject(By.text(text)), 15_000) ?: error("Missing UI action: $text")
+        item.click(); device.waitForIdle()
+    }
+    private fun fixture(form: String) {
+        val pkg = instrumentation.context.packageName
+        device.executeShellCommand("am start -W -n $pkg/app.heavenkey.heavenkey_mobile.fixture.AutofillFixtureActivity --es form $form --activity-clear-task --activity-new-task")
+        device.waitForIdle()
+        tap("Request synthetic autofill")
+    }
+    private fun consent() {
+        tap("Mit HeavenKey ausfüllen"); tap("Weiter"); enterPin()
+    }
+    private fun values(): JSONObject {
+        tap("Inspect synthetic values")
+        val result = device.wait(Until.findObject(By.desc("fixture-result")), 10_000) ?: error("Fixture result unavailable")
+        return JSONObject(result.text)
+    }
+
+    @Test fun actualSystemAutofillProfilesAppAssociationAndSignupNeverSubmitForms() {
+        val vault = VaultStore(context); val id = "autofill-${UUID.randomUUID()}"
+        val service = context.packageName + "/app.heavenkey.heavenkey_mobile.HeavenAutofillService"
+        device.executeShellCommand("settings put secure autofill_service $service")
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            authenticate(vault, scenario); vault.save(entry(id)); vault.saveProfile(profile(id)); vault.lock()
+            fixture("profile"); consent()
+            tap("Formularprofil auswählen"); tap("Synthetic profile")
+            tap("E-Mail: synthetic@example.test") // Deliberately withhold email while filling name and city.
+            tap("Ausgewählte Felder ausfüllen")
+            val profileValues = values()
+            assertEquals("Synthetisch", profileValues.getString("given-name")); assertEquals("Berlin", profileValues.getString("city"))
+            assertEquals("", profileValues.getString("email"))
+
+            fixture("login"); consent(); tap("Gespeicherten Login ausfüllen")
+            val login = device.wait(Until.findObject(By.textContains("Synthetic device acceptance")), 10_000) ?: error("Synthetic login not offered")
+            login.click(); tap("Zuordnen und ausfüllen")
+            val loginValues = values()
+            assertEquals(entry(id).getString("username"), loginValues.getString("username"))
+            assertEquals(entry(id).getString("password"), loginValues.getString("password"))
+
+            fixture("signup"); consent(); tap("Neues Passwort erzeugen und sichern")
+            tap("6 merkbare Wörter · ca. 77,5 Bit")
+            device.wait(Until.findObject(By.desc("HTTPS-Website, ggf. mit Port")), 10_000)!!.text = "https://example.test"
+            device.findObject(By.desc("Benutzername oder E-Mail")).text = "new-synthetic@example.test"
+            device.pressBack(); tap("Sichern und ausfüllen")
+            val signup = values()
+            assertEquals("new-synthetic@example.test", signup.getString("username"))
+            assertEquals(signup.getString("password"), signup.getString("confirmation"))
+            assertTrue(signup.getString("password").length >= 16)
+        }
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            authenticate(vault, scenario)
+            val generated = vault.read().single { it.getString("username") == "new-synthetic@example.test" }
+            assertTrue(generated.getString("password").contains('.'))
+            val app = NativeAppIdentity.read(context, instrumentation.context.packageName)!!
+            assertEquals(2, vault.associatedEntries(app).size)
+            vault.revokeApp(app.packageName); assertTrue(vault.associatedEntries(app).isEmpty())
+            vault.delete(id); vault.delete(generated.getString("id")); vault.deleteProfile(id); vault.lock()
+        }
+    }
+
 }

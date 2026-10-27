@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Synthetic form in the test APK, a distinct package from the vault.
+             No fixture activity, exported test entry point or data exists in release APKs. -->
+        <activity android:name="app.heavenkey.heavenkey_mobile.fixture.AutofillFixtureActivity"
+            android:exported="true" android:theme="@android:style/Theme.Material.Light.NoActionBar" />
+    </application>
+</manifest>

@@ -92,45 +92,77 @@ internal class VaultStore(private val context: Context) {
         }
     }
     @Synchronized fun lock() { generation++; expires = 0; pendingAuthentication?.cancel(); pendingAuthentication = null; clearClipboard() }
-    fun read(): List<JSONObject> = MobileStoreTransaction.run {
+    private data class State(val entries: List<JSONObject>, val profiles: List<JSONObject>, val bindings: List<JSONObject>)
+    private fun rows(array: JSONArray): List<JSONObject> = (0 until array.length()).map { array.getJSONObject(it) }
+    private fun validate(state: State) {
+        if (state.entries.size > 500 || state.entries.map { it.getString("id") }.toSet().size != state.entries.size)
+            throw VaultFailure("invalid_entry")
+        state.entries.forEach(OriginPolicy::validate)
+        FormProfiles.validateAll(state.profiles)
+        AppBindings.validateAll(state.bindings, state.entries)
+    }
+    private fun readState(): State {
         requireSession()
-        if (!hasStoredData()) return@run emptyList()
+        if (!hasStoredData()) return State(emptyList(), emptyList(), emptyList())
         try {
             if (file.baseFile.length() > 16 * 1024 * 1024) throw VaultFailure("corrupt_vault")
             val envelope = JSONObject(String(file.readFully(), Charsets.UTF_8))
-            if (envelope.getInt("version") != 1) throw VaultFailure("corrupt_vault")
+            val version = envelope.getInt("version")
+            if (version !in 1..2) throw VaultFailure("corrupt_vault")
             val iv = Base64.decode(envelope.getString("iv"), Base64.NO_WRAP)
             if (iv.size != 12) throw VaultFailure("corrupt_vault")
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, iv))
-            cipher.updateAAD("HeavenKey/mobile/v1".toByteArray(Charsets.UTF_8))
+            cipher.updateAAD("HeavenKey/mobile/v$version".toByteArray(Charsets.UTF_8))
             val plaintext = cipher.doFinal(Base64.decode(envelope.getString("ciphertext"), Base64.NO_WRAP))
-            val values = try { JSONArray(String(plaintext, Charsets.UTF_8)) } finally { plaintext.fill(0) }
-            if (values.length() > 500) throw VaultFailure("corrupt_vault")
-            val ids = mutableSetOf<String>()
-            return@run (0 until values.length()).map { i -> values.getJSONObject(i).also {
-                OriginPolicy.validate(it)
-                if (!ids.add(it.getString("id"))) throw VaultFailure("corrupt_vault")
-            } }
-        } catch (error: android.security.keystore.UserNotAuthenticatedException) {
-            throw VaultFailure("locked")
-        } catch (_: Exception) { throw VaultFailure("corrupt_vault") }
+            val state = try {
+                val text = String(plaintext, Charsets.UTF_8)
+                if (version == 1) State(rows(JSONArray(text)), emptyList(), emptyList())
+                else {
+                    val payload = JSONObject(text)
+                    if (payload.length() != 3) throw VaultFailure("corrupt_vault")
+                    State(rows(payload.getJSONArray("entries")), rows(payload.getJSONArray("profiles")), rows(payload.getJSONArray("appBindings")))
+                }
+            } finally { plaintext.fill(0) }
+            validate(state)
+            requireSession()
+            return state
+        } catch (_: android.security.keystore.UserNotAuthenticatedException) { throw VaultFailure("locked") }
+          catch (failure: VaultFailure) { throw VaultFailure(if (failure.code == "locked") "locked" else "corrupt_vault") }
+          catch (_: Exception) { throw VaultFailure("corrupt_vault") }
     }
-    private fun write(values: List<JSONObject>) {
+    fun read(): List<JSONObject> = MobileStoreTransaction.run { readState().entries }
+    fun profiles(): List<JSONObject> = MobileStoreTransaction.run { readState().profiles }
+    fun appBindings(): List<JSONObject> = MobileStoreTransaction.run { readState().bindings }
+
+    private fun writeState(state: State) {
         requireSession()
-        if (values.size > 500) throw VaultFailure("invalid_entry")
-        values.forEach { OriginPolicy.validate(it) }
+        validate(state)
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, key())
-        cipher.updateAAD("HeavenKey/mobile/v1".toByteArray(Charsets.UTF_8))
-        val plaintext = JSONArray(values).toString().toByteArray(Charsets.UTF_8)
+        cipher.updateAAD("HeavenKey/mobile/v2".toByteArray(Charsets.UTF_8))
+        val plaintext = JSONObject().put("entries", JSONArray(state.entries)).put("profiles", JSONArray(state.profiles))
+            .put("appBindings", JSONArray(state.bindings)).toString().toByteArray(Charsets.UTF_8)
         val encrypted = try { cipher.doFinal(plaintext) } finally { plaintext.fill(0) }
-        val payload = JSONObject().put("version", 1).put("iv", Base64.encodeToString(cipher.iv, Base64.NO_WRAP))
+        val payload = JSONObject().put("version", 2).put("iv", Base64.encodeToString(cipher.iv, Base64.NO_WRAP))
             .put("ciphertext", Base64.encodeToString(encrypted, Base64.NO_WRAP)).toString().toByteArray(Charsets.UTF_8)
         if (payload.size > 16 * 1024 * 1024) throw VaultFailure("vault_full")
+        requireSession()
         val output = file.startWrite()
         try { output.write(payload); file.finishWrite(output) }
         catch (error: Exception) { file.failWrite(output); throw error }
+    }
+    private fun retainedBindings(state: State, values: List<JSONObject>): List<JSONObject> {
+        val old = state.entries.associate { it.getString("id") to it.getString("origin") }
+        val current = values.associate { it.getString("id") to it.getString("origin") }
+        return state.bindings.filter { binding ->
+            val id = binding.getString("entryId")
+            current[id] != null && current[id] == old[id]
+        }
+    }
+    private fun write(values: List<JSONObject>) {
+        val state = readState()
+        writeState(state.copy(entries = values, bindings = retainedBindings(state, values)))
     }
     fun save(entry: JSONObject) = MobileStoreTransaction.run {
         OriginPolicy.validate(entry)
@@ -140,10 +172,39 @@ internal class VaultStore(private val context: Context) {
         write(values)
     }
     fun delete(id: String) = MobileStoreTransaction.run { write(read().filterNot { it.getString("id") == id }) }
-    fun replaceEntries(values: List<JSONObject>) = MobileStoreTransaction.run {
-        read()
-        if (values.map { it.getString("id") }.toSet().size != values.size) throw VaultFailure("invalid_entry")
-        write(values)
+    fun replaceEntries(values: List<JSONObject>) = MobileStoreTransaction.run { write(values) }
+    fun saveProfile(profile: JSONObject) = MobileStoreTransaction.run {
+        FormProfiles.validate(profile)
+        val state = readState()
+        writeState(state.copy(profiles = FormProfiles.merge(state.profiles, listOf(profile), true)))
+    }
+    fun deleteProfile(id: String) = MobileStoreTransaction.run {
+        val state = readState()
+        writeState(state.copy(profiles = state.profiles.filterNot { it.getString("id") == id }))
+    }
+    fun replaceContent(entries: List<JSONObject>, profiles: List<JSONObject>) = MobileStoreTransaction.run {
+        val state = readState()
+        writeState(State(entries, profiles, retainedBindings(state, entries)))
+    }
+    fun replaceProfiles(profiles: List<JSONObject>) = MobileStoreTransaction.run {
+        writeState(readState().copy(profiles = profiles))
+    }
+    fun associatedEntries(app: NativeAppIdentity): List<JSONObject> = MobileStoreTransaction.run {
+        val state = readState()
+        val ids = state.bindings.filter { it.getString("packageName") == app.packageName && it.getString("certificates") == app.certificates }
+            .map { it.getString("entryId") }.toSet()
+        state.entries.filter { it.getString("id") in ids }
+    }
+    fun bindApp(entryId: String, app: NativeAppIdentity) = MobileStoreTransaction.run {
+        if (!app.current(context)) throw VaultFailure("app_changed")
+        val state = readState()
+        val binding = JSONObject().put("entryId", entryId).put("packageName", app.packageName).put("certificates", app.certificates)
+        val bindings = state.bindings.filterNot { it.getString("entryId") == entryId && it.getString("packageName") == app.packageName } + binding
+        writeState(state.copy(bindings = bindings))
+    }
+    fun revokeApp(packageName: String) = MobileStoreTransaction.run {
+        val state = readState()
+        writeState(state.copy(bindings = state.bindings.filterNot { it.getString("packageName") == packageName }))
     }
     fun readSyncState(): JSONObject? = MobileStoreTransaction.run {
         requireSession()

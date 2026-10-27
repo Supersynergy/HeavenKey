@@ -131,3 +131,11 @@ Stand: 26.10.2026. Reihenfolge nach Abhängigkeit, nicht nach Begeisterung für 
 - [ ] Herausgebersignaturen/Notarisierung und sichere Updateverteilung nachweisen.
 - [ ] Unabhängige Sicherheitsprüfung, Wiederherstellung und Betriebsverantwortung vor produktiven Identitätskonten.
 - [ ] Öffentlich nur tatsächlich bestandene Funktionen und Grenzen kommunizieren.
+
+## Android-Ergänzung 0.28
+
+Die App-Anforderungen aus dem Gesamtkontext werden im
+[Android-Plan mit Unteraufgaben](ANDROID-AUTOFILL-PLAN.md) geführt. Profile werden
+nicht automatisch zu Identitätsnachweisen oder OIDC-Claims. Profil-Sync, Digital
+Asset Links, Credential-Manager-Passwörter und iOS folgen erst nach den dort
+aufgeführten Vertrauens- und Interoperabilitätsprüfungen.
