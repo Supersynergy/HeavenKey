@@ -156,7 +156,12 @@ jobs:
           tag = f'android-v{version}-preview.1'
           refs = json.loads(subprocess.check_output(['gh', 'api', f'repos/{os.environ["GH_REPO"]}/git/matching-refs/tags/{tag}'], text=True))
           if any(row.get('ref') == 'refs/tags/' + tag for row in refs):
-              raise SystemExit('Preview already published; increase the app version. Existing downloads are never replaced.')
+              subprocess.run(['gh', 'release', 'download', tag, '--pattern', 'PREVIEW.json', '--output', 'existing-preview.json'], check=True)
+              existing = json.loads(Path('existing-preview.json').read_text())
+              if existing.get('source_commit') != data['source_commit']:
+                  raise SystemExit('Preview tag belongs to another commit; increase the app version. Existing downloads are never replaced.')
+              print('Preview already published for this exact commit; keeping existing downloads.')
+              raise SystemExit(0)
           subprocess.run(['gh', 'release', 'create', tag, *[row['name'] for row in data['artifacts']], 'SHA256SUMS', 'PREVIEW.json',
                           '--target', os.environ['GITHUB_SHA'], '--prerelease', '--latest=false',
                           '--title', f'HeavenKey Android {version} – Vorschau für Testdaten', '--notes-file', 'release-notes.md'], check=True)

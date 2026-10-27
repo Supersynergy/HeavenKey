@@ -103,20 +103,27 @@ Betrieb bleiben in der bestehenden Identity-Due-Diligence mit ihren Abhängigkei
 
 ### P0: Abnahme und Veröffentlichung
 
-- [ ] Vollständige Android-CI auf dem finalen Quellcommit bestehen lassen.
-  - [ ] 42 Flutter-Tests, native Unit-Tests, vier API-36-Gerätetests.
-  - [ ] Produktionssignatur-Negativtests und APK/AAB-Prüfung mit gelöschten Testschlüsseln.
-  - [ ] Separate Vorschau auf falsche App-Kennung, Testcode und Debug-Laufzeit prüfen.
-- [ ] Geprüften Stand auf `main` zusammenführen und Vorschau veröffentlichen.
+- [x] Vollständige Android-CI auf dem finalen App-Quellcommit bestehen lassen.
+  - [x] 42 Flutter-Tests, 14 native Unit-Tests, vier API-36-Gerätetests.
+  - [x] Sechs Produktionssignatur-Prüffälle und APK/AAB-Prüfung mit gelöschten Testschlüsseln.
+  - [x] Separate Vorschau auf falsche App-Kennung, Testcode und Debug-Laufzeit prüfen.
+- [x] Geprüften Stand über [PR #39](https://github.com/Supersynergy/HeavenKey/pull/39) auf `main` zusammenführen.
+- [ ] Vorschau mit drei Architekturen, Prüfsummen und Quellnachweis veröffentlichen.
 - [ ] Produktions-APK/AAB mit vorhandener permanenter Herausgeberkonfiguration veröffentlichen.
   - [ ] Keystore, beide Passwörter, Alias und Zertifikat-Pin in GitHub vorhanden.
   - [ ] Kein Installationskanalwechsel ohne getestete Sicherung und getrennten Schlüssel.
+
+**Quellgebundene Abnahme:** App-Stand `facd8de1f7dae7bd45f7bca2744f6bdb7bc4dfae`,
+[Android-CI](https://github.com/Supersynergy/HeavenKey/actions/runs/40441971879) und
+[Projekt-CI](https://github.com/Supersynergy/HeavenKey/actions/runs/40441971889) bestanden.
+Der zusätzliche Veröffentlichungs-Lauf ist von dieser Codeabnahme getrennt.
 
 ### P1: Tatsächliche Geräte und nahtlose Integration
 
 - [ ] Android 11/14/16/17 auf physischen Geräten prüfen, mindestens Pixel und Samsung.
   - [ ] Aktuelles Chrome/Firefox, Gboard/Samsung-Tastatur, Dropdown und Inline.
   - [ ] Login, Registrierung, Bestätigung, Adresse, Abbruch, Rotation und App-Wechsel.
+  - [ ] Kaltstart und erste System-PIN-Abfrage auf echter Hardware prüfen; einmaliges PIN-Timeout des frischen CI-Emulators separat von der bestandenen System-Autofill-Abnahme untersuchen.
   - [ ] Flutter-/Compose-Formulare und native Eingabefilter gesondert abnehmen; Browser-/WebView-Herkunftsschutz bei zusätzlichen Adaptern erhalten.
   - [ ] Fremde Frames, lange Formulare, Shipping/Billing-Dopplung, Signaturwechsel negativ prüfen.
 - [ ] Profil-Sync und Desktop-/Browserprofile verlustfrei zusammenführen.

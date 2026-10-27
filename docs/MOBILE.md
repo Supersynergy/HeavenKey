@@ -19,18 +19,26 @@ merkbare Passphrasen. V3-Sicherungen enthalten Logins, Website-Passkeys und Prof
 App-Freigaben werden auf einem neuen Gerät neu erteilt; Profile sind noch nicht im
 Desktop-Sync. [Bedienung, Grenzen und nächste Schritte](ANDROID-AUTOFILL-PLAN.md).
 Die [getrennte neue Vorschau](https://github.com/Supersynergy/HeavenKey/releases/tag/android-v0.28.0-preview.1) heißt `android-v0.28.0-preview.1` und verwendet eine eigene
-App-Kennung. Die folgenden gemeinsamen Desktop-Downloads bleiben bei 0.26.
+App-Kennung. Desktop und Erweiterungen bleiben bei 0.26.
 
 ## Android-Vorschau installieren
 
-Das [gemeinsame Release 0.26](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1)
-enthält `HeavenKey-0.26.0-android-preview.apk`, alle fünf Desktop-Pakete und beide Erweiterungen
-und `SHA256SUMS`. Lade das APK auf ein
+Das [Android-Release 0.28 als Vorschau](https://github.com/Supersynergy/HeavenKey/releases/tag/android-v0.28.0-preview.1)
+enthält drei APKs, `SHA256SUMS` und `PREVIEW.json`. Für die meisten aktuellen Handys
+`HeavenKey-0.28.0-android-preview-arm64-v8a.apk` wählen; ARMv7 ist für passende
+32-Bit-Geräte, x86-64 für entsprechende Geräte/Emulatoren. Lade das APK auf ein
 Android-Gerät und folge dessen Installationsdialog. Erforderlich sind Android
-API 30 oder neuer und eine eingerichtete Gerätesperre. Das APK verwendet einen
-Debug-Schlüssel und ist ausschließlich für Testdaten vorgesehen. Für den Abgleich
-den Desktop aus demselben Release verwenden. Desktop und Erweiterungen tragen
-jetzt ebenfalls Version 0.26.0; ihre Manifeste benennen den zugehörigen Quellcommit.
+API 30 oder neuer und eine eingerichtete Gerätesperre.
+
+Die Vorschau heißt **HeavenKey Vorschau** und kann durch ihre separate App-Kennung
+parallel zur bisherigen App installiert werden. Sie verwendet Release-/AOT-Code
+ohne Debugger, aber eine kurzlebige Debug-Signatur und ausschließlich Testdaten.
+Eine dauerhafte Update-Identität ist damit nicht zugesagt. Bestehende Tresore werden
+nicht automatisch übernommen; vor einem Kanalwechsel Sicherung und getrennten
+Schlüssel aufbewahren und die Wiederherstellung prüfen. Eine alte App dabei nicht
+ungeprüft deinstallieren. Für den optionalen Abgleich den Desktop aus dem
+[Release 0.26](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1)
+verwenden; lokale Profile bleiben zunächst vom Sync ausgenommen.
 
 ## Funktionen
 
@@ -83,15 +91,15 @@ Ein Apple-Team oder eine Herausgebersignatur wird im Repository nicht vorgetäus
 
 ## Sicherung und Wiederherstellung
 
-Der neue Android-Quellstand erstellt **V2-Sicherungen mit Logins und Website-Passkeys**.
+Android 0.28 erstellt **V3-Sicherungen mit Logins, Website-Passkeys und Formularprofilen**.
 Die Schlüsselpaare werden ausschließlich im nativen Android-Code verarbeitet; Flutter erhält
 verschlüsselte Dateien und eine Vorschau mit Anzahlen. Ein Desktop ist für Export oder
-Wiederherstellung nicht erforderlich. Alte V1-Login-Sicherungen bleiben auf Android lesbar.
-V2 lässt sich nur mit einem Android-Client wiederherstellen, der dieses Format unterstützt;
-iOS und frühere APKs lesen weiterhin nur V1. Die verlinkte Release-APK 0.26 enthält diese
-noch unveröffentlichte Erweiterung nicht.
+Wiederherstellung nicht erforderlich. Alte V1-Login- und V2-Login-/Passkey-Sicherungen
+bleiben auf Android lesbar. V3 benötigt Android 0.28 oder einen späteren kompatiblen
+Client; iOS und die ältere gemeinsame APK 0.26 lesen weiterhin nur V1. App-Vertrauen
+wird nicht exportiert und muss auf neuen Geräten erneut bestätigt werden.
 
-Die Vorschau bindet sowohl Login- als auch Passkey-Bestand. Geänderte Daten verlangen
+Die Vorschau bindet Login-, Passkey- und Profilbestand sowie lokale App-Zuordnungen. Geänderte Daten verlangen
 eine neue Vorschau. Passkeys mit gleicher ID und anderen Schlüssel- oder Herkunftsdaten
 werden vor jeder Änderung abgewiesen. Bestehende Passkeys werden beim Import nicht gelöscht.
 Die beiden Speicherdateien werden einzeln atomar geschrieben. Ein später Dateifehler kann

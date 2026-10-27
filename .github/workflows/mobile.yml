@@ -71,7 +71,13 @@ jobs:
           ./gradlew :app:assembleDebugAndroidTest --no-daemon
       - name: Install isolated Android emulator
         run: |
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'system-images;android-36;google_apis;x86_64' 'build-tools;36.0.0'
+          for attempt in 1 2 3; do
+            if "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'system-images;android-36;google_apis;x86_64' 'build-tools;36.0.0'; then
+              break
+            fi
+            echo "Emulator image download/extraction failed on attempt $attempt."
+            if [ "$attempt" = 3 ]; then exit 1; fi
+          done
           test -e /dev/kvm
           sudo chmod a+rw /dev/kvm
       - name: Execute actual Keystore and portable passkey recovery

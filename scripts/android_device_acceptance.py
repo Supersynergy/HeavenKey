@@ -101,6 +101,13 @@ def main():
                 assert "Lock credential verified successfully" in verified, "Synthetic emulator PIN could not be verified: " + verified
                 adb("install", "--no-streaming", "-r", "-t", str(APP), timeout=180)
                 adb("install", "--no-streaming", "-r", "-t", str(TEST), timeout=90)
+                # Settle the newly configured secure keyguard before the first
+                # Activity/PIN prompt. The test reveals its keypad and enters the
+                # real synthetic PIN; this never disables or dismisses security.
+                adb("shell", "settings", "put", "secure", "lock_screen_lock_after_timeout", "0")
+                adb("shell", "input", "keyevent", "KEYCODE_SLEEP")
+                time.sleep(1)
+                adb("shell", "input", "keyevent", "KEYCODE_WAKEUP")
                 output = adb("shell", "am", "instrument", "-w", "-r", "-e", "class",
                              "app.heavenkey.heavenkey_mobile.PortableVaultDeviceTest",
                              "app.heavenkey.heavenkey_mobile.test/androidx.test.runner.AndroidJUnitRunner",
@@ -118,7 +125,8 @@ def main():
                     try:
                         (EVIDENCE / "logcat.txt").write_text(adb("shell", "logcat", "-d", "-t", "3000"))
                         (EVIDENCE / "autofill-logcat.txt").write_text(adb("shell", "logcat", "-d", "-s",
-                            "HeavenKeyAutofill:D", "AutofillSession:D", "AutofillManager:D", "TestRunner:I", "*:S"))
+                            "HeavenKeyAutofill:D", "AutofillSession:D", "AutofillManager:D", "TestRunner:I",
+                            "BiometricService:D", "BiometricService/AuthSession:D", "*:S"))
                     except subprocess.SubprocessError as failure:
                         (EVIDENCE / "logcat-error.txt").write_text(str(failure) + "\n" + str(getattr(failure, "stderr", "")))
                     raise RuntimeError("Native device acceptance failed; inspect instrumentation.txt.")

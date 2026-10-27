@@ -41,13 +41,18 @@ class PortableVaultDeviceTest {
         device.wakeUp()
         val keyguard = context.getSystemService(KeyguardManager::class.java)
         if (keyguard.isKeyguardLocked) {
-            // Wait for the actual PIN bouncer before entering digits. A swipe can
-            // return before its first frame exists on a freshly booted emulator.
-            device.swipe(device.displayWidth / 2, device.displayHeight * 3 / 4,
-                device.displayWidth / 2, device.displayHeight / 4, 30)
-            device.waitForIdle()
-            val key = device.wait(Until.findObject(By.res("com.android.systemui", "key4")), 10_000)
-            if (key == null) missingUi("Lock-screen PIN keypad")
+            // A cold system UI can ignore the first gesture before its first
+            // lock-screen frame. Repeat only the ordinary reveal gesture, never
+            // authentication or a lockscreen bypass. Enter the real PIN once.
+            val deadline = System.currentTimeMillis() + 30_000
+            var keypad = device.findObject(By.res("com.android.systemui", "key4"))
+            while (keypad == null && keyguard.isKeyguardLocked && System.currentTimeMillis() < deadline) {
+                device.wakeUp()
+                device.swipe(device.displayWidth / 2, device.displayHeight * 9 / 10,
+                    device.displayWidth / 2, device.displayHeight / 10, 40)
+                keypad = device.wait(Until.findObject(By.res("com.android.systemui", "key4")), 3_000)
+            }
+            if (keypad == null) missingUi("Lock-screen PIN keypad")
             for (digit in "417926") {
                 val button = device.wait(Until.findObject(By.res("com.android.systemui", "key$digit")), 5_000)
                     ?: missingUi("Lock-screen PIN digit")
@@ -56,8 +61,8 @@ class PortableVaultDeviceTest {
             val enter = device.findObject(By.res("com.android.systemui", "key_enter"))
             if (enter != null) enter.click() else device.pressEnter()
             device.waitForIdle()
-            val deadline = System.currentTimeMillis() + 10_000
-            while (keyguard.isKeyguardLocked && System.currentTimeMillis() < deadline) Thread.sleep(100)
+            val unlockedDeadline = System.currentTimeMillis() + 15_000
+            while (keyguard.isKeyguardLocked && System.currentTimeMillis() < unlockedDeadline) Thread.sleep(100)
         }
         if (keyguard.isKeyguardLocked) missingUi("Unlock owned emulator with its real PIN")
     }
@@ -67,15 +72,17 @@ class PortableVaultDeviceTest {
         var failure: String? = "pending"
         scenario.onActivity { activity -> vault.authenticate(activity) { failure = it; complete.countDown() } }
         enterPin()
-        assertTrue("Device authentication did not finish", complete.await(15, TimeUnit.SECONDS))
+        if (!complete.await(30, TimeUnit.SECONDS)) missingUi("Completed real device PIN authentication")
         assertNull("Device authentication failed", failure)
         device.waitForIdle()
     }
 
     private fun enterPin() {
-        val pin = device.wait(Until.findObject(By.clazz("android.widget.EditText").pkg("com.android.systemui")), 20_000)
+        val pin = device.wait(Until.findObject(By.clazz("android.widget.EditText").pkg("com.android.systemui").focused(true)), 20_000)
             ?: error("The actual Android device credential dialog did not appear; foreground=${device.currentPackageName}, keyguard=${context.getSystemService(KeyguardManager::class.java).isKeyguardLocked}.")
+        pin.click()
         pin.text = "417926" // Synthetic emulator PIN, set by the device test runner.
+        device.waitForIdle(1_000)
         device.pressEnter()
         device.waitForIdle()
     }
