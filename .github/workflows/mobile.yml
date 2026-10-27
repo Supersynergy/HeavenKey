@@ -53,6 +53,15 @@ jobs:
           flutter test --no-pub
       - name: Check Android security configuration
         run: python3 scripts/mobile_native_gate.py android
+      - name: Install pinned Android build dependencies
+        run: |
+          for attempt in 1 2 3; do
+            if "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358' 'platforms;android-36' 'build-tools;36.0.0'; then
+              exit 0
+            fi
+            echo "SDK download/extraction failed on attempt $attempt; retrying with the SDK manager."
+          done
+          exit 1
       - name: Build Android and execute portable backup tests
         working-directory: apps/mobile
         run: |

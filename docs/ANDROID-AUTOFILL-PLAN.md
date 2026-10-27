@@ -25,7 +25,7 @@ sie ersetzt weder ein Passwort bei einem fremden Anbieter noch dessen Registrier
 | Sicher einer App zuordnen | Explizite Zuordnung eines vorhandenen HTTPS-Logins an Paketname und aktuellen SHA-256-Signatursatz. Vor jeder Freigabe neu geprüft. Änderung der Login-Herkunft entfernt alte App-Zuordnungen. Widerruf in der App. Dies belegt keine Website-Zugehörigkeit der App. |
 | Automatisch ein neues Passwort machen | Bei klaren `newPassword`/`new-password`-Feldern Generator anbieten; zuerst als neuen Login sichern, dann auch ein eindeutiges Bestätigungsfeld ausfüllen. Kein Überschreiben bestehender Logins und keine automatische Kontoerstellung. |
 | Trotzdem merkbar | Sechs oder acht unabhängig zufällige Wörter aus der vollständigen EFF-Liste mit 7.776 Einträgen; etwa 77,5/103,4 Bit Wortauswahl. Punkt als eindeutiger Trenner, erstes Wort groß, Ziffer/`!` für Kompatibilität. Englische Wörter; Längenbeschränkungen einzelner Anbieter beachten. |
-| Kurze zufällige Passwörter | Bestehender kryptografischer Zeichengenerator bleibt verfügbar; im App-Editor 16/24/32/48 Zeichen. Im Registrierungsdialog zunächst 24 Zeichen. Keine stille Kürzung zu langer Werte. |
+| Kurze zufällige Passwörter | Bestehender kryptografischer Zeichengenerator bleibt verfügbar; im App-Editor 16/24/32/48 Zeichen. Im Registrierungsdialog zunächst 24 Zeichen. Gemeldete HTML-Längenlimits werden geprüft; HeavenKey kürzt Werte nicht selbst. Native Apps können eigene Eingabefilter haben. |
 | Tastaturintegration | Neutrales gesperrtes HeavenKey-Inline-Angebot ab Android 11 bei passender IME-Schnittstelle; sonst Android-Auswahlmenü. Kontonamen und Profilinhalte stehen nicht in diesem gesperrten Angebot. |
 | Ohne Desktop verwenden | Lokale Speicherung und V3-Sicherung mit Logins, exportierbaren Website-Passkeys und Profilen. Ältere V1-/V2-Android-Archive lesbar. App-Vertrauensfreigaben werden nicht exportiert und müssen auf neuen Geräten erneut erteilt werden. |
 | Vorhandene Daten behalten | Bestehende V1-Tresore werden mit demselben Keystore-Schlüssel gelesen und bei der nächsten Änderung atomar in V2 überführt. Profile bleiben bei Login-/Passkey-Synchronisierung erhalten. |
@@ -114,9 +114,10 @@ Betrieb bleiben in der bestehenden Identity-Due-Diligence mit ihren Abhängigkei
 
 ### P1: Tatsächliche Geräte und nahtlose Integration
 
-- [ ] Android 11/14/16 auf physischen Geräten prüfen, mindestens Pixel und Samsung.
+- [ ] Android 11/14/16/17 auf physischen Geräten prüfen, mindestens Pixel und Samsung.
   - [ ] Aktuelles Chrome/Firefox, Gboard/Samsung-Tastatur, Dropdown und Inline.
   - [ ] Login, Registrierung, Bestätigung, Adresse, Abbruch, Rotation und App-Wechsel.
+  - [ ] Flutter-/Compose-Formulare und native Eingabefilter gesondert abnehmen; Browser-/WebView-Herkunftsschutz bei zusätzlichen Adaptern erhalten.
   - [ ] Fremde Frames, lange Formulare, Shipping/Billing-Dopplung, Signaturwechsel negativ prüfen.
 - [ ] Profil-Sync und Desktop-/Browserprofile verlustfrei zusammenführen.
   - [ ] Mapping zu `packages/forms/schema.ts` festlegen, insbesondere `givenName→firstName`,

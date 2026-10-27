@@ -211,7 +211,8 @@ class PortableVaultDeviceTest {
     }
 
     private fun tap(text: String) {
-        val item = device.wait(Until.findObject(By.text(text)), 15_000) ?: error("Missing UI action: $text")
+        val selector = By.text(java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(text), java.util.regex.Pattern.CASE_INSENSITIVE or java.util.regex.Pattern.UNICODE_CASE))
+        val item = device.wait(Until.findObject(selector), 15_000) ?: error("Missing UI action: $text")
         item.click(); device.waitForIdle()
     }
     private fun fixture(form: String) {
@@ -222,7 +223,11 @@ class PortableVaultDeviceTest {
         tap("Request synthetic autofill")
     }
     private fun consent() {
-        tap("Mit HeavenKey ausfüllen"); tap("Weiter"); enterPin()
+        // Either the standard dropdown or the neutral inline keyboard chip.
+        val offer = device.wait(Until.findObject(By.text(java.util.regex.Pattern.compile("Mit HeavenKey ausfüllen|HeavenKey", java.util.regex.Pattern.CASE_INSENSITIVE))), 15_000)
+            ?: error("The system did not offer HeavenKey Autofill")
+        offer.click(); device.waitForIdle()
+        tap("Weiter"); enterPin()
     }
     private fun values(): JSONObject {
         tap("Inspect synthetic values")
