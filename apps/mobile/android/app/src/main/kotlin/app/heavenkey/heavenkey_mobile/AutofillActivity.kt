@@ -9,6 +9,7 @@ import android.os.SystemClock
 import android.service.autofill.Dataset
 import android.text.InputType
 import android.view.WindowManager
+import android.view.View
 import android.view.autofill.AutofillManager
 import android.view.autofill.AutofillValue
 import android.widget.CheckBox
@@ -25,6 +26,11 @@ class AutofillActivity : Activity() {
     private lateinit var vault: VaultStore
     private var pending: PendingFill? = null
     private var completing = false
+
+    private fun debug(event: String) {
+        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0)
+            android.util.Log.d("HeavenKeyAutofill", event)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
@@ -171,10 +177,14 @@ class AutofillActivity : Activity() {
 
     private fun saveGenerated(request: PendingFill, generated: String) {
         vault.read()
-        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(32, 8, 32, 8) }
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; setPadding(32, 8, 32, 8)
+            importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+        }
         fun input(label: String, value: String, type: Int): EditText = EditText(this).apply {
             hint = label; contentDescription = label; setText(value); inputType = type; isSingleLine = true
             isSaveEnabled = false; setSelectAllOnFocus(true); filterTouchesWhenObscured = true
+            importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
             layout.addView(this)
         }
         val origin = input("HTTPS-Website, ggf. mit Port", request.target.scope?.let { "https://${it.host}" }.orEmpty(), InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI)
@@ -190,7 +200,7 @@ class AutofillActivity : Activity() {
             .setPositiveButton("Sichern und ausfüllen", null).setNegativeButton("Abbrechen") { _, _ -> finish() })
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
             try {
-                if (!valid(request)) { finish(); return@setOnClickListener }
+                if (!valid(request)) { debug("generation request no longer authorized"); finish(); return@setOnClickListener }
                 val canonical = OriginPolicy.canonical(origin.text.toString().trim())
                 if (request.target.scope != null && !request.target.scope.matches(canonical)) { origin.error = "Die Website muss zur angezeigten Domain gehören."; return@setOnClickListener }
                 if (username.text.length > 320) { username.error = "Maximal 320 Zeichen."; return@setOnClickListener }
@@ -199,6 +209,7 @@ class AutofillActivity : Activity() {
                     .put("notes", "Für Registrierung erzeugt. Abschluss beim Anbieter selbst prüfen.")
                     .put("updatedAt", Instant.now().toString())
                 vault.save(entry)
+                debug("generated login saved; usernamePresent=${entry.getString("username").isNotEmpty()}")
                 if (request.target.scope == null) vault.bindApp(entry.getString("id"), request.target.app)
                 Toast.makeText(this, "Passwort im Tresor gespeichert", Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
@@ -211,9 +222,10 @@ class AutofillActivity : Activity() {
     }
 
     private fun deliver(request: PendingFill, values: Map<String, String>) {
-        if (!valid(request)) { finish(); return }
+        if (!valid(request)) { debug("delivery request no longer authorized"); finish(); return }
         vault.read() // The native authentication deadline remains authoritative.
         val selected = values.filterKeys { it in request.target.fields }
+        debug("delivering field types=${selected.keys.sorted()}")
         if (selected.isEmpty()) { finish(); return }
         val label = RemoteViews(packageName, android.R.layout.simple_list_item_1)
         label.setTextViewText(android.R.id.text1, "HeavenKey")

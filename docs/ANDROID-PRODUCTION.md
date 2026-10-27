@@ -96,10 +96,10 @@ tatsächlich geprüfte Buildnummer. Das App Bundle verwendet die Basisnummer.
 
 | Datei | Zweck |
 | --- | --- |
-| `HeavenKey-0.27.0-android-arm64-v8a.apk` | Direkte Installation auf den meisten aktuellen Android-Handys |
-| `HeavenKey-0.27.0-android-armeabi-v7a.apk` | Unterstützte 32-Bit-ARM-Geräte ab API 30 |
-| `HeavenKey-0.27.0-android-x86_64.apk` | Android-Geräte bzw. Emulatoren mit x86-64 |
-| `HeavenKey-0.27.0-android.aab` | App Bundle zur separaten Einreichung in einen Store |
+| `HeavenKey-0.28.0-android-arm64-v8a.apk` | Direkte Installation auf den meisten aktuellen Android-Handys |
+| `HeavenKey-0.28.0-android-armeabi-v7a.apk` | Unterstützte 32-Bit-ARM-Geräte ab API 30 |
+| `HeavenKey-0.28.0-android-x86_64.apk` | Android-Geräte bzw. Emulatoren mit x86-64 |
+| `HeavenKey-0.28.0-android.aab` | App Bundle zur separaten Einreichung in einen Store |
 | `SHA256SUMS`, `RELEASE.json` | Integrität, Herausgeberkennung, Quellcommit und Testergebnisse |
 
 Ein veröffentlichter GitHub-Release bedeutet keine Veröffentlichung im Play Store.

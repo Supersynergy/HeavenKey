@@ -3,6 +3,7 @@ package app.heavenkey.heavenkey_mobile
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Configurator
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.json.JSONObject
@@ -32,6 +33,9 @@ class PortableVaultDeviceTest {
     private val device = UiDevice.getInstance(instrumentation)
 
     @Before fun requireOwnedEmulator() {
+        // State selectors below provide the synchronization. A constantly updating
+        // IME must not add ten idle seconds to every gesture and expire real auth.
+        Configurator.getInstance().setWaitForIdleTimeout(1_000)
         assertEquals("heavenkey_production_test", device.executeShellCommand("getprop ro.boot.qemu.avd_name").trim())
         assertEquals("1", device.executeShellCommand("getprop ro.kernel.qemu").trim())
         device.wakeUp()
@@ -257,7 +261,11 @@ class PortableVaultDeviceTest {
         offer.click(); device.waitForIdle()
         tap("Weiter"); enterPin()
     }
-    private fun values(): JSONObject {
+    private fun values(expectedField: String, expectedValue: String): JSONObject {
+        // The authentication Activity result crosses a binder boundary; returning
+        // to the target window does not yet mean its values have been applied.
+        if (!device.wait(Until.hasObject(By.desc("fixture-$expectedField").text(expectedValue)), 15_000))
+            missingUi("Applied synthetic $expectedField")
         tap("Inspect synthetic values")
         val result = device.wait(Until.findObject(By.desc("fixture-result")), 10_000) ?: error("Fixture result unavailable")
         return JSONObject(result.text)
@@ -273,7 +281,7 @@ class PortableVaultDeviceTest {
             tap("Formularprofil auswählen"); tap("Synthetic profile")
             tap("E-Mail: synthetic@example.test") // Deliberately withhold email while filling name and city.
             tap("Ausgewählte Felder ausfüllen")
-            val profileValues = values()
+            val profileValues = values("given-name", "Synthetisch")
             assertEquals("Synthetisch", profileValues.getString("given-name")); assertEquals("Berlin", profileValues.getString("city"))
             assertEquals("", profileValues.getString("email"))
             assertEquals("", profileValues.getString("hidden-name"))
@@ -281,7 +289,7 @@ class PortableVaultDeviceTest {
             fixture("login"); consent(); tap("Gespeicherten Login ausfüllen")
             val login = device.wait(Until.findObject(By.textContains("Synthetic device acceptance")), 10_000) ?: error("Synthetic login not offered")
             login.click(); tap("Zuordnen und ausfüllen")
-            val loginValues = values()
+            val loginValues = values("username", "synthetic@example.test")
             assertEquals(entry(id).getString("username"), loginValues.getString("username"))
             assertEquals(entry(id).getString("password"), loginValues.getString("password"))
 
@@ -289,8 +297,9 @@ class PortableVaultDeviceTest {
             tap("6 merkbare Wörter · ca. 77,5 Bit")
             device.wait(Until.findObject(By.desc("HTTPS-Website, ggf. mit Port")), 10_000)!!.text = "https://example.test"
             device.findObject(By.desc("Benutzername oder E-Mail")).text = "new-synthetic@example.test"
+            assertEquals("new-synthetic@example.test", device.findObject(By.desc("Benutzername oder E-Mail")).text)
             tap("Sichern und ausfüllen")
-            val signup = values()
+            val signup = values("username", "new-synthetic@example.test")
             assertEquals("new-synthetic@example.test", signup.getString("username"))
             assertEquals(signup.getString("password"), signup.getString("confirmation"))
             assertTrue(signup.getString("password").length >= 16)

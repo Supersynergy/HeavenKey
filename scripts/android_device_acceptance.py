@@ -117,6 +117,8 @@ def main():
                         (EVIDENCE / "ui-dump-error.txt").write_text(str(failure))
                     try:
                         (EVIDENCE / "logcat.txt").write_text(adb("shell", "logcat", "-d", "-t", "3000"))
+                        (EVIDENCE / "autofill-logcat.txt").write_text(adb("shell", "logcat", "-d", "-s",
+                            "HeavenKeyAutofill:D", "AutofillSession:D", "AutofillManager:D", "TestRunner:I", "*:S"))
                     except subprocess.SubprocessError as failure:
                         (EVIDENCE / "logcat-error.txt").write_text(str(failure) + "\n" + str(getattr(failure, "stderr", "")))
                     raise RuntimeError("Native device acceptance failed; inspect instrumentation.txt.")
