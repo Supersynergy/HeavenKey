@@ -37,15 +37,25 @@ class PortableVaultDeviceTest {
         device.wakeUp()
         val keyguard = context.getSystemService(KeyguardManager::class.java)
         if (keyguard.isKeyguardLocked) {
-            // Real keyguard entry on this owned emulator; no dismissal/auth bypass.
+            // Wait for the actual PIN bouncer before entering digits. A swipe can
+            // return before its first frame exists on a freshly booted emulator.
             device.swipe(device.displayWidth / 2, device.displayHeight * 3 / 4,
                 device.displayWidth / 2, device.displayHeight / 4, 30)
-            device.executeShellCommand("input text 417926")
-            device.pressEnter(); device.waitForIdle()
-            val deadline = System.currentTimeMillis() + 5_000
+            device.waitForIdle()
+            val key = device.wait(Until.findObject(By.res("com.android.systemui", "key4")), 10_000)
+            if (key == null) missingUi("Lock-screen PIN keypad")
+            for (digit in "417926") {
+                val button = device.wait(Until.findObject(By.res("com.android.systemui", "key$digit")), 5_000)
+                    ?: missingUi("Lock-screen PIN digit")
+                button.click()
+            }
+            val enter = device.findObject(By.res("com.android.systemui", "key_enter"))
+            if (enter != null) enter.click() else device.pressEnter()
+            device.waitForIdle()
+            val deadline = System.currentTimeMillis() + 10_000
             while (keyguard.isKeyguardLocked && System.currentTimeMillis() < deadline) Thread.sleep(100)
         }
-        assertFalse("Unlock the synthetic emulator through its real PIN UI before app authentication", keyguard.isKeyguardLocked)
+        if (keyguard.isKeyguardLocked) missingUi("Unlock owned emulator with its real PIN")
     }
 
     private fun authenticate(vault: VaultStore, scenario: ActivityScenario<MainActivity>) {
