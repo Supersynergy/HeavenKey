@@ -48,6 +48,9 @@ class BackupPreview {
     required this.passkeyCount,
     required this.newPasskeys,
     required this.existingPasskeys,
+    required this.profileCount,
+    required this.newProfiles,
+    required this.existingProfiles,
     required this.vaultFingerprint,
     required this.archiveFingerprint,
     required List<BackupEntry> entries,
@@ -55,6 +58,7 @@ class BackupPreview {
 
   final int total, newCount, existing;
   final int passkeyCount, newPasskeys, existingPasskeys;
+  final int profileCount, newProfiles, existingProfiles;
   final String vaultFingerprint, archiveFingerprint;
   final List<BackupEntry> entries;
 
@@ -81,9 +85,14 @@ class BackupPreview {
     final passkeyCount = count('passkeyCount', optional: true);
     final newPasskeys = count('newPasskeys', optional: true);
     final existingPasskeys = count('existingPasskeys', optional: true);
+    final profileCount = count('profileCount', optional: true);
+    final newProfiles = count('newProfiles', optional: true);
+    final existingProfiles = count('existingProfiles', optional: true);
     final values = map['entries'];
     if (newCount + existing != total ||
         newPasskeys + existingPasskeys != passkeyCount ||
+        newProfiles + existingProfiles != profileCount ||
+        profileCount > 100 ||
         values is! List ||
         values.length != total) {
       throw const FormatException('Ungültige Vorschau.');
@@ -105,6 +114,9 @@ class BackupPreview {
       passkeyCount: passkeyCount,
       newPasskeys: newPasskeys,
       existingPasskeys: existingPasskeys,
+      profileCount: profileCount,
+      newProfiles: newProfiles,
+      existingProfiles: existingProfiles,
       vaultFingerprint: fingerprint('vaultFingerprint'),
       archiveFingerprint: fingerprint('archiveFingerprint'),
       entries: entries,

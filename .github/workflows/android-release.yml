@@ -7,6 +7,7 @@ on:
       - 'apps/mobile/pubspec.yaml'
       - '.github/workflows/android-release.yml'
       - 'scripts/android_release.py'
+      - 'scripts/android_preview.py'
   workflow_dispatch:
 
 permissions:
@@ -61,7 +62,7 @@ jobs:
           python3 - <<'PY'
           import json, os
           refs = json.load(open(os.environ['RUNNER_TEMP'] + '/android-existing-tags.json'))
-          if refs:
+          if any(row.get('ref') == 'refs/tags/' + os.environ['RELEASE_TAG'] for row in refs):
               raise SystemExit('Release tag already exists. Increase the Android version; artifacts are never overwritten.')
           PY
       - name: Install pinned Flutter and Android tools
@@ -69,7 +70,12 @@ jobs:
           git clone --depth=1 --branch 3.47.2 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
           test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = d3b14c876900e553bc736ca19295fc09e3853e8e
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0'
+          for attempt in 1 2 3; do
+            if "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358' 'platforms;android-36' 'build-tools;36.0.0'; then
+              break
+            fi
+            if [ "$attempt" = 3 ]; then exit 1; fi
+          done
       - name: Resolve locked dependencies
         working-directory: apps/mobile
         run: flutter pub get --enforce-lockfile
@@ -120,6 +126,42 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  publish-preview:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: android-preview-${{ github.sha }}
+          path: preview/
+      - name: Publish isolated test preview
+        working-directory: preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          sha256sum --check SHA256SUMS
+          python3 - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          data = json.loads(Path('PREVIEW.json').read_text())
+          assert data['production'] is False and data['stable_publisher_identity'] is False
+          assert data['application_id'] == 'app.heavenkey.heavenkey_mobile.preview'
+          assert data['source_commit'] == os.environ['GITHUB_SHA']
+          version = data['version'].removesuffix('-preview')
+          tag = f'android-v{version}-preview.1'
+          refs = json.loads(subprocess.check_output(['gh', 'api', f'repos/{os.environ["GH_REPO"]}/git/matching-refs/tags/{tag}'], text=True))
+          if any(row.get('ref') == 'refs/tags/' + tag for row in refs):
+              raise SystemExit('Preview already published; increase the app version. Existing downloads are never replaced.')
+          subprocess.run(['gh', 'release', 'create', tag, *[row['name'] for row in data['artifacts']], 'SHA256SUMS', 'PREVIEW.json',
+                          '--target', os.environ['GITHUB_SHA'], '--prerelease', '--latest=false',
+                          '--title', f'HeavenKey Android {version} – Vorschau für Testdaten', '--notes-file', 'release-notes.md'], check=True)
+          PY
+
   publish:
     needs: package
     runs-on: ubuntu-24.04
@@ -145,7 +187,7 @@ jobs:
           from pathlib import Path
           data = json.loads(Path('RELEASE.json').read_text())
           assert data['source_commit'] == os.environ['GITHUB_SHA']
-          text = f"HeavenKey Android {data['version']}\n\nStandalone Android vault, simpler onboarding, website passkeys and encrypted portable recovery for logins and passkeys.\n\nRequires Android 11/API 30; website passkey provider requires Android 14/API 34. Choose arm64-v8a for most current phones; AAB is for store submission.\n\nSource: {data['source_commit']}\nSigning certificate SHA-256: {data['signing_certificate_sha256']}\n\nAll artifacts passed signature, certificate, manifest and version checks. The source passed UI, native unit and isolated Android Keystore recovery tests. Physical-device and Play Store acceptance are separate and are not claimed. See RELEASE.json and SHA256SUMS.\n\nBack up existing vaults before changing installation channels. Android requires the same signing identity for an in-place update; do not uninstall a vault without an independently saved, tested recovery archive and key."
+          text = f"HeavenKey Android {data['version']}\n\nStandalone Android vault, encrypted form profiles, native app autofill with explicit package/signature associations, generated signup passwords, six/eight-word passphrases, website passkeys and encrypted V3 portable recovery including profiles.\n\nRequires Android 11/API 30; website passkey provider requires Android 14/API 34. Choose arm64-v8a for most current phones; AAB is for store submission.\n\nSource: {data['source_commit']}\nSigning certificate SHA-256: {data['signing_certificate_sha256']}\n\nAll artifacts passed signature, certificate, manifest and version checks. The source passed UI, native unit and isolated Android Keystore recovery tests. Physical-device and Play Store acceptance are separate and are not claimed. See RELEASE.json and SHA256SUMS.\n\nBack up existing vaults before changing installation channels. Android requires the same signing identity for an in-place update; do not uninstall a vault without an independently saved, tested recovery archive and key."
           Path('release-notes.txt').write_text(text + '\n')
           PY
           gh release create "$RELEASE_TAG" HeavenKey-*.apk HeavenKey-*.aab SHA256SUMS RELEASE.json --target "$GITHUB_SHA" --title "HeavenKey Android ${RELEASE_TAG#android-v}" --notes-file release-notes.txt --latest=false

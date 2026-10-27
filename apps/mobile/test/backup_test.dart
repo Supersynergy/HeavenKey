@@ -457,7 +457,7 @@ void main() {
         );
         final conflict = find.widgetWithText(
           CheckboxListTile,
-          'Vorhandene Logins mit gleicher ID ersetzen',
+          'Vorhandene Logins und Profile mit gleicher ID ersetzen',
         );
         await reveal(tester, conflict);
         expect(tester.widget<CheckboxListTile>(conflict).value, isFalse);

@@ -92,6 +92,9 @@ def main():
                 adb("shell", "wm", "dismiss-keyguard")
                 for setting in ("window_animation_scale", "transition_animation_scale", "animator_duration_scale"):
                     adb("shell", "settings", "put", "global", setting, "0")
+                # Keep this disposable test screen awake; authentication is still real OS PIN entry.
+                adb("shell", "settings", "put", "system", "screen_off_timeout", "1800000")
+                adb("shell", "svc", "power", "stayon", "true")
                 # This PIN belongs only to this newly created disposable emulator.
                 adb("shell", "locksettings", "set-pin", "417926")
                 verified = adb("shell", "locksettings", "verify", "--old", "417926")
@@ -101,32 +104,44 @@ def main():
                 output = adb("shell", "am", "instrument", "-w", "-r", "-e", "class",
                              "app.heavenkey.heavenkey_mobile.PortableVaultDeviceTest",
                              "app.heavenkey.heavenkey_mobile.test/androidx.test.runner.AndroidJUnitRunner",
-                             timeout=300)
+                             timeout=480)
                 (EVIDENCE / "instrumentation.txt").write_text(output)
-                if "OK (2 tests)" not in output or "FAILURES!!!" in output:
+                if "OK (4 tests)" not in output or "FAILURES!!!" in output:
                     print(output, flush=True)
                     # XML/logs include synthetic fixtures only.
                     try:
                         adb("shell", "uiautomator", "dump", "/sdcard/heavenkey-test-ui.xml")
                         (EVIDENCE / "failure-ui.xml").write_text(adb("shell", "cat", "/sdcard/heavenkey-test-ui.xml"))
                         print((EVIDENCE / "failure-ui.xml").read_text()[:12000], flush=True)
-                        (EVIDENCE / "logcat.txt").write_text(adb("logcat", "-d", "-t", "1500"))
-                    except subprocess.SubprocessError:
-                        pass
+                    except subprocess.SubprocessError as failure:
+                        (EVIDENCE / "ui-dump-error.txt").write_text(str(failure))
+                    try:
+                        (EVIDENCE / "logcat.txt").write_text(adb("shell", "logcat", "-d", "-t", "3000"))
+                        (EVIDENCE / "autofill-logcat.txt").write_text(adb("shell", "logcat", "-d", "-s",
+                            "HeavenKeyAutofill:D", "AutofillSession:D", "AutofillManager:D", "TestRunner:I", "*:S"))
+                    except subprocess.SubprocessError as failure:
+                        (EVIDENCE / "logcat-error.txt").write_text(str(failure) + "\n" + str(getattr(failure, "stderr", "")))
                     raise RuntimeError("Native device acceptance failed; inspect instrumentation.txt.")
                 source_paths = [*MOBILE.glob("android/app/src/main/**/*.kt"),
                                 *MOBILE.glob("android/app/src/androidTest/**/*.kt"),
+                    *MOBILE.glob("android/app/src/androidTest/**/*.java"),
+                                *MOBILE.glob("lib/**/*.dart"), *MOBILE.glob("assets/*"),
+                                *MOBILE.glob("android/app/src/main/res/xml/*.xml"),
+                                MOBILE / "android/app/src/androidTest/AndroidManifest.xml",
                                 MOBILE / "android/app/build.gradle.kts",
                                 MOBILE / "android/app/src/main/AndroidManifest.xml",
                                 Path(__file__).resolve()]
                 receipt = {
                     "passed": True, "kind": "isolated Android API 36 emulator",
-                    "synthetic_only": True, "tests": 2,
+                    "synthetic_only": True, "tests": 4,
                     "device_credential_authentication": True,
                     "real_android_keystore": True,
                     "portable_passkey_restore_and_signature": True,
                     "wrong_key_tamper_and_stale_preview_rejected": True,
                     "locked_export_rejected": True,
+                    "legacy_vault_migration": True,
+                    "profiles_backup_and_new_app_trust": True,
+                    "native_system_autofill_profiles_logins_signup": True,
                     "physical_device": False, "browser_passkey_flow": False,
                     "production_signed_app": False,
                     "source_commit": run(["git", "rev-parse", "HEAD"], cwd=ROOT).strip(),
@@ -137,7 +152,7 @@ def main():
                 }
                 (EVIDENCE / "acceptance.json").write_text(json.dumps(receipt, indent=2) + "\n")
                 print("ANDROID_DEVICE_ACCEPTANCE=" + json.dumps(receipt, sort_keys=True), flush=True)
-                print("PASS: actual device authentication, Keystore recovery and rejection checks (2 tests).")
+                print("PASS: actual device authentication, Keystore recovery and rejection checks (4 tests).")
             finally:
                 process.terminate()
                 try:

@@ -9,6 +9,17 @@ Stand: 26.10.2026. Bestandsprüfung auf `ac37ca5` (nach PR #36).
 - [Lokalen Login-Pilot ausführen](../apps/identity-pilot/README.md)
 - [Android- und Desktop-Bestand](MOBILE.md)
 
+## Android-App 0.28 – Ergänzung vom 27.10.2026
+
+[Umsetzung, Due Diligence, Pro/Contra und Unteraufgaben](ANDROID-AUTOFILL-PLAN.md):
+Formularprofile, native App-Zuordnungen mit Paket-/Signaturprüfung, Inline-Autofill,
+Registrierungsgenerator, merkbare 6/8-Wort-Passphrasen und portable V3-Sicherung.
+Produktionsauslieferung bleibt an den dauerhaften Herausgeberschlüssel gebunden;
+eine getrennte Testvorschau verwendet eine eigene App-Kennung. Physische Geräte,
+aktuelle Browser-/Tastaturmatrix, Profil-Sync und iOS-Erweiterung bleiben offen.
+Dies ist die Kompatibilitätsschicht für bestehende Passwortdienste. Der OIDC-Pilot
+und die nachfolgenden Identity-Abnahmen behalten ihren eigenen Status.
+
 ## Produktentscheidung
 
 | Ebene | Aufgabe | Entscheidung |

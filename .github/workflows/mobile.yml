@@ -10,6 +10,7 @@ on:
       - 'scripts/android_device_acceptance.py'
       - 'scripts/android_release.py'
       - 'scripts/android_signing_test.py'
+      - 'scripts/android_preview.py'
       - '.github/workflows/android-release.yml'
   push:
     branches: [main]
@@ -19,6 +20,7 @@ on:
       - 'scripts/android_device_acceptance.py'
       - 'scripts/android_release.py'
       - 'scripts/android_signing_test.py'
+      - 'scripts/android_preview.py'
 
 permissions:
   contents: read
@@ -51,6 +53,15 @@ jobs:
           flutter test --no-pub
       - name: Check Android security configuration
         run: python3 scripts/mobile_native_gate.py android
+      - name: Install pinned Android build dependencies
+        run: |
+          for attempt in 1 2 3; do
+            if "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358' 'platforms;android-36' 'build-tools;36.0.0'; then
+              exit 0
+            fi
+            echo "SDK download/extraction failed on attempt $attempt; retrying with the SDK manager."
+          done
+          exit 1
       - name: Build Android and execute portable backup tests
         working-directory: apps/mobile
         run: |
@@ -67,6 +78,28 @@ jobs:
         run: python3 scripts/android_device_acceptance.py
       - name: Build and verify release artifacts with disposable keys
         run: python3 scripts/android_signing_test.py --release-artifacts
+      - name: Build isolated preview with release runtime
+        env:
+          HEAVENKEY_ANDROID_PREVIEW: 'true'
+        run: |
+          (cd apps/mobile && flutter build apk --release --split-per-abi)
+          python3 - <<'PY'
+          import os, re, shutil, subprocess
+          from pathlib import Path
+          version, code = re.search(r'^version: (\d+\.\d+\.\d+)\+(\d+)$', Path('apps/mobile/pubspec.yaml').read_text(), re.M).groups()
+          output = Path('dist/android-preview'); output.mkdir(parents=True, exist_ok=True)
+          for abi in ('arm64-v8a', 'armeabi-v7a', 'x86_64'):
+              shutil.copyfile(f'apps/mobile/build/app/outputs/flutter-apk/app-{abi}-release.apk', output / f'HeavenKey-{version}-android-preview-{abi}.apk')
+          subprocess.run(['python3', 'scripts/android_preview.py', str(output), '--version', version, '--code', code,
+                          '--commit', os.environ['GITHUB_SHA'], '--device-evidence', 'dist/android-device-acceptance/acceptance.json'], check=True)
+          PY
+      - name: Preserve verified installable preview
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-preview-${{ github.sha }}
+          path: dist/android-preview/
+          if-no-files-found: error
+          retention-days: 14
       - name: Preserve source-bound native test evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

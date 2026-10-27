@@ -231,7 +231,7 @@ void main() {
       await tapVisible(tester, find.text('Login speichern'));
       expect(find.text('Dein erster Login ist gespeichert'), findsOneWidget);
       await tapVisible(tester, find.text('Autofill einrichten').first);
-      expect(find.text('Im Browser ausfüllen'), findsOneWidget);
+      expect(find.text('Apps und Formulare ausfüllen'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
       vault.dispose();
     },

@@ -16,6 +16,9 @@ val releaseSigning = mapOf(
     "certificateSha256" to providers.environmentVariable("HEAVENKEY_ANDROID_CERT_SHA256").orNull,
 )
 val hasReleaseSigning = releaseSigning.values.all { !it.isNullOrBlank() }
+// Preview is a separate app identity and distribution channel, never a fallback
+// signature for app.heavenkey.heavenkey_mobile. The production verifier rejects it.
+val isPreview = providers.environmentVariable("HEAVENKEY_ANDROID_PREVIEW").orNull == "true"
 
 val verifyProductionSigning = tasks.register("verifyProductionSigning") {
     group = "verification"
@@ -65,7 +68,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "app.heavenkey.heavenkey_mobile"
+        applicationId = if (isPreview) "app.heavenkey.heavenkey_mobile.preview" else "app.heavenkey.heavenkey_mobile"
+        manifestPlaceholders["heavenKeyLabel"] = if (isPreview) "HeavenKey Vorschau" else "HeavenKey"
         minSdk = 30
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -86,14 +90,15 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("production")
+            signingConfig = signingConfigs.getByName(if (isPreview) "debug" else "production")
+            if (isPreview) versionNameSuffix = "-preview"
             isDebuggable = false
         }
     }
 }
 
 tasks.matching { it.name == "preReleaseBuild" || it.name == "validateSigningRelease" }.configureEach {
-    dependsOn(verifyProductionSigning)
+    if (!isPreview) dependsOn(verifyProductionSigning)
 }
 
 kotlin {
@@ -109,6 +114,7 @@ flutter {
 // AndroidX (Google Maven) and cbor-java (Maven Central), both Apache-2.0.
 // CBOR is used only to encode authenticator outputs; crypto uses platform JCA.
 dependencies {
+    implementation("androidx.autofill:autofill:1.3.0")
     implementation("androidx.credentials:credentials:1.6.0")
     implementation("co.nstant.in:cbor:0.9")
     testImplementation("junit:junit:4.13.2")

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'backup_preview.dart';
+import 'form_profile.dart';
 import 'vault_entry.dart';
 
 class VaultController extends ChangeNotifier {
@@ -12,6 +13,9 @@ class VaultController extends ChangeNotifier {
   final MethodChannel _channel;
   List<VaultEntry> _entries = [];
   List<VaultEntry> get entries => List.unmodifiable(_entries);
+  List<FormProfile> _profiles = [];
+  List<FormProfile> get profiles => List.unmodifiable(_profiles);
+  List<Map<String, String>> appBindings = [];
   bool unlocked = false, busy = false;
   Map<Object?, Object?> status = {};
   String? error;
@@ -63,6 +67,9 @@ class VaultController extends ChangeNotifier {
           'Tresor konnte nicht gelesen werden. Daten bleiben erhalten.',
         'vault_full' =>
           'Speichergrenze erreicht. Der Eintrag wurde nicht gespeichert.',
+        'invalid_profile' =>
+          'Formularprofil ist ungültig. Bitte die Eingaben prüfen.',
+        'app_changed' => 'Die App-Signatur hat sich geändert. Bitte die Freigabe erneut prüfen.',
         'invalid_key' =>
           'Wiederherstellungsschlüssel stimmt nicht. Bitte prüfen.',
         'invalid_archive' =>
@@ -141,6 +148,8 @@ class VaultController extends ChangeNotifier {
       return;
     }
     _entries = _parseEntries(values);
+    await _refreshFormData(generation);
+    if (generation != _generation || _disposed) return;
     unlocked = true;
     _expiry?.cancel();
     _expiry = Timer(const Duration(seconds: 60), lock);
@@ -162,6 +171,65 @@ class VaultController extends ChangeNotifier {
     }
     return parsed;
   }
+
+  Future<void> _refreshFormData(int generation) async {
+    if (status['formsSupported'] != true) return;
+    final data = await _channel.invokeMapMethod<Object?, Object?>('formData');
+    if (generation != _generation || _disposed) return;
+    final profiles = data?['profiles'], bindings = data?['appBindings'];
+    if (profiles is! List ||
+        profiles.length > 100 ||
+        bindings is! List ||
+        bindings.length > 1000) {
+      throw const FormatException('Ungültige Formularprofile.');
+    }
+    final parsed = profiles.map((value) {
+      if (value is! Map<Object?, Object?>) {
+        throw const FormatException('Ungültiges Formularprofil.');
+      }
+      return FormProfile.fromMap(value);
+    }).toList();
+    if (parsed.map((value) => value.id).toSet().length != parsed.length) {
+      throw const FormatException('Doppelte Profil-ID.');
+    }
+    final apps = bindings.map((value) {
+      if (value is! Map ||
+          value.length != 3 ||
+          value.keys.toSet().difference({
+            'entryId',
+            'packageName',
+            'certificates',
+          }).isNotEmpty ||
+          value.values.any((field) => field is! String)) {
+        throw const FormatException('Ungültige App-Freigabe.');
+      }
+      return Map<String, String>.from(value);
+    }).toList();
+    _profiles = parsed;
+    appBindings = apps;
+  }
+
+  Future<bool> saveProfile(FormProfile profile) => _perform((generation) async {
+    if (!unlocked) throw PlatformException(code: 'locked');
+    profile.validate();
+    await _channel.invokeMethod<void>('saveProfile', profile.values);
+    await _refreshFormData(generation);
+    if (generation == _generation && !_disposed) {
+      status = {...status, 'hasVault': true};
+    }
+  });
+  Future<bool> deleteProfile(String id) => _perform((generation) async {
+    if (!unlocked) throw PlatformException(code: 'locked');
+    await _channel.invokeMethod<void>('deleteProfile', {'id': id});
+    await _refreshFormData(generation);
+  });
+  Future<bool> revokeApp(String packageName) => _perform((generation) async {
+    if (!unlocked) throw PlatformException(code: 'locked');
+    await _channel.invokeMethod<void>('revokeApp', {
+      'packageName': packageName,
+    });
+    await _refreshFormData(generation);
+  });
 
   Future<bool> save(VaultEntry entry) => _perform((generation) async {
     if (!unlocked) throw PlatformException(code: 'locked');
@@ -344,6 +412,8 @@ class VaultController extends ChangeNotifier {
     if (generation != _generation || _disposed) return;
     _entries = _parseEntries(values);
     clearBackupSelection();
+    await _refreshFormData(generation);
+    if (generation != _generation || _disposed) return;
     backupNotice = 'Sicherung wiederhergestellt.';
   }, backup: true);
 
@@ -438,6 +508,8 @@ class VaultController extends ChangeNotifier {
     _generation++;
     _expiry?.cancel();
     _entries = [];
+    _profiles = [];
+    appBindings = [];
     connection = {};
     websitePasskeys = [];
     unlocked = false;
@@ -463,6 +535,9 @@ class VaultController extends ChangeNotifier {
     _selectedBackup = null;
     backupNotice = null;
     _entries = [];
+    _profiles = [];
+    appBindings = [];
+    websitePasskeys = [];
     super.dispose();
   }
 }

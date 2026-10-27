@@ -65,22 +65,22 @@ def verify_manifest(manifest, version, code):
     require(manifest.find("uses-sdk").get(ANDROID + "minSdkVersion") == "30", "Unexpected minimum API")
 
 
-def verify(directory, version, code, commit, pin, device_evidence):
-    require(re.fullmatch(r"\d+\.\d+\.\d+", version), "Invalid release version")
-    require(re.fullmatch(r"[a-f0-9]{40}", commit), "An exact source commit is required")
-    pin = pin.replace(":", "").lower()
-    require(re.fullmatch(r"[a-f0-9]{64}", pin), "A production certificate pin is required")
-    require(code > 0, "A positive Android version code is required")
+def verify_device_evidence(device_evidence, commit):
     receipt = json.loads(device_evidence.read_text())
     for check in ("passed", "synthetic_only", "device_credential_authentication", "real_android_keystore",
                   "portable_passkey_restore_and_signature", "wrong_key_tamper_and_stale_preview_rejected",
-                  "locked_export_rejected"):
+                  "locked_export_rejected", "legacy_vault_migration", "profiles_backup_and_new_app_trust",
+                  "native_system_autofill_profiles_logins_signup"):
         require(receipt.get(check) is True, "Missing native device evidence: " + check)
-    require(receipt.get("tests") == 2 and receipt.get("source_commit") == commit,
+    require(receipt.get("tests") == 4 and receipt.get("source_commit") == commit,
             "Native device evidence belongs to another source commit")
     mobile = ROOT / "apps/mobile"
     source_paths = [*mobile.glob("android/app/src/main/**/*.kt"),
                     *mobile.glob("android/app/src/androidTest/**/*.kt"),
+                    *mobile.glob("android/app/src/androidTest/**/*.java"),
+                    *mobile.glob("lib/**/*.dart"), *mobile.glob("assets/*"),
+                    *mobile.glob("android/app/src/main/res/xml/*.xml"),
+                    mobile / "android/app/src/androidTest/AndroidManifest.xml",
                     mobile / "android/app/build.gradle.kts",
                     mobile / "android/app/src/main/AndroidManifest.xml",
                     ROOT / "scripts/android_device_acceptance.py"]
@@ -89,6 +89,17 @@ def verify(directory, version, code, commit, pin, device_evidence):
     for relative, expected in receipt["source_files"].items():
         path = (ROOT / relative).resolve()
         require(path.is_relative_to(ROOT) and digest(path) == expected, "Stale device evidence: " + relative)
+
+    return receipt
+
+
+def verify(directory, version, code, commit, pin, device_evidence):
+    require(re.fullmatch(r"\d+\.\d+\.\d+", version), "Invalid release version")
+    require(re.fullmatch(r"[a-f0-9]{40}", commit), "An exact source commit is required")
+    pin = pin.replace(":", "").lower()
+    require(re.fullmatch(r"[a-f0-9]{64}", pin), "A production certificate pin is required")
+    require(code > 0, "A positive Android version code is required")
+    receipt = verify_device_evidence(device_evidence, commit)
 
     sdk = Path(os.environ["ANDROID_HOME"])
     apksigner = str(sdk / "build-tools/36.0.0/apksigner")
