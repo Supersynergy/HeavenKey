@@ -276,7 +276,7 @@ class PortableVaultDeviceTest {
             tap("6 merkbare Wörter · ca. 77,5 Bit")
             device.wait(Until.findObject(By.desc("HTTPS-Website, ggf. mit Port")), 10_000)!!.text = "https://example.test"
             device.findObject(By.desc("Benutzername oder E-Mail")).text = "new-synthetic@example.test"
-            device.pressBack(); tap("Sichern und ausfüllen")
+            tap("Sichern und ausfüllen")
             val signup = values()
             assertEquals("new-synthetic@example.test", signup.getString("username"))
             assertEquals(signup.getString("password"), signup.getString("confirmation"))

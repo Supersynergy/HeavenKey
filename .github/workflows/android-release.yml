@@ -62,7 +62,7 @@ jobs:
           python3 - <<'PY'
           import json, os
           refs = json.load(open(os.environ['RUNNER_TEMP'] + '/android-existing-tags.json'))
-          if refs:
+          if any(row.get('ref') == 'refs/tags/' + os.environ['RELEASE_TAG'] for row in refs):
               raise SystemExit('Release tag already exists. Increase the Android version; artifacts are never overwritten.')
           PY
       - name: Install pinned Flutter and Android tools
@@ -155,7 +155,7 @@ jobs:
           version = data['version'].removesuffix('-preview')
           tag = f'android-v{version}-preview.1'
           refs = json.loads(subprocess.check_output(['gh', 'api', f'repos/{os.environ["GH_REPO"]}/git/matching-refs/tags/{tag}'], text=True))
-          if refs:
+          if any(row.get('ref') == 'refs/tags/' + tag for row in refs):
               raise SystemExit('Preview already published; increase the app version. Existing downloads are never replaced.')
           subprocess.run(['gh', 'release', 'create', tag, *[row['name'] for row in data['artifacts']], 'SHA256SUMS', 'PREVIEW.json',
                           '--target', os.environ['GITHUB_SHA'], '--prerelease', '--latest=false',
