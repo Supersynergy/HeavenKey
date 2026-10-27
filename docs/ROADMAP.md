@@ -20,6 +20,11 @@ aktuelle Browser-/Tastaturmatrix, Profil-Sync und iOS-Erweiterung bleiben offen.
 Dies ist die Kompatibilitätsschicht für bestehende Passwortdienste. Der OIDC-Pilot
 und die nachfolgenden Identity-Abnahmen behalten ihren eigenen Status.
 
+**Auslieferung:** [Android 0.28 als Testvorschau veröffentlicht](https://github.com/Supersynergy/HeavenKey/releases/tag/android-v0.28.0-preview.1),
+App-Stand `8fe146d`; Code-, System- und Paketprüfungen bestanden. Produktions-APK/AAB
+bleiben durch vier fehlende Signatur-Secrets und den Zertifikat-Pin gesperrt.
+[Abnahme, offene Unteraufgaben und nächster Freigabeschritt](ANDROID-AUTOFILL-PLAN.md).
+
 ## Produktentscheidung
 
 | Ebene | Aufgabe | Entscheidung |

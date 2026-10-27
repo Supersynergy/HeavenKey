@@ -11,6 +11,28 @@ Android 11 / API 30 ist die Mindestversion. Der Website-Passkey-Anbieter benöti
 Android 14 / API 34. Die Desktop-Version und ihre bisherigen Vorschau-Releases
 werden unabhängig versioniert.
 
+## Veröffentlichungsstand vom 27.10.2026
+
+Die [Android-Vorschau 0.28](https://github.com/Supersynergy/HeavenKey/releases/tag/android-v0.28.0-preview.1)
+ist mit drei installierbaren APKs, `PREVIEW.json` und `SHA256SUMS` veröffentlicht.
+Sie verwendet eine eigene App-Kennung und ist für Testdaten vorgesehen. Quellcommit:
+`8fe146d8d4a623eab41c1217fbfb4ba83cdb886b`. Flutter-Analyse/42 Tests, 14 native
+Unit-Tests, vier echte API-36-Emulatortests, sechs Signatur-Prüffälle sowie APK/AAB-
+und Vorschauprüfungen sind bestanden. Die veröffentlichten APK-Digests stimmen
+mit den freigegebenen Dateinachweisen überein.
+
+Der [Produktions-Lauf](https://github.com/Supersynergy/HeavenKey/actions/runs/40445062574)
+hat Geräte-/Paketabnahme und Vorschau-Upload erfolgreich abgeschlossen. Der Job
+`package` ist wegen aller fünf noch fehlenden Herausgeberwerte in
+`android-production` gesperrt: vier Secrets und eine Zertifikatsvariable aus der
+Tabelle unten. Es gibt deshalb noch keine Produktions-APK/AAB der Version 0.28
+und keinen Play-Store-Upload.
+
+Nach Einrichtung der dauerhaften Herausgeberwerte im verlinkten Lauf **Re-run failed
+jobs** wählen. Damit werden Produktionspaket und davon abhängiger Upload erneut
+gestartet; bestandene Prüfungen und bestehende Vorschau-Downloads bleiben erhalten.
+Keystore oder Passwörter nicht in Issues, Quellcode oder Chat hinterlegen.
+
 ## Was diese Freigabe enthält
 
 - Vereinfachter Start, schneller Passwortgenerator und drei Hauptfelder für neue

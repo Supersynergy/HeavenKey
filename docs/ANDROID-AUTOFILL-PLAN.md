@@ -100,6 +100,7 @@ Betrieb bleiben in der bestehenden Identity-Due-Diligence mit ihren Abhängigkei
   - [x] Version 0.28.0+28; Produktionsprüfung erhalten.
   - [x] Getrennte `.preview`-App, drei ABI-APKs, Signatur-/Manifest-/AOT-/Quellnachweise.
   - [x] CI-Gerätetests um Migration, Profil-Backup und echte native Autofill-Abläufe erweitern.
+  - [x] Kalten Emulator definiert sperren, PIN-Oberfläche/Fokus abwarten und fehlerhafte SDK-Downloads begrenzt wiederholen; erneut vollständig abgenommen.
 
 ### P0: Abnahme und Veröffentlichung
 
@@ -108,22 +109,27 @@ Betrieb bleiben in der bestehenden Identity-Due-Diligence mit ihren Abhängigkei
   - [x] Sechs Produktionssignatur-Prüffälle und APK/AAB-Prüfung mit gelöschten Testschlüsseln.
   - [x] Separate Vorschau auf falsche App-Kennung, Testcode und Debug-Laufzeit prüfen.
 - [x] Geprüften Stand über [PR #39](https://github.com/Supersynergy/HeavenKey/pull/39) auf `main` zusammenführen.
-- [ ] Vorschau mit drei Architekturen, Prüfsummen und Quellnachweis veröffentlichen.
+- [x] [Vorschau mit drei Architekturen, Prüfsummen und Quellnachweis veröffentlichen](https://github.com/Supersynergy/HeavenKey/releases/tag/android-v0.28.0-preview.1).
 - [ ] Produktions-APK/AAB mit vorhandener permanenter Herausgeberkonfiguration veröffentlichen.
   - [ ] Keystore, beide Passwörter, Alias und Zertifikat-Pin in GitHub vorhanden.
   - [ ] Kein Installationskanalwechsel ohne getestete Sicherung und getrennten Schlüssel.
 
-**Quellgebundene Abnahme:** App-Stand `facd8de1f7dae7bd45f7bca2744f6bdb7bc4dfae`,
-[Android-CI](https://github.com/Supersynergy/HeavenKey/actions/runs/40441971879) und
-[Projekt-CI](https://github.com/Supersynergy/HeavenKey/actions/runs/40441971889) bestanden.
-Der zusätzliche Veröffentlichungs-Lauf ist von dieser Codeabnahme getrennt.
+**Quellgebundene Abnahme:** Veröffentlichter App-Stand `8fe146d8d4a623eab41c1217fbfb4ba83cdb886b`,
+[Android-CI](https://github.com/Supersynergy/HeavenKey/actions/runs/40445062509) und
+[Projekt-CI](https://github.com/Supersynergy/HeavenKey/actions/runs/40445062657) bestanden.
+Im [Veröffentlichungs-Lauf](https://github.com/Supersynergy/HeavenKey/actions/runs/40445062574)
+sind Geräte-/Paketprüfung und Vorschau-Upload erfolgreich. Der Produktionsschritt
+stoppt wegen der fehlenden vier Signatur-Secrets und des Zertifikat-Pins in
+`android-production`; [Konfiguration und Fortsetzen](ANDROID-PRODUCTION.md).
+Die öffentlichen APK-Digests stimmen mit `PREVIEW.json` und `SHA256SUMS` überein;
+die 40 gebundenen Quelldateien stimmen mit diesem App-Stand überein.
 
 ### P1: Tatsächliche Geräte und nahtlose Integration
 
 - [ ] Android 11/14/16/17 auf physischen Geräten prüfen, mindestens Pixel und Samsung.
   - [ ] Aktuelles Chrome/Firefox, Gboard/Samsung-Tastatur, Dropdown und Inline.
   - [ ] Login, Registrierung, Bestätigung, Adresse, Abbruch, Rotation und App-Wechsel.
-  - [ ] Kaltstart und erste System-PIN-Abfrage auf echter Hardware prüfen; einmaliges PIN-Timeout des frischen CI-Emulators separat von der bestandenen System-Autofill-Abnahme untersuchen.
+  - [ ] Kaltstart und erste System-PIN-Abfrage auf echter Hardware prüfen; die im Emulator korrigierte Start-/Fokus-Synchronisierung ersetzt diese Geräteabnahme nicht.
   - [ ] Flutter-/Compose-Formulare und native Eingabefilter gesondert abnehmen; Browser-/WebView-Herkunftsschutz bei zusätzlichen Adaptern erhalten.
   - [ ] Fremde Frames, lange Formulare, Shipping/Billing-Dopplung, Signaturwechsel negativ prüfen.
 - [ ] Profil-Sync und Desktop-/Browserprofile verlustfrei zusammenführen.
