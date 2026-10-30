@@ -1,9 +1,9 @@
 # HeavenKey installieren und starten
 
 Aktuelle gemeinsame Ausgabe: [HeavenKey 0.27.0 Alpha](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.27.0-alpha.2). Die stabile Vorschau bleibt [0.26.0](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1).
-Sie enthält fünf Desktop-Pakete, die Android-APK und beide Browser-Erweiterungen.
+Sie enthält fünf Desktop-Pakete und beide Browser-Erweiterungen; eine Android-APK ist in dieser Alpha nicht enthalten, Android bleibt bei der getrennten 0.28-Vorschau.
 Die zugehörigen Dateinamen und direkten Downloads stehen in der [Paketliste](../README.md#starten).
-`SHA256SUMS` und `ACCEPTANCE.json` gehören zum selben Release.
+`SHA256SUMS` gehört zum Release. `ACCEPTANCE.json` gibt es in dieser Alpha nicht, weil dafür ein grüner CI-Lauf auf genau diesem Commit, ein unabhängiges Review und Android-Belege fehlen; die vollständige Abnahme bleibt beim 0.26-Release.
 
 macOS 14 oder neuer: Entpacke dein Architektur-Paket und ziehe `HeavenKey.app` nach Programme. Doppelklick öffnet das App-Fenster. Die App startet einen eigenen lokalen Dienst; Beenden oder das Schließen des letzten Fensters beendet ihn. Der Kommandozeilen-Starter bleibt für ausdrücklich gestartete Browser-Sitzungen enthalten. Bei einem bereits belegten Port zeigt die App einen Fehler und verbindet sich nicht mit dem fremden Listener.
 
