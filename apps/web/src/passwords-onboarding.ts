@@ -9,6 +9,9 @@ type OnboardingContext = {
 	login: () => void;
 	settings: () => void;
 	backup: () => void;
+	hasSamples: () => boolean;
+	addSamples: () => void;
+	removeSamples: () => void;
 };
 
 export function initOnboarding(ctx: OnboardingContext) {
@@ -21,7 +24,7 @@ export function initOnboarding(ctx: OnboardingContext) {
 	const dialog = document.createElement("dialog");
 	dialog.id = "onboarding-dialog";
 	dialog.setAttribute("aria-labelledby", "onboarding-heading");
-	dialog.innerHTML = `<div class="dialog-heading"><div><p class="eyebrow">ERSTE SCHRITTE</p><h2 id="onboarding-heading">Dein Tresor, Schritt für Schritt</h2></div><button type="button" class="secondary" id="onboarding-close">Schließen</button></div><p class="note">Alles beginnt auf diesem Gerät. Wähle den nächsten Schritt, der für dich passt.</p><p id="onboarding-progress" class="note" role="status"></p><ol class="setup-list"><li><div><strong>Dein Tresor</strong><p id="onboarding-vault-state" class="note"></p></div><button id="onboarding-vault" type="button" class="secondary">Zum Tresor</button></li><li><div><strong>Deine ersten Einträge</strong><p class="note">Einen Login anlegen oder eine CSV in den Einstellungen prüfen. Vor dem Import entscheidest du über Duplikate.</p></div><button id="onboarding-login" type="button">Login anlegen</button><button id="onboarding-import" type="button" class="secondary">Import öffnen</button></li><li><div><strong>Deine Sicherung</strong><p class="note">Exportiere eine verschlüsselte Kopie. Bewahre sie getrennt auf und prüfe ihre Wiederherstellung. Du brauchst ihr Masterpasswort.</p></div><button id="onboarding-backup" type="button" class="secondary">Sicherung exportieren</button></li><li><div><strong>Dein Passkey, wenn du möchtest</strong><p class="note">Ergänze in den Einstellungen einen kompatiblen Passkey zum Entsperren. Dein Masterpasswort bleibt der Rückweg.</p></div><button id="onboarding-access" type="button" class="secondary">Passkeys einrichten</button></li></ol><details class="onboarding-help"><summary>Mit Browser und Agenten arbeiten</summary><p class="note">Im Browser verbindest du die Erweiterung über einen einmaligen Code in den Einstellungen. Ein Transferprogramm erhält durch HeavenKey keine gespeicherten Passwörter.</p><div class="actions"><button id="onboarding-transfer" type="button" class="secondary">SFTP und SSH einrichten</button><button id="onboarding-agent" type="button" class="secondary">Geschützten Agentenzugriff ansehen</button></div><p class="note">Kopple einen Agenten ausdrücklich. Prüfe danach Website oder Server, Pfad, Aktion und Dauer jeder Freigabe. Beende oder widerrufe sie in den Einstellungen.</p></details>`;
+	dialog.innerHTML = `<div class="dialog-heading"><div><p class="eyebrow">ERSTE SCHRITTE</p><h2 id="onboarding-heading">Dein Tresor, Schritt für Schritt</h2></div><button type="button" class="secondary" id="onboarding-close">Schließen</button></div><p class="note">Alles beginnt auf diesem Gerät. Wähle den nächsten Schritt, der für dich passt.</p><p id="onboarding-progress" class="note" role="status"></p><ol class="setup-list"><li><div><strong>Dein Tresor</strong><p id="onboarding-vault-state" class="note"></p></div><button id="onboarding-vault" type="button" class="secondary">Zum Tresor</button></li><li><div><strong>Deine ersten Einträge</strong><p class="note">Einen eigenen Login anlegen, zufällige Beispieldaten ausprobieren oder eine CSV in den Einstellungen prüfen. Vor dem Import entscheidest du über Duplikate.</p><p id="onboarding-sample-state" class="note"></p></div><button id="onboarding-login" type="button">Login anlegen</button><button id="onboarding-samples" type="button" class="secondary">Beispieldaten einfügen</button><button id="onboarding-samples-remove" type="button" class="secondary">Beispieldaten entfernen</button><button id="onboarding-import" type="button" class="secondary">Import öffnen</button></li><li><div><strong>Deine Sicherung</strong><p class="note">Exportiere eine verschlüsselte Kopie. Bewahre sie getrennt auf und prüfe ihre Wiederherstellung. Du brauchst ihr Masterpasswort.</p></div><button id="onboarding-backup" type="button" class="secondary">Sicherung exportieren</button></li><li><div><strong>Dein Passkey, wenn du möchtest</strong><p class="note">Ergänze in den Einstellungen einen kompatiblen Passkey zum Entsperren. Dein Masterpasswort bleibt der Rückweg.</p></div><button id="onboarding-access" type="button" class="secondary">Passkeys einrichten</button></li></ol><details class="onboarding-help"><summary>Mit Browser und Agenten arbeiten</summary><p class="note">Im Browser verbindest du die Erweiterung über einen einmaligen Code in den Einstellungen. Ein Transferprogramm erhält durch HeavenKey keine gespeicherten Passwörter.</p><div class="actions"><button id="onboarding-transfer" type="button" class="secondary">SFTP und SSH einrichten</button><button id="onboarding-agent" type="button" class="secondary">Geschützten Agentenzugriff ansehen</button></div><p class="note">Kopple einen Agenten ausdrücklich. Prüfe danach Website oder Server, Pfad, Aktion und Dauer jeder Freigabe. Beende oder widerrufe sie in den Einstellungen.</p></details>`;
 	document.getElementById("app")!.append(dialog);
 	const openButton = document.createElement("button");
 	openButton.id = "onboarding-open";
@@ -66,6 +69,18 @@ export function initOnboarding(ctx: OnboardingContext) {
 		}),
 	);
 	get("onboarding-login").addEventListener("click", () => go(ctx.login));
+	let confirmingRemoval = false;
+	get("onboarding-samples").addEventListener("click", () => go(ctx.addSamples));
+	get("onboarding-samples-remove").addEventListener("click", () => {
+		if (!confirmingRemoval) {
+			confirmingRemoval = true;
+			get("onboarding-samples-remove").textContent = "Wirklich alle Beispieldaten löschen?";
+			get("onboarding-samples-remove").focus();
+			return;
+		}
+		confirmingRemoval = false;
+		go(ctx.removeSamples);
+	});
 	get("onboarding-import").addEventListener("click", () =>
 		go(() => {
 			ctx.settings();
@@ -101,6 +116,13 @@ export function initOnboarding(ctx: OnboardingContext) {
 			: count === 0
 				? "Dein nächster Schritt: Speichere einen Login oder prüfe einen Import."
 				: `${count} ${count === 1 ? "Login gespeichert" : "Logins gespeichert"}. Exportiere als Nächstes eine verschlüsselte Sicherung und prüfe ihre Wiederherstellung.`;
+		const samples = ctx.hasSamples();
+		if (!samples) confirmingRemoval = false;
+		get("onboarding-sample-state").textContent = samples
+			? `Beispieldaten sind gespeichert: zufällige, klar markierte Test-Logins auf .example-Domains. Sie gehören zu keinem echten Konto.`
+			: "Ohne eigene Daten helfen drei zufällige Beispieldaten beim Ausprobieren; sie lassen sich jederzeit wieder entfernen.";
+		get("onboarding-samples-remove").hidden = !samples;
+		if (!confirmingRemoval) get("onboarding-samples-remove").textContent = "Beispieldaten entfernen";
 		get("onboarding-vault-state").textContent = unlocked
 			? "Dein Tresor ist entsperrt. Änderungen werden verschlüsselt gespeichert."
 			: ctx.hasRecord()
@@ -108,6 +130,8 @@ export function initOnboarding(ctx: OnboardingContext) {
 				: "Wähle ein langes, einmaliges Masterpasswort. HeavenKey kann es nicht zurücksetzen.";
 		for (const id of [
 			"onboarding-login",
+			"onboarding-samples",
+			"onboarding-samples-remove",
 			"onboarding-import",
 			"onboarding-backup",
 			"onboarding-access",

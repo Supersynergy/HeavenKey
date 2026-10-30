@@ -14,6 +14,12 @@ Android zeigt die genaue gespeicherte Herkunft vor dem Speichern: `https://examp
 
 Nutzernamen-Vorschläge stammen ausschließlich aus dem aktuell entsperrten Tresor und werden erst nach deiner Auswahl eingesetzt. Es findet keine Verfügbarkeitsprüfung bei der Website statt. Notizen und weitere Optionen öffnest du bei Bedarf.
 
+## Beispieldaten ausprobieren
+
+Unter **Erste Schritte** fügt „Beispieldaten einfügen“ drei zufällige Logins ein. Sie tragen das Tag `Beispiel`, zeigen auf reservierte Domains wie `https://fotoalbum.example` (RFC 2606, keine echte Website) und verwenden neu generierte 20-Zeichen-Passwörter. Damit kannst du Suche, Sicherheitscheck, Generator und Sicherung ohne eigene Daten ausprobieren; dein echter Tresor bleibt unberührt.
+
+„Beispieldaten entfernen“ fragt einmal nach und löscht ausschließlich Einträge mit dem Tag `Beispiel`. Eigene Logins bleiben unverändert, auch wenn sie gleich heißen. Einen einzelnen Beispiel-Eintrag löschst du wie gewohnt über „Login löschen“.
+
 ## Ein neues Passwort erzeugen
 
 Auf Android wählst du bei Bedarf 16, 24, 32 oder 48 Zeichen. Die Auswahl allein ändert das Passwort noch nicht. Nutze den Generator ausdrücklich für ein neues oder zu änderndes Website-Passwort. Bei einem bereits gefüllten Passwortfeld bestätigst du die Ersetzung. Speichern in HeavenKey ändert das Passwort deines Kontos bei der Website nicht. Führe diese Änderung auch dort durch.

@@ -10,6 +10,7 @@ import { initExtensionUnlock } from "./passwords-extension-unlock";
 import { initPasswordAccess } from "./passwords-access";
 import { initPasswordSharing } from "./passwords-sharing";
 import { initOnboarding } from "./passwords-onboarding";
+import { SAMPLE_TAG, buildSampleEntries, hasSampleEntries, withSampleEntries, withoutSampleEntries } from "./passwords-onboarding-samples";
 import { normalizeWebsite, suggestedUsernames } from "./passwords-entry-assist";
 import { initMobileSync } from "./passwords-mobile-sync";
 import { getPrivacyPreferences, initPrivacy, recordActivity, clearActivities } from "./passwords-privacy";
@@ -494,7 +495,26 @@ protectedComposer = initProtectedComposer(accessContext, {
   },
 });
 initAccessOverview();
-onboarding = initOnboarding({vault:()=>vault,hasRecord:()=>!!remote,ready:()=>ready,busy:()=>busy,login:()=>edit(undefined, true),settings:showSettings,backup:()=>byId("export-backup").click()});
+function removeSamples() {
+  void operation(async run => {
+    if (!vault) return;
+    const remaining = withoutSampleEntries(vault.entries);
+    const removed = vault.entries.length - remaining.length;
+    if (!removed) { status("Keine Beispieldaten im Tresor."); return; }
+    if (selectedId && !remaining.some(entry => entry.id === selectedId)) selectedId = null;
+    if (await commit({ ...vault, version: vault.version, entries: remaining }, run)) { clearEditor(); status(`${removed} ${removed === 1 ? "Beispieldatum" : "Beispieldaten"} entfernt. Eigene Logins bleiben unverändert.`); focusAfter("new-entry"); }
+  });
+}
+function addSamples() {
+  void operation(async run => {
+    if (!vault) return;
+    const samples = buildSampleEntries();
+    const entries = withSampleEntries(vault.entries, samples);
+    selectedId = samples[0].id; revealedId = null;
+    if (await commit({ ...vault, version: vault.version, entries }, run)) { byId("workspace").classList.add("show-detail"); status(`${samples.length} zufällige Beispieldaten gespeichert. Sie tragen das Tag „${SAMPLE_TAG}“ und lassen sich in den Ersten Schritten wieder entfernen.`); focusAfter("detail-title"); }
+  });
+}
+onboarding = initOnboarding({vault:()=>vault,hasRecord:()=>!!remote,ready:()=>ready,busy:()=>busy,login:()=>edit(undefined, true),settings:showSettings,backup:()=>byId("export-backup").click(),hasSamples:()=>!!vault&&hasSampleEntries(vault.entries),addSamples,removeSamples});
 initBrand();
 initPresentation();
 void load();
