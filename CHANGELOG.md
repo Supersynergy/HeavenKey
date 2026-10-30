@@ -5,6 +5,7 @@
 - „Erste Schritte“ bietet zufällige Beispieldaten: drei mit dem Tag `Beispiel` markierte Logins auf reservierten `.example`-Domains (RFC 2606) mit frisch generierten 20-Zeichen-Passwörtern, Benutzernamen auf `@example.invalid` und einem Hinweis im Notizfeld. Damit lässt sich der Tresor ohne eigene Daten ausprobieren.
 - Beispieldaten lassen sich in zwei Schritten wieder entfernen („Beispieldaten entfernen“ → Bestätigung). Das Entfernen löscht ausschließlich Einträge mit dem Tag `Beispiel`; eigene Logins bleiben unverändert, auch bei gleichem Titel. Regressionstests decken Zufallsquelle, Kollisionsfreiheit, Grenzwerte der Zufallsfunktion und gemischte Tresore ab.
 - macOS-/MK-Abnahme der Alpha: echter Rust-Dienst, Tresor anlegen, Beispieldaten einfügen (3 Einträge, Tag `Beispiel`, `https://*.example`), Neuladen und Entsperren (Persistenz), Entfernen (0 Einträge). `passwords.sqlite` enthält keine Klartextspuren der Beispieldaten.
+- Korrekturen in Alpha 2: jede Zufallsentscheidung zieht genau einen Wert (vorher zwei, was eine eingespeiste Zufallsquelle verschob); der Bestätigungszustand von „Beispieldaten entfernen“ endet mit dem Dialog; scheitert das Speichern, fällt die Auswahl auf den vorherigen Eintrag zurück. Ein Test prüft die Ziehungszahl.
 - Grenzen dieser Alpha: keine neue Android-APK (Android bleibt bei der getrennten 0.28-Vorschau), unveränderte Herausgeber- und Audit-Grenzen.
 
 ## Unreleased — Android ohne Desktop

@@ -1,6 +1,6 @@
 # HeavenKey installieren und starten
 
-Aktuelle gemeinsame Ausgabe: [HeavenKey 0.27.0 Alpha](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.27.0-alpha.1). Die stabile Vorschau bleibt [0.26.0](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1).
+Aktuelle gemeinsame Ausgabe: [HeavenKey 0.27.0 Alpha](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.27.0-alpha.2). Die stabile Vorschau bleibt [0.26.0](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1).
 Sie enthält fünf Desktop-Pakete, die Android-APK und beide Browser-Erweiterungen.
 Die zugehörigen Dateinamen und direkten Downloads stehen in der [Paketliste](../README.md#starten).
 `SHA256SUMS` und `ACCEPTANCE.json` gehören zum selben Release.
