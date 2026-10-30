@@ -35,7 +35,10 @@ export function initOnboarding(ctx: OnboardingContext) {
 	let returnFocus: HTMLElement | null = null;
 	const get = <T extends HTMLElement = HTMLElement>(id: string) =>
 		document.getElementById(id) as T;
+	let confirmingRemoval = false;
 	function close(restore = true) {
+		confirmingRemoval = false;
+		get("onboarding-samples-remove").textContent = "Beispieldaten entfernen";
 		dialog.close();
 		if (
 			restore &&
@@ -69,7 +72,6 @@ export function initOnboarding(ctx: OnboardingContext) {
 		}),
 	);
 	get("onboarding-login").addEventListener("click", () => go(ctx.login));
-	let confirmingRemoval = false;
 	get("onboarding-samples").addEventListener("click", () => go(ctx.addSamples));
 	get("onboarding-samples-remove").addEventListener("click", () => {
 		if (!confirmingRemoval) {

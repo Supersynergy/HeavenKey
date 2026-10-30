@@ -22,7 +22,8 @@ const services = [
 const accounts = ["demo", "beispiel", "probe", "testkonto", "muster"] as const;
 
 function pick<T>(items: readonly T[], random: Random): T {
-	const value = Number.isFinite(random()) ? random() : 0;
+	const draw = random();
+	const value = Number.isFinite(draw) ? draw : 0;
 	const index = Math.min(items.length - 1, Math.max(0, Math.floor(value * items.length)));
 	return items[index];
 }
@@ -30,7 +31,8 @@ function pick<T>(items: readonly T[], random: Random): T {
 function shuffled<T>(items: readonly T[], random: Random): T[] {
 	const copy = [...items];
 	for (let index = copy.length - 1; index > 0; index--) {
-		const value = Number.isFinite(random()) ? random() : 0;
+		const draw = random();
+		const value = Number.isFinite(draw) ? draw : 0;
 		const target = Math.min(index, Math.max(0, Math.floor(value * (index + 1))));
 		[copy[index], copy[target]] = [copy[target], copy[index]];
 	}

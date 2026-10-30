@@ -510,8 +510,10 @@ function addSamples() {
     if (!vault) return;
     const samples = buildSampleEntries();
     const entries = withSampleEntries(vault.entries, samples);
+    const previous = selectedId;
     selectedId = samples[0].id; revealedId = null;
     if (await commit({ ...vault, version: vault.version, entries }, run)) { byId("workspace").classList.add("show-detail"); status(`${samples.length} zufällige Beispieldaten gespeichert. Sie tragen das Tag „${SAMPLE_TAG}“ und lassen sich in den Ersten Schritten wieder entfernen.`); focusAfter("detail-title"); }
+    else selectedId = previous;
   });
 }
 onboarding = initOnboarding({vault:()=>vault,hasRecord:()=>!!remote,ready:()=>ready,busy:()=>busy,login:()=>edit(undefined, true),settings:showSettings,backup:()=>byId("export-backup").click(),hasSamples:()=>!!vault&&hasSampleEntries(vault.entries),addSamples,removeSamples});

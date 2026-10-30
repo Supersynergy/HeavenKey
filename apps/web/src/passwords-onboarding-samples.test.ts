@@ -45,6 +45,17 @@ describe("onboarding sample data", () => {
 		expect(passwords.size).toBe(6);
 	});
 
+	test("consumes exactly one random value per decision", () => {
+		const callsFor = (count: number) => {
+			let calls = 0;
+			buildSampleEntries(count, () => { calls++; return 0.5; });
+			return calls;
+		};
+		// 8 services -> 7 shuffle swaps + one account pick per entry.
+		expect(callsFor(1)).toBe(8);
+		expect(callsFor(3) - callsFor(1)).toBe(2);
+	});
+
 	test("stays bounded when a random source returns edge values", () => {
 		for (const value of [0, 1, Number.NaN, -1, 2]) {
 			const entries = buildSampleEntries(99, () => value);
