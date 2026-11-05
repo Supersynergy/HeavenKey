@@ -389,8 +389,9 @@ $('generate-password').addEventListener('click',()=>void run(async generation=>{
   const scan=await inject(current,'scan',generation);active(generation);
   const anchor=scan.fields.find((field:Field)=>field.anchored);
   const candidates=scan.fields.filter((field:Field)=>field.kind==='new-password' && (!anchor || field.form===anchor.form));
-  const limits=candidates.map((field:Field)=>field.maxLength).filter((limit:number|undefined):limit is number=>!!limit);
+  const limits=candidates.map((field:Field)=>field.maxLength).filter((limit:number|undefined):limit is number=>typeof limit==='number' && limit>=0);
   const maximum=limits.length ? Math.min(128,...limits) : 128;
+  if(maximum<14) throw Error(`Dieses Feld erlaubt höchstens ${maximum} Zeichen. Ein sicheres Generatorpasswort benötigt mindestens 14.`);
   let value='';
   if(($('generator-mode') as HTMLSelectElement).value==='passphrase') {
     value=passphrase();if(value.length>maximum) throw Error(`Die Passphrase überschreitet das Feldlimit (${maximum}). Ein Zufallspasswort wählen.`);

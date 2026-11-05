@@ -98,7 +98,7 @@ function makeEngine() {
         const form=fieldGroup(el);
         if(!forms.has(form)) forms.set(form,crypto.randomUUID());
         const field: Field = { id, field: (P.labelText(el) || el.name || el.id || el.tagName).trim().slice(0, 120), entity: key, score: match.score, hasValue: hasValue(el), sensitive: !!key && high.has(base(key)), secret: !!key && secret.has(base(key)), kind: /\bnew-password\b/i.test(el.autocomplete || '') ? 'new-password' : el.type || el.tagName.toLowerCase(), form:forms.get(form)! };
-        field.maxLength = el.maxLength > 0 ? el.maxLength : undefined;
+        field.maxLength = el.maxLength >= 0 ? el.maxLength : undefined;
         field.anchored = !!req.anchor && anchor?.token === req.anchor && anchor.el === el && anchor.href === location.href && anchor.expires > Date.now();
         targets.set(id, { el, fingerprint: fingerprint(el), boundary: captureBoundary(el), field }); fields.push(field);
         if (req.action === 'capture' && key && !secret.has(base(key)) && (!high.has(base(key)) || req.sensitive) && (!high.has(base(key)) || exactSensitive(el, key)) && !['checkbox','radio'].includes(el.type)) {
@@ -143,7 +143,7 @@ function makeEngine() {
       if (['checkbox','radio'].includes(el.type) && (!req.choices || consent.test(P.tokens(el)))) return null;
       const bp = P.bdayParts(req.entities), value = P.resolveValue(key, req.entities, bp, el);
       if (!value) return null;
-      if (el.maxLength > 0 && value.length > el.maxLength) { blocked.push(target.field.field); return null; }
+      if (el.maxLength >= 0 && value.length > el.maxLength) { blocked.push(target.field.field); return null; }
       return { el, value, target };
     });
     // Consume before dispatching input events: page listeners cannot replay a scan.
@@ -155,7 +155,7 @@ function makeEngine() {
       if (!usable(el) || fingerprint(el) !== target.fingerprint || !sameBoundary(el, target.boundary)) { blocked.push(target.field.field); break; }
       // A previous field's input handler may have changed this field in the meantime.
       if (hasValue(el) && !req.overwrite) continue;
-      if (el.maxLength > 0 && value.length > el.maxLength || secret.has(base(target.field.entity || '')) && !secretDestinationAllowed(el, req.origin)) { blocked.push(target.field.field); break; }
+      if (el.maxLength >= 0 && value.length > el.maxLength || secret.has(base(target.field.entity || '')) && !secretDestinationAllowed(el, req.origin)) { blocked.push(target.field.field); break; }
       const old = { el, value: text(el), checked: !!el.checked, fingerprint: target.fingerprint };
       if (['checkbox','radio'].includes(el.type)) {
         if (!choices(el, value)) continue;

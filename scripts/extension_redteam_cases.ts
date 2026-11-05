@@ -25,6 +25,9 @@ export async function redteamCases({target,popup,targetId,invoke,check}:any) {
 
   await reset();request=await one('firstName');await target.locator('#firstName').evaluate((el:HTMLInputElement)=>el.maxLength=2);
   result=await invoke('fill',request);check('red team: changed field length invalidates the inspected target',!result.ok && await target.locator('#firstName').inputValue()==='');
+  await reset();await target.locator('#password').evaluate((el:HTMLInputElement)=>el.maxLength=0);
+  request=await one('password');result=await invoke('fill',request);
+  check('red team: a zero field limit never means unlimited secret delivery',result.ok && result.value.count===0 && await target.locator('#password').inputValue()==='');
 
   await reset();let scan=await invoke('scan');
   const names=scan.value.fields.filter((f:any)=>['firstName','lastName'].includes(f.entity)).map((f:any)=>({id:f.id,entity:f.entity}));assert.equal(names.length,2);

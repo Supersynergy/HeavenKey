@@ -156,6 +156,8 @@ class _FormProfilesPanelState extends State<FormProfilesPanel> {
                   .whereType<String>()
                   .where((value) => value.isNotEmpty)
                   .join(' · '),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             onTap: widget.vault.busy ? null : () => edit(profile),
             trailing: IconButton(
