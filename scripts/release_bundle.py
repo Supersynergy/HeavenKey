@@ -4,7 +4,6 @@ import hashlib
 import json
 from pathlib import Path
 import re
-import shutil
 import tarfile
 import tomllib
 import zipfile
@@ -61,11 +60,61 @@ def build(directory, commit, tag):
                          'Chrome unpacked; Firefox temporary/unsigned; no store approval',
                          'Hardware verification and independent security audit deferred']}
     (directory / 'RELEASE.json').write_text(json.dumps(report, indent=2) + '\n')
+    package_sums = ''.join(f'{digest(directory / name)}  {name}\n' for name in [*names, 'RELEASE.json', 'PREVIEW.json'])
+    guide = f'''# HeavenKey {version} – App, Computer und Browser
+
+Alle Pakete stammen aus Quellstand `{commit}`. Diese Ausgabe ist eine Vorschau.
+
+## Das passende Paket öffnen
+
+| Gerät | Datei |
+| --- | --- |
+| Android, die meisten aktuellen Handys | HeavenKey-{version}-android-preview-arm64-v8a.apk |
+| Android mit 32-Bit-ARM | HeavenKey-{version}-android-preview-armeabi-v7a.apk |
+| Android x86-64, Emulatoren | HeavenKey-{version}-android-preview-x86_64.apk |
+| Mac mit Apple Silicon | HeavenKey-{version}-macos-arm64.zip |
+| Mac mit Intel-Prozessor | HeavenKey-{version}-macos-x64.zip |
+| Windows x64 | HeavenKey-{version}-windows-x64.zip |
+| Linux x64 / ARM64 | HeavenKey-{version}-linux-x64.tar.gz / HeavenKey-{version}-linux-arm64.tar.gz |
+| Chrome / Chromium | HeavenKey-{version}-extension-chromium.zip |
+| Firefox | HeavenKey-{version}-extension-firefox.zip |
+
+Desktop-Archiv vollständig entpacken. Auf dem Mac `HeavenKey.app`, unter Windows
+`Start HeavenKey.cmd`, unter Linux `start.sh` öffnen. Die jeweilige beiliegende
+Anleitung beschreibt Betriebssystemhinweise und den Datenordner.
+
+Browser-Erweiterung entpacken. In Chrome unter `chrome://extensions` den
+Entwicklermodus und „Entpackte Erweiterung laden“ verwenden. Firefox: unter
+`about:debugging#/runtime/this-firefox` „Temporäres Add-on laden“ und `manifest.json`
+auswählen. Lokales HeavenKey starten, Erweiterung mit einem einmaligen Code koppeln,
+auf der Zielwebsite „Schlüssel auf dieser Website aktivieren“ wählen. Das Menü am
+Feld bietet Login, Name/Adresse, Generator und Verwaltung.
+
+Android benötigt Android 11 oder neuer; Website-Passkeys Android 14. Die Vorschau
+hat eine von der Produktions-App getrennte Kennung und eine Testsignatur. Eine
+bereits installierte Vorschau lässt sich mit einer anderen Testsignatur eventuell
+nicht direkt aktualisieren. Keine Daten werden automatisch übernommen; keinen
+ungesicherten Tresor deinstallieren. Nur Testdaten verwenden. Kein Play-Store-
+Upload, keine dauerhafte Android-Herausgebersignatur, keine Apple-Notarisierung
+oder Browser-Store-Signierung. Vor einem Kanalwechsel eine verschlüsselte Sicherung
+mit getrenntem Schlüssel erstellen und die Wiederherstellung prüfen.
+
+`PACKAGE-SHA256SUMS` prüft die enthaltenen Einzelpakete; die separat veröffentlichte
+`SHA256SUMS` prüft auch dieses Gesamtarchiv. Unter Linux `sha256sum -c
+PACKAGE-SHA256SUMS`, auf macOS `shasum -a 256 -c PACKAGE-SHA256SUMS` verwenden.
+`RELEASE.json` und `PREVIEW.json` enthalten Quellstand, Version und Android-Zertifikat.
+
+[Vollständige README](https://github.com/Supersynergy/HeavenKey/blob/{commit}/README.md)
+· [Release](https://github.com/Supersynergy/HeavenKey/releases/tag/{tag})
+· [Funktions- und Prozesskarten](https://github.com/Supersynergy/HeavenKey/blob/{commit}/docs/AUTOFILL-FLOWS.md)
+'''
     bundle = directory / f'HeavenKey-{version}-all-platforms.zip'
     with zipfile.ZipFile(bundle, 'w', zipfile.ZIP_DEFLATED, compresslevel=3) as archive:
         for name in [*names, 'PREVIEW.json', 'RELEASE.json']:
             archive.write(directory / name, name)
-        for name in ['README.md', 'LICENSE', 'docs/DISTRIBUTION.md', 'docs/AUTOFILL-COMPETITORS.md', 'docs/AUTOFILL-FLOWS.md', 'docs/releases/0.29.0.md']:
+        archive.writestr('README.md', guide)
+        archive.writestr('PACKAGE-SHA256SUMS', package_sums)
+        for name in ['LICENSE', 'docs/DISTRIBUTION.md', 'docs/AUTOFILL-COMPETITORS.md', 'docs/AUTOFILL-FLOWS.md', 'docs/releases/0.29.0.md']:
             archive.write(ROOT / name, name)
     sums = [*names, bundle.name, 'RELEASE.json', 'PREVIEW.json']
     (directory / 'SHA256SUMS').write_text(''.join(f'{digest(directory / name)}  {name}\n' for name in sums))
