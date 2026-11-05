@@ -8,6 +8,11 @@ on:
       - 'scripts/package_release.py'
       - 'scripts/release_bundle.py'
   push:
+    branches: [main]
+    paths:
+      - 'Cargo.toml'
+      - '.github/workflows/release.yml'
+      - 'scripts/release_bundle.py'
     tags: ['v*-preview.*']
   workflow_dispatch:
 
@@ -95,7 +100,7 @@ jobs:
           retention-days: 14
 
   publish:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name != 'pull_request'
     needs: [verify, android, desktop]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -115,11 +120,16 @@ jobs:
           name: android-preview-${{ github.sha }}
           path: dist/release-input
       - name: Validate complete source-bound bundle
-        run: python3 scripts/release_bundle.py dist/release-input --commit "$GITHUB_SHA" --tag "$GITHUB_REF_NAME"
+        run: |
+          version=$(python3 -c "import tomllib;print(tomllib.load(open('Cargo.toml','rb'))['workspace']['package']['version'])")
+          tag="v${version}-preview.1"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then tag="$GITHUB_REF_NAME"; fi
+          echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
+          python3 scripts/release_bundle.py dist/release-input --commit "$GITHUB_SHA" --tag "$tag"
       - name: Publish all platforms together
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          gh release create "$GITHUB_REF_NAME" dist/release-input/HeavenKey-* dist/release-input/SHA256SUMS dist/release-input/RELEASE.json dist/release-input/PREVIEW.json --verify-tag --prerelease --latest=false --title "HeavenKey 0.29 – Schlüssel, Passwörter & Formulare" --notes-file docs/releases/0.29.0.md
+          gh release create "$RELEASE_TAG" dist/release-input/HeavenKey-* dist/release-input/SHA256SUMS dist/release-input/RELEASE.json dist/release-input/PREVIEW.json --target "$GITHUB_SHA" --prerelease --latest=false --title "HeavenKey 0.29 – Schlüssel, Passwörter & Formulare" --notes-file docs/releases/0.29.0.md
