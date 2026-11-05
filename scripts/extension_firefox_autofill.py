@@ -273,6 +273,7 @@ def main():
                 cmd("/window", {"handle": popup_handle})
                 click("#undo-fill")
                 wait(lambda: "2 Felder zurückgesetzt" in status())
+                click('[data-task="template"]')
                 click('[data-id="firefox-profile"]')
                 click("#scan-page")
                 wait(lambda: visible("fill-confirmation"))

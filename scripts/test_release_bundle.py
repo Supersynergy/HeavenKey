@@ -20,7 +20,8 @@ class BundleTests(unittest.TestCase):
         self.version = tomllib.loads((release_bundle.ROOT / 'Cargo.toml').read_text())['workspace']['package']['version']
         self.commit = 'a' * 40
         self.tag = f'v{self.version}-preview.1'
-        self.metadata = {'version': self.version, 'source_commit': self.commit, 'source_fingerprint': 'b' * 64}
+        binary = b'Synthetic desktop bytes, never an executable'
+        self.metadata = {'version': self.version, 'source_commit': self.commit, 'source_fingerprint': 'b' * 64, 'binary_sha256': hashlib.sha256(binary).hexdigest()}
         for platform in ['macos-arm64', 'macos-x64', 'windows-x64', 'linux-arm64', 'linux-x64']:
             name = f'HeavenKey-{self.version}-{platform}'
             data = json.dumps(self.metadata).encode()
@@ -29,9 +30,13 @@ class BundleTests(unittest.TestCase):
                     info = tarfile.TarInfo(name + '/manifest.json')
                     info.size = len(data)
                     archive.addfile(info, io.BytesIO(data))
+                    info = tarfile.TarInfo(name + '/heavenkey')
+                    info.size = len(binary)
+                    archive.addfile(info, io.BytesIO(binary))
             else:
                 with zipfile.ZipFile(self.directory / (name + '.zip'), 'w') as archive:
                     archive.writestr(name + '/manifest.json', data)
+                    archive.writestr(name + ('/HeavenKey.exe' if platform == 'windows-x64' else '/heavenkey'), binary)
         for browser in ['chromium', 'firefox']:
             with zipfile.ZipFile(self.directory / f'HeavenKey-{self.version}-extension-{browser}.zip', 'w') as archive:
                 archive.writestr('BUILD.json', json.dumps(self.metadata))
@@ -48,7 +53,7 @@ class BundleTests(unittest.TestCase):
         (self.directory / 'PREVIEW.json').write_text(json.dumps(preview))
 
     def test_complete_download_contains_install_guide_and_verifiable_inner_packages(self):
-        release_bundle.build(self.directory, self.commit, self.tag)
+        release_bundle.build(self.directory, self.commit, self.tag, self.metadata['source_fingerprint'])
         with zipfile.ZipFile(self.directory / f'HeavenKey-{self.version}-all-platforms.zip') as archive:
             self.assertIn('chrome://extensions', archive.read('README.md').decode())
             sums = archive.read('PACKAGE-SHA256SUMS').decode().splitlines()
@@ -63,8 +68,20 @@ class BundleTests(unittest.TestCase):
             archive.writestr('BUILD.json', json.dumps({**self.metadata, 'source_commit': 'c' * 40}))
             archive.writestr('manifest.json', json.dumps({'version': self.version}))
             archive.writestr('inline.js', '// synthetic fixture only')
-        with self.assertRaises(AssertionError):
-            release_bundle.build(self.directory, self.commit, self.tag)
+        with self.assertRaisesRegex(ValueError, 'Stale source'):
+            release_bundle.build(self.directory, self.commit, self.tag, self.metadata['source_fingerprint'])
         (self.directory / name).unlink()
         with self.assertRaisesRegex(ValueError, 'Missing release package'):
-            release_bundle.build(self.directory, self.commit, self.tag)
+            release_bundle.build(self.directory, self.commit, self.tag, self.metadata['source_fingerprint'])
+
+    def test_matching_but_stale_platform_fingerprints_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'checked-out build inputs'):
+            release_bundle.build(self.directory, self.commit, self.tag, 'c' * 64)
+
+    def test_modified_desktop_binary_is_rejected(self):
+        name = f'HeavenKey-{self.version}-windows-x64'
+        with zipfile.ZipFile(self.directory / (name + '.zip'), 'w') as archive:
+            archive.writestr(name + '/manifest.json', json.dumps(self.metadata))
+            archive.writestr(name + '/HeavenKey.exe', b'changed synthetic bytes')
+        with self.assertRaisesRegex(ValueError, 'Desktop binary mismatch'):
+            release_bundle.build(self.directory, self.commit, self.tag, self.metadata['source_fingerprint'])

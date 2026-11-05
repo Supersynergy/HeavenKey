@@ -196,11 +196,11 @@ def desktop(target):
             "PASSWORD-MANAGER-VERIFICATION.md", "PASSWORD-MANAGER-RESEARCH-TOOLS.md",
             "ACCESS-AND-SHARING.md", "AGENT-BROKER.md", "AGENT-SANDBOX.md", "PROTECTED-FLOW.md", "PROTECTED-THREAT-MODEL.md", "VAULT-KDF.md", "TRANSFER-BROKER.md", "SSH-KEYS.md",
             "password-manager-matrix.json", "LICENSING.md",
-            "AUTOFILL-FLOWS.md", "AUTOFILL-COMPETITORS.md", "DISTRIBUTION.md",
+            "AUTOFILL-FLOWS.md", "AUTOFILL-COMPETITORS.md", "DISTRIBUTION.md", "REVIEW-0.30.md",
         ):
             shutil.copyfile(ROOT / "docs" / name, directory / name)
         (directory / "releases").mkdir()
-        shutil.copyfile(ROOT / "docs/releases/0.29.0.md", directory / "releases/0.29.0.md")
+        shutil.copyfile(ROOT / f"docs/releases/{VERSION}.md", directory / f"releases/{VERSION}.md")
         shutil.copyfile(ROOT / "scripts/broker.rs", directory / "broker.rs")
         dependency_notices(directory)
         shutil.copyfile(ROOT / "docs/licenses/noble-hashes-MIT.txt", directory / "licenses/noble-hashes-MIT.txt")

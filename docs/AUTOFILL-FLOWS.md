@@ -17,6 +17,22 @@ Das Webseiten-Menü enthält nur vier feste Aktionen. Weder Passwortwerte noch
 Profilnamen werden darin angezeigt. Ein Klick öffnet das vertrauenswürdige
 Erweiterungsfenster; Entsperrung und Auswahl finden dort statt.
 
+## Aufgabenorientierter Einstieg (0.30)
+
+Im Erweiterungsfenster führen **Anmelden**, **Formular**, **Neues Passwort** und
+**Verwalten** direkt zu den passenden Einträgen. Logins anderer Herkünfte sind
+standardmäßig ausgeblendet; „Logins anderer Websites anzeigen“ bzw. „Verwalten“
+macht sie bewusst zugänglich. Das erweitert keine Füllberechtigung.
+
+Der Schlüssel priorisiert am neuen Passwortfeld den Generator und an Kontakt-
+und Adressfeldern das Profil. Das Menü lässt sich mit Pfeiltasten sowie Home/End
+bedienen; Escape schließt es und gibt den Fokus an den Schlüssel zurück.
+
+Die Anzeige führt durch Auswahl → Prüfung → Freigabe. Vor dem Füllen zeigt sie
+Anzahl, Geheimnisse, Überschreibregel und „kein Absenden“. Die Anzahl ist die
+Auswahl, keine Garantie, dass jedes Feld gefüllt werden kann: fehlende Freigaben,
+zwischenzeitlich befüllte Werte und Sicherheitsregeln können Felder auslassen.
+
 ## Prozesskarte: Anmeldung und Kontaktformular
 
 ```mermaid
@@ -34,7 +50,8 @@ flowchart TD
 ```
 
 Logins verlangen eine exakte Übereinstimmung von Schema, Host und Port. Ein
-angeklicktes Feld grenzt die Vorwahl auf sein Formular ein. Neue Passwortfelder
+angeklicktes Feld begrenzt Prüfung und Füllung auf seine Formulargruppe; ein
+abgelaufener Klick wechselt nicht still zu einem anderen Formular. Neue Passwortfelder
 erhalten keine bestehenden Login-Passwörter. Einmalcodes werden bei Vorschau und
 Freigabe frisch berechnet. Bereits eingegebene Werte bleiben standardmäßig stehen.
 Finanz- und Identitätswerte benötigen ihre zusätzliche ausdrückliche Freigabe.
@@ -96,10 +113,20 @@ Funktion der Desktop-Erweiterungen, kein Bildschirm-Overlay über Android-Apps.
   obersten Frame. Bis zu 32 Herkunftsfreigaben, 60 sichtbare Schlüssel, 200
   geprüfte Eingabefelder pro Aktualisierung begrenzen den Aufwand.
 - Seitenwechsel, ersetzte Felder, geänderte Feldidentität und Sperren verhindern
-  die Nutzung einer veralteten Vorschau. Die maximale Sitzung ist weiterhin
-  zwei Minuten Inaktivität.
+  die Nutzung einer veralteten Vorschau. Auch Formularzuordnung, Zieladresse und
+  Feldlänge bleiben an die Vorschau gebunden. Klick und Vorschau gelten je höchstens
+  zwei Minuten; eine Vorschau kann nur einmal verwendet werden. Die Sitzung sperrt
+  weiterhin nach zwei Minuten Inaktivität.
+- Passwort und OTP werden nicht in ein Formular mit abweichender Zielherkunft
+  eingefügt. Das umfasst alternative `formaction`-Ziele, auch an extern zugeordneten
+  Absende-Buttons. Bei legitimen Formularen mit einem anderen Anmeldeserver ist
+  deshalb manuelle Eingabe erforderlich.
+- Vor jedem einzelnen Schreibvorgang werden Zustand, Kontext und vorhandener Wert
+  erneut geprüft. Ereignisbehandler eines vorherigen Feldes können eine spätere
+  Eingabe nicht still überschreiben lassen. Nur ausgewählte und freigegebene
+  Quellwerte werden an den isolierten Formularcode übergeben.
 - Die Website kann absichtlich eingefügte Werte wie manuell eingegebene Werte
   lesen. Es wird kein Formular automatisch abgesendet und keine Zahlung bestätigt.
 
 Vergleich und Funktionskarte: [zehn Referenzprodukte](AUTOFILL-COMPETITORS.md).
-Release- und Signierungsstatus: [0.29](releases/0.29.0.md).
+Release- und Signierungsstatus: [0.30](releases/0.30.0.md). Interner Review: [Sicherheit und Priorisierung](REVIEW-0.30.md).

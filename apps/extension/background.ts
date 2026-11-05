@@ -29,7 +29,7 @@ extension.runtime.onMessage.addListener((message: any, sender: any, respond: (va
     if (!Array.isArray(sites) || !sites.includes(site.origin) || !await extension.permissions.contains({ origins: [site.pattern] })) throw Error('Website nicht freigegeben.');
     const [anchor] = await extension.scripting.executeScript({ target: { tabId: tab.id, frameIds: [0] }, world: 'ISOLATED', func: (token: string, href: string) => {
       const selected = (globalThis as any).__heavenkeyInlineTarget;
-      return !!selected && selected.token === token && selected.href === href && location.href === href && selected.expires > Date.now() && selected.el.isConnected;
+      return !!selected && selected.token === token && selected.href === href && location.href === href && selected.expires > Date.now() && selected.el.isConnected && typeof selected.valid === 'function' && selected.valid();
     }, args: [message.token, tab.url] });
     if (!anchor?.result || Date.now() - (lastOpen.get(tab.id) || 0) < 1000) throw Error('Feldaktion abgelaufen. Erneut auf den Schlüssel klicken.');
     lastOpen.set(tab.id, Date.now());
