@@ -117,6 +117,7 @@ async function acceptOpened(opened: Awaited<ReturnType<typeof openVault>>, nextR
   key=opened.key;vault=opened.vault;envelope=opened.envelope;revision=nextRevision;lastActivity=Date.now();
   try { siteOrigin=(await target()).origin; } catch { siteOrigin=''; }
   active(generation); $('site-origin').textContent=siteOrigin || 'Öffne HeavenKey auf einer HTTPS-Webseite.';
+  if(!editLogin && siteOrigin) { input('login-url').value=siteOrigin; input('login-title').value=new URL(siteOrigin).hostname; }
   connected();$('smart-workspace').hidden=false;$('lock-extension').hidden=false;renderSources();status('Entsperrt. Passende Logins stehen oben, gespeicherte Profile dienen als Vorlagen.');focusAfter(input('vault-search'));
   const intent=new URL(location.href).searchParams.get('intent');
   if(intent==='generate') { startLogin(); focusAfter($('generate-password')); }
