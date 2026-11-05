@@ -4,9 +4,9 @@ import './vendor/fill.js';
 import { PROFILE_KEYS, HIGH_FIELDS } from '../../packages/forms/schema';
 
 type Entities = Record<string, string>;
-type Field = { id: string; field: string; entity: string | null; score: number; hasValue: boolean; sensitive: boolean; secret: boolean; kind: string; form: string };
+type Field = { id: string; field: string; entity: string | null; score: number; hasValue: boolean; sensitive: boolean; secret: boolean; kind: string; form: string; maxLength?: number; anchored?: boolean };
 type Target = { el: HTMLElement; fingerprint: string; field: Field };
-type Request = { action: 'scan' | 'fill' | 'undo' | 'capture' | 'clear'; origin: string; href: string; scan?: string; entities?: Entities; selected?: { id: string; entity: string }[]; sensitive?: boolean; secrets?: boolean; overwrite?: boolean; choices?: boolean };
+type Request = { action: 'scan' | 'fill' | 'undo' | 'capture' | 'clear'; origin: string; href: string; scan?: string; entities?: Entities; selected?: { id: string; entity: string }[]; sensitive?: boolean; secrets?: boolean; overwrite?: boolean; choices?: boolean; generated?: boolean; anchor?: string };
 const root = globalThis as any;
 const P = root.HeavenKeyFieldPrimitives;
 const EX = root.SmartFieldExtract;
@@ -90,6 +90,9 @@ function makeEngine() {
         const form=el.form || el.closest('form') || document.documentElement;
         if(!forms.has(form)) forms.set(form,crypto.randomUUID());
         const field: Field = { id, field: (P.labelText(el) || el.name || el.id || el.tagName).trim().slice(0, 120), entity: key, score: match.score, hasValue: hasValue(el), sensitive: !!key && high.has(base(key)), secret: !!key && secret.has(base(key)), kind: /\bnew-password\b/i.test(el.autocomplete || '') ? 'new-password' : el.type || el.tagName.toLowerCase(), form:forms.get(form)! };
+        field.maxLength = el.maxLength > 0 ? el.maxLength : undefined;
+        const anchor = root.__heavenkeyInlineTarget;
+        field.anchored = !!req.anchor && anchor?.token === req.anchor && anchor.el === el && anchor.href === location.href && anchor.expires > Date.now();
         targets.set(id, { el, fingerprint: fingerprint(el), field }); fields.push(field);
         if (req.action === 'capture' && key && !secret.has(base(key)) && (!high.has(base(key)) || req.sensitive) && (!high.has(base(key)) || exactSensitive(el, key)) && !['checkbox','radio'].includes(el.type)) {
           const value = text(el).trim(); if (value && value.length <= 10000 && PROFILE_KEYS.includes(key as any) && !captured[key]) captured[key] = value;
@@ -124,13 +127,15 @@ function makeEngine() {
       const target = targets.get(selection.id), key = selection.entity;
       if (!target || !allowed(key) || !usable(target.el) || fingerprint(target.el) !== target.fingerprint) throw new Error('Ein Feld hat sich geändert. Bitte erneut prüfen.');
       const el: any = target.el, original = target.field.entity;
-      if (secret.has(base(key)) && target.field.kind === 'new-password') { blocked.push(target.field.field); return null; }
+      if (secret.has(base(key)) && target.field.kind === 'new-password' && !(req.generated && key === 'password')) { blocked.push(target.field.field); return null; }
+      if (req.generated && key === 'password' && target.field.kind !== 'new-password') { blocked.push(target.field.field); return null; }
       // Re-mapping cannot downgrade the sensitivity of the actual target.
       if ((original && (high.has(base(original)) || secret.has(base(original))) && base(original) !== base(key)) || (high.has(base(key)) && (!req.sensitive || !exactSensitive(el, key))) || (secret.has(base(key)) && (!req.secrets || !exactSensitive(el, key)))) { blocked.push(target.field.field); return null; }
       if (hasValue(el) && !req.overwrite) return null;
       if (['checkbox','radio'].includes(el.type) && (!req.choices || consent.test(P.tokens(el)))) return null;
       const bp = P.bdayParts(req.entities), value = P.resolveValue(key, req.entities, bp, el);
       if (!value) return null;
+      if (el.maxLength > 0 && value.length > el.maxLength) { blocked.push(target.field.field); return null; }
       return { el, value, target };
     });
     for (const item of planned) {

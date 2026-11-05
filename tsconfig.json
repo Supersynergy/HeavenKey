@@ -12,9 +12,11 @@
     "skipLibCheck": true
   },
   "include": [
-    "apps/web/src/**/*.ts"
+    "apps/web/src/**/*.ts",
+    "apps/extension/**/*.ts"
   ],
   "exclude": [
-    "apps/web/src/**/*.test.ts"
+    "apps/web/src/**/*.test.ts",
+    "apps/extension/**/*.test.ts"
   ]
 }

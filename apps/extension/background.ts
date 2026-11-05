@@ -1,3 +1,4 @@
+import { website } from './site-access';
 const extension = (globalThis as any).browser || (globalThis as any).chrome;
 async function installMenus() {
   await extension.contextMenus.removeAll();
@@ -16,3 +17,26 @@ extension.contextMenus.onClicked.addListener(async (info: any, tab: any) => {
   await extension.tabs.create({ url: extension.runtime.getURL(`popup.html?target=${tab.id}&intent=${intent}`) });
   // The preview retrieves the current selection only after an explicit click.
 });
+
+const lastOpen = new Map<number, number>();
+extension.runtime.onMessage.addListener((message: any, sender: any, respond: (value: unknown) => void) => {
+  if (message?.type !== 'heavenkey.inline.open') return false;
+  void (async () => {
+    if (sender.id !== extension.runtime.id || sender.frameId !== 0 || !sender.tab?.id || !['login','template','generate','manage'].includes(message.intent) || typeof message.token !== 'string' || !/^[a-f0-9-]{36}$/.test(message.token)) throw Error('Ungültige Feldaktion.');
+    const tab = await extension.tabs.get(sender.tab.id), site = website(tab.url);
+    if (message.href !== tab.url || sender.url !== tab.url) throw Error('Die Zielseite wurde gewechselt.');
+    const sites = (await extension.storage.local.get('heavenkey.inline.sites'))['heavenkey.inline.sites'];
+    if (!Array.isArray(sites) || !sites.includes(site.origin) || !await extension.permissions.contains({ origins: [site.pattern] })) throw Error('Website nicht freigegeben.');
+    const [anchor] = await extension.scripting.executeScript({ target: { tabId: tab.id, frameIds: [0] }, world: 'ISOLATED', func: (token: string, href: string) => {
+      const selected = (globalThis as any).__heavenkeyInlineTarget;
+      return !!selected && selected.token === token && selected.href === href && location.href === href && selected.expires > Date.now() && selected.el.isConnected;
+    }, args: [message.token, tab.url] });
+    if (!anchor?.result || Date.now() - (lastOpen.get(tab.id) || 0) < 1000) throw Error('Feldaktion abgelaufen. Erneut auf den Schlüssel klicken.');
+    lastOpen.set(tab.id, Date.now());
+    const params = new URLSearchParams({ target: String(tab.id), intent: message.intent, anchor: message.token });
+    await extension.windows.create({ url: extension.runtime.getURL(`popup.html?${params}`), type: 'popup', width: 500, height: 760 });
+    respond({ ok: true });
+  })().catch(() => respond({ ok: false }));
+  return true;
+});
+extension.tabs.onRemoved.addListener((id: number) => lastOpen.delete(id));

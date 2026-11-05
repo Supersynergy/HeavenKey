@@ -22,3 +22,13 @@
 | Matching site and one-form login preview | Exact-origin sort; preselected empty login fields, final origin consent |
 | Optional biometric/PIN unlock | Owner WebAuthn PRF with 90-second, single-use encrypted extension handoff |
 | Registration protection | New-password fields reject saved passwords, including explicit remapping |
+
+| Per-site field key and four action choices | `inline.ts`; closed shadow, no value reads, trusted clicks only |
+| Exact-origin activation and opaque field anchor | `site-access.ts`, background validation and coordinator |
+| Login create/update and previous-password preservation | `smart-popup.ts`; encrypted CAS before generated fill |
+| Random passwords and six-word EFF passphrases | `generator.ts`; existing CSPRNG, field length limits |
+| New-password and confirmation fill | Separate generated provenance; no current-password delivery |
+| Private/business profile editor | Browser quick editor; Android profile entry points |
+
+[Ten reference products and feature maps](../../docs/AUTOFILL-COMPETITORS.md) ·
+[Process maps](../../docs/AUTOFILL-FLOWS.md).

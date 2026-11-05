@@ -7,17 +7,18 @@ const source = join(root, 'apps/extension');
 for (const browser of ['chromium','firefox']) {
   const out = join(root, 'dist', `extension-source-${browser}`);
   await rm(out, { recursive: true, force: true }); await mkdir(out, { recursive: true });
-  for (const entry of ['smart-popup.ts','content.ts','background.ts']) {
+  for (const entry of ['smart-popup.ts','content.ts','background.ts','inline.ts']) {
     const result = await Bun.build({ entrypoints: [join(source, entry)], outdir: out, target: 'browser', format: 'iife', minify: false, naming: entry.replace('.ts','.js') });
     if (!result.success) throw new AggregateError(result.logs, `Extension build failed: ${entry}`);
   }
   for (const name of ['popup.html','popup.css','popup.js','settings.js','THIRD-PARTY-NOTICE.md','EXTENSION-CONTRACT.md','FEATURE-MAP.md']) await copyFile(join(source, name), join(out, name));
   await copyFile(join(root, 'LICENSE'), join(out, 'LICENSE'));
   await copyFile(join(root, 'docs/licenses/noble-hashes-MIT.txt'), join(out, 'noble-hashes-MIT.txt'));
+  await copyFile(join(root, 'apps/mobile/assets/NOTICE.md'), join(out, 'EFF-WORDLIST-NOTICE.md'));
   const manifest: any = {
     manifest_version: 3, name: 'HeavenKey', version,
     description: 'Lokaler verschlüsselter Tresor und Formularhilfe mit deiner Freigabe.',
-    permissions: ['activeTab','scripting','storage','contextMenus'], optional_host_permissions: ['http://localhost/*'],
+    permissions: ['activeTab','scripting','storage','contextMenus'], optional_host_permissions: ['https://*/*','http://localhost/*','http://127.0.0.1/*','http://[::1]/*'],
     action: { default_popup: 'popup.html', default_title: 'HeavenKey öffnen' },
     commands: { _execute_action: { suggested_key: { default: 'Ctrl+Shift+Y', mac: 'Command+Shift+Y' }, description: 'HeavenKey öffnen' } },
     content_security_policy: { extension_pages: "default-src 'self'; script-src 'self'; object-src 'none'; connect-src http://localhost:*; img-src 'self' data:; style-src 'self'; base-uri 'none'; form-action 'none'" },

@@ -7,6 +7,7 @@ import { resolve, join } from 'node:path';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { createVault, openVault } from '../apps/web/src/passwords-crypto';
+import { inlineCases } from './extension_inline_cases';
 const root = resolve(import.meta.dir,'..');
 const temporary = await mkdtemp(join(tmpdir(),'heavenkey-smartfield-'));
 const binary = resolve(process.env.HEAVENKEY_BINARY || 'target/debug/uac-api');
@@ -164,6 +165,8 @@ try {
   const signupFill=await invoke('fill',{scan:signupScan.value.scan,entities:payload,selected:[{id:signup.id,entity:'password'}],secrets:true});
   check('saved login password never fills a new-password registration field',signupFill.ok && signupFill.value.count===0 && await target.locator('#signup-secret').inputValue()==='');
 
+  if(!process.argv.includes('--engine-only')) await inlineCases({browser,popup,target,appApi,master,check});
+
   if(!process.argv.includes('--engine-only')) {
     await mkdir(join(root,'apps/extension/evidence'),{recursive:true});await popup.setViewportSize({width:440,height:900});await popup.screenshot({path:join(root,'apps/extension/evidence/popup-unlocked.png'),fullPage:true});
     await popup.locator('#lock-extension').click();await popup.locator('#extension-master').fill('Synthetic-wrong-master-password');await popup.locator('#unlock-extension').click();await popup.waitForFunction(()=>document.querySelector('#smart-status')!.textContent!.includes('Entsperren fehlgeschlagen'));check('wrong master cannot unlock actual Rust ciphertext',await popup.locator('#smart-workspace').isHidden());
@@ -172,7 +175,7 @@ try {
     await popup.screenshot({path:join(root,'apps/extension/evidence/popup-disconnected.png'),fullPage:true});
   }
 
-  const sourcePaths=['scripts/extension_autofill_e2e.ts','apps/extension/popup.html','apps/extension/popup.css','apps/extension/popup.js','apps/extension/settings.js','apps/extension/content.ts','apps/extension/smart-popup.ts','apps/extension/background.ts','apps/extension/unlock-channel.ts','apps/web/src/passwords-extension-unlock.ts','apps/web/src/passwords-access.ts','apps/extension/vendor/extract.js','apps/extension/vendor/fill.js','apps/web/src/passwords-crypto.ts','packages/forms/schema.ts','scripts/build_extension.ts'];
+  const sourcePaths=['scripts/extension_inline_cases.ts','apps/extension/inline.ts','apps/extension/generator.ts','apps/extension/site-access.ts','apps/mobile/assets/eff_large_wordlist.txt','scripts/extension_autofill_e2e.ts','apps/extension/popup.html','apps/extension/popup.css','apps/extension/popup.js','apps/extension/settings.js','apps/extension/content.ts','apps/extension/smart-popup.ts','apps/extension/background.ts','apps/extension/unlock-channel.ts','apps/web/src/passwords-extension-unlock.ts','apps/web/src/passwords-access.ts','apps/extension/vendor/extract.js','apps/extension/vendor/fill.js','apps/web/src/passwords-crypto.ts','packages/forms/schema.ts','scripts/build_extension.ts'];
   const source_sha256=Object.fromEntries(await Promise.all(sourcePaths.map(async path=>[path,createHash('sha256').update(await readFile(join(root,path))).digest('hex')])));
   const report={source_sha256,pass:true,browser:browserPath,real_unpacked_extension:true,real_rust_pairing:!process.argv.includes('--engine-only'),mocks:false,test_only_manifest_grant:'http://localhost/*',native_optional_permission_prompt:'not automated: headless request waits for browser UI',synthetic_only:true,binary_sha256:createHash('sha256').update(await readFile(binary)).digest('hex'),manifest_sha256:createHash('sha256').update(await readFile(join(extension,'manifest.json'))).digest('hex'),cases,errors};
   await writeFile(join(root,process.argv.includes('--engine-only')?'apps/extension/ENGINE-RECEIPT.json':'apps/extension/TEST-RECEIPT.json'),JSON.stringify(report,null,2)+'\n');
