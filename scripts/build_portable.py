@@ -45,6 +45,8 @@ def source_fingerprint():
             "scripts/broker.rs",
             "scripts/build_agent_sandbox.ts",
             "scripts/sandbox/Dockerfile",
+            "apps/mobile/assets/eff_large_wordlist.txt",
+            "apps/mobile/assets/NOTICE.md",
         )
     ]
     for name in ("apps/api", "apps/desktop", "crates", "apps/web/src", "apps/demo", "apps/extension", "packages/forms", "packages/transfers", "packages/protected"):

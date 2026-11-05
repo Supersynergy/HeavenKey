@@ -7,6 +7,7 @@ import { resolve, join } from 'node:path';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { createVault, openVault } from '../apps/web/src/passwords-crypto';
+import { inlineCases } from './extension_inline_cases';
 const root = resolve(import.meta.dir,'..');
 const temporary = await mkdtemp(join(tmpdir(),'heavenkey-smartfield-'));
 const binary = resolve(process.env.HEAVENKEY_BINARY || 'target/debug/uac-api');
@@ -88,7 +89,7 @@ try {
   await popup.locator('#include-secrets').check();await popup.locator('#confirm-origin').check();await popup.locator('#fill-selected').click();await uiStatus('3 Felder gefüllt');
   check('exact-origin login and fresh TOTP fill through real popup',await target.locator('#username').inputValue()==='alex@example.invalid'&&await target.locator('#password').inputValue()==='Synthetic-login-only#42'&&/^\d{6}$/.test(await target.locator('#otp').inputValue()));
   await popup.locator('#undo-fill').click();await uiStatus('3 Felder zurückgesetzt');
-  await popup.locator('#smart-workspace details > summary').click();await popup.locator('#source-text').fill('First name: Jamie\nLast name: Example\nEmail: jamie@example.invalid');await popup.locator('#extract-text').click();await popup.locator('[data-entity="firstName"]').fill('Jana');await popup.locator('#profile-title').fill('Saved from editable text');await popup.locator('#save-profile').click();await uiStatus('Profil verschlüsselt gespeichert');
+  await popup.locator('#text-import > summary').click();await popup.locator('#source-text').fill('First name: Jamie\nLast name: Example\nEmail: jamie@example.invalid');await popup.locator('#extract-text').click();await popup.locator('[data-entity="firstName"]').fill('Jana');await popup.locator('#profile-title').fill('Saved from editable text');await popup.locator('#save-profile').click();await uiStatus('Profil verschlüsselt gespeichert');
   const saved=await appApi(''),opened=await openVault(saved.record,master);check('text extraction/edit/encrypted CAS profile save preserves all logins and profiles',opened.vault.version===2&&opened.vault.entries.length===2&&opened.vault.profiles?.length===2&&opened.vault.profiles.some(p=>p.title==='Saved from editable text'&&p.entities.firstName==='Jana'));
   const disk=await readFile(join(temporary,'data/passwords.sqlite'));check('real persisted SQLite has no profile plaintext or login secrets',!disk.includes(Buffer.from('Jana'))&&!disk.includes(Buffer.from('Synthetic-login-only#42'))&&!JSON.stringify(saved).includes(master));
   await appApi('',{expected_revision:saved.revision,record:saved.record});await popup.locator('[data-entity="firstName"]').fill('Conflict edit');await popup.locator('#save-profile').click();await popup.locator('#smart-workspace').waitFor({state:'hidden'});check('stale extension revision cannot overwrite vault; popup locks on conflict',!JSON.stringify(await appApi('')).includes('Conflict edit'));
@@ -164,6 +165,8 @@ try {
   const signupFill=await invoke('fill',{scan:signupScan.value.scan,entities:payload,selected:[{id:signup.id,entity:'password'}],secrets:true});
   check('saved login password never fills a new-password registration field',signupFill.ok && signupFill.value.count===0 && await target.locator('#signup-secret').inputValue()==='');
 
+  if(!process.argv.includes('--engine-only')) await inlineCases({browser,popup,target,appApi,master,check});
+
   if(!process.argv.includes('--engine-only')) {
     await mkdir(join(root,'apps/extension/evidence'),{recursive:true});await popup.setViewportSize({width:440,height:900});await popup.screenshot({path:join(root,'apps/extension/evidence/popup-unlocked.png'),fullPage:true});
     await popup.locator('#lock-extension').click();await popup.locator('#extension-master').fill('Synthetic-wrong-master-password');await popup.locator('#unlock-extension').click();await popup.waitForFunction(()=>document.querySelector('#smart-status')!.textContent!.includes('Entsperren fehlgeschlagen'));check('wrong master cannot unlock actual Rust ciphertext',await popup.locator('#smart-workspace').isHidden());
@@ -172,7 +175,7 @@ try {
     await popup.screenshot({path:join(root,'apps/extension/evidence/popup-disconnected.png'),fullPage:true});
   }
 
-  const sourcePaths=['scripts/extension_autofill_e2e.ts','apps/extension/popup.html','apps/extension/popup.css','apps/extension/popup.js','apps/extension/settings.js','apps/extension/content.ts','apps/extension/smart-popup.ts','apps/extension/background.ts','apps/extension/unlock-channel.ts','apps/web/src/passwords-extension-unlock.ts','apps/web/src/passwords-access.ts','apps/extension/vendor/extract.js','apps/extension/vendor/fill.js','apps/web/src/passwords-crypto.ts','packages/forms/schema.ts','scripts/build_extension.ts'];
+  const sourcePaths=['scripts/extension_inline_cases.ts','apps/extension/inline.ts','apps/extension/generator.ts','apps/extension/site-access.ts','apps/mobile/assets/eff_large_wordlist.txt','scripts/extension_autofill_e2e.ts','apps/extension/popup.html','apps/extension/popup.css','apps/extension/popup.js','apps/extension/settings.js','apps/extension/content.ts','apps/extension/smart-popup.ts','apps/extension/background.ts','apps/extension/unlock-channel.ts','apps/web/src/passwords-extension-unlock.ts','apps/web/src/passwords-access.ts','apps/extension/vendor/extract.js','apps/extension/vendor/fill.js','apps/web/src/passwords-crypto.ts','packages/forms/schema.ts','scripts/build_extension.ts'];
   const source_sha256=Object.fromEntries(await Promise.all(sourcePaths.map(async path=>[path,createHash('sha256').update(await readFile(join(root,path))).digest('hex')])));
   const report={source_sha256,pass:true,browser:browserPath,real_unpacked_extension:true,real_rust_pairing:!process.argv.includes('--engine-only'),mocks:false,test_only_manifest_grant:'http://localhost/*',native_optional_permission_prompt:'not automated: headless request waits for browser UI',synthetic_only:true,binary_sha256:createHash('sha256').update(await readFile(binary)).digest('hex'),manifest_sha256:createHash('sha256').update(await readFile(join(extension,'manifest.json'))).digest('hex'),cases,errors};
   await writeFile(join(root,process.argv.includes('--engine-only')?'apps/extension/ENGINE-RECEIPT.json':'apps/extension/TEST-RECEIPT.json'),JSON.stringify(report,null,2)+'\n');

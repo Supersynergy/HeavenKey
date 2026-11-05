@@ -1,0 +1,136 @@
+name: HeavenKey complete preview release
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/release.yml'
+      - 'scripts/build_portable.py'
+      - 'scripts/package_release.py'
+      - 'scripts/release_bundle.py'
+  push:
+    branches: [main]
+    paths:
+      - 'Cargo.toml'
+      - '.github/workflows/release.yml'
+      - 'scripts/release_bundle.py'
+    tags: ['v*-preview.*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: heavenkey-complete-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/ci.yml
+
+  android:
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/mobile.yml
+
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            target: aarch64-apple-darwin
+          - runner: macos-15-intel
+            target: x86_64-apple-darwin
+          - runner: ubuntu-24.04
+            target: x86_64-pc-windows-gnu
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: 1.4.2
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: nightly-2026-10-11
+          components: rustfmt, clippy
+          targets: ${{ matrix.target }}
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y pkg-config libssl-dev libdbus-1-dev gcc-mingw-w64-x86-64
+      - name: Pinned musl build tools
+        if: contains(matrix.target, 'linux-musl')
+        run: |
+          python3 -m venv "$RUNNER_TEMP/zig-tools"
+          "$RUNNER_TEMP/zig-tools/bin/pip" install ziglang==0.15.2
+          mkdir -p "$RUNNER_TEMP/heavenkey-bin"
+          "$RUNNER_TEMP/zig-tools/bin/python" - <<'PY'
+          import os, pathlib, ziglang
+          os.symlink(pathlib.Path(ziglang.__file__).parent / 'zig', pathlib.Path(os.environ['RUNNER_TEMP']) / 'heavenkey-bin/zig')
+          PY
+          echo "$RUNNER_TEMP/heavenkey-bin" >> "$GITHUB_PATH"
+          cargo install cargo-zigbuild --locked --version 0.24.1
+      - name: Resolve locked build dependencies
+        run: |
+          bun install --frozen-lockfile --ignore-scripts
+          cargo fetch --locked
+      - name: Build matching portable binary and platform archive
+        run: |
+          python3 scripts/build_portable.py '${{ matrix.target }}'
+          python3 scripts/package_release.py '${{ matrix.target }}'
+      - name: Exercise native portable binary
+        if: matrix.target != 'x86_64-pc-windows-gnu'
+        run: python3 scripts/runtime_smoke.py 'target/${{ matrix.target }}/release/uac-api' --output 'dist/runtime-${{ matrix.target }}.json'
+      - name: Preserve platform package and bundled extensions
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: platform-${{ matrix.target }}
+          path: |
+            dist/HeavenKey-*.zip
+            dist/HeavenKey-*.tar.gz
+            dist/runtime-*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    if: github.event_name != 'pull_request'
+    needs: [verify, android, desktop]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: platform-*
+          path: dist/release-input
+          merge-multiple: true
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-preview-${{ github.sha }}
+          path: dist/release-input
+      - name: Validate complete source-bound bundle
+        run: |
+          version=$(python3 -c "import tomllib;print(tomllib.load(open('Cargo.toml','rb'))['workspace']['package']['version'])")
+          tag="v${version}-preview.1"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then tag="$GITHUB_REF_NAME"; fi
+          echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
+          python3 scripts/release_bundle.py dist/release-input --commit "$GITHUB_SHA" --tag "$tag"
+      - name: Publish all platforms together
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" dist/release-input/HeavenKey-* dist/release-input/SHA256SUMS dist/release-input/RELEASE.json dist/release-input/PREVIEW.json --target "$GITHUB_SHA" --prerelease --latest=false --title "HeavenKey 0.29 – Schlüssel, Passwörter & Formulare" --notes-file docs/releases/0.29.0.md

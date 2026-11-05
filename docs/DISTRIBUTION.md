@@ -1,9 +1,12 @@
 # HeavenKey installieren und starten
 
-Aktuelle gemeinsame Ausgabe: [HeavenKey 0.27.0 Alpha](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.27.0-alpha.2). Die stabile Vorschau bleibt [0.26.0](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1).
-Sie enthält fünf Desktop-Pakete und beide Browser-Erweiterungen; eine Android-APK ist in dieser Alpha nicht enthalten, Android bleibt bei der getrennten 0.28-Vorschau.
-Die zugehörigen Dateinamen und direkten Downloads stehen in der [Paketliste](../README.md#starten).
-`SHA256SUMS` gehört zum Release. `ACCEPTANCE.json` gibt es in dieser Alpha nicht, weil dafür ein grüner CI-Lauf auf genau diesem Commit, ein unabhängiges Review und Android-Belege fehlen; die vollständige Abnahme bleibt beim 0.26-Release.
+Aktuelle gemeinsame Ausgabe: [HeavenKey 0.29 Vorschau](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.29.0-preview.1).
+Sie enthält fünf Desktop-Pakete, beide Browser-Erweiterungen und drei Android-Vorschau-APKs. Das Gesamtpaket fasst alle Downloads zusammen.
+
+`SHA256SUMS`, `RELEASE.json` und Androids `PREVIEW.json` weisen Paketversionen,
+Quellcommit, Prüfsummen und die Android-Testidentität aus. Sie ersetzen kein
+unabhängiges Audit oder eine Herausgebersignatur. Die historische vollständige
+0.26-Abnahme bleibt im [damaligen Bericht](RELEASE-0.26.md) erhalten.
 
 macOS 14 oder neuer: Entpacke dein Architektur-Paket und ziehe `HeavenKey.app` nach Programme. Doppelklick öffnet das App-Fenster. Die App startet einen eigenen lokalen Dienst; Beenden oder das Schließen des letzten Fensters beendet ihn. Der Kommandozeilen-Starter bleibt für ausdrücklich gestartete Browser-Sitzungen enthalten. Bei einem bereits belegten Port zeigt die App einen Fehler und verbindet sich nicht mit dem fremden Listener.
 
@@ -17,7 +20,7 @@ Die Pakete haben Prüfsummen und Quellstand-Manifeste. Ad-hoc-Integritätssiegel
 
 Der [lokale Agenten-Broker](AGENT-BROKER.md) benötigt zusätzlich einen installierten Chromium-Browser. `--broker-agent` und der [eingeschlossene Agentenstart](AGENT-SANDBOX.md) sind im Programm enthalten; `broker.rs` ist ein optionales Cargo-`-Zscript`-Hilfsskript für die Entwicklung.
 
-Die Alpha 0.27.0 enthält den lokalen Passwortmanager und den SFTP-/FTPES-Broker für macOS, Windows und Linux. Android ergänzt manuelle Desktop-Synchronisierung und Website-Passkeys. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Build- und Laufzeitnachweise stehen im [Releasebericht](RELEASE-0.27.md); der [Bericht zu 0.26](RELEASE-0.26.md) bleibt als historischer Nachweis erhalten.
+Die Vorschau 0.29 enthält den lokalen Passwortmanager und den SFTP-/FTPES-Broker für macOS, Windows und Linux. Android ergänzt manuelle Desktop-Synchronisierung und Website-Passkeys. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Build- und Laufzeitnachweise stehen im [Releasebericht](RELEASE-0.27.md); der [Bericht zu 0.26](RELEASE-0.26.md) bleibt als historischer Nachweis erhalten.
 
 Die Pakete enthalten Server, Weboberfläche und Lizenzhinweise. Für den Passwortmanager brauchst du einen aktuellen Browser, aber kein Rust, Bun, Python, Docker oder Passkey. Das optionale Zugangslabor verwendet WebAuthn, SQLCipher und eine geschützte Signierschlüsselhülle. Physische Passkeys sind noch nicht abgenommen.
 
@@ -53,11 +56,11 @@ Optional: `HeavenKey.exe --port 18245 --data-dir "C:\Users\Name\HeavenKey-Test"`
 
 ## Browser-Erweiterung
 
-Chrome und Edge verwenden dasselbe Chromium-Paket. Entpacke `HeavenKey-0.27.0-extension-chromium.zip`, öffne `chrome://extensions` oder `edge://extensions`, aktiviere den Entwicklermodus und wähle „Entpackte Erweiterung laden“. Wähle den Ordner, in dem `manifest.json` liegt.
+Chrome und Edge verwenden dasselbe Chromium-Paket. Entpacke `HeavenKey-0.29.0-extension-chromium.zip`, öffne `chrome://extensions` oder `edge://extensions`, aktiviere den Entwicklermodus und wähle „Entpackte Erweiterung laden“. Wähle den Ordner, in dem `manifest.json` liegt.
 
-Firefox ab Version 140: Entpacke `HeavenKey-0.27.0-extension-firefox.zip`; öffne `about:debugging#/runtime/this-firefox` und lade `manifest.json` über „Temporäres Add-on laden“. Diese Installation endet beim Browser-Neustart. Eine dauerhafte Installation im normalen Firefox braucht Mozilla-Signierung; das Paket ist noch unsigniert.
+Firefox ab Version 140: Entpacke `HeavenKey-0.29.0-extension-firefox.zip`; öffne `about:debugging#/runtime/this-firefox` und lade `manifest.json` über „Temporäres Add-on laden“. Diese Installation endet beim Browser-Neustart. Eine dauerhafte Installation im normalen Firefox braucht Mozilla-Signierung; das Paket ist noch unsigniert.
 
-Klicke auf HeavenKey in der Browserleiste, wähle den gewünschten Bereich und dann „HeavenKey öffnen“. Die Erweiterung öffnet den lokalen Passwortmanager oder das separat gestartete Zugangslabor; dessen Port muss zur Auswahl passen. Eine HTTPS-Verbindung ist nur für das Zugangslabor erlaubt. Für die Formularhilfe starte den lokalen Passwortmanager. Erzeuge unter Einstellungen einen Verbindungscode und gib ihn mit dem Dienstport in der Erweiterung ein. Bestätige die optionale Berechtigung für localhost. Gespeichert werden nur Verbindung und eigenes Token. Entsperre den Tresor im Popup mit dem Masterpasswort. Alternativ richte zuerst in HeavenKey einen PRF-fähigen Passkey ein und wähle in der Erweiterung „Mit Passkey entsperren“. Vergleiche den Code mit der lokalen HeavenKey-Seite, bestätige dort mit deinem Gerät und wähle danach in der Erweiterung „Freigabe übernehmen“. Dieser Kanal gilt einmalig für 90 Sekunden. Fingerabdruck, Gesicht, Geräte-PIN oder Sicherheitsschlüssel hängen vom Browser und Gerät ab. Ohne passende Passkey-Unterstützung verwende das Masterpasswort. Schließen oder zwei Minuten Inaktivität sperren die Erweiterung. Der Dienst muss laufen. Ctrl+Shift+Y beziehungsweise Cmd+Shift+Y öffnet die Erweiterung im Browser. Per Rechtsklick öffnest du einen Login oder wählst eine verschlüsselte Formularvorlage. Passende Logins stehen oben; bei genau einem erkannten Loginformular werden dessen leere Felder vorgewählt. Bestätige die genaue Zieladresse vor dem Füllen. Registrierungsfelder für ein neues Passwort und fremde Frames bleiben ausgeschlossen; es wird kein Formular abgesendet. Die Erweiterung nutzt activeTab, scripting, storage und contextMenus; sie erhält keinen dauerhaften Zugriff auf alle Websites und kein Native Messaging.
+Klicke auf HeavenKey in der Browserleiste, wähle den gewünschten Bereich und dann „HeavenKey öffnen“. Die Erweiterung öffnet den lokalen Passwortmanager oder das separat gestartete Zugangslabor; dessen Port muss zur Auswahl passen. Eine HTTPS-Verbindung ist nur für das Zugangslabor erlaubt. Für die Formularhilfe starte den lokalen Passwortmanager. Erzeuge unter Einstellungen einen Verbindungscode und gib ihn mit dem Dienstport in der Erweiterung ein. Bestätige die optionale Berechtigung für localhost. Gespeichert werden Verbindung, eigenes Token und ausdrücklich aktivierte Website-Herkünfte. Entsperre den Tresor im Popup mit dem Masterpasswort. Alternativ richte zuerst in HeavenKey einen PRF-fähigen Passkey ein und wähle in der Erweiterung „Mit Passkey entsperren“. Vergleiche den Code mit der lokalen HeavenKey-Seite, bestätige dort mit deinem Gerät und wähle danach in der Erweiterung „Freigabe übernehmen“. Dieser Kanal gilt einmalig für 90 Sekunden. Fingerabdruck, Gesicht, Geräte-PIN oder Sicherheitsschlüssel hängen vom Browser und Gerät ab. Ohne passende Passkey-Unterstützung verwende das Masterpasswort. Schließen oder zwei Minuten Inaktivität sperren die Erweiterung. Der Dienst muss laufen. Ctrl+Shift+Y beziehungsweise Cmd+Shift+Y öffnet die Erweiterung im Browser. Per Rechtsklick öffnest du einen Login oder wählst eine verschlüsselte Formularvorlage. Passende Logins stehen oben; bei genau einem erkannten Loginformular werden dessen leere Felder vorgewählt. Bestätige die genaue Zieladresse vor dem Füllen. Gespeicherte Login-Passwörter bleiben aus neuen Passwortfeldern ausgeschlossen; separat erzeugte und verschlüsselt gespeicherte neue Passwörter können dort nach Freigabe eingefügt werden. Fremde Frames bleiben ausgeschlossen; es wird kein Formular abgesendet. Die Erweiterung nutzt activeTab, scripting, storage und contextMenus; sie erhält keinen dauerhaften Zugriff auf alle Websites und kein Native Messaging.
 
 Safari verwendet die Weboberfläche direkt; eine Safari-Erweiterung ist nicht enthalten. Die native Android-App liegt als separates APK im selben Release. Für iOS fehlen ein nutzbares iPhone-SDK und die signierte Geräteabnahme. Die [Handy-Anleitung](MOBILE.md) beschreibt die verfügbaren Funktionen.
 
@@ -77,3 +80,8 @@ Die neue [Flutter-Handy-App](MOBILE.md) wird getrennt gebaut. Die bisherigen
 Desktop- und Erweiterungsarchive enthalten sie nicht; das Android-APK liegt daneben im selben Release. Die
 [bebilderte Installation](INSTALLATION.md) dokumentiert Desktop-Release 0.12.0;
 das [Zugangslabor](LAB-INSTALLATION.md) wird separat eingerichtet.
+
+
+### Schlüssel direkt am Feld (0.29)
+
+Auf der Zielwebsite die Erweiterung öffnen und **Schlüssel auf dieser Website aktivieren** wählen. Nach der Browserfreigabe bleibt das Feldmenü auf dieser Herkunft verfügbar. Deaktivieren entfernt die registrierte Formularhilfe; die Browserrechte lassen sich zusätzlich in den Erweiterungseinstellungen widerrufen. [Vollständiger Ablauf, Generator und Formularprofile](AUTOFILL-FLOWS.md). Das [Gesamtpaket](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-all-platforms.zip) enthält alle Plattformpakete sowie Versions- und Prüfsummennachweise.

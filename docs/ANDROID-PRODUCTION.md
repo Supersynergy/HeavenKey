@@ -1,4 +1,4 @@
-# HeavenKey Android 0.28.0 – Produktionsveröffentlichung
+# HeavenKey Android – Produktionsveröffentlichung
 
 Die Android-App arbeitet eigenständig: kein Desktop-Tresor und kein Cloudkonto
 sind für die lokale Nutzung erforderlich. Die tägliche Freigabe verwendet die
@@ -11,7 +11,19 @@ Android 11 / API 30 ist die Mindestversion. Der Website-Passkey-Anbieter benöti
 Android 14 / API 34. Die Desktop-Version und ihre bisherigen Vorschau-Releases
 werden unabhängig versioniert.
 
-## Veröffentlichungsstand vom 27.10.2026
+## Aktueller Stand: 0.29-Vorschau (5.11.2026)
+
+Die [gemeinsame Vorschau 0.29](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.29.0-preview.1)
+fasst App, Desktop und Browser-Erweiterungen zusammen. Android ergänzt direkte
+Einstiege für private und geschäftliche Formularprofile. Die dauerhaften
+Herausgeberwerte fehlen weiterhin: Die neue Ausgabe enthält Vorschau-APKs mit
+Testsignatur, keine Produktions-APK/AAB und keinen Store-Upload. Eine bereits
+installierte Vorschau kann bei anderer Signatur kein direktes Update annehmen;
+eine vorhandene App erst nach unabhängig gesicherter und geprüfter
+Wiederherstellung entfernen. Der nachfolgende Stand von 0.28 bleibt als historischer
+Prüfnachweis mit seinem eigenen Quellcommit erhalten.
+
+## Veröffentlichungsstand vom 27.10.2026 (historischer Nachweis)
 
 Die [Android-Vorschau 0.28](https://github.com/Supersynergy/HeavenKey/releases/tag/android-v0.28.0-preview.1)
 ist mit drei installierbaren APKs, `PREVIEW.json` und `SHA256SUMS` veröffentlicht.

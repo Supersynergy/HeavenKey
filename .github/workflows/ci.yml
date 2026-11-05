@@ -1,6 +1,7 @@
 name: HeavenKey CI
 
 on:
+  workflow_call:
   push:
     branches: [main]
   pull_request:
@@ -115,3 +116,15 @@ jobs:
           sudo chown "$USER" /evidence
           python3 scripts/ci/export_evidence.py
           cat /evidence/manifest.json
+      - name: Preserve current test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: verification-${{ github.sha }}-${{ github.run_id }}
+          path: |
+            docs/evidence/ci-*.log
+            docs/evidence/e2e.json
+            apps/extension/TEST-RECEIPT.json
+            apps/extension/INTEGRATION-BLOCKER.json
+          if-no-files-found: warn
+          retention-days: 14

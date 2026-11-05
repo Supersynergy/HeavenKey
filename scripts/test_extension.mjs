@@ -22,13 +22,13 @@ for (const browser of ['chromium','firefox']) {
   const manifest = JSON.parse(readFileSync(new URL('manifest.json',base),'utf8'));
   assert.equal(manifest.version,workspaceVersion);
   assert.deepEqual([...manifest.permissions].sort(),['activeTab','contextMenus','scripting','storage']);
-  assert.deepEqual(manifest.optional_host_permissions,['http://localhost/*']);
+  assert.deepEqual(manifest.optional_host_permissions,['https://*/*','http://localhost/*','http://127.0.0.1/*','http://[::1]/*']);
   for(const absent of ['host_permissions','content_scripts','externally_connectable','web_accessible_resources']) assert.equal(manifest[absent],undefined);
   assert.equal(manifest.action.default_popup,'popup.html');
   assert.equal(manifest.commands._execute_action.suggested_key.default,'Ctrl+Shift+Y');
   if (browser === 'firefox') assert.equal(manifest.browser_specific_settings.gecko.strict_min_version,'140.0');
   assert(manifest.content_security_policy.extension_pages.includes("script-src 'self'"));
-  for(const name of ['smart-popup.js','content.js','background.js','LICENSE','THIRD-PARTY-NOTICE.md']) assert(readFileSync(new URL(name,base)).length>0);
+  for(const name of ['smart-popup.js','content.js','background.js','inline.js','LICENSE','THIRD-PARTY-NOTICE.md','EFF-WORDLIST-NOTICE.md']) assert(readFileSync(new URL(name,base)).length>0);
 }
 await import('../apps/extension/vendor/extract.js');
 const extracted=globalThis.SmartFieldExtract.extract('Vorname: Alex\nNachname: Muster\nE-Mail: alex@example.invalid\nStraße: Musterstraße 12a\nGeburtsdatum: 14. März 1990\nIBAN: DE89370400440532013000');

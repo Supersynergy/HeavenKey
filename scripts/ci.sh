@@ -27,7 +27,7 @@ source_checks() {
   bun test apps/web/src/passwords-ssh.test.ts
   bun test packages/protected/schema.test.ts apps/web/src/passwords-protected.test.ts apps/web/src/passwords-protected-crypto.test.ts
   bun test apps/web/src/interface.test.ts
-  bun test apps/extension/popup.test.ts apps/extension/unlock-channel.test.ts
+  bun test apps/extension
   bun scripts/test_extension.mjs
   bun scripts/delegation-reference.mjs
   bun scripts/grant-reference.mjs
@@ -53,6 +53,7 @@ build() {
   HEAVENKEY_INTEGRATION_BINARY=target/debug/uac-api python3 -m unittest scripts.test_workstream_integration
   HEAVENKEY_INTEGRATION_BINARY=target/debug/uac-api python3 -m unittest scripts.test_password_manager
   HEAVENKEY_INTEGRATION_BINARY=target/debug/uac-api python3 -m unittest scripts.test_extension_pairing
+  bun scripts/extension_autofill_e2e.ts
   HEAVENKEY_PM_DESIGN=1 HEAVENKEY_PM_POLISH=1 HEAVENKEY_PM_WORKFLOWS=1 bun scripts/password_manager_e2e.mjs
   bun scripts/password_access_e2e.ts
   bun scripts/transfer_broker_e2e.ts
@@ -63,7 +64,6 @@ build() {
     bun scripts/password_broker_e2e.ts
     bun scripts/protected_flow_e2e.ts
   fi
-  bun scripts/extension_autofill_e2e.ts
   bun scripts/password_manager_ui_test.ts
   bun scripts/protocol_e2e.mjs
 }

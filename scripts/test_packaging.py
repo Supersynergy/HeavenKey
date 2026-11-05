@@ -25,6 +25,7 @@ class PackagingTests(unittest.TestCase):
             "scripts/build_openssl.py", "scripts/build_portable.py", "scripts/build_desktop.py", "scripts/build_extension.ts", "scripts/broker.rs",
             "scripts/build_agent_sandbox.ts", "scripts/sandbox/Dockerfile",
             "apps/demo/index.html", "apps/demo/main.js", "apps/demo/style.css", "apps/desktop/HeavenKey.swift",
+            "apps/mobile/assets/eff_large_wordlist.txt", "apps/mobile/assets/NOTICE.md",
         ):
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -88,12 +89,12 @@ class PackagingTests(unittest.TestCase):
         for name in ("chromium", "firefox"):
             source = self.root / f"extension-source-{name}"
             source.mkdir()
-            for filename in ("smart-popup.js", "content.js", "background.js", "LICENSE", "THIRD-PARTY-NOTICE.md"):
+            for filename in ("smart-popup.js", "content.js", "background.js", "inline.js", "LICENSE", "THIRD-PARTY-NOTICE.md", "EFF-WORDLIST-NOTICE.md"):
                 (source / filename).write_text("synthetic bundle")
             (source / "manifest.json").write_text(json.dumps({
                 "manifest_version": 3, "version": release.VERSION,
                 "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
-                "optional_host_permissions": ["http://localhost/*"],
+                "optional_host_permissions": ["https://*/*", "http://localhost/*", "http://127.0.0.1/*", "http://[::1]/*"],
             }))
         with (
             patch.object(release, "OUT", self.root),

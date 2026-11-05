@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.29.0 – 2026-11-05 (preview)
+
+- Optional per-website key buttons with login, identity, generator and management actions.
+- Trusted extension windows with live field anchors, exact-origin validation and explicit fill consent.
+- Browser login create/update, 14–128-character passwords, six-word EFF passphrases, field-length checks, encrypted save before generated new-password delivery and preservation of the previous password during changes.
+- Fast private/business profile entry points on Android; browser contact/address profile editor.
+- Complete source-bound release bundle for five desktop platforms, Chromium/Firefox and three Android preview architectures; updated README, ten-product feature comparison and process maps.
+- Update libz-sys to 1.1.31 to fix the existing RUSTSEC-2026-0418 CI blocker.
+- Preview distribution retains existing signing, store, hardware and independent-audit limitations.
+
+
 ## 0.27.0 Alpha — 2026-10-30
 
 - „Erste Schritte“ bietet zufällige Beispieldaten: drei mit dem Tag `Beispiel` markierte Logins auf reservierten `.example`-Domains (RFC 2606) mit frisch generierten 20-Zeichen-Passwörtern, Benutzernamen auf `@example.invalid` und einem Hinweis im Notizfeld. Damit lässt sich der Tresor ohne eigene Daten ausprobieren.

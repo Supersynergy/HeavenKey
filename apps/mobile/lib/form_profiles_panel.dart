@@ -36,6 +36,12 @@ class _FormProfilesPanelState extends State<FormProfilesPanel> {
     });
   }
 
+  void quickProfile(String label) {
+    edit();
+    fields!['label']!.text = label;
+    fields!['country']!.text = 'DE';
+  }
+
   @override
   void dispose() {
     close();
@@ -115,6 +121,25 @@ class _FormProfilesPanelState extends State<FormProfilesPanel> {
           ],
         ),
       ] else ...[
+        Wrap(
+          spacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: widget.vault.busy
+                  ? null
+                  : () => quickProfile('Privat'),
+              icon: const Icon(Icons.person_outline),
+              label: const Text('Privates Profil'),
+            ),
+            OutlinedButton.icon(
+              onPressed: widget.vault.busy
+                  ? null
+                  : () => quickProfile('Geschäftlich'),
+              icon: const Icon(Icons.business_outlined),
+              label: const Text('Geschäftliches Profil'),
+            ),
+          ],
+        ),
         for (final profile in widget.vault.profiles)
           ListTile(
             contentPadding: EdgeInsets.zero,

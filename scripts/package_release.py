@@ -196,8 +196,11 @@ def desktop(target):
             "PASSWORD-MANAGER-VERIFICATION.md", "PASSWORD-MANAGER-RESEARCH-TOOLS.md",
             "ACCESS-AND-SHARING.md", "AGENT-BROKER.md", "AGENT-SANDBOX.md", "PROTECTED-FLOW.md", "PROTECTED-THREAT-MODEL.md", "VAULT-KDF.md", "TRANSFER-BROKER.md", "SSH-KEYS.md",
             "password-manager-matrix.json", "LICENSING.md",
+            "AUTOFILL-FLOWS.md", "AUTOFILL-COMPETITORS.md", "DISTRIBUTION.md",
         ):
             shutil.copyfile(ROOT / "docs" / name, directory / name)
+        (directory / "releases").mkdir()
+        shutil.copyfile(ROOT / "docs/releases/0.29.0.md", directory / "releases/0.29.0.md")
         shutil.copyfile(ROOT / "scripts/broker.rs", directory / "broker.rs")
         dependency_notices(directory)
         shutil.copyfile(ROOT / "docs/licenses/noble-hashes-MIT.txt", directory / "licenses/noble-hashes-MIT.txt")
@@ -242,14 +245,14 @@ def extensions():
             raise ValueError("Build browser extensions before packaging this version")
         if set(manifest.get("permissions", [])) != {"activeTab", "scripting", "storage", "contextMenus"}:
             raise ValueError("Unexpected extension permissions")
-        if manifest.get("optional_host_permissions") != ["http://localhost/*"] or any(
+        if manifest.get("optional_host_permissions") != ["https://*/*", "http://localhost/*", "http://127.0.0.1/*", "http://[::1]/*"] or any(
             key in manifest for key in ("host_permissions", "externally_connectable", "content_scripts")
         ):
             raise ValueError("Unexpected persistent extension access")
         if directory.exists():
             shutil.rmtree(directory)
         shutil.copytree(built, directory)
-        for name in ("smart-popup.js", "content.js", "background.js", "LICENSE", "THIRD-PARTY-NOTICE.md"):
+        for name in ("smart-popup.js", "content.js", "background.js", "inline.js", "LICENSE", "THIRD-PARTY-NOTICE.md", "EFF-WORDLIST-NOTICE.md"):
             if not (directory / name).is_file():
                 raise ValueError(f"Missing extension file: {name}")
         (directory / "BUILD.json").write_text(json.dumps({
