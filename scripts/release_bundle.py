@@ -16,10 +16,16 @@ def digest(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
-def build(directory, commit, tag):
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def build(directory, commit, tag, expected_fingerprint):
     version = tomllib.loads((ROOT / 'Cargo.toml').read_text())['workspace']['package']['version']
     if not re.fullmatch(r'[0-9a-f]{40}', commit) or not re.fullmatch(r'v' + re.escape(version) + r'-preview\.[1-9][0-9]*', tag):
         raise ValueError('A matching immutable preview tag and full source commit are required')
+    require(re.fullmatch(r'[0-9a-f]{64}', expected_fingerprint), 'A freshly computed source fingerprint is required')
     names = [f'HeavenKey-{version}-{platform}' + ('.tar.gz' if platform.startswith('linux') else '.zip')
              for platform in ['macos-arm64','macos-x64','windows-x64','linux-arm64','linux-x64']]
     names += [f'HeavenKey-{version}-extension-{browser}.zip' for browser in ['chromium','firefox']]
@@ -34,24 +40,32 @@ def build(directory, commit, tag):
             with zipfile.ZipFile(path) as archive:
                 metadata = json.loads(archive.read('BUILD.json'))
                 manifest = json.loads(archive.read('manifest.json'))
-                assert manifest['version'] == version
-                assert 'inline.js' in archive.namelist()
+                require(manifest['version'] == version, 'Extension version mismatch: ' + name)
+                require('inline.js' in archive.namelist(), 'Missing field menu: ' + name)
         elif name.endswith('.zip'):
             with zipfile.ZipFile(path) as archive:
                 metadata = json.loads(archive.read(name.removesuffix('.zip') + '/manifest.json'))
+                binary = 'HeavenKey.exe' if 'windows-' in name else 'heavenkey'
+                base = name.removesuffix('.zip') + '/'
+                require(hashlib.sha256(archive.read(base + binary)).hexdigest() == metadata['binary_sha256'], 'Desktop binary mismatch: ' + name)
+                for relative, expected in metadata.get('app_files_sha256', {}).items():
+                    require(not relative.startswith('/') and '..' not in Path(relative).parts, 'Unsafe app bundle path')
+                    require(hashlib.sha256(archive.read(base + 'HeavenKey.app/' + relative)).hexdigest() == expected, 'App bundle mismatch: ' + relative)
         else:
             with tarfile.open(path) as archive:
                 metadata = json.load(archive.extractfile(name.removesuffix('.tar.gz') + '/manifest.json'))
-        assert metadata['source_commit'] == commit and metadata['version'] == version, name
+                binary = archive.extractfile(name.removesuffix('.tar.gz') + '/heavenkey')
+                require(binary is not None and hashlib.file_digest(binary, 'sha256').hexdigest() == metadata['binary_sha256'], 'Desktop binary mismatch: ' + name)
+        require(metadata['source_commit'] == commit and metadata['version'] == version, 'Stale source or version: ' + name)
         fingerprints.add(metadata['source_fingerprint'])
-    assert len(fingerprints) == 1, 'Platform packages were built from different inputs'
+    require(fingerprints == {expected_fingerprint}, 'Platform packages differ from the checked-out build inputs')
     preview = json.loads((directory / 'PREVIEW.json').read_text())
-    assert preview['source_commit'] == commit and preview['version'] == version + '-preview'
-    assert preview['production'] is False and preview['stable_publisher_identity'] is False
-    assert preview['application_id'] == 'app.heavenkey.heavenkey_mobile.preview'
-    assert {row['name'] for row in preview['artifacts']} == set(names[7:])
+    require(preview['source_commit'] == commit and preview['version'] == version + '-preview', 'Android source/version mismatch')
+    require(preview['production'] is False and preview['stable_publisher_identity'] is False, 'Unexpected Android production identity')
+    require(preview['application_id'] == 'app.heavenkey.heavenkey_mobile.preview', 'Unexpected Android app ID')
+    require(len(preview['artifacts']) == 3 and {row['name'] for row in preview['artifacts']} == set(names[7:]), 'Incomplete Android ABI set')
     for row in preview['artifacts']:
-        assert digest(directory / row['name']) == row['sha256'], row['name']
+        require(digest(directory / row['name']) == row['sha256'], 'Android digest mismatch: ' + row['name'])
     artifacts = {name: {'sha256': digest(directory / name), 'size': (directory / name).stat().st_size} for name in names}
     report = {'version': version, 'source_commit': commit, 'source_fingerprint': fingerprints.pop(),
               'tag': tag, 'production': False, 'complete_platform_set': True, 'artifacts': artifacts,
@@ -114,7 +128,7 @@ PACKAGE-SHA256SUMS`, auf macOS `shasum -a 256 -c PACKAGE-SHA256SUMS` verwenden.
             archive.write(directory / name, name)
         archive.writestr('README.md', guide)
         archive.writestr('PACKAGE-SHA256SUMS', package_sums)
-        for name in ['LICENSE', 'docs/DISTRIBUTION.md', 'docs/AUTOFILL-COMPETITORS.md', 'docs/AUTOFILL-FLOWS.md', 'docs/releases/0.29.0.md']:
+        for name in ['LICENSE', 'docs/DISTRIBUTION.md', 'docs/AUTOFILL-COMPETITORS.md', 'docs/AUTOFILL-FLOWS.md', 'docs/REVIEW-0.30.md', f'docs/releases/{version}.md']:
             archive.write(ROOT / name, name)
     sums = [*names, bundle.name, 'RELEASE.json', 'PREVIEW.json']
     (directory / 'SHA256SUMS').write_text(''.join(f'{digest(directory / name)}  {name}\n' for name in sums))
@@ -126,5 +140,6 @@ if __name__ == '__main__':
     parser.add_argument('directory', type=Path)
     parser.add_argument('--commit', required=True)
     parser.add_argument('--tag', required=True)
+    parser.add_argument('--fingerprint', required=True)
     args = parser.parse_args()
-    build(args.directory.resolve(), args.commit, args.tag)
+    build(args.directory.resolve(), args.commit, args.tag, args.fingerprint)

@@ -1,6 +1,6 @@
 # HeavenKey installieren und starten
 
-Aktuelle gemeinsame Ausgabe: [HeavenKey 0.29 Vorschau](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.29.0-preview.1).
+Aktuelle gemeinsame Ausgabe: [HeavenKey 0.30 Vorschau](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.30.0-preview.1).
 Sie enthält fünf Desktop-Pakete, beide Browser-Erweiterungen und drei Android-Vorschau-APKs. Das Gesamtpaket fasst alle Downloads zusammen.
 
 `SHA256SUMS`, `RELEASE.json` und Androids `PREVIEW.json` weisen Paketversionen,
@@ -20,7 +20,7 @@ Die Pakete haben Prüfsummen und Quellstand-Manifeste. Ad-hoc-Integritätssiegel
 
 Der [lokale Agenten-Broker](AGENT-BROKER.md) benötigt zusätzlich einen installierten Chromium-Browser. `--broker-agent` und der [eingeschlossene Agentenstart](AGENT-SANDBOX.md) sind im Programm enthalten; `broker.rs` ist ein optionales Cargo-`-Zscript`-Hilfsskript für die Entwicklung.
 
-Die Vorschau 0.29 enthält den lokalen Passwortmanager und den SFTP-/FTPES-Broker für macOS, Windows und Linux. Android ergänzt manuelle Desktop-Synchronisierung und Website-Passkeys. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Build- und Laufzeitnachweise stehen im [Releasebericht](RELEASE-0.27.md); der [Bericht zu 0.26](RELEASE-0.26.md) bleibt als historischer Nachweis erhalten.
+Die Vorschau 0.30 enthält den lokalen Passwortmanager und den SFTP-/FTPES-Broker für macOS, Windows und Linux. Android ergänzt manuelle Desktop-Synchronisierung und Website-Passkeys. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Build- und Laufzeitnachweise stehen im [Releasebericht](RELEASE-0.27.md); der [Bericht zu 0.26](RELEASE-0.26.md) bleibt als historischer Nachweis erhalten.
 
 Die Pakete enthalten Server, Weboberfläche und Lizenzhinweise. Für den Passwortmanager brauchst du einen aktuellen Browser, aber kein Rust, Bun, Python, Docker oder Passkey. Das optionale Zugangslabor verwendet WebAuthn, SQLCipher und eine geschützte Signierschlüsselhülle. Physische Passkeys sind noch nicht abgenommen.
 
@@ -56,9 +56,9 @@ Optional: `HeavenKey.exe --port 18245 --data-dir "C:\Users\Name\HeavenKey-Test"`
 
 ## Browser-Erweiterung
 
-Chrome und Edge verwenden dasselbe Chromium-Paket. Entpacke `HeavenKey-0.29.0-extension-chromium.zip`, öffne `chrome://extensions` oder `edge://extensions`, aktiviere den Entwicklermodus und wähle „Entpackte Erweiterung laden“. Wähle den Ordner, in dem `manifest.json` liegt.
+Chrome und Edge verwenden dasselbe Chromium-Paket. Entpacke `HeavenKey-0.30.0-extension-chromium.zip`, öffne `chrome://extensions` oder `edge://extensions`, aktiviere den Entwicklermodus und wähle „Entpackte Erweiterung laden“. Wähle den Ordner, in dem `manifest.json` liegt.
 
-Firefox ab Version 140: Entpacke `HeavenKey-0.29.0-extension-firefox.zip`; öffne `about:debugging#/runtime/this-firefox` und lade `manifest.json` über „Temporäres Add-on laden“. Diese Installation endet beim Browser-Neustart. Eine dauerhafte Installation im normalen Firefox braucht Mozilla-Signierung; das Paket ist noch unsigniert.
+Firefox ab Version 140: Entpacke `HeavenKey-0.30.0-extension-firefox.zip`; öffne `about:debugging#/runtime/this-firefox` und lade `manifest.json` über „Temporäres Add-on laden“. Diese Installation endet beim Browser-Neustart. Eine dauerhafte Installation im normalen Firefox braucht Mozilla-Signierung; das Paket ist noch unsigniert.
 
 Klicke auf HeavenKey in der Browserleiste, wähle den gewünschten Bereich und dann „HeavenKey öffnen“. Die Erweiterung öffnet den lokalen Passwortmanager oder das separat gestartete Zugangslabor; dessen Port muss zur Auswahl passen. Eine HTTPS-Verbindung ist nur für das Zugangslabor erlaubt. Für die Formularhilfe starte den lokalen Passwortmanager. Erzeuge unter Einstellungen einen Verbindungscode und gib ihn mit dem Dienstport in der Erweiterung ein. Bestätige die optionale Berechtigung für localhost. Gespeichert werden Verbindung, eigenes Token und ausdrücklich aktivierte Website-Herkünfte. Entsperre den Tresor im Popup mit dem Masterpasswort. Alternativ richte zuerst in HeavenKey einen PRF-fähigen Passkey ein und wähle in der Erweiterung „Mit Passkey entsperren“. Vergleiche den Code mit der lokalen HeavenKey-Seite, bestätige dort mit deinem Gerät und wähle danach in der Erweiterung „Freigabe übernehmen“. Dieser Kanal gilt einmalig für 90 Sekunden. Fingerabdruck, Gesicht, Geräte-PIN oder Sicherheitsschlüssel hängen vom Browser und Gerät ab. Ohne passende Passkey-Unterstützung verwende das Masterpasswort. Schließen oder zwei Minuten Inaktivität sperren die Erweiterung. Der Dienst muss laufen. Ctrl+Shift+Y beziehungsweise Cmd+Shift+Y öffnet die Erweiterung im Browser. Per Rechtsklick öffnest du einen Login oder wählst eine verschlüsselte Formularvorlage. Passende Logins stehen oben; bei genau einem erkannten Loginformular werden dessen leere Felder vorgewählt. Bestätige die genaue Zieladresse vor dem Füllen. Gespeicherte Login-Passwörter bleiben aus neuen Passwortfeldern ausgeschlossen; separat erzeugte und verschlüsselt gespeicherte neue Passwörter können dort nach Freigabe eingefügt werden. Fremde Frames bleiben ausgeschlossen; es wird kein Formular abgesendet. Die Erweiterung nutzt activeTab, scripting, storage und contextMenus; sie erhält keinen dauerhaften Zugriff auf alle Websites und kein Native Messaging.
 
@@ -82,6 +82,6 @@ Desktop- und Erweiterungsarchive enthalten sie nicht; das Android-APK liegt dane
 das [Zugangslabor](LAB-INSTALLATION.md) wird separat eingerichtet.
 
 
-### Schlüssel direkt am Feld (0.29)
+### Schlüssel direkt am Feld (0.30)
 
-Auf der Zielwebsite die Erweiterung öffnen und **Schlüssel auf dieser Website aktivieren** wählen. Nach der Browserfreigabe bleibt das Feldmenü auf dieser Herkunft verfügbar. Deaktivieren entfernt die registrierte Formularhilfe; die Browserrechte lassen sich zusätzlich in den Erweiterungseinstellungen widerrufen. [Vollständiger Ablauf, Generator und Formularprofile](AUTOFILL-FLOWS.md). Das [Gesamtpaket](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-all-platforms.zip) enthält alle Plattformpakete sowie Versions- und Prüfsummennachweise.
+Auf der Zielwebsite die Erweiterung öffnen und **Schlüssel auf dieser Website aktivieren** wählen. Nach der Browserfreigabe bleibt das Feldmenü auf dieser Herkunft verfügbar. Deaktivieren entfernt die registrierte Formularhilfe; die Browserrechte lassen sich zusätzlich in den Erweiterungseinstellungen widerrufen. [Vollständiger Ablauf, Generator und Formularprofile](AUTOFILL-FLOWS.md). Das [Gesamtpaket](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-all-platforms.zip) enthält alle Plattformpakete sowie Versions- und Prüfsummennachweise.

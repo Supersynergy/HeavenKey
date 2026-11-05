@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { createVault, openVault } from '../apps/web/src/passwords-crypto';
 import { inlineCases } from './extension_inline_cases';
+import { redteamCases } from './extension_redteam_cases';
 const root = resolve(import.meta.dir,'..');
 const temporary = await mkdtemp(join(tmpdir(),'heavenkey-smartfield-'));
 const binary = resolve(process.env.HEAVENKEY_BINARY || 'target/debug/uac-api');
@@ -77,12 +78,12 @@ try {
   assert(!handoffBodies.some(body=>body.includes(master)||body.includes('Synthetic-login-only#42')));check('passkey enrollment and handoff API bodies contain neither master nor login plaintext');
   const stored=await popup.evaluate(async()=>await (globalThis as any).chrome.storage.local.get(null));check('browser storage has connection/token only',Object.keys(stored).join()==='heavenkey.extension.v1'&&!JSON.stringify(stored).includes(master)&&!JSON.stringify(stored).includes('Synthetic-login-only'));
     const uiStatus=async(text:string)=>popup.waitForFunction(text=>document.querySelector('#smart-status')!.textContent!.includes(text),text);
-  await popup.locator('[data-id="synthetic-profile"]').click();await popup.locator('#scan-page').click();await popup.locator('#fill-confirmation').waitFor({state:'visible'});
+  await popup.locator('[data-task="template"]').click();await popup.locator('[data-id="synthetic-profile"]').click();await popup.locator('#scan-page').click();await popup.locator('#fill-confirmation').waitFor({state:'visible'});
   await popup.locator('#fill-selected').click();await uiStatus('ausdrücklich bestätigen');check('popup requires fresh explicit target-origin confirmation',await target.locator('#firstName').inputValue()==='');
   for(const box of await popup.locator('#field-map [data-field]').all()) await box.uncheck();
   await popup.getByRole('checkbox',{name:/^Vorname ·/}).check();await popup.locator('#confirm-origin').check();await popup.locator('#fill-selected').click();await uiStatus('1 Felder gefüllt');
   check('real popup selective profile fill changes only selected field',await target.locator('#firstName').inputValue()==='Alex'&&await target.locator('#lastName').inputValue()==='');await popup.locator('#undo-fill').click();await uiStatus('1 Felder zurückgesetzt');
-  await popup.locator('[data-id="wrong-origin"]').click();await popup.locator('#scan-page').click();await uiStatus('anderen Herkunft');check('popup rejects login saved for a different exact origin',await target.locator('#password').inputValue()==='');
+  await popup.locator('[data-task="login"]').click();await popup.locator('#show-other-logins').check();await popup.locator('[data-id="wrong-origin"]').click();await popup.locator('#scan-page').click();await uiStatus('anderen Herkunft');check('popup rejects login saved for a different exact origin',await target.locator('#password').inputValue()==='');
   await popup.locator('[data-id="synthetic-login"]').click();await popup.locator('#scan-page').click();await popup.locator('#fill-confirmation').waitFor({state:'visible'});
   for(const box of await popup.locator('#field-map [data-field]').all()) await box.uncheck();
   for(const text of ['Benutzername','Passwort','Einmalcode']) await popup.getByRole('checkbox',{name:new RegExp('^'+text+' ·')}).check();
@@ -99,7 +100,7 @@ try {
 
   for (const cancel of ['lock', 'pagehide', 'disconnect']) {
     console.log(`Cancellation fixture: ${cancel} scan`);
-    await popup.locator('[data-id="synthetic-profile"]').click();await popup.locator('#scan-page').click();await popup.locator('#fill-confirmation').waitFor({state:'visible'});
+    await popup.locator('[data-task="template"]').click();await popup.locator('[data-id="synthetic-profile"]').click();await popup.locator('#scan-page').click();await popup.locator('#fill-confirmation').waitFor({state:'visible'});
     for (const box of await popup.locator('#field-map [data-field]').all()) await box.uncheck();
     await popup.getByRole('checkbox',{name:/^Vorname ·/}).check();await popup.locator('#confirm-origin').check();
     // Delay completion of the native installation call to exercise cancellation
@@ -165,6 +166,7 @@ try {
   const signupFill=await invoke('fill',{scan:signupScan.value.scan,entities:payload,selected:[{id:signup.id,entity:'password'}],secrets:true});
   check('saved login password never fills a new-password registration field',signupFill.ok && signupFill.value.count===0 && await target.locator('#signup-secret').inputValue()==='');
 
+  await redteamCases({target,popup,targetId,invoke,check});
   if(!process.argv.includes('--engine-only')) await inlineCases({browser,popup,target,appApi,master,check});
 
   if(!process.argv.includes('--engine-only')) {
@@ -175,9 +177,9 @@ try {
     await popup.screenshot({path:join(root,'apps/extension/evidence/popup-disconnected.png'),fullPage:true});
   }
 
-  const sourcePaths=['scripts/extension_inline_cases.ts','apps/extension/inline.ts','apps/extension/generator.ts','apps/extension/site-access.ts','apps/mobile/assets/eff_large_wordlist.txt','scripts/extension_autofill_e2e.ts','apps/extension/popup.html','apps/extension/popup.css','apps/extension/popup.js','apps/extension/settings.js','apps/extension/content.ts','apps/extension/smart-popup.ts','apps/extension/background.ts','apps/extension/unlock-channel.ts','apps/web/src/passwords-extension-unlock.ts','apps/web/src/passwords-access.ts','apps/extension/vendor/extract.js','apps/extension/vendor/fill.js','apps/web/src/passwords-crypto.ts','packages/forms/schema.ts','scripts/build_extension.ts'];
+  const sourcePaths=['scripts/extension_redteam_cases.ts','apps/extension/form-boundary.ts','apps/extension/workflow.ts','scripts/extension_inline_cases.ts','apps/extension/inline.ts','apps/extension/generator.ts','apps/extension/site-access.ts','apps/mobile/assets/eff_large_wordlist.txt','scripts/extension_autofill_e2e.ts','apps/extension/popup.html','apps/extension/popup.css','apps/extension/popup.js','apps/extension/settings.js','apps/extension/content.ts','apps/extension/smart-popup.ts','apps/extension/background.ts','apps/extension/unlock-channel.ts','apps/web/src/passwords-extension-unlock.ts','apps/web/src/passwords-access.ts','apps/extension/vendor/extract.js','apps/extension/vendor/fill.js','apps/web/src/passwords-crypto.ts','packages/forms/schema.ts','scripts/build_extension.ts'];
   const source_sha256=Object.fromEntries(await Promise.all(sourcePaths.map(async path=>[path,createHash('sha256').update(await readFile(join(root,path))).digest('hex')])));
-  const report={source_sha256,pass:true,browser:browserPath,real_unpacked_extension:true,real_rust_pairing:!process.argv.includes('--engine-only'),mocks:false,test_only_manifest_grant:'http://localhost/*',native_optional_permission_prompt:'not automated: headless request waits for browser UI',synthetic_only:true,binary_sha256:createHash('sha256').update(await readFile(binary)).digest('hex'),manifest_sha256:createHash('sha256').update(await readFile(join(extension,'manifest.json'))).digest('hex'),cases,errors};
+  const report={source_sha256,pass:true,browser:browserPath,real_unpacked_extension:true,real_rust_pairing:!process.argv.includes('--engine-only'),mocks:false,test_only_manifest_grant:'http://localhost/*',native_optional_permission_prompt:'not automated: headless request waits for browser UI',synthetic_only:true,controlled_clock_tests:'isolated Date.now temporarily advanced for expiry regression',binary_sha256:createHash('sha256').update(await readFile(binary)).digest('hex'),manifest_sha256:createHash('sha256').update(await readFile(join(extension,'manifest.json'))).digest('hex'),cases,errors};
   await writeFile(join(root,process.argv.includes('--engine-only')?'apps/extension/ENGINE-RECEIPT.json':'apps/extension/TEST-RECEIPT.json'),JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify(report));
 } catch(error) {await writeFile(join(root,'apps/extension/INTEGRATION-BLOCKER.json'),JSON.stringify({pass:false,real_unpacked_extension:true,real_rust_pairing:cases.some(c=>c.name.includes('pairing')),error:error instanceof Error?error.message:String(error),cases,required_transport:'POST /api/password-vault/read JSON{} with strict extension Origin+token'},null,2)+'\n');throw error;} finally {await browser?.close();await stop();fixture.stop(true);await rm(temporary,{recursive:true,force:true});}

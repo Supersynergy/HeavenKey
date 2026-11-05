@@ -27,6 +27,19 @@ export async function inlineCases({browser,popup,target,appApi,master,check}:any
   check('field key opens trusted extension window and anchored login preview',!await login.locator('#confirm-origin').isChecked() && await login.locator('#field-map [data-field]:checked').count()>=2);
   await login.locator('#confirm-origin').check();await login.locator('#fill-selected').click();await status(login,'Felder gefüllt');
   check('inline login fills exact-origin password and fresh TOTP without submit',await target.locator('#password').inputValue()==='Synthetic-login-only#42' && /^\d{6}$/.test(await target.locator('#otp').inputValue()) && await target.evaluate(()=>(window as any).submissions===0));
+  await login.locator('#undo-fill').click();await status(login,'Felder zurückgesetzt');
+  await login.locator('[data-id="synthetic-login"]').click();await login.locator('#fill-confirmation').waitFor({state:'visible'});
+  for(const field of await login.locator('#field-map [data-field]').all()) await field.uncheck();
+  await login.getByRole('checkbox',{name:/^Benutzername ·/}).check();
+  await login.evaluate(()=>{
+    const ext=(globalThis as any).chrome, original=ext.scripting.executeScript.bind(ext.scripting);
+    (globalThis as any).__payloadAudit={original,keys:[]};
+    ext.scripting.executeScript=async(request:any)=>{if(request.args?.[0]?.action==='fill')(globalThis as any).__payloadAudit.keys=Object.keys(request.args[0].entities);return original(request);};
+  });
+  try {
+    await login.locator('#confirm-origin').check();await login.locator('#fill-selected').click();await status(login,'1 Felder gefüllt');
+    check('red team: unselected password and TOTP never enter native delivery arguments',await login.evaluate(()=>(globalThis as any).__payloadAudit.keys.join()==='username') && await target.locator('#password').inputValue()==='');
+  } finally {await login.evaluate(()=>{(globalThis as any).chrome.scripting.executeScript=(globalThis as any).__payloadAudit.original;delete(globalThis as any).__payloadAudit;});}
   await login.close();await target.reload();await target.waitForTimeout(150);
   const profile=await windowFor('#firstName','Name & Adresse ausfüllen');await profile.locator('[data-id="synthetic-profile"]').click();await profile.locator('#fill-confirmation').waitFor({state:'visible'});
   await profile.locator('#confirm-origin').check();await profile.locator('#fill-selected').click();await status(profile,'Felder gefüllt');
@@ -48,6 +61,10 @@ export async function inlineCases({browser,popup,target,appApi,master,check}:any
   await generated.locator('#confirm-login-update').check();await generated.locator('#save-login').click();await status(generated,'Login verschlüsselt gespeichert');
   const changed=await openVault((await appApi('')).record,master);
   check('password update needs consent and preserves previous working secret',changed.vault.entries.some(entry=>entry.title.endsWith('bisheriges Passwort') && entry.password==='Synthetic-login-only#42') && changed.vault.entries.find(entry=>entry.id==='synthetic-login')!.password!=='Synthetic-login-only#42');
+  const previous=changed.vault.entries.find(entry=>entry.id==='synthetic-login')!.password;
+  await generated.locator('#login-password').fill('Synthetic-manual-replacement#42');await generated.locator('#confirm-login-update').check();await generated.locator('#save-login').click();await status(generated,'Login verschlüsselt gespeichert');
+  const manual=await openVault((await appApi('')).record,master);
+  check('red team: manually replacing a password also preserves the previous encrypted credential',manual.vault.entries.some(entry=>entry.title.endsWith('bisheriges Passwort') && entry.password===previous) && manual.vault.entries.find(entry=>entry.id==='synthetic-login')!.password==='Synthetic-manual-replacement#42');
   await generated.close();await popup.bringToFront();await popup.locator('#disable-inline').click();await status(popup,'Schlüssel auf dieser Website deaktiviert');
   check('per-site disable removes persistent registration',await popup.evaluate(async()=>(await(globalThis as any).chrome.scripting.getRegisteredContentScripts()).length===0));
   await popup.evaluate(async()=>{await(globalThis as any).chrome.storage.local.remove('heavenkey.inline.sites');});await target.reload();await cdp.detach();

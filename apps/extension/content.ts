@@ -2,10 +2,11 @@
 import './vendor/extract.js';
 import './vendor/fill.js';
 import { PROFILE_KEYS, HIGH_FIELDS } from '../../packages/forms/schema';
+import { captureBoundary, sameBoundary, fieldGroup, secretDestinationAllowed } from './form-boundary';
 
 type Entities = Record<string, string>;
 type Field = { id: string; field: string; entity: string | null; score: number; hasValue: boolean; sensitive: boolean; secret: boolean; kind: string; form: string; maxLength?: number; anchored?: boolean };
-type Target = { el: HTMLElement; fingerprint: string; field: Field };
+type Target = { el: HTMLElement; fingerprint: string; boundary: ReturnType<typeof captureBoundary>; field: Field };
 type Request = { action: 'scan' | 'fill' | 'undo' | 'capture' | 'clear'; origin: string; href: string; scan?: string; entities?: Entities; selected?: { id: string; entity: string }[]; sensitive?: boolean; secrets?: boolean; overwrite?: boolean; choices?: boolean; generated?: boolean; anchor?: string };
 const root = globalThis as any;
 const P = root.HeavenKeyFieldPrimitives;
@@ -23,6 +24,7 @@ const fingerprint = (el: any) => [el.tagName, el.type, el.id, el.name, el.getAtt
 function safePage(req: Request) {
   if (window.top !== window || location.origin !== req.origin || location.href !== req.href) throw new Error('Die Zielseite hat sich geändert. Bitte erneut prüfen.');
   const url = new URL(location.href);
+  if (url.username || url.password) throw new Error('Zieladressen mit eingebetteter Anmeldung sind gesperrt.');
   if (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname))) throw new Error('Nur HTTPS-Seiten und lokale Testseiten sind erlaubt.');
 }
 function usable(el: any) {
@@ -74,26 +76,31 @@ function choices(el: any, value: string) {
   return !!label && (label === valueNorm || norm(el.value || '') === valueNorm || aliases.some((s: string) => norm(s) === label));
 }
 function makeEngine() {
-  let targets = new Map<string, Target>(), scan = '', href = '';
+  let targets = new Map<string, Target>(), scan = '', href = '', expires = 0, scanAnchor: string | undefined;
   let undo: { href: string; expires: number; rows: { el: any; value: string; checked: boolean; fingerprint: string; after: string; afterChecked: boolean; aria?: { el: Element; value: string | null }[] }[] }[] = [];
-  const clear = () => { targets.clear(); scan = ''; href = ''; undo = []; };
+  const clear = () => { targets.clear(); scan = ''; href = ''; expires = 0; scanAnchor = undefined; undo = []; };
   addEventListener('pagehide', clear);
   return (req: Request) => {
     safePage(req);
     if (req.action === 'clear') { clear(); return { cleared: true }; }
+    const anchor = req.anchor ? root.__heavenkeyInlineTarget : null;
+    if (req.anchor && req.action !== 'undo' && (!anchor || anchor.token !== req.anchor || anchor.href !== location.href ||
+      anchor.expires <= Date.now() || typeof anchor.valid !== 'function' || !anchor.valid() || !usable(anchor.el))) {
+      throw new Error('Der Feldklick ist abgelaufen oder das Formular wurde geändert. Erneut auf den Schlüssel klicken.');
+    }
     if (req.action === 'scan' || req.action === 'capture') {
-      targets = new Map(); scan = crypto.randomUUID(); href = location.href;
-      const fields: Field[] = [], captured: Entities = {}, forms=new Map<Element,string>();
+      targets = new Map(); scan = crypto.randomUUID(); href = location.href; expires = Date.now() + 120000; scanAnchor = req.anchor;
+      const fields: Field[] = [], captured: Entities = {}, forms=new Map<Node,string>();
       for (const el of P.allFields().slice(0, 500)) {
         if (!usable(el)) continue;
+        if (anchor && (fieldGroup(el) !== fieldGroup(anchor.el) || el.getRootNode() !== anchor.el.getRootNode())) continue;
         const match = identify(el), key = match.entity, id = crypto.randomUUID();
-        const form=el.form || el.closest('form') || document.documentElement;
+        const form=fieldGroup(el);
         if(!forms.has(form)) forms.set(form,crypto.randomUUID());
         const field: Field = { id, field: (P.labelText(el) || el.name || el.id || el.tagName).trim().slice(0, 120), entity: key, score: match.score, hasValue: hasValue(el), sensitive: !!key && high.has(base(key)), secret: !!key && secret.has(base(key)), kind: /\bnew-password\b/i.test(el.autocomplete || '') ? 'new-password' : el.type || el.tagName.toLowerCase(), form:forms.get(form)! };
-        field.maxLength = el.maxLength > 0 ? el.maxLength : undefined;
-        const anchor = root.__heavenkeyInlineTarget;
+        field.maxLength = el.maxLength >= 0 ? el.maxLength : undefined;
         field.anchored = !!req.anchor && anchor?.token === req.anchor && anchor.el === el && anchor.href === location.href && anchor.expires > Date.now();
-        targets.set(id, { el, fingerprint: fingerprint(el), field }); fields.push(field);
+        targets.set(id, { el, fingerprint: fingerprint(el), boundary: captureBoundary(el), field }); fields.push(field);
         if (req.action === 'capture' && key && !secret.has(base(key)) && (!high.has(base(key)) || req.sensitive) && (!high.has(base(key)) || exactSensitive(el, key)) && !['checkbox','radio'].includes(el.type)) {
           const value = text(el).trim(); if (value && value.length <= 10000 && PROFILE_KEYS.includes(key as any) && !captured[key]) captured[key] = value;
         }
@@ -120,29 +127,35 @@ function makeEngine() {
       }
       return { count };
     }
-    if (req.action !== 'fill' || req.scan !== scan || href !== location.href) throw new Error('Die Vorschau ist abgelaufen. Bitte erneut prüfen.');
+    if (req.action !== 'fill' || !scan || req.scan !== scan || href !== location.href || Date.now() >= expires || req.anchor !== scanAnchor) throw new Error('Die Vorschau ist abgelaufen. Bitte erneut prüfen.');
     if (!req.selected?.length || req.selected.length > 200 || !req.entities || Object.values(req.entities).some(v => typeof v !== 'string' || v.length > 10000)) throw new Error('Ungültige Feldauswahl.');
     const rows: any[] = [], blocked: string[] = [];
     const planned = req.selected.map(selection => {
       const target = targets.get(selection.id), key = selection.entity;
-      if (!target || !allowed(key) || !usable(target.el) || fingerprint(target.el) !== target.fingerprint) throw new Error('Ein Feld hat sich geändert. Bitte erneut prüfen.');
+      if (!target || !allowed(key) || !usable(target.el) || fingerprint(target.el) !== target.fingerprint || !sameBoundary(target.el, target.boundary)) throw new Error('Ein Feld oder Formularziel hat sich geändert. Bitte erneut prüfen.');
       const el: any = target.el, original = target.field.entity;
       if (secret.has(base(key)) && target.field.kind === 'new-password' && !(req.generated && key === 'password')) { blocked.push(target.field.field); return null; }
       if (req.generated && key === 'password' && target.field.kind !== 'new-password') { blocked.push(target.field.field); return null; }
+      if (secret.has(base(key)) && !secretDestinationAllowed(el, req.origin)) { blocked.push(target.field.field); return null; }
       // Re-mapping cannot downgrade the sensitivity of the actual target.
       if ((original && (high.has(base(original)) || secret.has(base(original))) && base(original) !== base(key)) || (high.has(base(key)) && (!req.sensitive || !exactSensitive(el, key))) || (secret.has(base(key)) && (!req.secrets || !exactSensitive(el, key)))) { blocked.push(target.field.field); return null; }
       if (hasValue(el) && !req.overwrite) return null;
       if (['checkbox','radio'].includes(el.type) && (!req.choices || consent.test(P.tokens(el)))) return null;
       const bp = P.bdayParts(req.entities), value = P.resolveValue(key, req.entities, bp, el);
       if (!value) return null;
-      if (el.maxLength > 0 && value.length > el.maxLength) { blocked.push(target.field.field); return null; }
+      if (el.maxLength >= 0 && value.length > el.maxLength) { blocked.push(target.field.field); return null; }
       return { el, value, target };
     });
+    // Consume before dispatching input events: page listeners cannot replay a scan.
+    targets.clear(); scan = ''; expires = 0;
     for (const item of planned) {
       if (!item) continue;
       safePage(req);
       const { el, value, target } = item;
-      if (!usable(el) || fingerprint(el) !== target.fingerprint) break;
+      if (!usable(el) || fingerprint(el) !== target.fingerprint || !sameBoundary(el, target.boundary)) { blocked.push(target.field.field); break; }
+      // A previous field's input handler may have changed this field in the meantime.
+      if (hasValue(el) && !req.overwrite) continue;
+      if (el.maxLength >= 0 && value.length > el.maxLength || secret.has(base(target.field.entity || '')) && !secretDestinationAllowed(el, req.origin)) { blocked.push(target.field.field); break; }
       const old = { el, value: text(el), checked: !!el.checked, fingerprint: target.fingerprint };
       if (['checkbox','radio'].includes(el.type)) {
         if (!choices(el, value)) continue;

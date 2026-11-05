@@ -4,6 +4,7 @@ import { PROFILE_KEYS, HIGH_FIELDS, validateProfiles, type FormProfile } from '.
 import { generateChannel, channelCode, openUnlock, validateRequest, type UnlockRequest } from './unlock-channel';
 import { website, scriptId } from './site-access';
 import { password, passphrase } from './generator';
+import { taskFrom, deliveryEntities, type Task } from './workflow';
 const extension = (globalThis as any).browser || (globalThis as any).chrome;
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const input = (id: string) => $<HTMLInputElement>(id);
@@ -18,10 +19,11 @@ let siteOrigin = '', pendingUnlock: {request: UnlockRequest; privateKey: CryptoK
 let nextFocus: HTMLElement | null=null;
 let editLogin: Login | null = null, draftGenerated = false, sourceGenerated = false, savedGenerated = '';
 let inlineTarget: { id: number; href: string; origin: string; pattern: string } | null = null;
+let currentTask = taskFrom(new URL(location.href).searchParams.get('intent'));
 function focusAfter(control: HTMLElement) { if(busy) nextFocus=control;else control.focus(); }
 const button = (label: string, fn: () => void, kind = 'secondary') => { const b = document.createElement('button'); b.type = 'button'; b.className = kind; b.textContent = label; b.addEventListener('click', () => { if (!busy) fn(); }); return b; };
 function status(message: string, error = false) { $('smart-status').textContent = message; $('smart-status').dataset.error = String(error); }
-function resetPreview() { preview = null; $('field-map').replaceChildren(); $('fill-confirmation').hidden = true; input('confirm-origin').checked = false; }
+function resetPreview() { preview = null; $('field-map').replaceChildren(); $('fill-confirmation').hidden = true; input('confirm-origin').checked = false; $('fill-summary').textContent = ''; $('task-progress').textContent = '1 · Eintrag auswählen oder neu anlegen'; }
 function resetSource() { sourceGenerated=false; $('quick-login').hidden=true; entities = {}; sourceLogin = null; sourceProfile = null; $('entity-preview').replaceChildren(); input('source-text').value = ''; input('profile-title').value = ''; input('include-sensitive').checked = false; input('include-secrets').checked = false; input('overwrite').checked = false; input('include-choices').checked = false; resetPreview(); }
 function clearEditor() {
   editLogin=null; draftGenerated=false; savedGenerated='';
@@ -29,12 +31,33 @@ function clearEditor() {
   input('login-password').type='password'; input('show-generated').checked=false; input('confirm-login-update').checked=false;
   $('update-login-row').hidden=true; $('preview-generated').hidden=true; ($('login-editor') as HTMLDetailsElement).open=false;
 }
-function startLogin(entry?: Login) {
+function startLogin(entry?: Login, expand = true) {
   clearEditor(); editLogin=entry || null;
   input('login-title').value=entry?.title || (siteOrigin ? new URL(siteOrigin).hostname : '');
   input('login-username').value=entry?.username || ''; input('login-password').value=entry?.password || ''; input('login-url').value=entry?.url || siteOrigin;
-  $('update-login-row').hidden=!entry; ($('login-editor') as HTMLDetailsElement).open=true;
+  $('update-login-row').hidden=!entry; ($('login-editor') as HTMLDetailsElement).open=expand;
 }
+function renderTask() {
+  const copy: Record<Task,[string,string]> = {
+    login: ['Anmelden','Wähle einen Login für die angezeigte Website. Danach die Felder prüfen und freigeben.'],
+    template: ['Formular ausfüllen','Wähle dein privates oder geschäftliches Profil. Nur gewählte Werte werden weitergegeben.'],
+    generate: ['Neues Passwort','Neues Passwort erzeugen, verschlüsselt speichern und anschließend neue Passwortfelder füllen.'],
+    manage: ['Tresor verwalten','Logins und Profile finden, bearbeiten oder den vollständigen lokalen Tresor öffnen.'],
+  };
+  $('task-title').textContent = copy[currentTask][0]; $('task-help').textContent = copy[currentTask][1];
+  for (const control of document.querySelectorAll<HTMLButtonElement>('[data-task]')) control.setAttribute('aria-pressed',String(control.dataset.task === currentTask));
+  $('new-profile').hidden = currentTask !== 'template' && currentTask !== 'manage';
+  $('new-login').hidden = currentTask === 'template';
+  $('other-logins-row').hidden = currentTask === 'template' || currentTask === 'manage';
+  $('login-editor').hidden = currentTask === 'template';
+}
+for (const control of document.querySelectorAll<HTMLButtonElement>('[data-task]')) control.addEventListener('click', () => {
+  if (!key || busy) return;
+  currentTask = taskFrom(control.dataset.task || null); resetSource(); clearEditor(); renderTask(); renderSources();
+  if (currentTask === 'generate') { startLogin(); focusAfter($('generate-password')); }
+  else focusAfter(input('vault-search'));
+});
+input('show-other-logins').addEventListener('change',renderSources);
 function lock(message = 'Tresor gesperrt.') {
   nextFocus=null;
   const pending=pendingUnlock; pendingUnlock=null; $('complete-passkey').hidden=true; $('passkey-code').textContent='';
@@ -79,11 +102,11 @@ function renderSources() {
   if (!vault) return;
   const query = input('vault-search').value.trim().toLowerCase(), list = $('source-list'); list.replaceChildren();
   const profiles = vault.profiles || [];
-  const intent=new URL(location.href).searchParams.get('intent');
   const matches=(entry: any)=>{ try{return new URL(entry.url).origin===siteOrigin;}catch{return false;} };
   const logins=[...vault.entries].sort((a,b)=>Number(matches(b))-Number(matches(a)) || a.title.localeCompare(b.title));
   for (const entry of [...logins.map(v => ({ v, kind: 'login' })), ...profiles.map(v => ({ v, kind: 'profile' }))]) {
-    if(intent==='template' && entry.kind!=='profile') continue;
+    if(currentTask==='template' && entry.kind!=='profile' || ['login','generate'].includes(currentTask) && entry.kind!=='login') continue;
+    if(entry.kind==='login' && currentTask!=='manage' && !matches(entry.v) && !input('show-other-logins').checked) continue;
     if (!JSON.stringify({ title: entry.v.title, username: (entry.v as any).username, entities: entry.kind === 'profile' ? (entry.v as FormProfile).entities : undefined }).toLowerCase().includes(query)) continue;
     const b = button(`${entry.kind === 'login' ? matches(entry.v) ? 'Diese Seite' : 'Andere Seite' : 'Vorlage'} · ${entry.v.title}`, () => {
       resetSource();
@@ -91,7 +114,7 @@ function renderSources() {
         sourceLogin = entry.v;
         entities = { username: (entry.v as any).username, email: (entry.v as any).username, password: (entry.v as any).password };
         status('Login gewählt. Füllen ist nur auf seiner exakt gespeicherten Herkunft erlaubt.');
-        startLogin(entry.v as Login);
+        startLogin(entry.v as Login,currentTask==='generate' || currentTask==='manage');
       } else { sourceProfile = entry.v as FormProfile; entities = { ...sourceProfile.entities }; input('profile-title').value = sourceProfile.title; status('Profil gewählt. Prüfe die Werte und die Zielseite.'); }
       renderEntities();
       $('quick-login').hidden=entry.kind!=='login' || !matches(entry.v);
@@ -100,7 +123,7 @@ function renderSources() {
     });
     b.dataset.kind = entry.kind; b.dataset.id = entry.v.id; list.append(b);
   }
-  if (!list.childElementCount) { const p = document.createElement('p'); p.className = 'note'; p.textContent = 'Keine passenden Einträge. Profile kannst du aus einem Text oder einem Formular erstellen.'; list.append(p); }
+  if (!list.childElementCount) { const p = document.createElement('p'); p.className = 'note'; p.textContent = currentTask==='template' ? 'Noch kein passendes Profil. Lege ein privates oder geschäftliches Formularprofil an.' : 'Kein passender Login. Lege einen Login für diese Website an oder suche ausdrücklich in weiteren Logins.'; list.append(p); }
 }
 function renderEntities() {
   const list = $('entity-preview'); list.replaceChildren(); resetPreview();
@@ -118,10 +141,9 @@ async function acceptOpened(opened: Awaited<ReturnType<typeof openVault>>, nextR
   try { siteOrigin=(await target()).origin; } catch { siteOrigin=''; }
   active(generation); $('site-origin').textContent=siteOrigin || 'Öffne HeavenKey auf einer HTTPS-Webseite.';
   if(!editLogin && siteOrigin) { input('login-url').value=siteOrigin; input('login-title').value=new URL(siteOrigin).hostname; }
-  connected();$('smart-workspace').hidden=false;$('lock-extension').hidden=false;renderSources();status('Entsperrt. Passende Logins stehen oben, gespeicherte Profile dienen als Vorlagen.');focusAfter(input('vault-search'));
-  const intent=new URL(location.href).searchParams.get('intent');
-  if(intent==='generate') { startLogin(); focusAfter($('generate-password')); }
-  if(intent==='manage') focusAfter($('manage-vault'));
+  connected();$('smart-workspace').hidden=false;$('lock-extension').hidden=false;renderTask();renderSources();status('Entsperrt. Wähle die gewünschte Aufgabe; es wird nichts automatisch ausgefüllt.');focusAfter(input('vault-search'));
+  if(currentTask==='generate') { startLogin(); focusAfter($('generate-password')); }
+  if(currentTask==='manage') focusAfter($('manage-vault'));
 }
 async function target() {
   const param = new URL(location.href).searchParams.get('target');
@@ -169,11 +191,20 @@ function showMap(result: any) {
     for (const name of [...Object.keys(entities), ...['bday_day','bday_month','bday_year','cc_exp','cc_month','cc_year'].filter(available)]) {
       const option = document.createElement('option'); option.value = name; option.textContent = labels[name] || name; options.append(option);
     }
-    options.value = field.entity || ''; options.addEventListener('change', () => { check.checked = !!options.value; input('confirm-origin').checked = false; });
-    check.addEventListener('change', () => { input('confirm-origin').checked = false; });
+    options.value = field.entity || ''; options.addEventListener('change', () => { check.checked = !!options.value; input('confirm-origin').checked = false; updateFillSummary(); });
+    check.addEventListener('change', () => { input('confirm-origin').checked = false; updateFillSummary(); });
     row.append(label,options); list.append(row);
   }
   $('target-origin').textContent = result.origin; input('confirm-origin').checked = false; $('fill-confirmation').hidden = false;
+  $('task-progress').textContent = '2 · Felder prüfen → 3 · Website freigeben und füllen'; updateFillSummary();
+}
+function selectedFields() {
+  return [...document.querySelectorAll<HTMLInputElement>('[data-field]:checked')].map(field => ({ id: field.dataset.field!, entity: document.querySelector<HTMLSelectElement>(`[data-mapping="${field.dataset.field}"]`)!.value })).filter(row => row.entity);
+}
+function updateFillSummary() {
+  const selected = selectedFields(), secrets = selected.filter(row => ['password','otp'].includes(row.entity)).length;
+  $('fill-summary').textContent = `${selected.length} Felder${secrets ? ` · ${secrets} Geheimnisse` : ''} · ${input('overwrite').checked ? 'Überschreiben ausdrücklich erlaubt' : 'Vorhandene Eingaben bleiben erhalten'} · kein Absenden`;
+  $('fill-selected').textContent = `${selected.length} gewählte Felder füllen`;
 }
 $('pairing-form').addEventListener('submit', event => {
   event.preventDefault();
@@ -248,8 +279,9 @@ async function previewSource(generation: number) {
   const form=anchor?.form || (passwords.length===1 ? passwords[0].form : sourceProfile && new Set(result.fields.map((f:Field)=>f.form)).size===1 ? result.fields[0]?.form : null);
   const allowed=form ? result.fields.filter((f:Field)=>f.form===form && !f.hasValue && !f.sensitive && (sourceGenerated ? f.entity==='password' && f.kind==='new-password' : sourceLogin ? ['username','email','password','otp'].includes(f.entity||'') && f.kind!=='new-password' : !!f.entity && available(f.entity) && !f.secret)) : [];
   for(const check of document.querySelectorAll<HTMLInputElement>('[data-field]')) check.checked=allowed.some((f:Field)=>f.id===check.dataset.field);
+  updateFillSummary();
   input('include-secrets').checked=!!sourceLogin;input('confirm-origin').checked=false;
-  status(form ? 'Loginfelder ausgewählt. Prüfe die Adresse und gib das Einfügen frei. Es wird nichts abgesendet.' : 'Kein eindeutiges Loginformular. Wähle die Felder einzeln in der Vorschau.');$('fill-confirmation').scrollIntoView({block:'nearest'});focusAfter(input('confirm-origin'));
+  status(form ? 'Passende Felder ausgewählt. Prüfe die Adresse und gib das Einfügen frei. Es wird nichts abgesendet.' : 'Kein eindeutiges Formular. Wähle die Felder einzeln in der Vorschau.');$('fill-confirmation').scrollIntoView({block:'nearest'});focusAfter(input('confirm-origin'));
 }
 $('quick-login').addEventListener('click',()=>void run(previewSource));
 $('lock-extension').addEventListener('click', () => { lock(); input('extension-master').focus(); });
@@ -273,11 +305,12 @@ $('scan-page').addEventListener('click', () => void run(async generation => {
 $('fill-selected').addEventListener('click', () => void run(async generation => {
   if (!key || !pageTarget || !preview || !input('confirm-origin').checked) throw new Error('Die angezeigte Zielseite ausdrücklich bestätigen.');
   const current = await target(); active(generation); if (current.id !== pageTarget.id || current.href !== pageTarget.href) throw new Error('Die Zielseite hat sich geändert. Erneut prüfen.');
-  const selected = [...document.querySelectorAll<HTMLInputElement>('[data-field]:checked')].map(field => ({ id: field.dataset.field!, entity: document.querySelector<HTMLSelectElement>(`[data-mapping="${field.dataset.field}"]`)!.value })).filter(row => row.entity);
+  const selected = selectedFields();
   if (sourceLogin?.totp) { const code = (await totp(sourceLogin.totp)).code; active(generation); entities.otp = code; }
   if(sourceGenerated && (entities.password!==savedGenerated || sourceLogin?.password!==savedGenerated)) throw Error('Das neue Passwort wurde geändert. Erneut verschlüsselt speichern.');
-  const result = await inject(pageTarget,'fill',generation,{ scan: preview.scan, entities, selected, sensitive: input('include-sensitive').checked, secrets: input('include-secrets').checked, overwrite: input('overwrite').checked, choices: input('include-choices').checked, generated: sourceGenerated }); active(generation);
+  const result = await inject(pageTarget,'fill',generation,{ scan: preview.scan, entities: deliveryEntities(entities,selected,{sensitive:input('include-sensitive').checked,secrets:input('include-secrets').checked}), selected, sensitive: input('include-sensitive').checked, secrets: input('include-secrets').checked, overwrite: input('overwrite').checked, choices: input('include-choices').checked, generated: sourceGenerated }); active(generation);
   resetPreview(); status(`${result.count} Felder gefüllt.${result.blocked.length ? ` ${result.blocked.length} Felder wegen fehlender Freigabe oder Zuordnung ausgelassen.` : ''} Es wurde kein Formular abgesendet.`);
+  $('task-progress').textContent = result.count ? 'Fertig · Werte eingefügt. Auf der Website prüfen und selbst absenden.' : 'Keine Werte eingefügt · Auswahl und Freigaben prüfen.';
 }));
 $('undo-fill').addEventListener('click', () => void run(async generation => { if (!key || !pageTarget) throw new Error('Keine Füllung in dieser Sitzung.'); const result = await inject(pageTarget,'undo',generation); active(generation); resetPreview(); status(`${result.count} Felder zurückgesetzt. Unveränderte Zielseite und maximal 2 Minuten erforderlich.`); }));
 $('capture-page').addEventListener('click', () => void run(async generation => {
@@ -296,7 +329,7 @@ $('save-profile').addEventListener('click', () => void run(async generation => {
   const saved = snapshot(await api('/api/password-vault',{ expected_revision: revision, record: sealed })); active(generation);
   vault = next; envelope = sealed; revision = saved.revision; sourceProfile = profile; renderSources(); status('Profil verschlüsselt gespeichert.');
 }));
-for (const id of ['include-sensitive','include-secrets','overwrite','include-choices']) input(id).addEventListener('change', () => { input('confirm-origin').checked = false; });
+for (const id of ['include-sensitive','include-secrets','overwrite','include-choices']) input(id).addEventListener('change', () => { input('confirm-origin').checked = false; updateFillSummary(); });
 
 async function refreshInline() {
   try {
@@ -356,8 +389,9 @@ $('generate-password').addEventListener('click',()=>void run(async generation=>{
   const scan=await inject(current,'scan',generation);active(generation);
   const anchor=scan.fields.find((field:Field)=>field.anchored);
   const candidates=scan.fields.filter((field:Field)=>field.kind==='new-password' && (!anchor || field.form===anchor.form));
-  const limits=candidates.map((field:Field)=>field.maxLength).filter((limit:number|undefined):limit is number=>!!limit);
+  const limits=candidates.map((field:Field)=>field.maxLength).filter((limit:number|undefined):limit is number=>typeof limit==='number' && limit>=0);
   const maximum=limits.length ? Math.min(128,...limits) : 128;
+  if(maximum<14) throw Error(`Dieses Feld erlaubt höchstens ${maximum} Zeichen. Ein sicheres Generatorpasswort benötigt mindestens 14.`);
   let value='';
   if(($('generator-mode') as HTMLSelectElement).value==='passphrase') {
     value=passphrase();if(value.length>maximum) throw Error(`Die Passphrase überschreitet das Feldlimit (${maximum}). Ein Zufallspasswort wählen.`);
@@ -378,7 +412,7 @@ $('save-login').addEventListener('click',()=>void run(async generation=>{
   if(!entry.title || !entry.password) throw Error('Titel und Passwort eingeben.');
   if(!editLogin && vault.entries.some(login=>{try{return new URL(login.url).origin===current.origin && login.username===entry.username;}catch{return false;}})) throw Error('Ein Login für dieses Konto existiert. Den Eintrag auswählen und ausdrücklich aktualisieren.');
   // Keep the working credential while a website password change is still pending.
-  const previous=editLogin && draftGenerated && editLogin.password!==entry.password ? [{...editLogin,id:crypto.randomUUID(),title:editLogin.title.slice(0,170)+' · bisheriges Passwort',favorite:false}] : [];
+  const previous=editLogin && editLogin.password!==entry.password ? [{...editLogin,id:crypto.randomUUID(),title:editLogin.title.slice(0,170)+' · bisheriges Passwort',favorite:false}] : [];
   const next={...vault,entries:[...vault.entries.filter(login=>login.id!==entry.id),...previous,entry]};validateVault(next);
   const sealed=await sealVault(next,key,envelope);active(generation);
   const saved=snapshot(await api('/api/password-vault',{expected_revision:revision,record:sealed}));active(generation);

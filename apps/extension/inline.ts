@@ -1,5 +1,7 @@
 /** Optional, per-website field affordance. Never reads values or receives vault data. */
 import { website } from './site-access';
+import { captureBoundary, sameBoundary } from './form-boundary';
+import { fieldTask } from './workflow';
 const ext = (globalThis as any).browser || (globalThis as any).chrome;
 const state = globalThis as any;
 if (window.top === window && !state.__heavenkeyInline) {
@@ -29,10 +31,12 @@ if (window.top === window && !state.__heavenkeyInline) {
     if (!event.isTrusted || !enabled || !relevant(el)) return;
     close();
     const token = crypto.randomUUID();
-    state.__heavenkeyInlineTarget = { el, token, href: location.href, expires: Date.now() + 120000 };
+    const boundary = captureBoundary(el);
+    state.__heavenkeyInlineTarget = { el, token, href: location.href, expires: Date.now() + 120000, valid: () => sameBoundary(el, boundary) };
     menu = document.createElement('div'); menu.className = 'menu'; menu.setAttribute('role', 'group'); menu.setAttribute('aria-label', 'HeavenKey Aktionen');
     const brand = document.createElement('div'); brand.className = 'brand'; brand.textContent = 'HeavenKey'; menu.append(brand);
-    const options = [['login', 'Login auswählen'], ['template', 'Name & Adresse ausfüllen'], ['generate', 'Neues Passwort generieren'], ['manage', 'Passwörter verwalten']];
+    const preferred = fieldTask(el);
+    const options = [['login', 'Login auswählen'], ['template', 'Name & Adresse ausfüllen'], ['generate', 'Neues Passwort generieren'], ['manage', 'Passwörter verwalten']].sort((a,b) => Number(b[0] === preferred) - Number(a[0] === preferred));
     for (const [intent, label] of options) {
       const action = document.createElement('button'); action.type = 'button'; action.textContent = label;
       action.addEventListener('click', async click => {
@@ -41,6 +45,12 @@ if (window.top === window && !state.__heavenkeyInline) {
         catch { action.textContent = 'Erweiterung bitte neu öffnen'; }
       }); menu.append(action);
     }
+    menu.addEventListener('keydown', event => {
+      const controls = [...menu!.querySelectorAll('button')], current = controls.indexOf(shadow.activeElement as HTMLButtonElement);
+      if (event.key === 'Escape') { event.preventDefault(); close(); anchor.focus(); return; }
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? controls.length - 1 : event.key === 'ArrowDown' ? (current + 1) % controls.length : event.key === 'ArrowUp' ? (current + controls.length - 1) % controls.length : -1;
+      if (next >= 0) { event.preventDefault(); controls[next].focus(); }
+    });
     const hint = document.createElement('div'); hint.className = 'hint'; hint.textContent = 'Entsperren und Freigabe im HeavenKey-Fenster.'; menu.append(hint);
     const rect = anchor.getBoundingClientRect(); menu.style.left = `${Math.max(4, Math.min(rect.right - 246, innerWidth - 254))}px`; menu.style.top = `${Math.max(4, Math.min(rect.bottom + 6, innerHeight - 270))}px`;
     shadow.append(menu); menu.querySelector('button')?.focus();
@@ -60,6 +70,7 @@ if (window.top === window && !state.__heavenkeyInline) {
       const rect = el.getBoundingClientRect(); button.style.left = `${Math.min(innerWidth - 32, rect.right - 31)}px`; button.style.top = `${rect.top + (rect.height - 28) / 2}px`;
     }
     if (enabled && !host.isConnected) document.documentElement.append(host);
+    if (state.__heavenkeyInlineTarget && (!state.__heavenkeyInlineTarget.valid() || state.__heavenkeyInlineTarget.expires <= Date.now())) { close(); delete state.__heavenkeyInlineTarget; }
     if (!enabled) { close(); host.remove(); delete state.__heavenkeyInlineTarget; }
   };
   const schedule = () => { if (!pending && !stopped) { pending = true; requestAnimationFrame(render); } };

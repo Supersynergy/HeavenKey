@@ -125,14 +125,16 @@ class _FormProfilesPanelState extends State<FormProfilesPanel> {
           spacing: 8,
           children: [
             OutlinedButton.icon(
-              onPressed: widget.vault.busy
+              onPressed:
+                  widget.vault.busy || widget.vault.profiles.length >= 100
                   ? null
                   : () => quickProfile('Privat'),
               icon: const Icon(Icons.person_outline),
               label: const Text('Privates Profil'),
             ),
             OutlinedButton.icon(
-              onPressed: widget.vault.busy
+              onPressed:
+                  widget.vault.busy || widget.vault.profiles.length >= 100
                   ? null
                   : () => quickProfile('Geschäftlich'),
               icon: const Icon(Icons.business_outlined),
@@ -145,6 +147,18 @@ class _FormProfilesPanelState extends State<FormProfilesPanel> {
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.contact_page_outlined),
             title: Text(profile.label),
+            subtitle: Text(
+              [
+                    profile.values['fullName'],
+                    profile.values['email'],
+                    profile.values['city'],
+                  ]
+                  .whereType<String>()
+                  .where((value) => value.isNotEmpty)
+                  .join(' · '),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
             onTap: widget.vault.busy ? null : () => edit(profile),
             trailing: IconButton(
               tooltip: 'Profil löschen',

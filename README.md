@@ -13,17 +13,18 @@ keine echte Office-Anbindung und kein KYC-Nachweis.
 
 Passwörter auf dem Desktop und auf Android lokal verwalten. HeavenKey verschlüsselt den Tresor auf deinem Gerät. Desktop und Handy lassen sich ausdrücklich koppeln und manuell abgleichen; Android erstellt und verwendet Website-Passkeys. Für den Passwortmanager brauchst du kein Cloudkonto.
 
-[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.29.0 Vorschau](https://img.shields.io/badge/version-0.29.0_preview-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.29.0-preview.1)
+[![CI](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Supersynergy/HeavenKey/actions/workflows/ci.yml) [![Version 0.30.0 Vorschau](https://img.shields.io/badge/version-0.30.0_preview-b38b3e)](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.30.0-preview.1)
 
-[App, Desktop und Erweiterungen 0.29](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.29.0-preview.1) · [Desktop einrichten](docs/DISTRIBUTION.md) · [Handy und Synchronisierung](docs/MOBILE-SYNC-PASSKEYS.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Lizenz](LICENSE)
+[App, Desktop und Erweiterungen 0.30](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.30.0-preview.1) · [Desktop einrichten](docs/DISTRIBUTION.md) · [Handy und Synchronisierung](docs/MOBILE-SYNC-PASSKEYS.md) · [Bedienung](docs/PASSWORD-MANAGER.md) · [Lizenz](LICENSE)
 
 Android hat einen eigenen [Produktions-Release-Ablauf](docs/ANDROID-PRODUCTION.md)
 für die eigenständige Handy-Nutzung. Der Ablauf veröffentlicht erst nach nativen
 Wiederherstellungstests und Prüfung der konfigurierten Herausgebersignatur.
 
-Android 0.29 enthält die vorhandenen Formularprofile, nativen App-Zuordnungen,
+Android 0.30 enthält die vorhandenen Formularprofile, nativen App-Zuordnungen,
 Registrierungsgenerator und merkbaren Passphrasen sowie neue direkte Einstiege für
-private und geschäftliche Profile. Die [gemeinsame Vorschau 0.29](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.29.0-preview.1)
+private und geschäftliche Profile. Die Liste zeigt Name, E-Mail und Ort zur schnellen
+Unterscheidung; die Profilgrenze gilt auch für die Direkteinstiege. Die [gemeinsame Vorschau 0.30](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.30.0-preview.1)
 verwendet auf Android eine getrennte App-Kennung und eine Testsignatur. Die
 [dauerhafte Produktionssignatur](docs/ANDROID-PRODUCTION.md) fehlt weiterhin;
 es gibt keinen App-Store-Upload. Desktop-Pakete und Erweiterungen sind ebenfalls
@@ -35,7 +36,20 @@ als Vorschau gekennzeichnet.
 
 Die macOS-App hat ein eigenes Fenster, native Datei-Dialoge und Tastaturmenüs. Beim Beenden stoppt sie ihren Dienst und die daran gebundenen Agentensitzungen. Passkeys hängen von WebView, Betriebssystem und Authenticator ab; über „Ansicht → Im Browser öffnen“ kannst du einen kompatiblen Browser verwenden.
 
-## Neu in 0.29: der Schlüssel direkt am Formular
+## Neu in 0.30: klare Aufgaben und geprüfte Formularziele
+
+Wähle **Anmelden**, **Formular**, **Neues Passwort** oder **Verwalten**.
+Die Erweiterung zeigt zuerst die passenden Einträge für diese Aufgabe; Logins
+anderer Websites erscheinen erst nach deiner Auswahl. Vor der Freigabe siehst du
+die Anzahl der gewählten Felder, Geheimnisse und die Regel für vorhandene Eingaben.
+
+Die Vorschau und der Feldklick laufen nach zwei Minuten ab. Verschobene Felder,
+geänderte Formularziele und nachträglich geänderte Feldlimits verlangen eine neue
+Prüfung. Passwort und Einmalcode werden bei Formularzielen auf anderen Herkünften
+ausgelassen. Nicht ausgewählte oder nicht freigegebene Werte gelangen gar nicht
+in die Formularhilfe. [Red-Team-Prüfung und Priorisierung](docs/REVIEW-0.30.md).
+
+### Der Schlüssel direkt am Formular
 
 Aktiviere in der Erweiterung **Schlüssel auf dieser Website aktivieren**. Danach
 erscheint das kleine Schlüsselsymbol an sichtbaren Login-, Kontakt- und
@@ -46,22 +60,22 @@ bleiben im vertrauenswürdigen HeavenKey-Fenster.
 
 Der Browser-Generator bietet 14–128 Zeichen, wählbare Sonderzeichen oder sechs
 zufällige EFF-Wörter. Neue Passwörter werden vor dem Einfügen verschlüsselt
-abgelegt; bei einem erzeugten Passwortwechsel bleibt das bisherige Passwort
+abgelegt; bei jedem im Browser gespeicherten Passwortwechsel bleibt das bisherige Passwort
 zusätzlich erhalten. Private und geschäftliche Formularprofile sparen wiederholte
 Namens-, Kontakt- und Adresseingaben; Android hat dafür direkte Einstiege.
 
 [Bedienung und Prozesskarten](docs/AUTOFILL-FLOWS.md) ·
 [Funktionskarten von zehn Referenzprodukten](docs/AUTOFILL-COMPETITORS.md) ·
-[Release-Details und Signierungsstatus](docs/releases/0.29.0.md)
+[Release-Details und Signierungsstatus](docs/releases/0.30.0.md)
 
 **Alle Plattformen in einem Download:**
-[HeavenKey-0.29.0-all-platforms.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-all-platforms.zip).
+[HeavenKey-0.30.0-all-platforms.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-all-platforms.zip).
 Der gemeinsame Release-Workflow veröffentlicht erst nach erfolgreicher CI,
 Android-Abnahme und allen fünf Desktop-Builds. Einzelpakete stehen unten.
 
 ## Beim ersten Start
 
-Erstelle einen Tresor oder wähle die Wiederherstellung deiner Sicherung. Unter **Erste Schritte** fügst du auf Wunsch drei zufällige Beispieldaten ein (Tag `Beispiel`, reservierte `.example`-Domains) und entfernst sie dort wieder; eigene Logins bleiben dabei unverändert. Der erste Login braucht Website, Nutzername und das aktuelle Passwort; der Name lässt sich aus der Domain übernehmen. Android zeigt zunächst nur drei Login-Felder; eigene Namen und Notizen sind optional. Ein eigener Passkey-Tab, wählbare Generatorlängen und ein neues Hell-/Dunkel-Design erleichtern den Einstieg. Android 0.28 ergänzt V3-Sicherungen einschließlich Website-Passkeys und Formularprofilen ohne Desktop. Die aktuelle 0.29-Vorschau enthält diese Änderungen und die schnellen Profil-Einstiege. Android akzeptiert auch eine vollständige HTTPS-Adresse und zeigt vor dem Speichern die genaue Herkunft ohne Pfad.
+Erstelle einen Tresor oder wähle die Wiederherstellung deiner Sicherung. Unter **Erste Schritte** fügst du auf Wunsch drei zufällige Beispieldaten ein (Tag `Beispiel`, reservierte `.example`-Domains) und entfernst sie dort wieder; eigene Logins bleiben dabei unverändert. Der erste Login braucht Website, Nutzername und das aktuelle Passwort; der Name lässt sich aus der Domain übernehmen. Android zeigt zunächst nur drei Login-Felder; eigene Namen und Notizen sind optional. Ein eigener Passkey-Tab, wählbare Generatorlängen und ein neues Hell-/Dunkel-Design erleichtern den Einstieg. Android 0.28 ergänzt V3-Sicherungen einschließlich Website-Passkeys und Formularprofilen ohne Desktop. Die aktuelle 0.30-Vorschau enthält diese Änderungen und die schnellen Profil-Einstiege. Android akzeptiert auch eine vollständige HTTPS-Adresse und zeigt vor dem Speichern die genaue Herkunft ohne Pfad.
 
 Ein neues Passwort erzeugst du ausdrücklich. Bereits eingegebene Passwörter werden erst nach Bestätigung ersetzt. Vorschläge für Nutzernamen stammen aus dem entsperrten lokalen Tresor. Nach dem ersten Login führen passende Aktionen zur Sicherung, Browserintegration und Gerätekopplung. [Einstieg und Grenzen](docs/ONBOARDING.md).
 
@@ -73,24 +87,24 @@ Die ursprüngliche Idee steckt jetzt im Passwortmanager: den lokalen Tresor mit 
 
 ## Starten
 
-1. Lade für Android die [Vorschau 0.29](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.29.0-preview.1), für Desktop und Erweiterungen die [Vorschau 0.29](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.29.0-preview.1). Prüfe das Paket mit der jeweiligen `SHA256SUMS` und entpacke Desktop-Pakete vollständig. Die Android-APK wird auf dem Handy installiert.
+1. Lade für Android die [Vorschau 0.30](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.30.0-preview.1), für Desktop und Erweiterungen die [Vorschau 0.30](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.30.0-preview.1). Prüfe das Paket mit der jeweiligen `SHA256SUMS` und entpacke Desktop-Pakete vollständig. Die Android-APK wird auf dem Handy installiert.
 2. Öffne auf macOS `HeavenKey.app`. Die App verwaltet ihren lokalen Dienst und zeigt den Tresor im eigenen Fenster. Unter Windows und Linux öffnet der Starter den lokalen Tresor im Browser.
 3. Desktop: Lege ein Masterpasswort mit mindestens 14 Zeichen fest. Android: Bestätige deine Gerätesperre; ein zusätzliches Masterpasswort ist nicht erforderlich. Exportiere anschließend eine verschlüsselte Sicherung und prüfe ihre Wiederherstellung.
 
 | System | Paket | Starter |
 | --- | --- | --- |
-| macOS mit Apple Silicon | [HeavenKey-0.29.0-macos-arm64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-macos-arm64.zip) | `HeavenKey.app` (macOS 14+) |
-| macOS mit Intel-Prozessor | [HeavenKey-0.29.0-macos-x64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-macos-x64.zip) | `HeavenKey.app` (macOS 14+) |
-| Windows x64 | [HeavenKey-0.29.0-windows-x64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-windows-x64.zip) | `Start HeavenKey.cmd` |
-| Linux x64 | [HeavenKey-0.29.0-linux-x64.tar.gz](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-linux-x64.tar.gz) | `./start.sh` |
-| Linux ARM64 | [HeavenKey-0.29.0-linux-arm64.tar.gz](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-linux-arm64.tar.gz) | `./start.sh` |
-| Android ARM64, die meisten aktuellen Handys | [HeavenKey-0.29.0-android-preview-arm64-v8a.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-android-preview-arm64-v8a.apk) | Android 11+, Gerätesperre; Website-Passkeys ab Android 14 |
-| Android ARMv7, 32 Bit | [HeavenKey-0.29.0-android-preview-armeabi-v7a.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-android-preview-armeabi-v7a.apk) | Android 11+ |
-| Android x86-64 | [HeavenKey-0.29.0-android-preview-x86_64.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-android-preview-x86_64.apk) | Passende Geräte oder Emulatoren |
+| macOS mit Apple Silicon | [HeavenKey-0.30.0-macos-arm64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-macos-arm64.zip) | `HeavenKey.app` (macOS 14+) |
+| macOS mit Intel-Prozessor | [HeavenKey-0.30.0-macos-x64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-macos-x64.zip) | `HeavenKey.app` (macOS 14+) |
+| Windows x64 | [HeavenKey-0.30.0-windows-x64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-windows-x64.zip) | `Start HeavenKey.cmd` |
+| Linux x64 | [HeavenKey-0.30.0-linux-x64.tar.gz](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-linux-x64.tar.gz) | `./start.sh` |
+| Linux ARM64 | [HeavenKey-0.30.0-linux-arm64.tar.gz](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-linux-arm64.tar.gz) | `./start.sh` |
+| Android ARM64, die meisten aktuellen Handys | [HeavenKey-0.30.0-android-preview-arm64-v8a.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-android-preview-arm64-v8a.apk) | Android 11+, Gerätesperre; Website-Passkeys ab Android 14 |
+| Android ARMv7, 32 Bit | [HeavenKey-0.30.0-android-preview-armeabi-v7a.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-android-preview-armeabi-v7a.apk) | Android 11+ |
+| Android x86-64 | [HeavenKey-0.30.0-android-preview-x86_64.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-android-preview-x86_64.apk) | Passende Geräte oder Emulatoren |
 
-[Chromium-Erweiterung](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-extension-chromium.zip) · [Firefox-Erweiterung](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/HeavenKey-0.29.0-extension-firefox.zip) · [SHA256SUMS](https://github.com/Supersynergy/HeavenKey/releases/download/v0.29.0-preview.1/SHA256SUMS)
+[Chromium-Erweiterung](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-extension-chromium.zip) · [Firefox-Erweiterung](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-extension-firefox.zip) · [SHA256SUMS](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/SHA256SUMS)
 
-App, Desktop und Erweiterungen stehen gemeinsam in der [Vorschau 0.29 mit Prüfsummen und Quellnachweisen](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.29.0-preview.1). Die Android-Vorschau hat eine von der Produktions-App getrennte Kennung. Eine bereits installierte Vorschau lässt sich wegen einer anderen Testsignatur gegebenenfalls nicht direkt aktualisieren. Vor einem Kanalwechsel die verschlüsselte Sicherung und Wiederherstellung prüfen; keinen ungesicherten Tresor deinstallieren. Sie ist für Testdaten vorgesehen und hat keine dauerhafte Herausgebersignatur. Ein iOS-Paket ist noch nicht verfügbar; die Produktionsfreigabe steht aus.
+App, Desktop und Erweiterungen stehen gemeinsam in der [Vorschau 0.30 mit Prüfsummen und Quellnachweisen](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.30.0-preview.1). Die Android-Vorschau hat eine von der Produktions-App getrennte Kennung. Eine bereits installierte Vorschau lässt sich wegen einer anderen Testsignatur gegebenenfalls nicht direkt aktualisieren. Vor einem Kanalwechsel die verschlüsselte Sicherung und Wiederherstellung prüfen; keinen ungesicherten Tresor deinstallieren. Sie ist für Testdaten vorgesehen und hat keine dauerhafte Herausgebersignatur. Ein iOS-Paket ist noch nicht verfügbar; die Produktionsfreigabe steht aus.
 
 Windows verwendet jetzt denselben OpenSSL-Pfad für SSH-Schlüssel im Speicher wie macOS und Linux. Wine-Kompatibilität und echte Windows-Sicherheitsabnahme sind getrennte Nachweise. Die Pakete sind noch ohne Herausgebersignatur oder Notarisierung.
 
@@ -222,7 +236,7 @@ HeavenKey ist proprietäre Software. Die [HeavenKey Proprietary License 1.0](LIC
 Die [Flutter-App für Android und iPhone](docs/MOBILE.md) ergänzt den Desktop-Tresor
 mit nativer Geräteauthentifizierung und verschlüsselter Sicherung. Android verlangt
 für die gemeldete HTTPS-Domain eine ausdrückliche Einmalfreigabe vor dem Entsperren.
-Die [Android-Vorschau 0.29](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.29.0-preview.1)
+Die [Android-Vorschau 0.30](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.30.0-preview.1)
 enthält die aktuellen Android-APKs. Desktop und Erweiterungen liegen weiterhin im
 [gemeinsamen Release 0.26](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1).
 Android unterstützt den gekoppelten Desktop-Abgleich sowie Website-Passkeys über

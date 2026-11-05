@@ -1,7 +1,7 @@
 name: heavenkey_mobile
 description: Standalone encrypted Android vault with optional desktop sync, browser autofill and website passkeys.
 publish_to: none
-version: 0.29.0+29
+version: 0.30.0+30
 environment:
   sdk: ^3.13.2
 dependencies:

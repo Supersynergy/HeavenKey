@@ -11,9 +11,9 @@ Android 11 / API 30 ist die Mindestversion. Der Website-Passkey-Anbieter benöti
 Android 14 / API 34. Die Desktop-Version und ihre bisherigen Vorschau-Releases
 werden unabhängig versioniert.
 
-## Aktueller Stand: 0.29-Vorschau (5.11.2026)
+## Aktueller Stand: 0.30-Vorschau (5.11.2026)
 
-Die [gemeinsame Vorschau 0.29](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.29.0-preview.1)
+Die [gemeinsame Vorschau 0.30](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.30.0-preview.1)
 fasst App, Desktop und Browser-Erweiterungen zusammen. Android ergänzt direkte
 Einstiege für private und geschäftliche Formularprofile. Die dauerhaften
 Herausgeberwerte fehlen weiterhin: Die neue Ausgabe enthält Vorschau-APKs mit
