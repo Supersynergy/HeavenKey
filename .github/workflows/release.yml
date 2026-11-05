@@ -21,7 +21,7 @@ permissions:
 
 concurrency:
   group: heavenkey-complete-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
@@ -76,11 +76,11 @@ jobs:
           os.symlink(pathlib.Path(ziglang.__file__).parent / 'zig', pathlib.Path(os.environ['RUNNER_TEMP']) / 'heavenkey-bin/zig')
           PY
           echo "$RUNNER_TEMP/heavenkey-bin" >> "$GITHUB_PATH"
-          cargo install cargo-zigbuild --locked --version 0.20.1
+          cargo install cargo-zigbuild --locked --version 0.24.1
       - name: Resolve locked build dependencies
         run: |
           bun install --frozen-lockfile --ignore-scripts
-          cargo fetch --locked --target '${{ matrix.target }}'
+          cargo fetch --locked
       - name: Build matching portable binary and platform archive
         run: |
           python3 scripts/build_portable.py '${{ matrix.target }}'
