@@ -426,8 +426,17 @@ $('preview-generated').addEventListener('click',()=>void run(async generation=>{
   sourceLogin=editLogin;sourceProfile=null;sourceGenerated=true;entities={password:savedGenerated};
   renderEntities();await previewSource(generation);
 }));
-for (const type of ['pointerdown','keydown']) document.addEventListener(type, () => { lastActivity = Date.now(); });
-setInterval(() => { if (key && Date.now() - lastActivity > 120000) lock('Nach 2 Minuten Inaktivität gesperrt.'); },10000);
+for (const type of ['pointerdown','keydown','input','click']) document.addEventListener(type, event => {
+  if (checkSessionDeadline()) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+  lastActivity = Date.now();
+}, { capture: true });
+function checkSessionDeadline(): boolean {
+  const now = Date.now();
+  if ((key || busy) && (now < lastActivity || now - lastActivity >= 120000)) { lock('Nach 2 Minuten Inaktivität gesperrt.'); return true; }
+  return false;
+}
+setInterval(checkSessionDeadline,10000);
+addEventListener('focus', () => { checkSessionDeadline(); });
 addEventListener('pagehide', () => lock());
 void (async () => { try { const saved = (await extension.storage.local.get('heavenkey.extension.v1'))['heavenkey.extension.v1']; if (validConnection(saved)) connection = saved; else if (saved) await extension.storage.local.remove('heavenkey.extension.v1'); connected(); if(connection && new URL(location.href).searchParams.get('passkey')==='1') $('passkey-extension').click(); } catch { status('Verbindungseinstellung konnte nicht geladen werden.',true); } })();
 void refreshInline();

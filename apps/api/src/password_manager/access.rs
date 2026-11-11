@@ -1111,6 +1111,7 @@ mod tests {
             "/share/",
             "/share.js",
             "/passwords.css",
+            "/passwords-protected.css",
             "/heavenkey-cover.png",
             "/api/password-shares/recipient/start",
             "/api/password-shares/recipient/verify",

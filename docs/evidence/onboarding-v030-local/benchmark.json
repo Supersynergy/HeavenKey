@@ -1,0 +1,68 @@
+{
+  "scope": "local loopback, debug Rust binary, sequential GET, synthetic empty vault, no production data",
+  "base_commit": "287041e7d7c304af11b957cfd844efc39eaf10fd",
+  "working_tree_changes_uncommitted_at_measurement": true,
+  "binary_sha256": "2a09f8a7c73e7507130870242e9cbe26eb653056f134c1bee107f0982cbb1fd0",
+  "api_source_sha256": "7b928c2f8bde443b0634d06fd54917872745e946bfacb90932c556c6ee35ded8",
+  "version": "HeavenKey 0.30.0",
+  "startup_health_ms_single_sample": 75.82,
+  "results": {
+    "/health": {
+      "n": 20,
+      "status": [
+        200
+      ],
+      "bytes": [
+        47
+      ],
+      "p50_ms": 0.8,
+      "p95_ms": 1.18,
+      "min_ms": 0.59,
+      "max_ms": 1.53
+    },
+    "/passwords/": {
+      "n": 20,
+      "status": [
+        200
+      ],
+      "bytes": [
+        20270
+      ],
+      "p50_ms": 0.6,
+      "p95_ms": 0.81,
+      "min_ms": 0.53,
+      "max_ms": 0.88
+    },
+    "/passwords.css": {
+      "n": 20,
+      "status": [
+        200
+      ],
+      "bytes": [
+        32688
+      ],
+      "p50_ms": 0.65,
+      "p95_ms": 0.78,
+      "min_ms": 0.56,
+      "max_ms": 1.0
+    },
+    "/passwords-protected.css": {
+      "n": 20,
+      "status": [
+        200
+      ],
+      "bytes": [
+        2410
+      ],
+      "p50_ms": 0.5,
+      "p95_ms": 0.63,
+      "min_ms": 0.42,
+      "max_ms": 0.89
+    }
+  },
+  "limits": [
+    "one cold start, no statistical startup claim",
+    "warm sequential HTTP only, not end-user latency or cross-platform benchmark",
+    "no request concurrency or real credentials"
+  ]
+}

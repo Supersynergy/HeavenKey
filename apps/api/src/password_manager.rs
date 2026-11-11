@@ -401,6 +401,14 @@ pub async fn style() -> Response {
         .into_response()
 }
 
+async fn protected_style() -> Response {
+    (
+        [("content-type", "text/css")],
+        include_str!("../../web/src/passwords-protected.css"),
+    )
+        .into_response()
+}
+
 async fn cover() -> Response {
     (
         [("content-type", "image/png")],
@@ -424,7 +432,11 @@ fn host_allowed(app: &VaultApp, host: Option<&str>, path: &str) -> bool {
             && (recipient_route(path)
                 || matches!(
                     path,
-                    "/share/" | "/share.js" | "/passwords.css" | "/heavenkey-cover.png"
+                    "/share/"
+                        | "/share.js"
+                        | "/passwords.css"
+                        | "/passwords-protected.css"
+                        | "/heavenkey-cover.png"
                 )))
 }
 
@@ -592,6 +604,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         .route("/passwords/", get(page))
         .route("/passwords.js", get(script))
         .route("/passwords.css", get(style))
+        .route("/passwords-protected.css", get(protected_style))
         .route(
             "/share/",
             get(|| async { Html(include_str!("../../web/share.html")) }),

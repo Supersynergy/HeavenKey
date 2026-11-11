@@ -27,6 +27,7 @@ let token = "", revision = 0, remote: Envelope | null = null;
 let restoreReady = false;
 let vault: Vault | null = null, key: CryptoKey | null = null, envelope: Envelope | null = null;
 let generation = 0, busy = false, ready = false, lastActivity = Date.now(), hiddenTimer: ReturnType<typeof setTimeout> | undefined;
+let hiddenSince: number | null = null;
 let deleting: string | null = null;
 let selectedId: string | null = null, activeTag: string | null = null, revealedId: string | null = null;
 let revealTimer: ReturnType<typeof setTimeout> | undefined;
@@ -74,6 +75,7 @@ function setBusy(next: boolean) {
 }
 function clearEditor() { byId("editor-status").textContent = ""; byId("editor-status").hidden = true; form("entry-form").reset(); input("entry-id").value = ""; input("entry-password").type = "password"; input("entry-url").setCustomValidity(""); byId("entry-url-preview").textContent = ""; byId("username-suggestions").replaceChildren(); byId("username-suggestions").hidden = true; byId("generate-confirmation").hidden = true; byId("reveal-password").setAttribute("aria-pressed", "false"); byId("reveal-password").textContent = "Anzeigen"; byId<HTMLDialogElement>("editor").close(); }
 function lock(message = "Tresor gesperrt.", refresh = true) {
+  clearTimeout(hiddenTimer); hiddenSince = null;
   mobileSync?.clear();
   workflows?.clear(); passwordAccess?.clear(); passwordSharing?.clear(); passwordBroker?.clear(); transferBroker?.clear(); protectedComposer?.clear(); onboarding?.clear();
   cancelReveal(); clearActivities();
@@ -453,9 +455,28 @@ form("rekey-form").addEventListener("submit", event => { event.preventDefault();
   const rekeyed = await createVault(master, next); if (!unlocked(run)) return;
   if (await commit(next, run, rekeyed.key, rekeyed.envelope)) status("Masterpasswort geändert. Entsperr-Passkeys und Geräteverbindungen bitte neu einrichten; offene Freigaben wurden widerrufen. Alte Sicherungen brauchen ihr damaliges Passwort.");
 }); });
-for (const name of ["pointerdown", "keydown", "input"] as const) document.addEventListener(name, () => { lastActivity = Date.now(); }, { passive: true });
-setInterval(() => { if (vault && Date.now() - lastActivity >= 300_000) lock("Nach 5 Minuten ohne Eingabe gesperrt."); }, 1000);
-document.addEventListener("visibilitychange", () => { clearTimeout(hiddenTimer); if (document.visibilityState === "hidden") { if (getPrivacyPreferences().strictBackground) { if (vault || busy) lock("Beim Wechsel in den Hintergrund gesperrt."); } else hiddenTimer = setTimeout(() => { if (vault || busy) lock("Nach 30 Sekunden im Hintergrund gesperrt."); }, 30_000); } });
+for (const name of ["pointerdown", "keydown", "input", "click"] as const) document.addEventListener(name, event => {
+  if (checkSessionDeadline()) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+  lastActivity = Date.now();
+}, { capture: true });
+function checkSessionDeadline(): boolean {
+  if (!vault && !busy) return false;
+  const now = Date.now();
+  if (vault && (now < lastActivity || now - lastActivity >= 300_000)) { lock("Nach 5 Minuten ohne Eingabe gesperrt."); return true; }
+  if (hiddenSince !== null && (now < hiddenSince || now - hiddenSince >= 30_000)) { lock("Nach 30 Sekunden im Hintergrund gesperrt."); return true; }
+  return false;
+}
+setInterval(checkSessionDeadline, 1000);
+document.addEventListener("visibilitychange", () => {
+  if (checkSessionDeadline()) return;
+  clearTimeout(hiddenTimer);
+  if (document.visibilityState === "hidden") {
+    hiddenSince ??= Date.now();
+    if (getPrivacyPreferences().strictBackground) { if (vault || busy) lock("Beim Wechsel in den Hintergrund gesperrt."); }
+    else hiddenTimer = setTimeout(() => { checkSessionDeadline(); }, Math.max(0, 30_000 - (Date.now() - hiddenSince)));
+  } else hiddenSince = null;
+});
+window.addEventListener("focus", () => { checkSessionDeadline(); });
 window.addEventListener("pagehide", () => { lock("Seite verlassen, Tresor gesperrt.", false); });
 initPrivacy(() => { cancelReveal(); clearEditor(); workflows?.clear(); passwordAccess?.clear(); passwordSharing?.clear(); passwordBroker?.clear(); transferBroker?.clear(); protectedComposer?.clear(); if (vault) { render(); void passwordAccess?.refresh(); void passwordSharing?.refresh(); void passwordBroker?.unlocked().then(async () => { await transferBroker?.unlocked(); await protectedComposer?.refresh(); }); } });
 workflows = initWorkflows({vault:()=>vault,revision:()=>revision,generation:()=>generation,current:unlocked,busy:()=>busy,discreet:()=>getPrivacyPreferences().discreet,run:operation,commit,status,select:id=>{showEntries();selectEntry(id,true);},settings:showSettings,copy,pairing:pairingRequest,shareProfile:profile=>passwordSharing?.shareProfile(profile)});

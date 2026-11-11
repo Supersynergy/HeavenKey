@@ -1,0 +1,44 @@
+{
+  "pass": true,
+  "cases": [
+    {
+      "name": "Firefox native context menu opens the target-bound login preview",
+      "pass": true
+    },
+    {
+      "name": "Firefox pairs with Rust and unlocks encrypted vault using master fallback",
+      "pass": true
+    },
+    {
+      "name": "activeTab permits exact-form login fill without target host permission; no signup, hidden field or submit",
+      "pass": true
+    },
+    {
+      "name": "saved encrypted contact template fills the recognized form in Firefox",
+      "pass": true
+    },
+    {
+      "name": "persistent extension storage contains pairing only, never vault plaintext",
+      "pass": true
+    },
+    {
+      "name": "no enrolled PRF passkey gives explicit failure without unlocking extension",
+      "pass": true
+    },
+    {
+      "name": "password fallback cancels pending passkey handoff and remains usable",
+      "pass": true
+    },
+    {
+      "name": "popup reload drops decrypted session and requires new unlock",
+      "pass": true
+    }
+  ],
+  "browser": "159.0.1",
+  "binary_sha256": "2a09f8a7c73e7507130870242e9cbe26eb653056f134c1bee107f0982cbb1fd0",
+  "test_only_localhost_grant": true,
+  "target_host_permission": false,
+  "native_context_menu_command": true,
+  "synthetic_only": true,
+  "physical_biometric_tested": false
+}

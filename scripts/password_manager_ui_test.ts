@@ -1,3 +1,4 @@
+/// <reference types="bun" />
 import { chromium } from "playwright-core";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -7,14 +8,21 @@ const build = await Bun.build({entrypoints:[`${root}/apps/web/src/passwords.ts`]
 const script = await build.outputs[0].text();
 let record: any = null, revision = 0;
 const writes: any[]=[];
+function deferredRequest() {
+ let release!: () => void, announce!: () => void;
+ const started = new Promise<void>(resolve => { announce = resolve; });
+ const released = new Promise<void>(resolve => { release = resolve; });
+ return { started, release, wait: async () => { announce(); await released; } };
+}
+let readGate: ReturnType<typeof deferredRequest> | null = null, writeGate: ReturnType<typeof deferredRequest> | null = null;
 const server=Bun.serve({port:0,hostname:"127.0.0.1",async fetch(request){
  const path=new URL(request.url).pathname;
  if(path==="/passwords/")return new Response(await readFile(`${root}/apps/web/passwords.html`),{headers:{"Content-Type":"text/html"}});
  if(path==="/passwords.css")return new Response(await readFile(`${root}/apps/web/src/passwords.css`),{headers:{"Content-Type":"text/css"}});
  if(path==="/passwords.js")return new Response(script,{headers:{"Content-Type":"text/javascript"}});
- if(path==="/api/password-vault/config")return Response.json({token:"synthetic-local-token",revision});
+ if(path==="/api/password-vault/config"){const gate=readGate;readGate=null;if(gate)await gate.wait();return Response.json({token:"synthetic-local-token",revision});}
  if(path==="/api/password-vault"){
- if(request.method==="POST"){const body=await request.json();if(body.expected_revision!==revision)return new Response("conflict",{status:409});record=body.record;revision++;writes.push(body);}
+ if(request.method==="POST"){const body=await request.json();const gate=writeGate;writeGate=null;if(gate)await gate.wait();if(body.expected_revision!==revision)return new Response("conflict",{status:409});record=body.record;revision++;writes.push(body);}
  return Response.json({revision,record});
  }
  return new Response("not found",{status:404});
@@ -70,6 +78,55 @@ try {
  await page.reload();await page.locator("#unlock:not([disabled])").waitFor();await page.locator("#master").fill("synthetic replacement password");await page.locator("#unlock").click();await page.locator("#workspace:not([hidden])").waitFor();
  for(const width of [320,375,414,768,1440]){await page.setViewportSize({width,height:900});const size=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:innerWidth}));assert(size.scroll<=size.width,`overflow at ${width}: ${size.scroll}`);}
  console.log("PASS responsive widths 320/375/414/768/1440");
+ const staleRead=readGate=deferredRequest();await page.locator("#lock").click();await staleRead.started;
+ await page.evaluate(()=>document.querySelector<HTMLButtonElement>("#lock")!.click());
+ await page.locator("#unlock:not([disabled])").waitFor();await page.locator("#master").fill("synthetic replacement password");await page.locator("#unlock").click();await page.locator("#workspace:not([hidden])").waitFor();
+ const oldResponse=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/password-vault/config");staleRead.release();await (await oldResponse).finished();await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>resolve())));
+ assert(await page.locator("#workspace").isVisible());assert.equal(await page.locator("#master").inputValue(),"");
+ console.log("PASS stale API reload cannot replace a later unlocked session");
+ const inFlightWrite=writeGate=deferredRequest();await page.locator("#new-entry").click();await page.locator("#entry-title").fill("Synthetic in-flight save");await page.locator("#entry-password").fill("Synthetic-in-flight-secret!");await page.locator("#save-entry").click();await inFlightWrite.started;
+ const beforeDelayedWrite=revision;await page.keyboard.press("Control+Alt+l");await page.locator("#workspace[hidden]").waitFor({state:"attached"});assert(await page.locator("#unlock").isDisabled());
+ const writeResponse=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/password-vault"&&response.request().method()==="POST");inFlightWrite.release();await (await writeResponse).finished();await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>resolve())));
+ assert.equal(revision,beforeDelayedWrite+1);assert(await page.locator("#gate").isVisible());assert.equal(await page.locator("#entry-password").inputValue(),"");assert.equal(await page.locator("#editor").evaluate(el=>(el as HTMLDialogElement).open),false);assert(!JSON.stringify(writes).includes("Synthetic-in-flight-secret!"));
+ await page.locator("#unlock:not([disabled])").waitFor();await page.locator("#master").fill("synthetic replacement password");await page.locator("#unlock").click();await page.locator("#workspace:not([hidden])").waitFor();assert.equal(await page.locator('[data-testid="login"]').filter({hasText:"Synthetic in-flight save"}).count(),1);
+ console.log("PASS in-flight ciphertext save cannot reopen a locked vault; next unlock reloads the committed revision");
+ const committedRecord=JSON.stringify(record),rejectedWrite=writeGate=deferredRequest();await page.locator("#new-entry").click();await page.locator("#entry-title").fill("Rejected synthetic save");await page.locator("#entry-password").fill("Synthetic-rejected-secret!");await page.locator("#save-entry").click();await rejectedWrite.started;
+ await page.keyboard.press("Control+Alt+l");await page.locator("#workspace[hidden]").waitFor({state:"attached"});assert(await page.locator("#unlock").isDisabled());
+ revision++;const conflictResponse=page.waitForResponse(response=>new URL(response.url()).pathname==="/api/password-vault"&&response.request().method()==="POST");rejectedWrite.release();const conflict=await conflictResponse;await conflict.finished();assert.equal(conflict.status(),409);assert.equal(JSON.stringify(record),committedRecord);
+ await page.locator("#unlock:not([disabled])").waitFor();await page.locator("#master").fill("synthetic replacement password");await page.locator("#unlock").click();await page.locator("#workspace:not([hidden])").waitFor();assert.equal(await page.locator('[data-testid="login"]').filter({hasText:"Synthetic in-flight save"}).count(),1);assert.equal(await page.locator('[data-testid="login"]').filter({hasText:"Rejected synthetic save"}).count(),0);
+ console.log("PASS rejected in-flight write still releases the locked reload and preserves the committed vault");
+ assert(await page.evaluate(()=>{
+  const original=Date.now;
+  try {
+   Object.defineProperty(document,"visibilityState",{configurable:true,get:()=>"hidden"});document.dispatchEvent(new Event("visibilitychange"));
+   Date.now=()=>original()+30001;
+   Object.defineProperty(document,"visibilityState",{configurable:true,get:()=>"visible"});document.dispatchEvent(new Event("visibilitychange"));
+   return (document.getElementById("workspace") as HTMLElement).hidden;
+  } finally {Date.now=original;delete (document as any).visibilityState;}
+ }));
+ console.log("PASS suspended background return locks synchronously before its timer runs");
+ await page.locator("#unlock:not([disabled])").waitFor();await page.locator("#master").fill("synthetic replacement password");await page.locator("#unlock").click();await page.locator("#workspace:not([hidden])").waitFor();
+ assert(await page.evaluate(()=>{
+  const original=Date.now;
+  try {Date.now=()=>original()+300000;dispatchEvent(new FocusEvent("focus"));return (document.getElementById("workspace") as HTMLElement).hidden;}
+  finally {Date.now=original;}
+ }));
+ console.log("PASS focus after suspended inactivity locks before timers run");
+ await page.locator("#unlock:not([disabled])").waitFor();await page.locator("#master").fill("synthetic replacement password");await page.locator("#unlock").click();await page.locator("#workspace:not([hidden])").waitFor();
+ await page.locator("#new-entry").click();await page.locator("#entry-title").fill("Synthetic session expiry");await page.locator("#entry-password").fill("Synthetic-session-secret-only!");await page.locator("#save-entry").click();await page.locator('[data-testid="toggle-favorite"]').waitFor();
+ await page.locator("#editor").waitFor({state:"hidden"});await page.waitForFunction(()=>!document.querySelector<HTMLButtonElement>('[data-testid="toggle-favorite"]')?.disabled);
+ const beforeIdle=revision;
+ assert(await page.evaluate(()=>{
+  const original=Date.now;
+  try {
+   Date.now=()=>original()+300000;
+   document.querySelector<HTMLButtonElement>('[data-testid="toggle-favorite"]')!.click();
+   return (document.getElementById("workspace") as HTMLElement).hidden;
+  } finally {Date.now=original;}
+ }));
+ assert.equal(revision,beforeIdle);assert.equal(await page.locator("#entry-password").inputValue(),"");
+ console.log("PASS expired accessibility click locks synchronously instead of mutating the vault");
+ await page.locator("#unlock:not([disabled])").waitFor();await page.locator("#master").fill("synthetic replacement password");await page.locator("#unlock").click();await page.locator("#workspace:not([hidden])").waitFor();
  await page.evaluate(()=>{const original=Date.now;Date.now=()=>original()+301000;});await page.locator("#workspace[hidden]").waitFor({state:"attached",timeout:2500});assert.equal(await page.locator("#entry-password").inputValue(),"");
  console.log("PASS 5min idle lock (controlled clock)");
  assert.deepEqual(errors,[]);console.log("fixture browser acceptance passed",{writes:writes.length,backupRevision});
