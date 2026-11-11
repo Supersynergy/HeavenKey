@@ -1,0 +1,298 @@
+{
+  "source_sha256": {
+    "scripts/extension_redteam_cases.ts": "9c846ec145a5f3b4cd5d35ca2e6a43688d89e67cfb05c93b6fa7574e578719ce",
+    "apps/extension/form-boundary.ts": "632e29c8295e856e4a831c13fbec0a399cab921d51a8ea9f1dec34cd3b8dc7bf",
+    "apps/extension/workflow.ts": "b752e1c78647ea40f714f85bb07d1101e7401e517cf86ca332f1088249dd5e0e",
+    "scripts/extension_inline_cases.ts": "cce07568da8ce5c512101b3c73cb1861d8774de75fe3a3ae04de291724b1b25b",
+    "apps/extension/inline.ts": "965136afce019f1dd37f8542998de065729aa46bdd6ef7835d8a77ca5dae3611",
+    "apps/extension/generator.ts": "6bb995442d6374ad353ea3a0ccb7cca27bb6308524582965fa168c0655c59e34",
+    "apps/extension/site-access.ts": "3c7a016b073aa7f5ee957bf0df84f5cb341dd0640afe6ccb960537d6a3011fca",
+    "apps/mobile/assets/eff_large_wordlist.txt": "addd35536511597a02fa0a9ff1e5284677b8883b83e986e43f15a3db996b903e",
+    "scripts/extension_autofill_e2e.ts": "1c42240aef3a73582a900f24c4c5b6cd3632a22b9f41fe877f0b77a282bffe31",
+    "apps/extension/popup.html": "d2c0e324919d73f381487b2182639e6a84fe04c2c9b8726d6de7bb07f84dae30",
+    "apps/extension/popup.css": "25e7c9c2df3eb70cdd0f1d5391c4dafcf43449dfcd378df483478b5c958ede1a",
+    "apps/extension/popup.js": "b855d0ac03f34f58c10a4f020a2ffeba113c0e12d11bbefcbeebec22af31d311",
+    "apps/extension/settings.js": "70f141d7acbe11fbaf3580f6f677c133cf9e024d6f26d8c078e3565c43b0f298",
+    "apps/extension/content.ts": "c500d5a7943ff8c1030fac8368f11101b42c8c78bdad76ea0ddaad88fd3a59f8",
+    "apps/extension/smart-popup.ts": "11f83fd6fd7918d57fe72c2bddef03d562fadaa064b2efe66f113f209d73cb49",
+    "apps/extension/background.ts": "4655e4d66435b9d2fe58e9be60f296067ecee456e5d4defd9fc1ca37e983793d",
+    "apps/extension/unlock-channel.ts": "725909ff09734d7b105540d68ecaeb6bb3b9b35113bc0971b033050347c04e33",
+    "apps/web/src/passwords-extension-unlock.ts": "f0be2f0e5583e221e96c23abea1936eeb1855f7cd79a741bb3448149f8b441b6",
+    "apps/web/src/passwords-access.ts": "7c412d18ce2e468cf8a237dd99e28ceac25b38f6aa3d043a4ee9db7beca4c3ef",
+    "apps/extension/vendor/extract.js": "3a805267b059623908a86cb1138a5bf85f84aa5cabd3c52fbb231e07658d6213",
+    "apps/extension/vendor/fill.js": "9e7d4b05aa3f72a54260c20d7e424718bac094605f492e1db5e9ea3dbc41163a",
+    "apps/web/src/passwords-crypto.ts": "91496de04298db4c30fd174e44fe4f99b4dd45c6a1497a9d058475f080dbb795",
+    "packages/forms/schema.ts": "297f40e3ec1c9c1332945f5d9d5bed8fd728ee2adf8cb5534b250907ea6fba29",
+    "scripts/build_extension.ts": "2b3b2f592a5abfd1d2cb843f03f61e1316e29aca24dadcd578a00da2b4793973"
+  },
+  "pass": true,
+  "browser": "/Users/master/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+  "real_unpacked_extension": true,
+  "real_rust_pairing": true,
+  "mocks": false,
+  "test_only_manifest_grant": "http://localhost/*",
+  "native_optional_permission_prompt": "not automated: headless request waits for browser UI",
+  "synthetic_only": true,
+  "controlled_clock_tests": "isolated Date.now temporarily advanced for expiry regression",
+  "binary_sha256": "f3b8115bc2013709d451867dee67f88c364cf144ba785cf3dbc14134fa363978",
+  "manifest_sha256": "1a50d8b4b357e5e46cbebab093e7351100479ac67c7dc1a488aeb6f7e1fb5fc7",
+  "cases": [
+    {
+      "name": "unpacked extension with declared test-only localhost grant; real Rust one-use pairing",
+      "pass": true
+    },
+    {
+      "name": "real Rust encrypted snapshot decrypted in popup",
+      "pass": true
+    },
+    {
+      "name": "native virtual PRF authenticator enrolls through real Rust verifier",
+      "pass": true
+    },
+    {
+      "name": "real PRF passkey unlock crosses single-use encrypted channel into paired extension without clipboard",
+      "pass": true
+    },
+    {
+      "name": "passkey enrollment and handoff API bodies contain neither master nor login plaintext",
+      "pass": true
+    },
+    {
+      "name": "browser storage has connection/token only",
+      "pass": true
+    },
+    {
+      "name": "popup requires fresh explicit target-origin confirmation",
+      "pass": true
+    },
+    {
+      "name": "real popup selective profile fill changes only selected field",
+      "pass": true
+    },
+    {
+      "name": "popup rejects login saved for a different exact origin",
+      "pass": true
+    },
+    {
+      "name": "exact-origin login and fresh TOTP fill through real popup",
+      "pass": true
+    },
+    {
+      "name": "text extraction/edit/encrypted CAS profile save preserves all logins and profiles",
+      "pass": true
+    },
+    {
+      "name": "real persisted SQLite has no profile plaintext or login secrets",
+      "pass": true
+    },
+    {
+      "name": "stale extension revision cannot overwrite vault; popup locks on conflict",
+      "pass": true
+    },
+    {
+      "name": "popup reload discards decrypted session and key",
+      "pass": true
+    },
+    {
+      "name": "lock keeps source and consent controls disabled during pending fill",
+      "pass": true
+    },
+    {
+      "name": "lock cancels pending fill before plaintext dispatch and preserves locked status",
+      "pass": true
+    },
+    {
+      "name": "pagehide keeps source and consent controls disabled during pending fill",
+      "pass": true
+    },
+    {
+      "name": "pagehide cancels pending fill before plaintext dispatch and preserves locked status",
+      "pass": true
+    },
+    {
+      "name": "disconnect keeps source and consent controls disabled during pending fill",
+      "pass": true
+    },
+    {
+      "name": "disconnect cancels pending fill before plaintext dispatch and preserves locked status",
+      "pass": true
+    },
+    {
+      "name": "scan excludes hidden/honeypot/disabled/readonly/off/consent/payment",
+      "pass": true
+    },
+    {
+      "name": "bank-name target is independently classified as sensitive",
+      "pass": true
+    },
+    {
+      "name": "select/date/split date/number/textarea/contenteditable/native event fill",
+      "pass": true
+    },
+    {
+      "name": "open shadow roots filled; frame remains untouched",
+      "pass": true
+    },
+    {
+      "name": "secret and sensitive fields denied without opt-ins",
+      "pass": true
+    },
+    {
+      "name": "checkbox/radio values matched while consent/payment remain untouched",
+      "pass": true
+    },
+    {
+      "name": "existing values preserved and no submission",
+      "pass": true
+    },
+    {
+      "name": "undo restores empty select/number/contenteditable and preserves subsequent edits",
+      "pass": true
+    },
+    {
+      "name": "explicit exact sensitive and secret opt-ins work",
+      "pass": true
+    },
+    {
+      "name": "reverse capture excludes secrets and sensitive values by default",
+      "pass": true
+    },
+    {
+      "name": "capture opt-in permits exact financial values but never passwords",
+      "pass": true
+    },
+    {
+      "name": "sensitivity cannot be downgraded; high values cannot use generic fallback",
+      "pass": true
+    },
+    {
+      "name": "changed field identity invalidates preview",
+      "pass": true
+    },
+    {
+      "name": "SPA navigation invalidates scan and undo origin binding",
+      "pass": true
+    },
+    {
+      "name": "SPA field replacement rejects stale DOM reference",
+      "pass": true
+    },
+    {
+      "name": "isolated coordinator rejects an origin mismatch",
+      "pass": true
+    },
+    {
+      "name": "saved login password never fills a new-password registration field",
+      "pass": true
+    },
+    {
+      "name": "red team: changed form action invalidates preview before any secret write",
+      "pass": true
+    },
+    {
+      "name": "red team: moving an unchanged field into another form invalidates preview",
+      "pass": true
+    },
+    {
+      "name": "red team: cross-origin submission cannot receive secrets",
+      "pass": true
+    },
+    {
+      "name": "red team: external submit override cannot receive secrets",
+      "pass": true
+    },
+    {
+      "name": "red team: changed field length invalidates the inspected target",
+      "pass": true
+    },
+    {
+      "name": "red team: a zero field limit never means unlimited secret delivery",
+      "pass": true
+    },
+    {
+      "name": "red team: a page listener cannot make a later field overwrite a fresh value",
+      "pass": true
+    },
+    {
+      "name": "red team: action mutation during an earlier input event stops password delivery",
+      "pass": true
+    },
+    {
+      "name": "red team: scan expires after two minutes even if popup remains active",
+      "pass": true
+    },
+    {
+      "name": "red team: missing or expired inline anchor never falls back to another form",
+      "pass": true
+    },
+    {
+      "name": "red team: consumed scan cannot be replayed",
+      "pass": true
+    },
+    {
+      "name": "per-site activation registers persistent top-frame UI with exact host pattern",
+      "pass": true
+    },
+    {
+      "name": "closed shadow UI exposes no vault data in page text",
+      "pass": true
+    },
+    {
+      "name": "field key opens trusted extension window and anchored login preview",
+      "pass": true
+    },
+    {
+      "name": "inline login fills exact-origin password and fresh TOTP without submit",
+      "pass": true
+    },
+    {
+      "name": "red team: unselected password and TOTP never enter native delivery arguments",
+      "pass": true
+    },
+    {
+      "name": "inline identity fills names while financial fields and consent stay empty",
+      "pass": true
+    },
+    {
+      "name": "generator honors field limit and requires saving before delivery",
+      "pass": true
+    },
+    {
+      "name": "new password is in actual encrypted Rust vault before delivery",
+      "pass": true
+    },
+    {
+      "name": "generated secret fills new and confirmation fields only without submit",
+      "pass": true
+    },
+    {
+      "name": "generated fill is undoable after encrypted save",
+      "pass": true
+    },
+    {
+      "name": "password update needs consent and preserves previous working secret",
+      "pass": true
+    },
+    {
+      "name": "red team: manually replacing a password also preserves the previous encrypted credential",
+      "pass": true
+    },
+    {
+      "name": "per-site disable removes persistent registration",
+      "pass": true
+    },
+    {
+      "name": "wrong master cannot unlock actual Rust ciphertext",
+      "pass": true
+    },
+    {
+      "name": "server revoke disconnects paired popup and clears persisted token",
+      "pass": true
+    },
+    {
+      "name": "real Rust process restart invalidates pairing and requires explicit re-pair",
+      "pass": true
+    }
+  ],
+  "errors": []
+}

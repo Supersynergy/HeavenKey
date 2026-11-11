@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "tests": 4,
+  "real_android_keystore": true,
+  "native_autofill_profiles": true,
+  "synthetic_only": true,
+  "api": 36,
+  "abi": "arm64-v8a",
+  "avd": "heavenkey_production_test",
+  "serial": "emulator-5556",
+  "debug_apk_sha256": "3a1d02b2b96690ed3f2ce23b293c636f43fac380baa9584ba6e02723d5763b03",
+  "test_apk_sha256": "07d0674d67d5419d2ebc4d87c113ddad96ceee46282f3aab2de704fa4e900500",
+  "source_files": {
+    "apps/mobile/android/app/src/androidTest/kotlin/app/heavenkey/heavenkey_mobile/PortableVaultDeviceTest.kt": "0b11cdab54284db968965ec30f6c03620dbf0dc07cda3e5552c2c943fc9860b4",
+    "apps/mobile/android/app/src/main/kotlin/app/heavenkey/heavenkey_mobile/MainActivity.kt": "ff9cb3b073c58d9cc106f428c3201850973ab8bd873526ca5a87f67019f546ab",
+    "apps/mobile/pubspec.yaml": "3b5c1700e7bdc2c76c0eb2d54aa66fc69fc29e219e82688fcccedc42907f49a2",
+    "apps/mobile/android/app/build.gradle.kts": "5157f90aad9cb520445cc09521c649aa48d39edbf47186c35857ab4da19e4a83"
+  },
+  "instrumentation": "android-native-031-instrumentation.txt",
+  "limits": [
+    "locally built debug/instrumentation APKs; release-mode preview UI is separately tested",
+    "physical device and production signature unverified"
+  ]
+}

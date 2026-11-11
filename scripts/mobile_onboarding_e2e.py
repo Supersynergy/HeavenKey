@@ -32,7 +32,18 @@ def run(args, timeout=30, **kw):
 
 
 def adb(*args):
-    return run([SDK / "platform-tools/adb", "-s", "emulator-5584", *args])
+    command = [SDK / "platform-tools/adb", "-s", "emulator-5584", *args]
+    readonly = args[0] == "shell" and args[1] in {
+        "cat", "dumpsys", "getprop", "pm", "sha256sum",
+    }
+    for attempt in range(3 if readonly else 1):
+        try:
+            return run(command)
+        except subprocess.CalledProcessError as error:
+            if error.returncode != 255 or attempt == 2 or not readonly:
+                raise
+            time.sleep(1)
+    raise AssertionError("Unreachable ADB retry state")
 
 
 def nodes():
@@ -103,8 +114,8 @@ def visible(label):
     )
 
 
-def await_visible(label):
-    deadline = time.monotonic() + 10
+def await_visible(label, seconds=10):
+    deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         if visible(label):
             return True
@@ -169,18 +180,25 @@ def save():
 
 def reauthenticate():
     click("Tresor sperren")
-    click("Tresor entsperren")
+    if visible("Auf diesem Handy starten"):
+        click("Auf diesem Handy starten")
+    else:
+        click("Tresor entsperren")
     auth()
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apk", type=Path, required=True)
+    parser.add_argument("--avd", default="heavenkey-20261024")
+    parser.add_argument("--package", default=PKG)
+    parser.add_argument("--report", type=Path, default=HERE / "android-onboarding.json")
     args = parser.parse_args()
+    package = args.package
     assert (
-        adb("shell", "getprop", "ro.boot.qemu.avd_name").strip() == "heavenkey-20261024"
+        adb("shell", "getprop", "ro.boot.qemu.avd_name").strip() == args.avd
     )
-    (HERE / "android-onboarding.json").unlink(missing_ok=True)
+    args.report.unlink(missing_ok=True)
     apk = args.apk.resolve()
     apk_hash = hashlib.sha256(apk.read_bytes()).hexdigest()
     sources = [
@@ -194,27 +212,18 @@ def main():
     ]
     hashes = {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in sources}
     adb("install", "-r", apk)
-    installed = adb("shell", "pm", "path", PKG).strip().split("package:", 1)[1]
-    actual = subprocess.run(
-        [
-            str(SDK / "platform-tools/adb"),
-            "-s",
-            "emulator-5584",
-            "exec-out",
-            "cat",
-            installed,
-        ],
-        check=True,
-        capture_output=True,
-        timeout=30,
-    ).stdout
-    assert hashlib.sha256(actual).hexdigest() == apk_hash, (
+    installed = adb("shell", "pm", "path", package).strip().split("package:", 1)[1]
+    installed_hash = adb("shell", "sha256sum", installed).split()[0]
+    assert installed_hash == apk_hash, (
         "Installed APK must match frozen candidate"
     )
-    adb("shell", "pm", "clear", PKG)
-    adb("shell", "am", "start", "-n", PKG + "/.MainActivity")
-    assert await_visible("Tresor entsperren")
-    click("Tresor entsperren")
+    adb("shell", "pm", "clear", package)
+    adb("shell", "am", "start", "-n", package + "/" + PKG + ".MainActivity")
+    if await_visible("Auf diesem Handy starten", seconds=45):
+        click("Auf diesem Handy starten")
+    else:
+        assert await_visible("Tresor entsperren")
+        click("Tresor entsperren")
     auth()
     assert await_visible("Ersten Login speichern")
     assert visible("Sicherung wiederherstellen") and visible("Vom Desktop übernehmen")
@@ -246,8 +255,9 @@ def main():
     assert visible("https://example.com:8443"), (
         "Stored origin must retain the exact port"
     )
-    click("Eigenen Namen vergeben")
+    find("Name")
     fill("Name", "Synthetic onboarding custom")
+    top()
     fill("HTTPS-Website", "http://example.com")
     save()
     top()
@@ -273,8 +283,8 @@ def main():
     click("Passwort ersetzen")
     save()
     assert await_visible("accounts.example.com")
-    adb("shell", "am", "force-stop", PKG)
-    adb("shell", "am", "start", "-n", PKG + "/.MainActivity")
+    adb("shell", "am", "force-stop", package)
+    adb("shell", "am", "start", "-n", package + "/" + PKG + ".MainActivity")
     assert await_visible("Tresor entsperren")
     click("Tresor entsperren")
     auth()
@@ -282,7 +292,7 @@ def main():
         "accounts.example.com"
     )
     click("Tresor sperren")
-    assert await_visible("Tresor entsperren")
+    assert await_visible("Auf diesem Handy starten") or await_visible("Tresor entsperren")
     for p, expected in hashes.items():
         assert hashlib.sha256((ROOT / p).read_bytes()).hexdigest() == expected, (
             "Source changed: " + p
@@ -291,6 +301,7 @@ def main():
         passed=True,
         synthetic_only=True,
         apk_sha256=apk_hash,
+        package=package,
         api=36,
         source_files=hashes,
         actual_device_credential=True,
@@ -310,7 +321,7 @@ def main():
         human_time_delta_seconds=None,
         action_frequency_per_day=None,
     )
-    (HERE / "android-onboarding.json").write_text(
+    args.report.write_text(
         json.dumps(result, ensure_ascii=False, indent=2) + "\n"
     )
     print(

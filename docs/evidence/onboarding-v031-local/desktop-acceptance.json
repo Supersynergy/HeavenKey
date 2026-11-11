@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "synthetic_only": true,
+  "real_rust_service": true,
+  "tested_binary_sha256": "f3b8115bc2013709d451867dee67f88c364cf144ba785cf3dbc14134fa363978",
+  "tested_binary_version": "HeavenKey 0.31.0",
+  "source_files": {
+    "apps/web/src/passwords-entry-assist.ts": "99754fb2407e2991f6974c5cb6130105b2abb46b5a6e5849e09815aac1be6d4c",
+    "apps/web/src/passwords.ts": "ddb66c65c2b5319db84cfbff417ab9778be68123175646d3ac7186635714d8cc",
+    "apps/web/src/passwords-onboarding.ts": "5da8deab07ef36a3a73ebd3bad4e5a4db6d8dc0db772a6bbb240e73578c4e366",
+    "apps/web/src/passwords.css": "3e5b06b3d5116edb0a82d1bcfe8a37f14794798e5d22ea89ef89a60c0e9e2922",
+    "apps/web/passwords.html": "d5688d2ee29012878a2c0f0d03ca7f858c367bc73acefa9cc71a5a88cb4c3cec",
+    "scripts/onboarding_e2e.ts": "4da0227216f42227dbca13b22235a4b80ccbd1fa879e40563c2afe629133ddb3"
+  },
+  "visible_editor_fields": [
+    "entry-url",
+    "entry-title",
+    "entry-username",
+    "entry-password"
+  ],
+  "bare_website_accepted": true,
+  "existing_password_preserved": true,
+  "replacement_confirmed": true,
+  "local_username_suggestions": true,
+  "backup_download": true,
+  "keyboard_focus_and_escape": true,
+  "unsafe_scheme_blocked": true,
+  "lock_clears_suggestions": true,
+  "encrypted_persistence": true,
+  "narrow_viewport": true,
+  "mk": {
+    "ms": 2,
+    "ok": true,
+    "value": true
+  },
+  "human_time_delta_seconds": null,
+  "action_frequency_per_day": null
+}

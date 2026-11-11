@@ -1,0 +1,45 @@
+{
+  "base_commit": "d8e6ee2c0c3bba8211c12db79298b463ea60c4fe",
+  "working_tree_changes_uncommitted_at_measurement": true,
+  "gates": [
+    {
+      "name": "check-fast",
+      "exit_code": 0,
+      "elapsed_seconds": null,
+      "time_utc": null,
+      "log_sha256": "ec46677d555db712320c2ae4bb2f4583ad6704e0a2f34a4a7971e4e0c556fb5f"
+    },
+    {
+      "name": "mobile-check",
+      "exit_code": 0,
+      "elapsed_seconds": 30.083,
+      "time_utc": "2026-11-11T20:28:14.701925+00:00",
+      "log_sha256": "8e7a92f2e822ca5f42a15bcc8e97442595f1ecd4fac7a03e4488d518623c45b1"
+    },
+    {
+      "name": "check",
+      "exit_code": 1,
+      "elapsed_seconds": 24.775,
+      "time_utc": "2026-11-11T20:28:53.773195+00:00",
+      "log_sha256": null
+    },
+    {
+      "name": "check",
+      "exit_code": 0,
+      "elapsed_seconds": 424.803,
+      "time_utc": "2026-11-11T20:38:33.997881+00:00",
+      "log_sha256": "ec512950c6508e9547c86735b4db7dd8289d52da35ce9621e9858cc60b85424c"
+    },
+    {
+      "name": "e2e",
+      "exit_code": 0,
+      "elapsed_seconds": 17.198,
+      "time_utc": "2026-11-11T20:39:52.782055+00:00",
+      "log_sha256": "1e13897c16b1a5a829236ac1141488bd0dd88152c58749bdaf6174ac9bc78653"
+    }
+  ],
+  "notes": [
+    "the first check failed a 5s Bun crypto-sync test under unrelated host load; the focused test and subsequent full check passed",
+    "CI release jobs remain separate from this local evidence"
+  ]
+}
