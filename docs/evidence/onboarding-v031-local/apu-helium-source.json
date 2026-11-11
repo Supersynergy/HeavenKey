@@ -1,0 +1,14 @@
+{
+  "engine": "helium",
+  "url": "http://localhost:18323/passwords/",
+  "binary_sha256": "c42792c5f3fc823fd885df52589478fb01fa515322f28ba52d5c4df297521790",
+  "web_source_sha256": "9fe71ae8696bf7c7d51117bc4b6de2520a5caefc92d9356079f30fc0bb5f650d",
+  "audit_verdict": "WARN x9",
+  "failures": 0,
+  "warnings": 9,
+  "screenshots": [
+    "apu-helium-first-run.jpg",
+    "apu-helium-setup.jpg"
+  ],
+  "synthetic_only": true
+}

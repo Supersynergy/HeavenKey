@@ -1,18 +1,18 @@
 # HeavenKey 0.31: lokale Release-Abnahme
 
-Stand: 11. November 2026, ausgehend von `d8e6ee2`. Alle Konten und Geräte-PINs
-in dieser Abnahme sind synthetisch. Die Tests liefen vor dem 0.31-Commit;
-deshalb binden die Receipts ihre Quellen und Binaries an SHA-256 statt an
-einen noch nicht vorhandenen Release-Commit. Die GitHub-CI prüft den
-committeten Stand nach dem Tag-Push erneut.
+Stand: 11. November 2026, ausgehend von `ffb85fa`. Alle Konten und
+Geräte-PINs in dieser Abnahme sind synthetisch. Die Desktop-Tests nach
+dem Sperr-Fix liefen vor dem nächsten Commit; die Receipts binden Quellen
+und Binaries deshalb an SHA-256. Die GitHub-CI prüft den committeten Stand
+nach dem neuen Tag-Push erneut.
 
 ## Prüfergebnis
 
 | Pfad | Ergebnis | Beleg |
 | --- | --- | --- |
 | `just check-fast` | bestanden, Rust-Format, TypeScript, gezielte Tests, Extension-Paket | [Gate-Verlauf](onboarding-v031-local/gates.json) |
-| `just check` | bestanden, 424,8 s | [Gate-Verlauf](onboarding-v031-local/gates.json) |
-| `just e2e` | 138/138, 17,2 s, virtuelle CTAP2-Geräte und echter Rust-Verifier | [Einzelfälle](onboarding-v031-local/e2e-current.json) |
+| `just check` | nach Sperr-Fix bestanden, 404,0 s | [Gate-Verlauf](onboarding-v031-local/gates.json) |
+| `just e2e` | nach Sperr-Fix 138/138, 20,1 s, virtuelle CTAP2-Geräte und echter Rust-Verifier | [Einzelfälle](onboarding-v031-local/e2e-current.json) |
 | `just mobile-check` | bestanden, 30,1 s, Analyse, Flutter-Tests und native Policy | [Gate-Verlauf](onboarding-v031-local/gates.json) |
 | Desktop-Erststart | bestanden: Tresor, Login, Sicherung, Sperre, Persistenz, Tastatur und 390-px-Ansicht | [Desktop-Receipt](onboarding-v031-local/desktop-acceptance.json) |
 | Chromium-Extension | 64/64 mit Feldschlüsseln und realer Rust-Kopplung | [Extension-Receipt](onboarding-v031-local/chromium-extension.json) |
@@ -20,10 +20,16 @@ committeten Stand nach dem Tag-Push erneut.
 | Android-16-Emulator, 0.31-ARM64-Release-APK | bestanden: Paket-Hash auf Gerät, Geräte-PIN, erster Login, genaue Herkunft, Generatorfreigabe, Vorschläge und Prozess-Neustart | [APK-Receipt](mobile/android-onboarding-031-preview-apk.json) |
 | Android-16-Emulator, native Instrumentation | 4/4: Keystore/Passkey-Restore, Fehlerschutz, Profil-Backup und System-Autofill | [Native-Receipt](mobile/android-native-031-local.json), [Runner-Ausgabe](mobile/android-native-031-instrumentation.txt) |
 
-Ein erster voller Check scheiterte an der 5-s-Frist eines Crypto-Sync-Tests,
-während fremde Builds die Maschine auslasteten. Derselbe Test bestand
-anschließend einzeln (5/5); der vollständige Check bestand danach ohne
-Codeänderung. Dieser Fehlversuch bleibt im [Gate-Verlauf](onboarding-v031-local/gates.json).
+Ein erster lokaler Check scheiterte an der 5-s-Frist eines Crypto-Sync-Tests
+unter fremder Maschinenlast. Der Test bestand anschließend einzeln (5/5),
+der volle Check danach. Der öffentliche
+[Preview.1-Lauf](https://github.com/Supersynergy/HeavenKey/actions/runs/43106587319)
+fand dagegen einen echten Fehler. Nach Sperren während eines noch laufenden
+POST konnte das schnelle Nachladen den alten Tresorstand zum Entsperren
+anbieten. Ein gezielter Browser-Test reproduzierte das lokal.
+Der Ladepfad wartet jetzt auf ausstehende Schreibvorgänge und liest erst
+dann den aktuellen Stand; gezielter Test, voller Check und E2E bestanden
+auf dem korrigierten Quellstand. Preview.1 wurde **nicht** veröffentlicht.
 Die Flutter-Abhängigkeiten wurden mit dem vorhandenen Lockfile aufgelöst.
 
 Die Android-Release-APK meldet `0.31.0-preview`, VersionCode `2031`, minSdk 30
@@ -37,7 +43,8 @@ ist nicht automatisch bytegleich mit den späteren CI-Artefakten.
 APU/MK lud die 0.31-Passwortseite in Helium. Der Erststart ließ sich mit
 synthetischem Masterpasswort bedienen, der Einrichtungsdialog öffnete sich,
 und alle geladenen Ressourcen antworteten ohne HTTP-Fehler. Der
-[APU-Audit](onboarding-v031-local/apu-helium-audit.json) meldete keine harten
+[APU-Audit](onboarding-v031-local/apu-helium-audit.json) auf dem korrigierten
+[Quellstand](onboarding-v031-local/apu-helium-source.json) meldete keine harten
 Fehler, aber neun Hinweise, darunter SVG-Überlappungen und eine
 nicht zugeordnete doppelte ID. Diese Heuristik ist keine Liste von neun
 bestätigten sichtbaren Defekten.
@@ -57,9 +64,9 @@ für die Bildabnahme nicht abgeschaltet. Die Android-UI wurde stattdessen
 [Rohdaten und Grenzen](onboarding-v031-local/benchmark.json): ein
 Debug-Binary, ein leerer Wegwerf-Tresor, ein Start und je 20 sequenzielle
 Loopback-GETs; alle 80 antworteten mit HTTP 200. Median / p95:
-`/health` 1,17 / 2,60 ms, `/passwords/` 0,90 / 1,01 ms,
-`/passwords.css` 1,22 / 2,47 ms und `/passwords-protected.css`
-2,38 / 17,39 ms. Die erste Health-Antwort kam nach 28,54 ms.
+`/health` 1,46 / 2,54 ms, `/passwords/` 0,68 / 0,99 ms,
+`/passwords.css` 0,66 / 0,72 ms und `/passwords-protected.css`
+0,68 / 0,75 ms. Die erste Health-Antwort kam nach 20,22 ms.
 Die Maschine hatte wechselnde Last; das ist weder ein fairer Vergleich
 mit 0.30 noch ein Nutzer-Latenz- oder Skalierungsbenchmark.
 
@@ -72,7 +79,7 @@ Passwortseite ab und wurde auf 0.31 nicht als bestanden ausgegeben; die
 native Windows-Abnahme, dauerhafte Android-Signatur, Browser-Store-Freigabe,
 Apple-Notarisierung und ein unabhängiges Audit fehlen.
 
-`v0.31.0-preview.1` soll nur veröffentlicht werden, wenn die GitHub-Pipeline
+`v0.31.0-preview.2` soll nur veröffentlicht werden, wenn die GitHub-Pipeline
 die öffentliche CI, Android-Vorschau, fünf Desktop-Ziele und das
 quellgebundene Gesamtbundle besteht. Vor einem Wechsel von einer bestehenden
 Installation eine verschlüsselte Sicherung erstellen und ihre

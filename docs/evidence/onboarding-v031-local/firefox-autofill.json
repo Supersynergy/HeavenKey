@@ -35,7 +35,7 @@
     }
   ],
   "browser": "159.0.1",
-  "binary_sha256": "f3b8115bc2013709d451867dee67f88c364cf144ba785cf3dbc14134fa363978",
+  "binary_sha256": "c42792c5f3fc823fd885df52589478fb01fa515322f28ba52d5c4df297521790",
   "test_only_localhost_grant": true,
   "target_host_permission": false,
   "native_context_menu_command": true,

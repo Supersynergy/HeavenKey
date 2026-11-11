@@ -1,6 +1,6 @@
 # HeavenKey installieren und starten
 
-Aktuelle gemeinsame Ausgabe: [HeavenKey 0.30 Vorschau](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.30.0-preview.1).
+Aktuelle gemeinsame Ausgabe: [HeavenKey 0.31 Vorschau](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.31.0-preview.2).
 Sie enthält fünf Desktop-Pakete, beide Browser-Erweiterungen und drei Android-Vorschau-APKs. Das Gesamtpaket fasst alle Downloads zusammen.
 
 `SHA256SUMS`, `RELEASE.json` und Androids `PREVIEW.json` weisen Paketversionen,
@@ -20,7 +20,7 @@ Die Pakete haben Prüfsummen und Quellstand-Manifeste. Ad-hoc-Integritätssiegel
 
 Der [lokale Agenten-Broker](AGENT-BROKER.md) benötigt zusätzlich einen installierten Chromium-Browser. `--broker-agent` und der [eingeschlossene Agentenstart](AGENT-SANDBOX.md) sind im Programm enthalten; `broker.rs` ist ein optionales Cargo-`-Zscript`-Hilfsskript für die Entwicklung.
 
-Die Vorschau 0.30 enthält den lokalen Passwortmanager und den SFTP-/FTPES-Broker für macOS, Windows und Linux. Android ergänzt manuelle Desktop-Synchronisierung und Website-Passkeys. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Build- und Laufzeitnachweise stehen im [Releasebericht](RELEASE-0.27.md); der [Bericht zu 0.26](RELEASE-0.26.md) bleibt als historischer Nachweis erhalten.
+Die Vorschau 0.31 enthält den lokalen Passwortmanager und den SFTP-/FTPES-Broker für macOS, Windows und Linux. Android ergänzt manuelle Desktop-Synchronisierung und Website-Passkeys. Die [Passwortmanager-Anleitung](PASSWORD-MANAGER.md) beschreibt Einrichtung, Sicherung und Grenzen. Die [0.31-Abnahme](evidence/heavenkey-0.31-local-review.md) dokumentiert die aktuellen Prüfungen; die Berichte zu [0.27](RELEASE-0.27.md) und [0.26](RELEASE-0.26.md) bleiben historisch.
 
 Die Pakete enthalten Server, Weboberfläche und Lizenzhinweise. Für den Passwortmanager brauchst du einen aktuellen Browser, aber kein Rust, Bun, Python, Docker oder Passkey. Das optionale Zugangslabor verwendet WebAuthn, SQLCipher und eine geschützte Signierschlüsselhülle. Physische Passkeys sind noch nicht abgenommen.
 

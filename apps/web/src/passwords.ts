@@ -27,6 +27,8 @@ let token = "", revision = 0, remote: Envelope | null = null;
 let restoreReady = false;
 let vault: Vault | null = null, key: CryptoKey | null = null, envelope: Envelope | null = null;
 let generation = 0, busy = false, ready = false, lastActivity = Date.now(), hiddenTimer: ReturnType<typeof setTimeout> | undefined;
+let pendingWrites = 0;
+const writesSettled: Array<() => void> = [];
 let hiddenSince: number | null = null;
 let deleting: string | null = null;
 let selectedId: string | null = null, activeTag: string | null = null, revealedId: string | null = null;
@@ -97,14 +99,19 @@ function lock(message = "Tresor gesperrt.", refresh = true) {
 function active(run: number): boolean { return run === generation; }
 function unlocked(run: number): boolean { return active(run) && !!key && !!vault; }
 async function api(path: string, record?: Envelope, expected?: number): Promise<unknown> {
-  const response = await fetch(path, { method: record ? "POST" : "GET", cache: "no-store", signal: AbortSignal.timeout(15_000), credentials: "omit", headers: { "X-HeavenKey-Client": "password-manager", ...(token ? { "X-HeavenKey-Token": token } : {}), ...(record ? { "Content-Type": "application/json" } : {}) }, ...(record ? { body: JSON.stringify({ expected_revision: expected, record }) } : {}) });
-  if (!response.ok) {
-    if (response.status === 409) throw new Error("Speicherkonflikt: Ein anderer Tab hat den Tresor geändert. Sperre ihn und entsperre erneut; deine ungespeicherten Änderungen werden verworfen.");
-    throw new Error(`Lokaler Tresordienst nicht verfügbar (HTTP ${response.status}).`);
+  if (record) pendingWrites++;
+  try {
+    const response = await fetch(path, { method: record ? "POST" : "GET", cache: "no-store", signal: AbortSignal.timeout(15_000), credentials: "omit", headers: { "X-HeavenKey-Client": "password-manager", ...(token ? { "X-HeavenKey-Token": token } : {}), ...(record ? { "Content-Type": "application/json" } : {}) }, ...(record ? { body: JSON.stringify({ expected_revision: expected, record }) } : {}) });
+    if (!response.ok) {
+      if (response.status === 409) throw new Error("Speicherkonflikt: Ein anderer Tab hat den Tresor geändert. Sperre ihn und entsperre erneut; deine ungespeicherten Änderungen werden verworfen.");
+      throw new Error(`Lokaler Tresordienst nicht verfügbar (HTTP ${response.status}).`);
+    }
+    const text = await response.text();
+    if (text.length > MAX_FILE_BYTES) throw new Error("Serverantwort überschreitet die Größenbegrenzung.");
+    return JSON.parse(text);
+  } finally {
+    if (record && --pendingWrites === 0) writesSettled.splice(0).forEach(resolve => resolve());
   }
-  const text = await response.text();
-  if (text.length > MAX_FILE_BYTES) throw new Error("Serverantwort überschreitet die Größenbegrenzung.");
-  return JSON.parse(text);
 }
 async function pairingRequest(method: 'GET'|'POST'|'DELETE'): Promise<unknown> {
   const response = await fetch('/api/password-vault/extension/pairing', {method,cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(15_000),headers:{'X-HeavenKey-Client':'password-manager','X-HeavenKey-Token':token}});
@@ -121,6 +128,9 @@ async function load(announce = true) {
   const run = generation;
   ready = false; restoreReady = false; setBusy(true);
   try {
+    // A locked vault must not offer the previous revision while a save is still pending.
+    if (pendingWrites) await new Promise<void>(resolve => writesSettled.push(resolve));
+    if (!active(run)) return;
     const config = await api("/api/password-vault/config") as { token?: unknown; revision?: unknown; share_origin?: unknown };
     if (!active(run)) return;
     if (typeof config.token !== "string" || !config.token || config.token.length > 1024) throw new Error("Ungültige lokale Zugriffskonfiguration.");

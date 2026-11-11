@@ -1,11 +1,11 @@
 {
   "scope": "local loopback, debug Rust binary, sequential GET, synthetic empty vault",
-  "base_commit": "d8e6ee2c0c3bba8211c12db79298b463ea60c4fe",
+  "base_commit": "ffb85fafb009b30f193e7bb84e66b78daebc4ee8",
   "working_tree_changes_uncommitted_at_measurement": true,
-  "binary_sha256": "f3b8115bc2013709d451867dee67f88c364cf144ba785cf3dbc14134fa363978",
+  "binary_sha256": "c42792c5f3fc823fd885df52589478fb01fa515322f28ba52d5c4df297521790",
   "api_source_sha256": "7b928c2f8bde443b0634d06fd54917872745e946bfacb90932c556c6ee35ded8",
   "version": "HeavenKey 0.31.0",
-  "startup_health_ms_single_sample": 28.54,
+  "startup_health_ms_single_sample": 20.22,
   "results": {
     "/health": {
       "n": 20,
@@ -15,10 +15,10 @@
       "bytes": [
         47
       ],
-      "p50_ms": 1.17,
-      "p95_ms": 2.6,
-      "min_ms": 0.79,
-      "max_ms": 2.74
+      "p50_ms": 1.46,
+      "p95_ms": 2.54,
+      "min_ms": 0.89,
+      "max_ms": 2.72
     },
     "/passwords/": {
       "n": 20,
@@ -28,10 +28,10 @@
       "bytes": [
         20270
       ],
-      "p50_ms": 0.9,
-      "p95_ms": 1.01,
-      "min_ms": 0.75,
-      "max_ms": 1.04
+      "p50_ms": 0.68,
+      "p95_ms": 0.99,
+      "min_ms": 0.61,
+      "max_ms": 1.29
     },
     "/passwords.css": {
       "n": 20,
@@ -41,10 +41,10 @@
       "bytes": [
         32688
       ],
-      "p50_ms": 1.22,
-      "p95_ms": 2.47,
-      "min_ms": 0.8,
-      "max_ms": 2.97
+      "p50_ms": 0.66,
+      "p95_ms": 0.72,
+      "min_ms": 0.61,
+      "max_ms": 0.75
     },
     "/passwords-protected.css": {
       "n": 20,
@@ -54,10 +54,10 @@
       "bytes": [
         2410
       ],
-      "p50_ms": 2.38,
-      "p95_ms": 17.39,
-      "min_ms": 1.09,
-      "max_ms": 20.57
+      "p50_ms": 0.68,
+      "p95_ms": 0.75,
+      "min_ms": 0.61,
+      "max_ms": 0.79
     }
   },
   "limits": [

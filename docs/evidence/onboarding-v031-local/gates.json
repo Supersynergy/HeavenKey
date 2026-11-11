@@ -1,5 +1,5 @@
 {
-  "base_commit": "d8e6ee2c0c3bba8211c12db79298b463ea60c4fe",
+  "base_commit": "ffb85fafb009b30f193e7bb84e66b78daebc4ee8",
   "working_tree_changes_uncommitted_at_measurement": true,
   "gates": [
     {
@@ -36,10 +36,32 @@
       "elapsed_seconds": 17.198,
       "time_utc": "2026-11-11T20:39:52.782055+00:00",
       "log_sha256": "1e13897c16b1a5a829236ac1141488bd0dd88152c58749bdaf6174ac9bc78653"
+    },
+    {
+      "name": "check",
+      "exit_code": 0,
+      "elapsed_seconds": 404.016,
+      "time_utc": "2026-11-11T22:17:18.298200+00:00",
+      "log_sha256": "b0f1199648a5cc9ae4393d1a09c1b6bc746937550177059f09ec53355b450ac4"
+    },
+    {
+      "name": "e2e",
+      "exit_code": 0,
+      "elapsed_seconds": 20.121,
+      "time_utc": "2026-11-11T22:18:00.940518+00:00",
+      "log_sha256": "3ebcdc7123b3875e081b9dd34b4a760053bf2dd7f12b6bf23d437b4ee681fb59"
     }
   ],
   "notes": [
-    "the first check failed a 5s Bun crypto-sync test under unrelated host load; the focused test and subsequent full check passed",
-    "CI release jobs remain separate from this local evidence"
-  ]
+    "the first local check failed a 5s Bun crypto-sync test under unrelated host load; focused and full reruns passed",
+    "preview.1 exposed a real in-flight save lock race on hosted Linux ARM64; local red/green reproduced and the subsequent check/e2e passed on corrected source",
+    "new preview.2 GitHub CI remains a separate gate"
+  ],
+  "preview_1_ci": {
+    "run_id": 43106587319,
+    "conclusion": "failure",
+    "failed_job": "verify / verify-public",
+    "case": "lock while POST in flight allowed an old vault read to re-enable unlock",
+    "release_published": false
+  }
 }
