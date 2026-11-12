@@ -99,16 +99,43 @@ Die ursprüngliche Idee steckt jetzt im Passwortmanager: den lokalen Tresor mit 
 2. Öffne auf macOS `HeavenKey.app`. Die App verwaltet ihren lokalen Dienst und zeigt den Tresor im eigenen Fenster. Unter Windows und Linux öffnet der Starter den lokalen Tresor im Browser.
 3. Desktop: Lege ein Masterpasswort mit mindestens 14 Zeichen fest. Android: Bestätige deine Gerätesperre; ein zusätzliches Masterpasswort ist nicht erforderlich. Exportiere anschließend eine verschlüsselte Sicherung und prüfe ihre Wiederherstellung.
 
-| System | Paket | Starter |
-| --- | --- | --- |
-| macOS mit Apple Silicon | [HeavenKey-0.30.0-macos-arm64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-macos-arm64.zip) | `HeavenKey.app` (macOS 14+) |
-| macOS mit Intel-Prozessor | [HeavenKey-0.30.0-macos-x64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-macos-x64.zip) | `HeavenKey.app` (macOS 14+) |
-| Windows x64 | [HeavenKey-0.30.0-windows-x64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-windows-x64.zip) | `Start HeavenKey.cmd` |
-| Linux x64 | [HeavenKey-0.30.0-linux-x64.tar.gz](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-linux-x64.tar.gz) | `./start.sh` |
-| Linux ARM64 | [HeavenKey-0.30.0-linux-arm64.tar.gz](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-linux-arm64.tar.gz) | `./start.sh` |
-| Android ARM64, die meisten aktuellen Handys | [HeavenKey-0.30.0-android-preview-arm64-v8a.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-android-preview-arm64-v8a.apk) | Android 11+, Gerätesperre; Website-Passkeys ab Android 14 |
-| Android ARMv7, 32 Bit | [HeavenKey-0.30.0-android-preview-armeabi-v7a.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-android-preview-armeabi-v7a.apk) | Android 11+ |
-| Android x86-64 | [HeavenKey-0.30.0-android-preview-x86_64.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-android-preview-x86_64.apk) | Passende Geräte oder Emulatoren |
+<details>
+<summary><strong>📋 8 Einträge anzeigen</strong></summary>
+
+- **macOS mit Apple Silicon**<br>
+  Paket: [HeavenKey-0.30.0-macos-arm64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-macos-arm64.zip)<br>
+  Starter: `HeavenKey.app` (macOS 14+)
+
+- **macOS mit Intel-Prozessor**<br>
+  Paket: [HeavenKey-0.30.0-macos-x64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-macos-x64.zip)<br>
+  Starter: `HeavenKey.app` (macOS 14+)
+
+- **Windows x64**<br>
+  Paket: [HeavenKey-0.30.0-windows-x64.zip](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-windows-x64.zip)<br>
+  Starter: `Start HeavenKey.cmd`
+
+- **Linux x64**<br>
+  Paket: [HeavenKey-0.30.0-linux-x64.tar.gz](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-linux-x64.tar.gz)<br>
+  Starter: `./start.sh`
+
+- **Linux ARM64**<br>
+  Paket: [HeavenKey-0.30.0-linux-arm64.tar.gz](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-linux-arm64.tar.gz)<br>
+  Starter: `./start.sh`
+
+- **Android ARM64, die meisten aktuellen Handys**<br>
+  Paket: [HeavenKey-0.30.0-android-preview-arm64-v8a.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-android-preview-arm64-v8a.apk)<br>
+  Starter: Android 11+, Gerätesperre; Website-Passkeys ab Android 14
+
+- **Android ARMv7, 32 Bit**<br>
+  Paket: [HeavenKey-0.30.0-android-preview-armeabi-v7a.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-android-preview-armeabi-v7a.apk)<br>
+  Starter: Android 11+
+
+- **Android x86-64**<br>
+  Paket: [HeavenKey-0.30.0-android-preview-x86_64.apk](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-android-preview-x86_64.apk)<br>
+  Starter: Passende Geräte oder Emulatoren
+
+</details>
+
 
 [Chromium-Erweiterung](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-extension-chromium.zip) · [Firefox-Erweiterung](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/HeavenKey-0.30.0-extension-firefox.zip) · [SHA256SUMS](https://github.com/Supersynergy/HeavenKey/releases/download/v0.30.0-preview.1/SHA256SUMS)
 
