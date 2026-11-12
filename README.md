@@ -2,13 +2,6 @@
 
 **Zugang beginnt mit Zustimmung.**
 
-Die Weiterentwicklung zum passwortlosen Identitäts- und Loginanbieter ist in der
-[Roadmap](docs/ROADMAP.md) mit [Due Diligence und Pro/Contra](docs/IDENTITY-DUE-DILIGENCE.md)
-und [To-dos samt Unteraufgaben](docs/IDENTITY-BACKLOG.md) festgehalten. Der getrennte
-[lokale Identity-Pilot](apps/identity-pilot/README.md) verbindet zwei Demo-Anwendungen
-über Passkeys und OpenID Connect. Er ist keine veröffentlichte App-Funktion,
-keine echte Office-Anbindung und kein KYC-Nachweis.
-
 ![Das ursprüngliche HeavenKey-Motiv: ein Schlüssel vor einem leuchtenden Himmelstor](docs/assets/heavenkey-hero.png)
 
 Passwörter auf dem Desktop und auf Android lokal verwalten. HeavenKey verschlüsselt den Tresor auf deinem Gerät. Desktop und Handy lassen sich ausdrücklich koppeln und manuell abgleichen; Android erstellt und verwendet Website-Passkeys. Für den Passwortmanager brauchst du kein Cloudkonto.
@@ -35,6 +28,21 @@ als Vorschau gekennzeichnet.
 *Die Bilder zeigen die echte lokale App mit ausschließlich erfundenen Beispieldaten. Passwörter bleiben verdeckt.*
 
 Die macOS-App hat ein eigenes Fenster, native Datei-Dialoge und Tastaturmenüs. Beim Beenden stoppt sie ihren Dienst und die daran gebundenen Agentensitzungen. Passkeys hängen von WebView, Betriebssystem und Authenticator ab; über „Ansicht → Im Browser öffnen“ kannst du einen kompatiblen Browser verwenden.
+
+[🚀 Starten](#starten) · [🧭 Alltag](#im-alltag) · [🖼️ Ansichten](#ansichten) · [🔒 Sicherheit](#sicherheit-und-grenzen) · [🛠️ Entwicklung](#entwicklung)
+
+<details>
+<summary>🗺️ Roadmap und Identity-Pilot</summary>
+
+Die Weiterentwicklung zum passwortlosen Identitäts- und Loginanbieter ist in der
+[Roadmap](docs/ROADMAP.md) mit [Due Diligence und Pro/Contra](docs/IDENTITY-DUE-DILIGENCE.md)
+und [To-dos samt Unteraufgaben](docs/IDENTITY-BACKLOG.md) festgehalten. Der getrennte
+[lokale Identity-Pilot](apps/identity-pilot/README.md) verbindet zwei Demo-Anwendungen
+über Passkeys und OpenID Connect. Er ist keine veröffentlichte App-Funktion,
+keine echte Office-Anbindung und kein KYC-Nachweis.
+
+
+</details>
 
 ## Neu in 0.30: klare Aufgaben und geprüfte Formularziele
 
