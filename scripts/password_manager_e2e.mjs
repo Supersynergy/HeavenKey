@@ -47,6 +47,13 @@ function observePage(current) {
 }
 async function ready() { await page.locator("#unlock").waitFor({ state: "visible" }); await page.waitForFunction(() => !document.querySelector("#unlock").disabled); }
 async function status(text) { await page.waitForFunction(text => document.querySelector("#status").textContent.includes(text), text); }
+async function expectLockedAfterRejection() {
+  await status("Entsperren fehlgeschlagen.");
+  assert.equal(await page.locator("#gate-feedback #status").getAttribute("data-error"), "true");
+  assert(await page.locator("#workspace").isHidden());
+  assert(await page.locator("#master").evaluate(field => field === document.activeElement));
+}
+
 async function unlock(password, create = false) { await ready(); await page.locator("#master").fill(password); if (create) await page.locator("#master-confirm").fill(password); await page.locator("#unlock").click(); }
 async function entries() { if (await page.locator("#settings-view").isVisible()) await page.locator("#close-settings").click(); }
 async function settingsSection(text) {
@@ -114,7 +121,7 @@ try {
   await page.screenshot({ path: "docs/evidence/password-manager/unlocked.png", fullPage: true });
   await page.locator("#lock").click(); await ready();
   check("lock clears credentials and form state", await page.locator("#entries").textContent() === "" && await page.locator("#entry-password").inputValue() === "");
-  await unlock("synthetic-wrong-password-only"); await status("Passwort falsch"); check("wrong master rejected");
+  await unlock("synthetic-wrong-password-only"); await expectLockedAfterRejection(); check("wrong master rejected");
   await unlock(master); await count(1); check("correct master restores persisted login");
   const second = await context.newPage(); await second.goto(origin); await second.waitForFunction(() => !document.querySelector("#unlock").disabled);
   await second.locator("#master").fill(master); await second.locator("#unlock").click(); await second.locator("#new-entry").waitFor();
@@ -139,7 +146,7 @@ try {
   await page.locator("#import-csv").click(); await page.waitForFunction(() => document.querySelector("#status").dataset.error === "true");
   check("invalid later CSV row imports nothing", JSON.stringify(await snapshot()) === JSON.stringify(beforeInvalid));
   await settingsSection("Masterpasswort ändern"); await page.locator("#new-master").fill(newMaster); await page.locator("#new-master-confirm").fill(newMaster); await page.locator("#rekey").click(); await status("Masterpasswort geändert");
-  await page.locator("#lock").click(); await ready(); await unlock(master); await status("Passwort falsch"); await unlock(newMaster); await count(2); check("master password change retires old key");
+  await page.locator("#lock").click(); await ready(); await unlock(master); await expectLockedAfterRejection(); await unlock(newMaster); await count(2); check("master password change retires old key");
   await page.locator("[data-testid=edit-entry]").first().click();
   const beforeGeneration = await page.locator("#entry-password").inputValue();
   await page.locator("#generate").click();
@@ -177,7 +184,7 @@ try {
     const response = await fetch("/api/password-vault", { method: "POST", headers, body: JSON.stringify({ expected_revision: revision, record }) });
     if (!response.ok) throw new Error("corruption fixture rejected");
   });
-  await page.locator("#lock").click(); await unlock(newMaster); await status("Passwort falsch");
+  await page.locator("#lock").click(); await unlock(newMaster); await expectLockedAfterRejection();
   await recovery(); check("locked recovery is reachable without successful unlock");
   await page.locator("#locked-restore-file").setInputFiles(largeBackup); await page.locator("#locked-restore-master").fill("synthetic-wrong-backup-password"); await page.locator("#locked-restore-confirm").check();
   const corruptSnapshot = await snapshot(); await page.locator("#locked-restore-submit").click(); await status("Passwort falsch");
