@@ -20,7 +20,7 @@ const server=Bun.serve({port:0,hostname:"127.0.0.1",async fetch(request){
  if(path==="/passwords/")return new Response(await readFile(`${root}/apps/web/passwords.html`),{headers:{"Content-Type":"text/html"}});
  if(path==="/passwords.css")return new Response(await readFile(`${root}/apps/web/src/passwords.css`),{headers:{"Content-Type":"text/css"}});
  if(path==="/passwords.js")return new Response(script,{headers:{"Content-Type":"text/javascript"}});
- if(path==="/api/password-vault/config"){const gate=readGate;readGate=null;if(gate)await gate.wait();return Response.json({token:"synthetic-local-token",revision});}
+ if(path==="/api/password-vault/config"){const gate=readGate;readGate=null;if(gate)await gate.wait();return Response.json({token:"synthetic-local-token",vault_folder:"Reisetresor",revision});}
  if(path==="/api/password-vault"){
  if(request.method==="POST"){const body=await request.json();const gate=writeGate;writeGate=null;if(gate)await gate.wait();if(body.expected_revision!==revision)return new Response("conflict",{status:409});record=body.record;revision++;writes.push(body);}
  return Response.json({revision,record});
@@ -43,7 +43,7 @@ try {
  const backup=JSON.stringify(record);const backupRevision=revision;
  await page.locator('[data-testid="edit-entry"]').click();await page.locator("#entry-title").fill("Edited synthetic");await page.locator("#save-entry").click();await page.waitForFunction(()=>document.querySelector("#entries")!.textContent!.includes("Edited synthetic"));
  await page.locator("#lock").click();await page.locator("#gate:not([hidden])").waitFor();assert.equal(await page.locator("#entries").textContent(),"");assert.equal(await page.locator("#entry-password").inputValue(),"");
- await page.locator("#unlock:not([disabled])").waitFor();await page.locator("#master").fill("incorrect synthetic password");await page.locator("#unlock").click();await page.waitForFunction(()=>document.querySelector("#status")!.textContent!.includes("Entsperren fehlgeschlagen"));assert(await page.locator("#workspace").isHidden());
+ await page.locator("#unlock:not([disabled])").waitFor();await page.locator("#master").fill("incorrect synthetic password");await page.locator("#unlock").click();await page.waitForFunction(()=>document.querySelector("#status")!.textContent!.includes("Entsperren fehlgeschlagen"));assert.equal(await page.locator("#vault-folder").innerText(),"Reisetresor");assert.equal(await page.locator("#vault-address").innerText(),new URL(origin).host);assert(await page.locator("#gate-feedback #status").isVisible());assert(await page.locator("#master").evaluate(el=>el===document.activeElement));assert(await page.locator("#workspace").isHidden());
  await page.locator("#master").fill("synthetic master password");await page.locator("#unlock").click();await page.locator("#workspace:not([hidden])").waitFor();assert((await page.locator("#entries").textContent())!.includes("Edited synthetic"));
  console.log("PASS edit/persistence and lock clears DOM; wrong master rejected");
  await settingsSection("CSV");await page.locator("#import-file").setInputFiles({name:"synthetic.csv",mimeType:"text/csv",buffer:Buffer.from('Title,Username,Password,URL,Notes\nCSV demo,demo,synthetic-csv-password,https://example.invalid,"line1\nline2"')});await page.locator("#import-csv").click();await page.locator("#confirm-import").click();await page.waitForFunction(()=>document.querySelectorAll('[data-testid="login"]').length===2);

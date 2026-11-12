@@ -1,6 +1,47 @@
 import AppKit
+import SwiftUI
 import WebKit
 import Darwin
+
+private struct VaultChoices: View {
+    @State var personal: Bool
+    let select: (Bool) -> Void
+
+    var body: some View {
+        VStack(spacing: 8) {
+            row("Standard", icon: "tray.full", personalVault: false)
+            row("Persönlich", icon: "person", personalVault: true)
+        }
+        .padding(4)
+    }
+
+    private func row(_ title: String, icon: String, personalVault: Bool) -> some View {
+        let selected = personal == personalVault
+        return Button {
+            personal = personalVault
+            select(personalVault)
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: icon).frame(width: 24).accessibilityHidden(true)
+                Text(title).font(.headline)
+                Spacer()
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, minHeight: 46)
+            .background(selected ? Color.accentColor.opacity(0.10) : Color(nsColor: .controlBackgroundColor),
+                        in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(selected ? Color.accentColor : Color(nsColor: .separatorColor)))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
 
 // Keep the vault UI inside the backend origin; external pages never inherit its context.
 func isVaultURL(_ url: URL, port: Int) -> Bool {
@@ -58,6 +99,63 @@ final class HeavenKeyApp: NSObject, NSApplicationDelegate, WKNavigationDelegate,
     var failed = false
     var webCrashCount = 0
 
+    var choosing = false
+
+    private func command(_ path: String, _ arguments: [String]) -> String? {
+        let process = Process(), pipe = Pipe()
+        process.executableURL = URL(fileURLWithPath: path)
+        process.arguments = arguments
+        process.standardOutput = pipe
+        process.standardError = FileHandle.nullDevice
+        do { try process.run() } catch { return nil }
+        let bytes = pipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else { return nil }
+        return String(decoding: bytes, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func selectProfile() -> (port: Int, directory: String, title: String)? {
+        choosing = true
+        defer { choosing = false }
+        let alert = NSAlert()
+        alert.messageText = "Tresor auswählen"
+        alert.informativeText = "Du entsperrst den gewählten Tresor im nächsten Schritt."
+        var personal = ready && port == 18246
+        let choices = NSHostingView(rootView: VaultChoices(personal: personal) { personal = $0 })
+        choices.frame = NSRect(x: 0, y: 0, width: 290, height: 112)
+        alert.accessoryView = choices
+        alert.addButton(withTitle: "Weiter")
+        alert.addButton(withTitle: "Abbrechen").keyEquivalent = "\u{1b}"
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        return (personal ? 18246 : 18240, support.appendingPathComponent(personal ? "HeavenKey-Persoenlich" : "HeavenKey").path, personal ? "Persönlich" : "Standard")
+    }
+
+    // Activate only our native app holding this database, never trust the port alone.
+    private func activateExisting(port: Int, directory: String) -> Bool {
+        guard let pid = command("/usr/sbin/lsof", ["-nP", "-t", "-iTCP:\(port)", "-sTCP:LISTEN"]),
+              Int32(pid) != nil,
+              command("/usr/sbin/lsof", ["-a", "-p", pid, directory + "/passwords.sqlite"]) != nil,
+              let parent = command("/bin/ps", ["-p", pid, "-o", "ppid="]).flatMap(Int32.init),
+              let owner = NSRunningApplication(processIdentifier: parent),
+              owner.bundleURL?.standardizedFileURL == Bundle.main.bundleURL.standardizedFileURL else { return false }
+        return owner.activate(options: [.activateAllWindows])
+    }
+
+    @objc func switchProfile() {
+        guard !choosing, let profile = selectProfile() else { return }
+        if activateExisting(port: profile.port, directory: profile.directory) { return }
+        let options = NSWorkspace.OpenConfiguration()
+        options.createsNewApplicationInstance = true
+        options.arguments = ["--port", String(profile.port), "--data-dir", profile.directory]
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: options)
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if ready && !choosing { switchProfile() }
+        return false
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         installMenu()
         let config = WKWebViewConfiguration()
@@ -77,6 +175,13 @@ final class HeavenKeyApp: NSObject, NSApplicationDelegate, WKNavigationDelegate,
         NSApp.activate(ignoringOtherApps: true)
         do { (port, dataDirectory) = try launchOptions(Array(CommandLine.arguments.dropFirst())) }
         catch { fail("Ungültige Startoptionen. Verwende --port 1024…65535 und einen absoluten --data-dir-Pfad."); return }
+        if CommandLine.arguments.dropFirst().isEmpty {
+            guard let profile = selectProfile() else { NSApp.terminate(nil); return }
+            if activateExisting(port: profile.port, directory: profile.directory) { NSApp.terminate(nil); return }
+            port = profile.port
+            dataDirectory = profile.directory
+            window.title = "HeavenKey · " + profile.title
+        }
         startBackend()
     }
 
@@ -85,6 +190,7 @@ final class HeavenKeyApp: NSObject, NSApplicationDelegate, WKNavigationDelegate,
         let app = NSMenuItem(); menu.addItem(app)
         let appMenu = NSMenu(); app.submenu = appMenu
         appMenu.addItem(withTitle: "Über HeavenKey", action: #selector(about), keyEquivalent: "")
+        appMenu.addItem(withTitle: "Tresor auswählen …", action: #selector(switchProfile), keyEquivalent: "o")
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "HeavenKey beenden", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         let edit = NSMenuItem(); menu.addItem(edit)

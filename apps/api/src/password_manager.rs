@@ -256,8 +256,11 @@ fn access(app: &VaultApp, headers: &HeaderMap, token_required: bool) -> ApiResul
 pub async fn config(State(app): State<VaultApp>, headers: HeaderMap) -> ApiResult<Json<Value>> {
     access(&app, &headers, false)?;
     let db = app.db.lock().map_err(internal)?;
+    let folder = db
+        .path()
+        .and_then(|p| Path::new(p).parent()?.file_name()?.to_str());
     Ok(Json(
-        json!({"token": app.token.as_ref(), "revision": revision(&db)?, "share_origin": app.access.share_origin}),
+        json!({"token": app.token.as_ref(), "revision": revision(&db)?, "share_origin": app.access.share_origin, "vault_folder": folder}),
     ))
 }
 

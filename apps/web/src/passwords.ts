@@ -60,9 +60,17 @@ function focusAfter(id: string) { if (busy) pendingFocus = id; else byId(id).foc
 let clipboardTimer: ReturnType<typeof setTimeout> | undefined;
 let clipboardValue = "", clipboardEpoch = 0;
 let statusTimer: ReturnType<typeof setTimeout> | undefined;
+const statusHome = byId("status").parentElement!;
+byId("vault-address").textContent = location.host;
 const status = (message: string, error = false) => {
   clearTimeout(statusTimer);
-  const output = byId("status"); output.textContent = message; output.dataset.error = String(error);
+  const output = byId("status");
+  if (byId("gate").hidden) {
+    if (output.parentElement !== statusHome) statusHome.insertBefore(output, byId("editor"));
+  } else {
+    byId("gate-feedback").append(output);
+  }
+  output.textContent = message; output.dataset.error = String(error);
   let inDialog = false;
   for (const id of ["editor", "delete-dialog"]) if (byId<HTMLDialogElement>(id).open) {
     const local = byId(`${id}-status`); local.textContent = message; local.dataset.error = String(error); local.hidden = false; inDialog = true;
@@ -131,7 +139,7 @@ async function load(announce = true) {
     // A locked vault must not offer the previous revision while a save is still pending.
     if (pendingWrites) await new Promise<void>(resolve => writesSettled.push(resolve));
     if (!active(run)) return;
-    const config = await api("/api/password-vault/config") as { token?: unknown; revision?: unknown; share_origin?: unknown };
+    const config = await api("/api/password-vault/config") as { token?: unknown; revision?: unknown; share_origin?: unknown; vault_folder?: unknown };
     if (!active(run)) return;
     if (typeof config.token !== "string" || !config.token || config.token.length > 1024) throw new Error("Ungültige lokale Zugriffskonfiguration.");
     if (!Number.isSafeInteger(config.revision) || Number(config.revision) < 0) throw new Error("Ungültige lokale Tresorrevision.");
@@ -140,6 +148,11 @@ async function load(announce = true) {
     const snapshot = readSnapshot(await api("/api/password-vault"));
     if (!active(run)) return;
     revision = snapshot.revision; remote = snapshot.record; ready = true;
+    const folder = typeof config.vault_folder === "string" ? config.vault_folder : "";
+    byId("vault-folder").textContent = folder === "HeavenKey" ? "Standard" : folder === "HeavenKey-Persoenlich" ? "Persönlich" : folder || "Lokaler Tresor";
+    document.querySelector<HTMLElement>(".gate-description")!.textContent = remote
+      ? "Gib das Masterpasswort ein, das du für diesen Tresor gewählt hast."
+      : "Wähle ein eigenes Masterpasswort mit 14 bis 1024 Zeichen. Bewahre es getrennt auf. HeavenKey kann es nicht zurücksetzen.";
     byId("gate-heading").textContent = remote ? "Tresor entsperren" : "Lokalen Tresor anlegen";
     byId("unlock").textContent = remote ? "Entsperren" : "Tresor anlegen";
     byId("create-confirm").hidden = !!remote;
@@ -360,7 +373,10 @@ form("unlock-form").addEventListener("submit", event => {
     const master = value("master"), current = remote;
     if (!current && master !== value("master-confirm")) throw new Error("Die Masterpasswörter stimmen nicht überein.");
     input("master").value = ""; input("master-confirm").value = "";
-    const opened = current ? await openVault(current, master) : await createVault(master);
+    const opened = current ? await openVault(current, master).catch(() => {
+      if (active(run)) focusAfter("master");
+      throw new Error("Entsperren fehlgeschlagen. Prüfe oben den Tresornamen und die Adresse. Stimmen beide, prüfe die Feststelltaste und gib das Masterpasswort erneut ein.");
+    }) : await createVault(master);
     if (!active(run)) return;
     if (!current) { const saved = readSnapshot(await api("/api/password-vault", opened.envelope, revision)); if (!active(run)) return; revision = saved.revision; }
     acceptOpened(opened, revision, run, current ? "Tresor entsperrt." : "Tresor angelegt und verschlüsselt gespeichert."); recordActivity(current ? "unlock" : "create");
