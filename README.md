@@ -1,8 +1,11 @@
+<p align="center">
+  <img src="docs/assets/heavenkey-hero.png" alt="HeavenKey" width="960">
+</p>
+
 # HeavenKey
 
 **Zugang beginnt mit Zustimmung.**
 
-![HeavenKey](docs/assets/heavenkey-hero.png)
 
 Passwörter auf dem Desktop und auf Android lokal verwalten. HeavenKey verschlüsselt den Tresor auf deinem Gerät. Desktop und Handy lassen sich ausdrücklich koppeln und manuell abgleichen; Android erstellt und verwendet Website-Passkeys. Für den Passwortmanager brauchst du kein Cloudkonto.
 
