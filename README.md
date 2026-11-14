@@ -285,3 +285,7 @@ physische Telefone stehen aus. Diese Version ist für Testdaten vorgesehen.
 Die [bebilderte Installation](docs/INSTALLATION.md) bleibt ausdrücklich auf
 Desktop-Release 0.12.0 bezogen. Das [Zugangslabor](docs/LAB-INSTALLATION.md) hat eine
 eigene Einrichtung.
+
+## Additional documentation
+
+[docs/architecture](docs/architecture/)
