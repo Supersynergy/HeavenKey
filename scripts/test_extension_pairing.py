@@ -2,6 +2,7 @@
 
 import json
 import os
+import sqlite3
 import time
 import unittest
 import urllib.error
@@ -110,6 +111,23 @@ class ExtensionPairing(test_password_manager.PasswordManager):
             self.assertEqual(value, {"paired": 0})
             self.reject(token=replacement)
             restart_token = self.pair(app_token)["token"]
+        with sqlite3.connect(self.data / "passwords.sqlite") as db:
+            stored = db.execute("SELECT origin,token_hash FROM password_extension_clients").fetchall()
+            self.assertEqual(len(stored), 1)
+            self.assertEqual(stored[0][0], self.chrome)
+            self.assertNotEqual(stored[0][1], restart_token)
+            self.assertEqual(len(stored[0][1]), 43)
+        with self.server():
+            self.assertEqual(self.http(token=restart_token)[0], saved)
+            self.reject(token=restart_token, origin=self.firefox)
+            self.reject(path="/config", token=restart_token)
+            self.denied(403, token=app_token)
+            owner = self.pm("/config")["token"]
+            self.assertEqual(self.pm("/extension/pairing", token=owner),
+                             {"paired": 1, "pending": False, "origins": [self.chrome]})
+            self.http("/extension/pairing", method="DELETE", token=owner,
+                      origin=f"http://localhost:{self.port}",
+                      headers={"X-HeavenKey-Client": "password-manager"})
         with self.server():
             self.reject(token=restart_token)
             self.assertEqual(self.pm("/extension/pairing", token=self.pm("/config")["token"]),

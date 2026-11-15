@@ -21,7 +21,7 @@ struct Sealed {
 }
 pub(super) struct Pending {
     origin: String,
-    token: String,
+    token_hash: String,
     key: PublicKey,
     revision: u64,
     salt: String,
@@ -48,7 +48,7 @@ fn unavailable() -> ApiError {
     forbidden("extension_unlock_unavailable")
 }
 fn live(app: &VaultApp, p: &Pending, extensions: &Extensions) -> ApiResult<()> {
-    if p.expires <= Instant::now() || extensions.grants.get(&p.origin) != Some(&p.token) {
+    if p.expires <= Instant::now() || extensions.grants.get(&p.origin) != Some(&p.token_hash) {
         return Err(unavailable());
     }
     let value = current(&*app.db.lock().map_err(internal)?)?;
@@ -69,10 +69,7 @@ async fn start(
         return Err(unavailable());
     }
     let origin = headers["origin"].to_str().map_err(internal)?.to_owned();
-    let token = headers["x-heavenkey-token"]
-        .to_str()
-        .map_err(internal)?
-        .to_owned();
+    let token = extension_token_hash(headers["x-heavenkey-token"].to_str().map_err(internal)?);
     let mut extensions = app.extensions.lock().map_err(internal)?;
     extensions
         .unlocks
@@ -92,7 +89,7 @@ async fn start(
         id.clone(),
         Pending {
             origin,
-            token,
+            token_hash: token,
             key: input.public_key,
             revision,
             salt,
@@ -152,7 +149,12 @@ async fn poll(
     let mut extensions = app.extensions.lock().map_err(internal)?;
     let p = extensions.unlocks.get(&input.id).ok_or_else(unavailable)?;
     if headers["origin"].to_str().ok() != Some(p.origin.as_str())
-        || headers["x-heavenkey-token"].to_str().ok() != Some(p.token.as_str())
+        || headers["x-heavenkey-token"]
+            .to_str()
+            .ok()
+            .map(extension_token_hash)
+            .as_ref()
+            != Some(&p.token_hash)
     {
         return Err(unavailable());
     }
@@ -236,7 +238,7 @@ mod tests {
         extensions.grants.insert("paired".into(), "token".into());
         let mut pending = Pending {
             origin: "paired".into(),
-            token: "token".into(),
+            token_hash: "token".into(),
             key: PublicKey {
                 x: random_secret(),
                 y: random_secret(),

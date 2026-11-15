@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { openVault } from '../apps/web/src/passwords-crypto';
 export async function inlineCases({browser,popup,target,appApi,master,check}:any) {
-  const status=(page:any,text:string)=>page.waitForFunction((value:string)=>document.querySelector('#smart-status')?.textContent?.includes(value),text);
+  const status=(page:any,text:string)=>page.waitForFunction((value:string)=>document.querySelector('#smart-status')?.textContent?.includes(value) && document.querySelector('#smart')?.getAttribute('aria-busy')==='false',text);
   const cdp=await browser.newCDPSession(target);
   const clickAX=async(name:string)=>{
     const {nodes}=await cdp.send('Accessibility.getFullAXTree');
@@ -12,7 +12,13 @@ export async function inlineCases({browser,popup,target,appApi,master,check}:any
   };
   const windowFor=async(selector:string,label:string)=>{
     await target.bringToFront();const box=await target.locator(selector).boundingBox();assert(box);
-    await target.mouse.click(box.x+box.width-17,box.y+box.height/2);await target.waitForTimeout(100);
+    const {nodes}=await cdp.send('Accessibility.getFullAXTree');let key:any;
+    for(const node of nodes.filter((node:any)=>node.role?.value==='button'&&node.name?.value==='HeavenKey öffnen')){
+      const {model}=await cdp.send('DOM.getBoxModel',{backendNodeId:node.backendDOMNodeId});const [left,top]=model.border;
+      if(Math.abs(top+model.height/2-(box.y+box.height/2))<1 && (left>=box.x+box.width||left+model.width<=box.x)){key={left,top,...model};break;}
+    }
+    assert(key,'Field key must occupy a free outer gutter and stay vertically centered');assert.equal(key.width,24);assert.equal(key.height,24);
+    await target.mouse.click(key.left+key.width/2,key.top+key.height/2);await target.waitForTimeout(100);
     const opened=browser.waitForEvent('page');await clickAX(label);const page=await opened;
     await page.waitForLoadState('domcontentloaded');await page.locator('#unlock-form').waitFor({state:'visible'});
     await page.locator('#extension-master').fill(master);await page.locator('#unlock-extension').click();await page.locator('#smart-workspace').waitFor({state:'visible'});return page;

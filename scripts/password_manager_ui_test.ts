@@ -19,6 +19,7 @@ const server=Bun.serve({port:0,hostname:"127.0.0.1",async fetch(request){
  const path=new URL(request.url).pathname;
  if(path==="/passwords/")return new Response(await readFile(`${root}/apps/web/passwords.html`),{headers:{"Content-Type":"text/html"}});
  if(path==="/passwords.css")return new Response(await readFile(`${root}/apps/web/src/passwords.css`),{headers:{"Content-Type":"text/css"}});
+ if(path==="/heavenkey-cover.png")return new Response(await readFile(`${root}/docs/assets/heavenkey-hero-square.png`),{headers:{"Content-Type":"image/png"}});
  if(path==="/passwords.js")return new Response(script,{headers:{"Content-Type":"text/javascript"}});
  if(path==="/api/password-vault/config"){const gate=readGate;readGate=null;if(gate)await gate.wait();return Response.json({token:"synthetic-local-token",vault_folder:"Reisetresor",revision});}
  if(path==="/api/password-vault"){
@@ -31,10 +32,70 @@ let browser;
 try {
  browser=await chromium.launch({executablePath:process.env.CHROME_PATH || (process.platform === "darwin" ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" : "/usr/bin/google-chrome"),headless:true,args:["--disable-background-networking"],timeout:20000});
  const context=await browser.newContext({acceptDownloads:true});const page=await context.newPage();const errors:string[]=[];page.on("pageerror",error=>errors.push(error.message));
+ page.setDefaultTimeout(120000);
  const origin=`http://localhost:${server.port}`;await page.goto(`${origin}/passwords/`);await page.locator("#unlock:not([disabled])").waitFor();
+ // Exercise the desktop presentation bridge without native credentials.
+ await page.evaluate(() => dispatchEvent(new CustomEvent("heavenkey-desktop", {detail: "personal"})));
+ await page.setViewportSize({width:1280,height:840});
+ await page.screenshot({path:"/tmp/heavenkey-stable-light.png",animations:"disabled"});
+ const primary = await page.locator("#unlock").boundingBox();
+ assert(primary && primary.y + primary.height <= 840, "create action visible without scrolling on desktop");
+ for (const width of [320,375,414,768,1440]) {
+   await page.setViewportSize({width,height:900});
+   const overflow = await page.evaluate(() => ({width:innerWidth,scroll:document.documentElement.scrollWidth,nodes:[...document.querySelectorAll<HTMLElement>("body *")].filter(el=>el.getBoundingClientRect().right>innerWidth+1 && el.getClientRects().length).slice(0,14).map(el=>({tag:el.tagName,id:el.id,cls:el.className,rect:el.getBoundingClientRect().toJSON()}))}));
+   assert(overflow.scroll <= overflow.width, `gate overflow at ${width}: ${JSON.stringify(overflow)}`);
+ }
+ await page.setViewportSize({width:1280,height:840});
+ await page.locator("#gate-theme-toggle").click();
+ assert.equal(await page.locator("#gate-theme-toggle").getAttribute("aria-pressed"),"true");
+ await page.screenshot({path:"/tmp/heavenkey-stable-dark.png",animations:"disabled"});
+ await page.locator("#gate-theme-toggle").click();
+ await page.setViewportSize({width:375,height:900});await page.screenshot({path:"/tmp/heavenkey-stable-mobile.png",animations:"disabled"});
+ await page.setViewportSize({width:1280,height:840});
+ await page.evaluate(() => { document.body.style.zoom = "2"; });
+ assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "gate overflow at 200 percent");
+ await page.evaluate(() => { document.body.style.zoom = ""; });
+ await page.locator("#master").focus();await page.keyboard.press("Tab");
+ assert.equal(await page.evaluate(() => document.activeElement?.id),"master-confirm");
+ const shell = await page.locator("#gate").boundingBox();
+ assert(shell && shell.x === 0 && shell.y === 0 && shell.width === 1280 && shell.height === 840, "window-filling shell has no outer margin");
+ const imageBefore = await page.locator(".gate-identity").boundingBox();
+ const toolbarBefore = await page.locator(".gate-content-top").boundingBox();
+ const restorePanel = page.locator("#locked-recovery");
+ await restorePanel.locator("summary").click();
+ await page.locator("#locked-restore-file").waitFor({state:"visible"});
+ assert.deepEqual(await page.locator("#gate").boundingBox(),shell,"recovery preserves shell size");
+ assert.deepEqual(await page.locator(".gate-identity").boundingBox(),imageBefore,"recovery preserves image bounds");
+ assert.deepEqual(await page.locator(".gate-content-top").boundingBox(),toolbarBefore,"recovery preserves toolbar bounds");
+ assert(await page.locator("#unlock-form").isHidden(),"recovery replaces login within the same surface");
+ await page.screenshot({path:"/tmp/heavenkey-stable-recovery.png",animations:"disabled"});
+ await page.locator("#locked-restore-file").setInputFiles({name:"invalid-backup.json",mimeType:"application/json",buffer:Buffer.from("{invalid-json")});
+ await page.locator("#locked-restore-master").fill("Synthetic recovery phrase only");
+ await page.locator("#locked-restore-confirm").check();await page.locator("#locked-restore-submit").click();
+ await page.waitForFunction(()=>!!document.querySelector("#locked-restore-feedback #status[data-error=true]")?.textContent);
+ assert(await page.locator("#locked-restore-feedback #status").isVisible(),"recovery error is visible in active panel");
+ assert.deepEqual(await page.locator("#gate").boundingBox(),shell,"recovery error keeps fixed shell");
+ assert.equal(writes.length,0,"invalid recovery never writes the vault");
+
+ await restorePanel.locator("summary").click();
+ assert.deepEqual(await page.locator("#gate").boundingBox(),shell,"closing recovery preserves shell");
+ assert.equal(await page.evaluate(()=>document.activeElement?.id),"master");
+ console.log("PASS edge-to-edge shell, 5 widths, theme, 200 percent, focus, fixed-size recovery transition");
  async function settingsSection(text:string) { if (!(await page.locator("#settings-view").isVisible())) await page.locator("#nav-settings").click(); const summary=page.locator("#settings-view summary").filter({hasText:text}); if (!(await summary.evaluate(el=>(el.parentElement as HTMLDetailsElement).open))) await summary.click(); }
  await page.locator("#master").fill("synthetic master password");await page.locator("#master-confirm").fill("synthetic master password");await page.locator("#unlock").click();await page.locator("#workspace:not([hidden])").waitFor();
  console.log("PASS browser vault creation");
+ await page.locator("#nav-generator").click();
+ const words = await page.locator("#entry-password").inputValue();
+ assert.equal(words.split(".").length, 6);
+ await page.locator("#generate").click();await page.locator("#generate-keep").click();
+ assert.equal(await page.locator("#entry-password").inputValue(), words);
+ await page.locator("#generator-kind").selectOption("characters");
+ await page.locator("#generator-length").fill("32");
+ await page.locator("#generate").click();await page.locator("#generate-replace").click();
+ assert.equal((await page.locator("#entry-password").inputValue()).length,32);
+ await page.locator("#cancel-entry").click();
+ console.log("PASS six-word default, preserve existing password, explicit character generator");
+
  await page.locator("#new-entry").click();await page.locator("#entry-title").fill("<img src=x onerror=alert(1)> Synthetic");await page.locator("#entry-username").fill("demo@example.invalid");await page.locator("#entry-password").fill("synthetic-login-secret");await page.locator("#entry-url").fill("https://example.invalid");await page.locator("#entry-notes").fill("synthetic note");await page.locator("#entry-tags").fill("work, test");await page.locator("#entry-totp").fill("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ");await page.locator("#entry-favorite").check();await page.locator("#save-entry").click();await page.locator('[data-testid="login"]').waitFor();
  assert.equal(await page.evaluate(() => document.activeElement?.id), "detail-title");assert.equal(await page.locator("#entries img").count(),0);assert.equal(writes.length,2);assert(!JSON.stringify(writes).includes("synthetic-login-secret"));
  await page.locator('[data-testid="show-totp"]').click();await page.locator('[data-testid="totp-code"]').waitFor();

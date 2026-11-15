@@ -6,11 +6,16 @@ import { tmpdir } from "node:os";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { Database } from "bun:sqlite";
+import { createServer } from "node:net";
 
 const binary = resolve(process.env.HEAVENKEY_BINARY || "target/debug/uac-api");
 const prefix = JSON.parse(process.env.HEAVENKEY_BINARY_PREFIX || "[]");
 const temporary = await mkdtemp(join(tmpdir(), "heavenkey-passwords-"));
-const origin = "http://localhost:18246";
+const portReservation = createServer();
+await new Promise((resolve, reject) => { portReservation.once("error", reject); portReservation.listen(0, "127.0.0.1", resolve); });
+const port = portReservation.address().port;
+await new Promise((resolve, reject) => portReservation.close(error => error ? reject(error) : resolve()));
+const origin = `http://localhost:${port}`;
 const master = "synthetic-master-passphrase-only";
 const newMaster = "synthetic-new-master-passphrase-only";
 const secret = "Synthetic-login-secret-6#X";
@@ -22,7 +27,7 @@ async function start() {
   const data = join(temporary, "data");
   const windows = process.env.HEAVENKEY_WINDOWS_PATHS === "1";
   const dataPath = windows ? "Z:" + data.replaceAll("/", "\\") : data;
-  server = spawn(prefix[0] || binary, prefix.length ? [...prefix.slice(1), binary, "--password-manager", "--port", "18246", "--data-dir", dataPath] : ["--password-manager", "--port", "18246", "--data-dir", dataPath], { cwd: temporary, env: environment, stdio: ["ignore", "pipe", "pipe"] });
+  server = spawn(prefix[0] || binary, prefix.length ? [...prefix.slice(1), binary, "--password-manager", "--port", String(port), "--data-dir", dataPath] : ["--password-manager", "--port", String(port), "--data-dir", dataPath], { cwd: temporary, env: environment, stdio: ["ignore", "pipe", "pipe"] });
   server.stdout.on("data", bytes => output += bytes); server.stderr.on("data", bytes => output += bytes);
   const deadline = Date.now() + 45000;
   while (true) {
@@ -152,7 +157,13 @@ try {
   await page.locator("#generate").click();
   check("generator preserves an existing password before confirmation", await page.locator("#entry-password").inputValue() === beforeGeneration);
   await page.locator("#generate-replace").click();
-  check("confirmed generator fills a fresh 24-character password", (await page.locator("#entry-password").inputValue()).length === 24);
+  const generatedWords = await page.locator("#entry-password").inputValue();
+  check("confirmed default generator fills six fresh memorable words", await page.locator("#generator-kind").inputValue() === "words" && generatedWords.split('.').length === 6 && generatedWords !== beforeGeneration);
+  await page.locator("#generator-kind").selectOption("characters"); await page.locator("#generator-length").fill("24");
+  await page.locator("#generate").click();
+  check("changing generator mode still preserves the current password before confirmation", await page.locator("#entry-password").inputValue() === generatedWords);
+  await page.locator("#generate-replace").click();
+  check("confirmed character generator fills a fresh 24-character password", (await page.locator("#entry-password").inputValue()).length === 24 && await page.locator("#entry-password").inputValue() !== generatedWords);
   await page.locator("#cancel-entry").click();
   await stop(); await start(); await page.reload(); await unlock(newMaster); await count(2); check("real process restart preserves encrypted vault");
   const requestsBefore = posts.length;

@@ -8,7 +8,7 @@ const root = resolve(import.meta.dir, '..');
 const executablePath = process.env.CHROME_PATH || '/Applications/Iron.app/Contents/MacOS/Chromium';
 const report = process.env.HEAVENKEY_FORMS_REPORT || '/tmp/hk-forms-browser.json';
 const directory = await mkdtemp(join(tmpdir(), 'heavenkey-forms-'));
-const sourcePaths = ['packages/forms/field-label.ts','packages/forms/feedback.ts','apps/web/src/passwords.ts','apps/web/src/passwords.css','apps/web/dist/passwords.js','apps/extension/vendor/fill.js','apps/extension/smart-popup.ts','apps/extension/popup.html','apps/extension/popup.css','dist/extension-source-chromium/content.js','dist/extension-source-chromium/smart-popup.js','dist/extension-source-chromium/popup.html','dist/extension-source-chromium/popup.css','dist/extension-source-chromium/manifest.json','scripts/forms_handling_acceptance.ts'];
+const sourcePaths = ['packages/forms/field-label.ts','packages/forms/feedback.ts','packages/forms/schema.ts','packages/forms/presets.ts','apps/web/src/passwords-workflows.ts','apps/extension/content.ts','apps/web/src/passwords.ts','apps/web/src/passwords.css','apps/web/dist/passwords.js','apps/extension/vendor/fill.js','apps/extension/smart-popup.ts','apps/extension/popup.html','apps/extension/popup.css','dist/extension-source-chromium/content.js','dist/extension-source-chromium/smart-popup.js','dist/extension-source-chromium/popup.html','dist/extension-source-chromium/popup.css','dist/extension-source-chromium/manifest.json','scripts/forms_handling_acceptance.ts'];
 async function sourceHashes() { return Object.fromEntries(await Promise.all(sourcePaths.map(async file=>[file,createHash('sha256').update(await readFile(join(root,file))).digest('hex')]))); }
 const sources = await sourceHashes();
 
@@ -41,6 +41,7 @@ try {
  check('reset removes all feedback references',await app.locator('#unlock-form .form-feedback').isHidden());
  const workers=browser.serviceWorkers(),worker=workers[0] || await browser.waitForEvent('serviceworker');
  const id=new URL(worker.url()).host,popup=await browser.newPage();await popup.goto(`chrome-extension://${id}/popup.html`);
+ check('shop inquiry and tax drafts are available in the real app and extension',await app.locator('#form-profiles .actions button').count()===3 && await popup.locator('#profile-preset option').count()===3);
  await popup.locator('#pair-extension').click();await popup.locator('#pairing-form .form-feedback:not([hidden])').waitFor();
  check('real unpacked extension exposes pairing validation without a request',await popup.locator('#pair-code').getAttribute('aria-invalid')==='true');
  await popup.locator('#pairing-form .form-feedback button').click();
@@ -65,6 +66,46 @@ try {
  check('Smartfield recognizes ordered ARIA references and root-local shadow labels',result.fields.length===2 && result.fields.some((f:any)=>f.entity==='firstName'&&f.field==='Vorname')&&result.fields.some((f:any)=>f.entity==='email'&&f.field==='Geschäftliche E-Mail'));
  check('explicit selected-field fill uses the production engine',result.count===2&&result.filled);
  check('undo preserves subsequent manual edits',result.undone===1&&result.preserved&&result.empty);
+
+ await target.setContent('<meta charset="utf-8"><form id="shop"><label>Vorname<input id="given" autocomplete="section-delivery shipping given-name"></label><label>E-Mail<input id="mail" type="email" autocomplete="shipping email"></label><label>Land<select id="country" autocomplete="shipping country-name"><option value="">Bitte wählen</option><option value="DE">Deutschland</option></select></label><label>Newsletter<input id="newsletter" type="checkbox"></label><button type="submit">Bestellen</button></form>');
+ const shop=await target.evaluate(()=>{
+  let submits=0;document.querySelector('form')!.addEventListener('submit',event=>{event.preventDefault();submits++;});
+  const engine=(globalThis as any).__heavenkeyEngine,request={origin:location.origin,href:location.href};
+  const scan=engine({...request,action:'scan'}),entities={firstName:'Alex',email:'synthetic@example.invalid',country:'Deutschland'};
+  const filled=engine({...request,action:'fill',scan:scan.scan,entities,selected:scan.fields.filter((field:any)=>field.entity in entities).map((field:any)=>({id:field.id,entity:field.entity}))});
+  return {count:filled.count,given:(document.querySelector('#given') as HTMLInputElement).value,mail:(document.querySelector('#mail') as HTMLInputElement).value,country:(document.querySelector('#country') as HTMLSelectElement).value,newsletter:(document.querySelector('#newsletter') as HTMLInputElement).checked,submits};
+ });
+ check('shop autofill supports sectioned autocomplete and native country selects',shop.count===3&&shop.given==='Alex'&&shop.mail==='synthetic@example.invalid'&&shop.country==='DE');
+ check('shop filling never subscribes or submits an order',!shop.newsletter&&shop.submits===0);
+ await target.setContent('<meta charset="utf-8"><form><label>Betreff<input id="subject" name="subject"></label><label>Nachricht<textarea id="message" name="message"></textarea></label><input id="day" autocomplete="bday-day"><input id="month" autocomplete="bday-month"><input id="year" autocomplete="bday-year"></form>');
+ const inquiry=await target.evaluate(()=>{
+  const engine=(globalThis as any).__heavenkeyEngine,request={origin:location.origin,href:location.href};
+  const scan=engine({...request,action:'scan'}),entities={subject:'TEST Anfrage',message:'Nur synthetische Testdaten.',birthdate:'1990-03-14'};
+  const selected=scan.fields.filter((field:any)=>field.entity in entities||field.entity?.startsWith('bday_')).map((field:any)=>({id:field.id,entity:field.entity}));
+  const filled=engine({...request,action:'fill',scan:scan.scan,entities,selected});
+  return {count:filled.count,values:['subject','message','day','month','year'].map(id=>(document.getElementById(id) as HTMLInputElement).value)};
+ });
+ check('inquiries support textareas and split date fields',inquiry.count===5&&JSON.stringify(inquiry.values)===JSON.stringify(['TEST Anfrage','Nur synthetische Testdaten.','14','03','1990']));
+ await target.setContent('<meta charset="utf-8"><form><label>Steuerliche Identifikationsnummer<input id="tax-id"></label><label>Steuernummer<input id="tax-number"></label><label>Umsatzsteuer-ID<input id="vat"></label></form>');
+ const tax=await target.evaluate(()=>{
+  const engine=(globalThis as any).__heavenkeyEngine,request={origin:location.origin,href:location.href};
+  const entities={steuerid:'TEST-TAX-PRIVATE',steuernr:'TEST-NUMMER',vat:'TEST-VAT'};
+  const perform=(sensitive:boolean)=>{const scan=engine({...request,action:'scan'});return engine({...request,action:'fill',scan:scan.scan,entities,sensitive,selected:scan.fields.map((field:any)=>({id:field.id,entity:field.entity}))});};
+  const denied=perform(false),empty=[...document.querySelectorAll('input')].every(input=>!input.value),approved=perform(true);
+  return {denied:denied.count,empty,approved:approved.count,values:[...document.querySelectorAll('input')].map(input=>input.value)};
+ });
+ check('tax identifiers and VAT require explicit sensitive-field consent',tax.denied===0&&tax.empty);
+ check('approved tax fields receive only the selected synthetic identifiers',tax.approved===3&&JSON.stringify(tax.values)===JSON.stringify(['TEST-TAX-PRIVATE','TEST-NUMMER','TEST-VAT']));
+
+ await target.setContent('<meta charset="utf-8"><form><div contenteditable="true" role="textbox" aria-label="Nachricht" style="min-height:24px"></div><input type="file"><iframe title="Separates Formular" srcdoc="<input autocomplete=email>"></iframe></form>');
+ const rich=await target.evaluate(()=>{
+  const engine=(globalThis as any).__heavenkeyEngine,request={origin:location.origin,href:location.href};
+  const scan=engine({...request,action:'scan'}),message=scan.fields.find((field:any)=>field.entity==='message');
+  const filled=engine({...request,action:'fill',scan:scan.scan,entities:{message:'TEST Anfrage im Richtextfeld'},selected:message?[{id:message.id,entity:'message'}]:[]});
+  return {coverage:scan.coverage,count:filled.count,value:document.querySelector('[contenteditable]')!.textContent,file:(document.querySelector('[type=file]') as HTMLInputElement).files!.length};
+ });
+ check('richtext inquiry fields accept explicitly selected text',rich.count===1&&rich.value==='TEST Anfrage im Richtextfeld');
+ check('coverage reports frames and manual file uploads without filling either',rich.coverage.frames===1&&rich.coverage.fileInputs===1&&rich.file===0);
  check('invalid local forms cause no vault writes',writes===0);
  check('no uncaught browser errors',errors.length===0);
  assert.deepEqual(await sourceHashes(),sources,'Sources changed during acceptance');

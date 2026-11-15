@@ -1,4 +1,5 @@
 import { createVault, openVault, sealVault, validateEnvelope, validateVault, generatePassword, parseCsv, totp, MAX_FILE_BYTES, type Envelope, type Login, type Vault } from "./passwords-crypto";
+import { passphrase } from "../../extension/generator";
 import { createIcon, initPresentation } from "./passwords-presentation";
 import { initBrand } from "./passwords-brand";
 import { initWorkflows } from "./passwords-workflows";
@@ -27,6 +28,7 @@ for (const form of document.querySelectorAll<HTMLFormElement>('form')) initFormF
 let shareOrigin = location.origin;
 let token = "", revision = 0, remote: Envelope | null = null;
 let restoreReady = false;
+let desktopChoice: "standard" | "personal" | null = null;
 let vault: Vault | null = null, key: CryptoKey | null = null, envelope: Envelope | null = null;
 let generation = 0, busy = false, ready = false, lastActivity = Date.now(), hiddenTimer: ReturnType<typeof setTimeout> | undefined;
 let pendingWrites = 0;
@@ -55,7 +57,7 @@ function closeNavigation() { byId("workspace").classList.remove("navigation-open
 function showEntries() { byId("health-view").hidden = true; byId("nav-health").classList.remove("active"); byId("nav-health").removeAttribute("aria-current"); byId("settings-view").hidden = true; byId("workspace").classList.remove("settings-open"); byId("nav-settings").classList.remove("active"); byId("nav-settings").removeAttribute("aria-current"); closeNavigation(); refreshNavigation(); }
 function setFilter(favorites = false, tag: string | null = null) { if (busy || !vault) return; activeTag = tag; input("favorites-only").checked = favorites; selectedId = null; cancelReveal(); showEntries(); byId("workspace").classList.remove("show-detail"); render(); }
 function showSettings() { if (busy || !vault) return; clearEditor(); showEntries(); byId("settings-view").hidden = false; byId("workspace").classList.add("settings-open"); byId("nav-settings").classList.add("active"); byId("nav-settings").setAttribute("aria-current", "page"); closeNavigation(); refreshNavigation(); byId("settings-heading").focus(); void passwordAccess?.refresh(); void passwordSharing?.refresh(); void passwordBroker?.refresh(); onboarding?.refresh(); }
-function setTheme(theme: string) { const dark = theme === "dark"; document.documentElement.dataset.theme = dark ? "dark" : "light"; byId("theme-toggle").setAttribute("aria-pressed", String(dark)); byId("theme-label").textContent = dark ? "Helles Design" : "Dunkles Design"; byId("gate-theme-toggle").textContent = dark ? "Helles Design" : "Dunkles Design"; byId("gate-theme-toggle").setAttribute("aria-pressed", String(dark)); }
+function setTheme(theme: string) { const dark = theme === "dark"; document.documentElement.dataset.theme = dark ? "dark" : "light"; byId("theme-toggle").setAttribute("aria-pressed", String(dark)); byId("theme-label").textContent = dark ? "Helles Design" : "Dunkles Design"; byId("gate-theme-toggle").setAttribute("aria-label", dark ? "Helles Design" : "Dunkles Design"); byId("gate-theme-toggle").setAttribute("aria-pressed", String(dark)); }
 try { setTheme(localStorage.getItem("heavenkey-theme") || "light"); } catch { setTheme("light"); }
 let pendingFocus: string | null = null;
 function focusAfter(id: string) { if (busy) pendingFocus = id; else byId(id).focus(); }
@@ -69,10 +71,13 @@ const status = (message: string, error = false) => {
   const output = byId("status");
   if (byId("gate").hidden) {
     if (output.parentElement !== statusHome) statusHome.insertBefore(output, byId("editor"));
+  } else if (byId<HTMLDetailsElement>("locked-recovery").open) {
+    byId("locked-restore-feedback").append(output);
   } else {
     byId("gate-feedback").append(output);
   }
   output.textContent = message; output.dataset.error = String(error);
+  if (error && byId<HTMLDetailsElement>("locked-recovery").open) output.scrollIntoView({block: "nearest"});
   let inDialog = false;
   for (const id of ["editor", "delete-dialog"]) if (byId<HTMLDialogElement>(id).open) {
     const local = byId(`${id}-status`); local.textContent = message; local.dataset.error = String(error); local.hidden = false; inDialog = true;
@@ -87,6 +92,7 @@ function setBusy(next: boolean) {
 }
 function clearEditor() { byId("editor-status").textContent = ""; byId("editor-status").hidden = true; form("entry-form").reset(); input("entry-id").value = ""; input("entry-password").type = "password"; input("entry-url").setCustomValidity(""); byId("entry-url-preview").textContent = ""; byId("username-suggestions").replaceChildren(); byId("username-suggestions").hidden = true; byId("generate-confirmation").hidden = true; byId("reveal-password").setAttribute("aria-pressed", "false"); byId("reveal-password").textContent = "Anzeigen"; byId<HTMLDialogElement>("editor").close(); }
 function lock(message = "Tresor gesperrt.", refresh = true) {
+  byId<HTMLDetailsElement>("locked-recovery").open = false;
   clearTimeout(hiddenTimer); hiddenSince = null;
   mobileSync?.clear();
   workflows?.clear(); passwordAccess?.clear(); passwordSharing?.clear(); passwordBroker?.clear(); transferBroker?.clear(); protectedComposer?.clear(); onboarding?.clear();
@@ -153,16 +159,16 @@ async function load(announce = true) {
     const folder = typeof config.vault_folder === "string" ? config.vault_folder : "";
     byId("vault-folder").textContent = folder === "HeavenKey" ? "Standard" : folder === "HeavenKey-Persoenlich" ? "Persönlich" : folder || "Lokaler Tresor";
     document.querySelector<HTMLElement>(".gate-description")!.textContent = remote
-      ? "Gib das Masterpasswort ein, das du für diesen Tresor gewählt hast."
-      : "Wähle ein eigenes Masterpasswort mit 14 bis 1024 Zeichen. Bewahre es getrennt auf. HeavenKey kann es nicht zurücksetzen.";
-    byId("gate-heading").textContent = remote ? "Tresor entsperren" : "Lokalen Tresor anlegen";
+      ? "Entsperre deine Passwörter und Profile auf diesem Gerät."
+      : "Wähle eine lange, einmalige Passphrase mit mindestens 14 Zeichen. Bewahre sie getrennt auf.";
+    byId("gate-heading").textContent = remote ? "Willkommen zurück." : "Dein neuer Tresor.";
     byId("unlock").textContent = remote ? "Entsperren" : "Tresor anlegen";
     byId("create-confirm").hidden = !!remote;
     input("master-confirm").required = !remote;
     input("master").autocomplete = remote ? "current-password" : "new-password";
-    if (announce) status(remote ? "Verschlüsselter Tresor bereit." : "Noch kein Tresor vorhanden. Wähle ein langes, einmaliges Masterpasswort.");
+    if (announce) status("");
   } catch (error) { if (active(run)) status(error instanceof Error ? error.message : "Laden fehlgeschlagen.", true); }
-  finally { if (active(run)) { setBusy(false); onboarding?.refresh(); void passwordAccess?.refresh(); } }
+  finally { if (active(run)) { setBusy(false); onboarding?.refresh(); void passwordAccess?.refresh(); notifyDesktopReady(); } }
 }
 async function operation(task: (run: number) => Promise<void>) {
   if (busy) return;
@@ -407,7 +413,7 @@ byId("nav-settings").addEventListener("click", showSettings);
 byId("nav-health").addEventListener("click", showHealth);
 byId("close-health").addEventListener("click", () => { showEntries(); input("search").focus(); });
 byId("close-settings").addEventListener("click", () => { showEntries(); input("search").focus(); });
-byId("nav-generator").addEventListener("click", () => { if (busy || !vault) return; if (getPrivacyPreferences().discreet) { status("Beende die diskrete Ansicht, um Einträge zu bearbeiten."); return; } showEntries(); edit(); input("entry-password").value = generatePassword(24); input("entry-password").focus(); status("Neues Passwort generiert. Zum Übernehmen verschlüsselt speichern."); });
+byId("nav-generator").addEventListener("click", () => { if (busy || !vault) return; if (getPrivacyPreferences().discreet) { status("Beende die diskrete Ansicht, um Einträge zu bearbeiten."); return; } showEntries(); edit(); input("entry-password").value = generatedEntryPassword(); input("entry-password").focus(); status("Neues Passwort generiert. Zum Übernehmen verschlüsselt speichern."); });
 byId("menu-toggle").addEventListener("click", () => { const open = byId("workspace").classList.toggle("navigation-open"); byId("menu-toggle").setAttribute("aria-expanded", String(open)); if (open) byId("nav-all").focus(); });
 ["theme-toggle", "gate-theme-toggle"].forEach(id => byId(id).addEventListener("click", () => { const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; setTheme(theme); try { localStorage.setItem("heavenkey-theme", theme); } catch { status("Design für diesen Tab geändert. Der Browser erlaubt keine dauerhafte Speicherung."); } }));
 document.addEventListener("keydown", event => {
@@ -426,9 +432,12 @@ byId("entries").addEventListener("keydown", event => {
   event.preventDefault(); buttons[Math.max(0,Math.min(buttons.length - 1,index + (event.key === "ArrowDown" ? 1 : -1)))]?.focus();
 });
 byId("reveal-password").addEventListener("click", () => { const reveal = input("entry-password").type === "password"; input("entry-password").type = reveal ? "text" : "password"; byId("reveal-password").setAttribute("aria-pressed", String(reveal)); byId("reveal-password").textContent = reveal ? "Verbergen" : "Anzeigen"; });
+function generatedEntryPassword(): string {
+  return value("generator-kind") === "words" ? passphrase() : generatePassword(Number(value("generator-length")));
+}
 function generateEntryPassword() {
   if (!vault || busy) return;
-  try { input("entry-password").value = generatePassword(Number(value("generator-length"))); byId("generate-confirmation").hidden = true; status("Passwort generiert. Bei einem bestehenden Konto auch auf der Website ändern; danach verschlüsselt speichern."); input("entry-password").focus(); } catch (error) { status((error as Error).message, true); }
+  try { input("entry-password").value = generatedEntryPassword(); byId("generate-confirmation").hidden = true; status("Passwort generiert. Bei einem bestehenden Konto auch auf der Website ändern; danach verschlüsselt speichern."); input("entry-password").focus(); } catch (error) { status((error as Error).message, true); }
 }
 byId("generate").addEventListener("click", () => { if (value("entry-password")) { byId("generate-confirmation").hidden = false; byId("generate-keep").focus(); } else generateEntryPassword(); });
 byId("generate-replace").addEventListener("click", generateEntryPassword);
@@ -569,4 +578,42 @@ onboarding = initOnboarding({vault:()=>vault,hasRecord:()=>!!remote,ready:()=>re
 initBrand();
 initPresentation();
 void load();
+
+function notifyDesktopReady() {
+  if (!ready || !desktopChoice) return;
+  document.documentElement.classList.remove("vault-switching"); byId("gate").removeAttribute("aria-busy");
+  (window as unknown as {webkit?: {messageHandlers?: {heavenkeyVault?: {postMessage(value: string): void}}}}).webkit?.messageHandlers?.heavenkeyVault?.postMessage("ready");
+}
+window.addEventListener("heavenkey-vault-connected", (event: Event) => {
+  window.dispatchEvent(new CustomEvent("heavenkey-desktop", {detail: (event as CustomEvent<unknown>).detail}));
+  void load(false);
+});
+window.addEventListener("heavenkey-switch-cancelled", () => {
+  document.documentElement.classList.remove("vault-switching"); byId("gate").removeAttribute("aria-busy"); void load(false);
+});
+byId<HTMLDetailsElement>("locked-recovery").addEventListener("toggle", () => {
+  const panel = byId<HTMLDetailsElement>("locked-recovery");
+  panel.querySelector("summary")!.textContent = panel.open ? "← Zurück zur Anmeldung" : "Sicherung wiederherstellen";
+  if (panel.open) byId("locked-restore-file").focus();
+  else if (!byId("gate").hidden) { byId("gate-feedback").append(byId("status")); input("master").focus(); }
+});
+window.addEventListener("heavenkey-desktop", (event: Event) => {
+  const choice = (event as CustomEvent<unknown>).detail;
+  if (choice !== "standard" && choice !== "personal") return;
+  desktopChoice = choice; document.documentElement.classList.add("desktop-shell");
+  document.querySelectorAll<HTMLElement>("[data-desktop-only]").forEach(el => { el.hidden = false; });
+  document.querySelectorAll<HTMLButtonElement>("[data-vault-choice]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.vaultChoice === choice)));
+  notifyDesktopReady();
+});
+document.querySelectorAll<HTMLButtonElement>("[data-vault-choice]").forEach(button => button.addEventListener("click", () => {
+  if (busy || button.getAttribute("aria-pressed") === "true") return;
+  const native = (window as unknown as {webkit?: {messageHandlers?: {heavenkeyVault?: {postMessage(value: string): void}}}}).webkit?.messageHandlers?.heavenkeyVault;
+  if (!native) return;
+  byId<HTMLDetailsElement>("locked-recovery").open = false;
+  lock("", false);
+  document.documentElement.classList.add("vault-switching");
+  byId("gate").setAttribute("aria-busy", "true");
+  native.postMessage(button.dataset.vaultChoice!);
+}));
+
 window.addEventListener("pageshow", event => { if (event.persisted && !vault) void load(); });
