@@ -5,9 +5,11 @@ import { generateChannel, channelCode, openUnlock, validateRequest, type UnlockR
 import { website, scriptId } from './site-access';
 import { password, passphrase } from './generator';
 import { taskFrom, deliveryEntities, type Task } from './workflow';
+import { initFormFeedback } from '../../packages/forms/feedback';
 const extension = (globalThis as any).browser || (globalThis as any).chrome;
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const input = (id: string) => $<HTMLInputElement>(id);
+const formFeedback = new Map(Array.from(document.querySelectorAll<HTMLFormElement>('form'), form => [form.id, initFormFeedback(form)]));
 const labels: Record<string,string> = { accountHolder:'Kontoinhaber',address2:'Adresszusatz',ahv:'AHV-Nummer',amount:'Betrag',bankName:'Bankname',bic:'BIC',birthdate:'Geburtsdatum',blz:'Bankleitzahl',caseno:'Aktenzeichen',ccExp:'Kartenablauf',ccHolder:'Karteninhaber',city:'Ort',company:'Firma',contractno:'Vertragsnummer',country:'Land',creditcard:'Kartennummer',creditorId:'Gläubiger-ID',currency:'Währung',customerno:'Kundennummer',cvc:'Kartenprüfnummer',date:'Datum',email:'E-Mail',familienstand:'Familienstand',firstName:'Vorname',geburtsname:'Geburtsname',geburtsort:'Geburtsort',gkv:'Krankenversicherung',houseNumber:'Hausnummer',hrb:'Handelsregister',iban:'IBAN',jobTitle:'Beruf / Position',konfession:'Konfession',language:'Sprache',lastName:'Nachname',mandatsref:'Mandatsreferenz',memberno:'Mitgliedsnummer',message:'Nachricht',name:'Name',nationality:'Staatsangehörigkeit',number:'Nummer',password:'Passwort',perso:'Ausweisnummer',phone:'Telefon',postbox:'Postfach',purpose:'Verwendungszweck',salutation:'Anrede',sozialvers:'Sozialversicherung',state:'Bundesland',steuerid:'Steuer-ID',steuernr:'Steuernummer',street:'Straße und Hausnummer',streetName:'Straße',subject:'Betreff',title:'Titel',url:'Webseite',username:'Benutzername',vat:'Umsatzsteuer-ID',zip:'Postleitzahl',otp:'Einmalcode',bday_day:'Geburtstag (Tag)',bday_month:'Geburtstag (Monat)',bday_year:'Geburtstag (Jahr)',cc_exp:'Kartenablauf',cc_month:'Kartenablauf (Monat)',cc_year:'Kartenablauf (Jahr)' };
 type Connection = { origin: string; token: string };
 type ExtendedVault = Vault & { profiles?: FormProfile[] };
@@ -26,6 +28,7 @@ function status(message: string, error = false) { $('smart-status').textContent 
 function resetPreview() { preview = null; $('field-map').replaceChildren(); $('fill-confirmation').hidden = true; input('confirm-origin').checked = false; $('fill-summary').textContent = ''; $('task-progress').textContent = '1 · Eintrag auswählen oder neu anlegen'; }
 function resetSource() { sourceGenerated=false; $('quick-login').hidden=true; entities = {}; sourceLogin = null; sourceProfile = null; $('entity-preview').replaceChildren(); input('source-text').value = ''; input('profile-title').value = ''; input('include-sensitive').checked = false; input('include-secrets').checked = false; input('overwrite').checked = false; input('include-choices').checked = false; resetPreview(); }
 function clearEditor() {
+  formFeedback.get('login-form')?.clear();
   editLogin=null; draftGenerated=false; savedGenerated='';
   for (const id of ['login-title','login-username','login-password','login-url']) input(id).value='';
   input('login-password').type='password'; input('show-generated').checked=false; input('confirm-login-update').checked=false;
@@ -59,6 +62,7 @@ for (const control of document.querySelectorAll<HTMLButtonElement>('[data-task]'
 });
 input('show-other-logins').addEventListener('change',renderSources);
 function lock(message = 'Tresor gesperrt.') {
+  for (const feedback of formFeedback.values()) feedback.clear();
   nextFocus=null;
   const pending=pendingUnlock; pendingUnlock=null; $('complete-passkey').hidden=true; $('passkey-code').textContent='';
   if(pending && connection) void api('/api/password-vault/extension/unlock/cancel',{id:pending.request.id}).catch(()=>console.warn('HeavenKey: Abbruch beim Dienst nicht bestätigt; die Anfrage läuft nach spätestens 90 Sekunden ab.'));
@@ -402,7 +406,10 @@ $('generate-password').addEventListener('click',()=>void run(async generation=>{
   input('login-password').value=value;draftGenerated=true;$('preview-generated').hidden=true;input('confirm-login-update').checked=false;
   status(`Neues Passwort erzeugt (${value.length} Zeichen). Jetzt verschlüsselt speichern; danach kann es in neue Passwortfelder eingefügt werden.`);
 }));
-$('save-login').addEventListener('click',()=>void run(async generation=>{
+$('login-form').addEventListener('submit',event=>{
+  event.preventDefault();
+  if (!($('login-form') as HTMLFormElement).reportValidity()) return;
+  void run(async generation=>{
   if(!key || !vault || !envelope) return;
   const current=await target(); active(generation);
   const url=input('login-url').value;
@@ -420,7 +427,8 @@ $('save-login').addEventListener('click',()=>void run(async generation=>{
   entities={username:entry.username,email:entry.username,password:entry.password};renderEntities();renderSources();
   $('update-login-row').hidden=false;input('confirm-login-update').checked=false;$('preview-generated').hidden=!draftGenerated;
   status('Login verschlüsselt gespeichert. Bei einer Passwortänderung muss die Website die Änderung noch bestätigen.');
-}));
+});
+});
 $('preview-generated').addEventListener('click',()=>void run(async generation=>{
   if(!key || !savedGenerated || !editLogin || input('login-password').value!==savedGenerated) throw Error('Das neue Passwort zuerst verschlüsselt speichern.');
   sourceLogin=editLogin;sourceProfile=null;sourceGenerated=true;entities={password:savedGenerated};

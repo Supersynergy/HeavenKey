@@ -12,6 +12,7 @@ import { initPasswordSharing } from "./passwords-sharing";
 import { initOnboarding } from "./passwords-onboarding";
 import { SAMPLE_TAG, buildSampleEntries, hasSampleEntries, withSampleEntries, withoutSampleEntries } from "./passwords-onboarding-samples";
 import { normalizeWebsite, suggestedUsernames } from "./passwords-entry-assist";
+import { initFormFeedback } from "../../../packages/forms/feedback";
 import { initMobileSync } from "./passwords-mobile-sync";
 import { getPrivacyPreferences, initPrivacy, recordActivity, clearActivities } from "./passwords-privacy";
 const byId = <T extends HTMLElement = HTMLElement>(id: string): T => {
@@ -22,6 +23,7 @@ const byId = <T extends HTMLElement = HTMLElement>(id: string): T => {
 const input = (id: string) => byId<HTMLInputElement>(id);
 const value = (id: string) => (byId(id) as HTMLInputElement | HTMLTextAreaElement).value;
 const form = (id: string) => byId<HTMLFormElement>(id);
+for (const form of document.querySelectorAll<HTMLFormElement>('form')) initFormFeedback(form);
 let shareOrigin = location.origin;
 let token = "", revision = 0, remote: Envelope | null = null;
 let restoreReady = false;

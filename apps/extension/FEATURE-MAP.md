@@ -7,7 +7,10 @@
 | Country and salutation aliases | SmartField alias/option matching primitives |
 | Split dates, address/house number, phone, card expiry | SmartField resolution/coercion primitives |
 | Select, radio, checkbox, contenteditable, native setters | Reviewed primitives with explicit selection and safety gates |
-| Open shadow roots | SmartField traversal; closed roots remain inaccessible |
+| Open shadow roots | SmartField traversal; labels resolve in their own root; closed roots remain inaccessible |
+| Multiple ARIA label references | Shared value-free field names, ordered references and explicit-label precedence |
+| Local form validation | Shared accessible error links, native constraints, correction/reset/lock cleanup; no values in error text |
+| Login editing | Real form submission, required title/password, Enter support; explicit replacement approval remains required |
 | Encrypted profiles, login/TOTP search | Shared HeavenKey vault crypto and profile validator |
 | Pairing, revoke/restart disconnection, current revision | Local Rust service and extension-specific origin-bound token |
 | Preview, editable values, per-field mapping | `smart-popup.ts` |
