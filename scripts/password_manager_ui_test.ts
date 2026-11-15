@@ -79,6 +79,7 @@ try {
 
  await restorePanel.locator("summary").click();
  assert.deepEqual(await page.locator("#gate").boundingBox(),shell,"closing recovery preserves shell");
+ await page.waitForFunction(()=>document.activeElement?.id==="master",undefined,{timeout:1000});
  assert.equal(await page.evaluate(()=>document.activeElement?.id),"master");
  console.log("PASS edge-to-edge shell, 5 widths, theme, 200 percent, focus, fixed-size recovery transition");
  async function settingsSection(text:string) { if (!(await page.locator("#settings-view").isVisible())) await page.locator("#nav-settings").click(); const summary=page.locator("#settings-view summary").filter({hasText:text}); if (!(await summary.evaluate(el=>(el.parentElement as HTMLDetailsElement).open))) await summary.click(); }
