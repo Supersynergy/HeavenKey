@@ -111,6 +111,11 @@ def dependency_notices(destination):
             license_files.append(source / "vendor/dbus/COPYING")
         if package["name"] == "libssh2-sys":
             license_files.append(source / "libssh2/COPYING")
+        if package["name"] == "sqlcipher-src":
+            license_files.extend(
+                source / "sqlcipher" / filename
+                for filename in ("LICENSE-sqlcipher", "LICENSE-libtomcrypt")
+            )
         for path in license_files:
             target = destination / "licenses" / name / path.name
             target.parent.mkdir(parents=True, exist_ok=True)
