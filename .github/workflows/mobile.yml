@@ -86,13 +86,12 @@ jobs:
           }
           gradle.beforeProject { project ->
               if (project.path == ':app' && project.rootProject.projectDir.name == 'android') {
+                  def mirror = project.repositories.maven {
+                      name = 'MavenCentralRobolectricMirror'
+                      url = project.uri('https://maven-central.storage-download.googleapis.com/maven2/')
+                  }
                   project.repositories.exclusiveContent {
-                      forRepository {
-                          maven {
-                              name = 'MavenCentralRobolectricMirror'
-                              url = uri('https://maven-central.storage-download.googleapis.com/maven2/')
-                          }
-                      }
+                      forRepositories(mirror)
                       filter {
                           includeVersion('org.robolectric', 'nativeruntime-dist-compat', '1.0.18')
                       }
