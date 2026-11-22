@@ -103,8 +103,11 @@ def run_wallet_acceptance(directory, evidence, adb, source_identity):
                     "node", str(ROOT / "scripts/membership_wallet_agent.mjs"), str(directory),
                     approval["delegation_id"], approval["idempotency_key"],
                 ]
-                first = subprocess.check_output(command, cwd=ROOT, text=True, timeout=15)
-                retry = subprocess.check_output(command, cwd=ROOT, text=True, timeout=15)
+                try:
+                    first = subprocess.check_output(command, cwd=ROOT, text=True, timeout=15)
+                    retry = subprocess.check_output(command, cwd=ROOT, text=True, timeout=15)
+                except subprocess.SubprocessError:
+                    raise RuntimeError("The synthetic agent invocation did not complete.") from None
                 draft = browser.request(status_path)["delegation"]
                 if first != retry or draft["status"] != "executed":
                     raise RuntimeError("The invoice draft was not reconciled after retry.")
