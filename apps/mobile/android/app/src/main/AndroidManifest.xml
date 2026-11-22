@@ -25,11 +25,22 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity-alias android:name=".WalletLink" android:targetActivity=".MainActivity"
+            android:enabled="${heavenKeyWalletEnabled}" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="openid-credential-offer" />
+                <data android:scheme="openid4vp" />
+            </intent-filter>
+        </activity-alias>
         <activity android:name=".AutofillActivity" android:exported="false" android:enabled="true"
             android:theme="@android:style/Theme.Material.Light.Dialog.Alert" android:excludeFromRecents="true" />
         <service android:name=".HeavenAutofillService" android:exported="true" android:enabled="true"

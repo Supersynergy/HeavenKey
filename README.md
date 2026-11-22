@@ -37,6 +37,10 @@ Die macOS-App hat ein eigenes Fenster, native Datei-Dialoge und Tastaturmenüs. 
 <details>
 <summary>🗺️ Roadmap und Identity-Pilot</summary>
 
+Die [Android-Wallet-Vorschau](docs/MEMBERSHIP-WALLET.md) zeigt einen synthetischen
+Mitgliedschaftsnachweis, den Zugang zu einem Testprojekt und einen einmalig
+freigegebenen Rechnungsentwurf.
+
 Die Weiterentwicklung zum passwortlosen Identitäts- und Loginanbieter ist in der
 [Roadmap](docs/ROADMAP.md) mit [Due Diligence und Pro/Contra](docs/IDENTITY-DUE-DILIGENCE.md)
 und [To-dos samt Unteraufgaben](docs/IDENTITY-BACKLOG.md) festgehalten. Der getrennte

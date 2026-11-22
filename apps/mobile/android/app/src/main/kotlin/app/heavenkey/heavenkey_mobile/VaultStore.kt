@@ -86,8 +86,10 @@ internal class VaultStore(private val context: Context) {
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) { finish("cancelled") }
             })
     }
+    fun walletSessionActive(): Boolean = SystemClock.elapsedRealtime() < expires
+
     private fun requireSession() {
-        if (expires == 0L || SystemClock.elapsedRealtime() >= expires) {
+        if (!walletSessionActive()) {
             lock(); throw VaultFailure("locked")
         }
     }
