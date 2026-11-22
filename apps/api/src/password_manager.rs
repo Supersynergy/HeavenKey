@@ -55,6 +55,30 @@ fn random_secret() -> String {
     URL_SAFE_NO_PAD.encode(bytes)
 }
 
+fn extension_token_hash(token: &str) -> String {
+    URL_SAFE_NO_PAD.encode(Sha256::digest(token.as_bytes()))
+}
+
+fn persistent_extensions(db: &Connection) -> rusqlite::Result<Extensions> {
+    db.execute_batch("CREATE TABLE IF NOT EXISTS password_extension_clients(origin TEXT PRIMARY KEY,token_hash TEXT NOT NULL CHECK(length(token_hash)=43));")?;
+    let mut extensions = Extensions::default();
+    let mut statement = db.prepare("SELECT origin,token_hash FROM password_extension_clients")?;
+    let rows = statement.query_map([], |row| {
+        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+    })?;
+    for row in rows {
+        let (origin, hash) = row?;
+        if !extension_origin(&origin)
+            || !decoded(&hash, 32, 32)
+            || extensions.grants.len() >= MAX_EXTENSION_CLIENTS
+        {
+            return Err(rusqlite::Error::InvalidQuery);
+        }
+        extensions.grants.insert(origin, hash);
+    }
+    Ok(extensions)
+}
+
 fn extension_origin(origin: &str) -> bool {
     if let Some(id) = origin.strip_prefix("chrome-extension://") {
         return id.len() == 32 && id.bytes().all(|b| (b'a'..=b'p').contains(&b));
@@ -78,7 +102,7 @@ fn extension_access(app: &VaultApp, headers: &HeaderMap) -> ApiResult<()> {
         return Err(forbidden("local_vault_denied"));
     }
     let extensions = app.extensions.lock().map_err(internal)?;
-    if extensions.grants.get(origin).map(String::as_str) != Some(token) {
+    if extensions.grants.get(origin) != Some(&extension_token_hash(token)) {
         return Err(forbidden("local_vault_denied"));
     }
     Ok(())
@@ -122,7 +146,13 @@ async fn pairing_status(State(app): State<VaultApp>, headers: HeaderMap) -> ApiR
 
 async fn pairing_revoke(State(app): State<VaultApp>, headers: HeaderMap) -> ApiResult<Json<Value>> {
     access(&app, &headers, true)?;
-    *app.extensions.lock().map_err(internal)? = Extensions::default();
+    let mut extensions = app.extensions.lock().map_err(internal)?;
+    app.db
+        .lock()
+        .map_err(internal)?
+        .execute("DELETE FROM password_extension_clients", [])
+        .map_err(internal)?;
+    *extensions = Extensions::default();
     Ok(Json(json!({"paired": 0})))
 }
 
@@ -168,7 +198,9 @@ async fn connect(
     let db = app.db.lock().map_err(internal)?;
     let revision = revision(&db)?;
     let token = random_secret();
-    extensions.grants.insert(origin.to_owned(), token.clone());
+    let hash = extension_token_hash(&token);
+    db.execute("INSERT INTO password_extension_clients(origin,token_hash) VALUES(?1,?2) ON CONFLICT(origin) DO UPDATE SET token_hash=excluded.token_hash", rusqlite::params![origin, hash]).map_err(internal)?;
+    extensions.grants.insert(origin.to_owned(), hash);
     Ok(Json(json!({"token": token, "revision": revision})))
 }
 
@@ -256,8 +288,11 @@ fn access(app: &VaultApp, headers: &HeaderMap, token_required: bool) -> ApiResul
 pub async fn config(State(app): State<VaultApp>, headers: HeaderMap) -> ApiResult<Json<Value>> {
     access(&app, &headers, false)?;
     let db = app.db.lock().map_err(internal)?;
+    let folder = db
+        .path()
+        .and_then(|p| Path::new(p).parent()?.file_name()?.to_str());
     Ok(Json(
-        json!({"token": app.token.as_ref(), "revision": revision(&db)?, "share_origin": app.access.share_origin}),
+        json!({"token": app.token.as_ref(), "revision": revision(&db)?, "share_origin": app.access.share_origin, "vault_folder": folder}),
     ))
 }
 
@@ -401,6 +436,14 @@ pub async fn style() -> Response {
         .into_response()
 }
 
+async fn protected_style() -> Response {
+    (
+        [("content-type", "text/css")],
+        include_str!("../../web/src/passwords-protected.css"),
+    )
+        .into_response()
+}
+
 async fn cover() -> Response {
     (
         [("content-type", "image/png")],
@@ -424,7 +467,11 @@ fn host_allowed(app: &VaultApp, host: Option<&str>, path: &str) -> bool {
             && (recipient_route(path)
                 || matches!(
                     path,
-                    "/share/" | "/share.js" | "/passwords.css" | "/heavenkey-cover.png"
+                    "/share/"
+                        | "/share.js"
+                        | "/passwords.css"
+                        | "/passwords-protected.css"
+                        | "/heavenkey-cover.png"
                 )))
 }
 
@@ -556,6 +603,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
     db.busy_timeout(Duration::from_secs(2))?;
     db.execute_batch("PRAGMA synchronous=FULL; CREATE TABLE IF NOT EXISTS password_manager(id INTEGER PRIMARY KEY CHECK(id=1),revision INTEGER NOT NULL CHECK(revision>0),record TEXT NOT NULL);")?;
     access::schema(&db)?;
+    let extensions = persistent_extensions(&db)?;
     let share_origin = std::env::var_os("HEAVENKEY_SHARE_ORIGIN")
         .map(|value| value.into_string())
         .transpose()
@@ -567,7 +615,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         origin: origin.clone(),
         host: format!("localhost:{port}"),
         token: random_secret().into(),
-        extensions: Arc::new(Mutex::new(Extensions::default())),
+        extensions: Arc::new(Mutex::new(extensions)),
         access,
         broker: Arc::new(broker::Broker::new()),
         transfer: Arc::new(transfer::TransferBroker::new()),
@@ -592,6 +640,7 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         .route("/passwords/", get(page))
         .route("/passwords.js", get(script))
         .route("/passwords.css", get(style))
+        .route("/passwords-protected.css", get(protected_style))
         .route(
             "/share/",
             get(|| async { Html(include_str!("../../web/share.html")) }),

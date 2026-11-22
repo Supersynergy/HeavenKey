@@ -5,9 +5,18 @@ import { generateChannel, channelCode, openUnlock, validateRequest, type UnlockR
 import { website, scriptId } from './site-access';
 import { password, passphrase } from './generator';
 import { taskFrom, deliveryEntities, type Task } from './workflow';
+import { initFormFeedback } from '../../packages/forms/feedback';
+import { FORM_PRESETS, presetEntities } from '../../packages/forms/presets';
 const extension = (globalThis as any).browser || (globalThis as any).chrome;
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const input = (id: string) => $<HTMLInputElement>(id);
+const formFeedback = new Map(Array.from(document.querySelectorAll<HTMLFormElement>('form'), form => [form.id, initFormFeedback(form)]));
+const coverageStatus = document.createElement('p'); coverageStatus.id = 'form-coverage'; coverageStatus.className = 'note'; coverageStatus.setAttribute('role','status');
+$('field-map').before(coverageStatus);
+for (const preset of FORM_PRESETS) {
+  const option = document.createElement('option'); option.value = preset.id; option.textContent = preset.title;
+  $<HTMLSelectElement>('profile-preset').append(option);
+}
 const labels: Record<string,string> = { accountHolder:'Kontoinhaber',address2:'Adresszusatz',ahv:'AHV-Nummer',amount:'Betrag',bankName:'Bankname',bic:'BIC',birthdate:'Geburtsdatum',blz:'Bankleitzahl',caseno:'Aktenzeichen',ccExp:'Kartenablauf',ccHolder:'Karteninhaber',city:'Ort',company:'Firma',contractno:'Vertragsnummer',country:'Land',creditcard:'Kartennummer',creditorId:'Gläubiger-ID',currency:'Währung',customerno:'Kundennummer',cvc:'Kartenprüfnummer',date:'Datum',email:'E-Mail',familienstand:'Familienstand',firstName:'Vorname',geburtsname:'Geburtsname',geburtsort:'Geburtsort',gkv:'Krankenversicherung',houseNumber:'Hausnummer',hrb:'Handelsregister',iban:'IBAN',jobTitle:'Beruf / Position',konfession:'Konfession',language:'Sprache',lastName:'Nachname',mandatsref:'Mandatsreferenz',memberno:'Mitgliedsnummer',message:'Nachricht',name:'Name',nationality:'Staatsangehörigkeit',number:'Nummer',password:'Passwort',perso:'Ausweisnummer',phone:'Telefon',postbox:'Postfach',purpose:'Verwendungszweck',salutation:'Anrede',sozialvers:'Sozialversicherung',state:'Bundesland',steuerid:'Steuer-ID',steuernr:'Steuernummer',street:'Straße und Hausnummer',streetName:'Straße',subject:'Betreff',title:'Titel',url:'Webseite',username:'Benutzername',vat:'Umsatzsteuer-ID',zip:'Postleitzahl',otp:'Einmalcode',bday_day:'Geburtstag (Tag)',bday_month:'Geburtstag (Monat)',bday_year:'Geburtstag (Jahr)',cc_exp:'Kartenablauf',cc_month:'Kartenablauf (Monat)',cc_year:'Kartenablauf (Jahr)' };
 type Connection = { origin: string; token: string };
 type ExtendedVault = Vault & { profiles?: FormProfile[] };
@@ -23,9 +32,10 @@ let currentTask = taskFrom(new URL(location.href).searchParams.get('intent'));
 function focusAfter(control: HTMLElement) { if(busy) nextFocus=control;else control.focus(); }
 const button = (label: string, fn: () => void, kind = 'secondary') => { const b = document.createElement('button'); b.type = 'button'; b.className = kind; b.textContent = label; b.addEventListener('click', () => { if (!busy) fn(); }); return b; };
 function status(message: string, error = false) { $('smart-status').textContent = message; $('smart-status').dataset.error = String(error); }
-function resetPreview() { preview = null; $('field-map').replaceChildren(); $('fill-confirmation').hidden = true; input('confirm-origin').checked = false; $('fill-summary').textContent = ''; $('task-progress').textContent = '1 · Eintrag auswählen oder neu anlegen'; }
+function resetPreview() { coverageStatus.textContent=''; preview = null; $('field-map').replaceChildren(); $('fill-confirmation').hidden = true; input('confirm-origin').checked = false; $('fill-summary').textContent = ''; $('task-progress').textContent = '1 · Eintrag auswählen oder neu anlegen'; }
 function resetSource() { sourceGenerated=false; $('quick-login').hidden=true; entities = {}; sourceLogin = null; sourceProfile = null; $('entity-preview').replaceChildren(); input('source-text').value = ''; input('profile-title').value = ''; input('include-sensitive').checked = false; input('include-secrets').checked = false; input('overwrite').checked = false; input('include-choices').checked = false; resetPreview(); }
 function clearEditor() {
+  formFeedback.get('login-form')?.clear();
   editLogin=null; draftGenerated=false; savedGenerated='';
   for (const id of ['login-title','login-username','login-password','login-url']) input(id).value='';
   input('login-password').type='password'; input('show-generated').checked=false; input('confirm-login-update').checked=false;
@@ -59,6 +69,7 @@ for (const control of document.querySelectorAll<HTMLButtonElement>('[data-task]'
 });
 input('show-other-logins').addEventListener('change',renderSources);
 function lock(message = 'Tresor gesperrt.') {
+  for (const feedback of formFeedback.values()) feedback.clear();
   nextFocus=null;
   const pending=pendingUnlock; pendingUnlock=null; $('complete-passkey').hidden=true; $('passkey-code').textContent='';
   if(pending && connection) void api('/api/password-vault/extension/unlock/cancel',{id:pending.request.id}).catch(()=>console.warn('HeavenKey: Abbruch beim Dienst nicht bestätigt; die Anfrage läuft nach spätestens 90 Sekunden ab.'));
@@ -117,8 +128,9 @@ function renderSources() {
         startLogin(entry.v as Login,currentTask==='generate' || currentTask==='manage');
       } else { sourceProfile = entry.v as FormProfile; entities = { ...sourceProfile.entities }; input('profile-title').value = sourceProfile.title; status('Profil gewählt. Prüfe die Werte und die Zielseite.'); }
       renderEntities();
-      $('quick-login').hidden=entry.kind!=='login' || !matches(entry.v);
+      $('quick-login').hidden=entry.kind==='login' && !matches(entry.v);
       if(entry.kind==='login' && matches(entry.v)) $('quick-login').textContent=`Login auf ${siteOrigin} prüfen`;
+      else if(entry.kind==='profile') $('quick-login').textContent=`Formular auf ${siteOrigin} automatisch zuordnen`;
       if(new URL(location.href).searchParams.has('anchor') && (entry.kind==='profile' || matches(entry.v))) void run(previewSource);
     });
     b.dataset.kind = entry.kind; b.dataset.id = entry.v.id; list.append(b);
@@ -178,6 +190,14 @@ async function inject(target: { id: number; href: string; origin: string }, acti
 }
 function available(entity: string) { return !!entities[entity] || entity.startsWith('bday_') && !!entities.birthdate || ['cc_exp','cc_month','cc_year'].includes(entity) && !!entities.ccExp || entity === 'cc_csc' && !!entities.cvc; }
 function showMap(result: any) {
+  const coverage = result.coverage;
+  coverageStatus.textContent = coverage ? [
+    `${coverage.eligible} bearbeitbare Felder erkannt`,
+    coverage.unknown ? `${coverage.unknown} Felder manuell zuordnen` : '',
+    coverage.frames ? `${coverage.frames} eingebettete Bereiche nicht untersucht` : '',
+    coverage.fileInputs ? `${coverage.fileInputs} Datei-Felder bleiben manuell` : '',
+    coverage.truncated ? 'Großes Formular: nur begrenzter Ausschnitt geprüft' : '',
+  ].filter(Boolean).join(' · ') : '';
   preview = { scan: result.scan, fields: result.fields }; const list = $('field-map'); list.replaceChildren();
   for (const field of preview!.fields) {
     const row = document.createElement('div'); row.className = 'mapping-row';
@@ -369,7 +389,8 @@ $('disable-inline').addEventListener('click',()=>void run(async generation=>{
 $('new-login').addEventListener('click',()=>{if(!key || busy) return;resetSource();startLogin();input('login-username').focus();});
 $('new-profile').addEventListener('click',()=>{
   if(!key || busy) return;resetSource();clearEditor();
-  entities=Object.fromEntries(['firstName','lastName','email','phone','company','street','zip','city','state','country'].map(name=>[name,'']));
+  const selected=$<HTMLSelectElement>('profile-preset').value;
+  entities=presetEntities(selected);input('profile-title').value=FORM_PRESETS.find(preset=>preset.id===selected)!.title;
   renderEntities();input('profile-title').focus();status('Privates oder geschäftliches Profil anlegen und verschlüsselt speichern.');
 });
 $('manage-vault').addEventListener('click',()=>void run(async()=>{
@@ -402,7 +423,10 @@ $('generate-password').addEventListener('click',()=>void run(async generation=>{
   input('login-password').value=value;draftGenerated=true;$('preview-generated').hidden=true;input('confirm-login-update').checked=false;
   status(`Neues Passwort erzeugt (${value.length} Zeichen). Jetzt verschlüsselt speichern; danach kann es in neue Passwortfelder eingefügt werden.`);
 }));
-$('save-login').addEventListener('click',()=>void run(async generation=>{
+$('login-form').addEventListener('submit',event=>{
+  event.preventDefault();
+  if (!($('login-form') as HTMLFormElement).reportValidity()) return;
+  void run(async generation=>{
   if(!key || !vault || !envelope) return;
   const current=await target(); active(generation);
   const url=input('login-url').value;
@@ -420,14 +444,24 @@ $('save-login').addEventListener('click',()=>void run(async generation=>{
   entities={username:entry.username,email:entry.username,password:entry.password};renderEntities();renderSources();
   $('update-login-row').hidden=false;input('confirm-login-update').checked=false;$('preview-generated').hidden=!draftGenerated;
   status('Login verschlüsselt gespeichert. Bei einer Passwortänderung muss die Website die Änderung noch bestätigen.');
-}));
+});
+});
 $('preview-generated').addEventListener('click',()=>void run(async generation=>{
   if(!key || !savedGenerated || !editLogin || input('login-password').value!==savedGenerated) throw Error('Das neue Passwort zuerst verschlüsselt speichern.');
   sourceLogin=editLogin;sourceProfile=null;sourceGenerated=true;entities={password:savedGenerated};
   renderEntities();await previewSource(generation);
 }));
-for (const type of ['pointerdown','keydown']) document.addEventListener(type, () => { lastActivity = Date.now(); });
-setInterval(() => { if (key && Date.now() - lastActivity > 120000) lock('Nach 2 Minuten Inaktivität gesperrt.'); },10000);
+for (const type of ['pointerdown','keydown','input','click']) document.addEventListener(type, event => {
+  if (checkSessionDeadline()) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+  lastActivity = Date.now();
+}, { capture: true });
+function checkSessionDeadline(): boolean {
+  const now = Date.now();
+  if ((key || busy) && (now < lastActivity || now - lastActivity >= 120000)) { lock('Nach 2 Minuten Inaktivität gesperrt.'); return true; }
+  return false;
+}
+setInterval(checkSessionDeadline,10000);
+addEventListener('focus', () => { checkSessionDeadline(); });
 addEventListener('pagehide', () => lock());
 void (async () => { try { const saved = (await extension.storage.local.get('heavenkey.extension.v1'))['heavenkey.extension.v1']; if (validConnection(saved)) connection = saved; else if (saved) await extension.storage.local.remove('heavenkey.extension.v1'); connected(); if(connection && new URL(location.href).searchParams.get('passkey')==='1') $('passkey-extension').click(); } catch { status('Verbindungseinstellung konnte nicht geladen werden.',true); } })();
 void refreshInline();

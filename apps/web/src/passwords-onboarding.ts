@@ -19,8 +19,8 @@ export function initOnboarding(ctx: OnboardingContext) {
 	intro.id = "onboarding-intro";
 	intro.className = "onboarding-intro";
 	intro.setAttribute("aria-label", "Dein Einstieg");
-	intro.innerHTML = `<ol class="onboarding-steps"><li><span>1</span>Eigenen Tresor anlegen</li><li><span>2</span>Login speichern oder importieren</li><li><span>3</span>Sicherung aufbewahren</li></ol><p class="note">Du startest ohne Konto. Einen Passkey kannst du danach ergänzen.</p><button id="onboarding-restore" type="button" class="secondary">Ich habe schon eine Sicherung</button>`;
-	document.querySelector(".gate-description")!.after(intro);
+	intro.innerHTML = `<button id="onboarding-restore" type="button" class="secondary">Schon eine Sicherung? Wiederherstellen</button>`;
+	document.getElementById("unlock-form")!.after(intro);
 	const dialog = document.createElement("dialog");
 	dialog.id = "onboarding-dialog";
 	dialog.setAttribute("aria-labelledby", "onboarding-heading");

@@ -108,6 +108,24 @@ def main():
                 adb("shell", "input", "keyevent", "KEYCODE_SLEEP")
                 time.sleep(1)
                 adb("shell", "input", "keyevent", "KEYCODE_WAKEUP")
+                source_identity = {
+                    "source_commit": run(["git", "rev-parse", "HEAD"], cwd=ROOT).strip(),
+                    "app_sha256": digest(APP),
+                    "test_apk_sha256": digest(TEST),
+                }
+                wallet_failure = None
+                wallet_directory = os.environ.get("HEAVENKEY_WALLET_CI_DIRECTORY")
+                if wallet_directory:
+                    from android_wallet_device import run_wallet_acceptance
+                    try:
+                        run_wallet_acceptance(wallet_directory, EVIDENCE, adb, source_identity)
+                    except Exception as failure:
+                        wallet_failure = failure
+                        print(f"Wallet device acceptance failed: {failure}", flush=True)
+                    finally:
+                        # Only the newly created AVD verified above is selected. Restore the blank
+                        # test app before the independent portable-vault and Autofill scenarios.
+                        adb("shell", "pm", "clear", "app.heavenkey.heavenkey_mobile")
                 output = adb("shell", "am", "instrument", "-w", "-r", "-e", "class",
                              "app.heavenkey.heavenkey_mobile.PortableVaultDeviceTest",
                              "app.heavenkey.heavenkey_mobile.test/androidx.test.runner.AndroidJUnitRunner",
@@ -152,15 +170,15 @@ def main():
                     "native_system_autofill_profiles_logins_signup": True,
                     "physical_device": False, "browser_passkey_flow": False,
                     "production_signed_app": False,
-                    "source_commit": run(["git", "rev-parse", "HEAD"], cwd=ROOT).strip(),
-                    "app_sha256": digest(APP),
-                    "test_apk_sha256": digest(TEST),
+                    **source_identity,
                     "source_files": {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
                                      for p in sorted(source_paths)},
                 }
                 (EVIDENCE / "acceptance.json").write_text(json.dumps(receipt, indent=2) + "\n")
                 print("ANDROID_DEVICE_ACCEPTANCE=" + json.dumps(receipt, sort_keys=True), flush=True)
                 print("PASS: actual device authentication, Keystore recovery and rejection checks (4 tests).")
+                if wallet_failure:
+                    raise RuntimeError("Wallet device acceptance failed; see the device test output.") from wallet_failure
             finally:
                 process.terminate()
                 try:

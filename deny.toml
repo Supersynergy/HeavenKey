@@ -3,6 +3,8 @@ version = 2
 [licenses]
 version = 2
 allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "Unicode-3.0", "MPL-2.0", "OpenSSL", "Zlib"]
+# Upstream SQLCipher source combines its own, SQLite and LibTomCrypt licenses.
+exceptions = [{ crate = "sqlcipher-src@420.0.0", allow = ["blessing", "WTFPL"] }]
 [licenses.private]
 ignore = true
 [bans]

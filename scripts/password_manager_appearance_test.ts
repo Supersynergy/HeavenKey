@@ -6,28 +6,40 @@ export async function appearanceChecks(page: Page, master: string, check: (name:
   async function inspect(scope: string, theme?: string) {
     const result = await page.evaluate(({scope, theme}) => {
       if (theme && document.documentElement.dataset.theme !== theme) document.querySelector<HTMLButtonElement>("#theme-toggle")!.click();
-      const rgb = (value: string) => (value.match(/[\d.]+/g) || []).map(Number);
+      // Computed color-mix() may serialize as color(srgb ...), whose channels
+      // are normalized. Let the browser convert every supported CSS color.
+      const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
+      const context = canvas.getContext('2d', { willReadFrequently: true })!;
+      const rgb = (value: string) => {
+        context.clearRect(0, 0, 1, 1); context.fillStyle = value; context.fillRect(0, 0, 1, 1);
+        const [r, g, b, a] = context.getImageData(0, 0, 1, 1).data;
+        return [r, g, b, a / 255];
+      };
       const background = (element: Element): number[] => {
         const color = rgb(getComputedStyle(element).backgroundColor);
-        return color.length < 4 || color[3] > 0 ? color : element.parentElement ? background(element.parentElement) : [255, 255, 255];
+        if (color[3] === 1) return color;
+        const parent = element.parentElement ? background(element.parentElement) : [255, 255, 255];
+        return color.slice(0, 3).map((channel, index) => channel * color[3] + parent[index] * (1 - color[3]));
       };
       const luminance = (color: number[]) => color.slice(0, 3).reduce((sum, value, index) => {
         const channel = value / 255;
         return sum + (channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4) * [.2126, .7152, .0722][index];
       }, 0);
       const ratio = (a: number[], b: number[]) => (Math.max(luminance(a), luminance(b)) + .05) / (Math.min(luminance(a), luminance(b)) + .05);
+      const foreground = (color: number[], backdrop: number[]) => color.slice(0, 3).map((channel, index) => channel * (color[3] ?? 1) + backdrop[index] * (1 - (color[3] ?? 1)));
+      const contrast = (value: string, element: Element) => { const backdrop = background(element); return ratio(foreground(rgb(value), backdrop), backdrop); };
       const rows: { label: string; ratio: number }[] = [];
       const walker = document.createTreeWalker(document.querySelector(scope)!, NodeFilter.SHOW_TEXT);
       while (walker.nextNode()) {
         const node = walker.currentNode, element = node.parentElement!;
         if (!node.textContent?.trim() || !element.getClientRects().length || element.closest('[hidden], [aria-hidden="true"], :disabled')) continue;
-        rows.push({ label: node.textContent.trim().slice(0, 70), ratio: ratio(rgb(getComputedStyle(element).color), background(element)) });
+        rows.push({ label: node.textContent.trim().slice(0, 70), ratio: contrast(getComputedStyle(element).color, element) });
       }
       const controls = [...document.querySelectorAll<HTMLElement>(`${scope} input, ${scope} select, ${scope} textarea, ${scope} kbd, ${scope} button.secondary`)].filter(el => el.getClientRects().length && !el.closest(':disabled, [hidden]'));
       for (const input of controls.filter(el => el.matches('input[placeholder], textarea[placeholder]'))) {
-        rows.push({ label: `${input.id} placeholder`, ratio: ratio(rgb(getComputedStyle(input, "::placeholder").color), background(input)) });
+        rows.push({ label: `${input.id} placeholder`, ratio: contrast(getComputedStyle(input, "::placeholder").color, input) });
       }
-      const boundaries = controls.filter(el => el.matches(':not([type=checkbox])') && parseFloat(getComputedStyle(el).borderTopWidth) > 0 && rgb(getComputedStyle(el).borderTopColor)[3] !== 0).map(el => ({label: el.id || el.tagName, ratio: ratio(rgb(getComputedStyle(el).borderTopColor), background(el))}));
+      const boundaries = controls.filter(el => el.matches(':not([type=checkbox])') && parseFloat(getComputedStyle(el).borderTopWidth) > 0 && rgb(getComputedStyle(el).borderTopColor)[3] !== 0).map(el => ({label: el.id || el.tagName, ratio: contrast(getComputedStyle(el).borderTopColor, el)}));
       return { samples: rows.length, failures: rows.filter(row => row.ratio < 4.5), boundaries: boundaries.filter(row => row.ratio < 3) };
     }, {scope, theme});
     assert(result.samples > 3, "contrast checks must inspect rendered text");

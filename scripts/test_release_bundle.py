@@ -10,6 +10,7 @@ import unittest
 import zipfile
 
 import release_bundle
+from android_preview import WALLET_DEVICE_CHECKS
 
 
 class BundleTests(unittest.TestCase):
@@ -48,8 +49,12 @@ class BundleTests(unittest.TestCase):
             data = b'Synthetic unit-test bytes, not an installable APK'
             (self.directory / name).write_bytes(data)
             artifacts.append({'name': name, 'sha256': hashlib.sha256(data).hexdigest()})
+        wallet_receipt = dict.fromkeys(WALLET_DEVICE_CHECKS, True)
+        wallet_receipt.update(source_commit=self.commit, physical_device=False)
         preview = {'version': self.version + '-preview', 'source_commit': self.commit, 'production': False,
-                   'stable_publisher_identity': False, 'application_id': 'app.heavenkey.heavenkey_mobile.preview', 'artifacts': artifacts}
+                   'stable_publisher_identity': False, 'application_id': 'app.heavenkey.heavenkey_mobile.preview',
+                   'wallet_profile_included': False, 'wallet_pilot_emulator_evidence': wallet_receipt,
+                   'artifacts': artifacts}
         (self.directory / 'PREVIEW.json').write_text(json.dumps(preview))
 
     def test_complete_download_contains_install_guide_and_verifiable_inner_packages(self):
@@ -77,6 +82,16 @@ class BundleTests(unittest.TestCase):
     def test_matching_but_stale_platform_fingerprints_are_rejected(self):
         with self.assertRaisesRegex(ValueError, 'checked-out build inputs'):
             release_bundle.build(self.directory, self.commit, self.tag, 'c' * 64)
+
+    def test_missing_or_stale_wallet_device_evidence_blocks_publication(self):
+        path = self.directory / 'PREVIEW.json'
+        preview = json.loads(path.read_text())
+        stale = {**preview['wallet_pilot_emulator_evidence'], 'source_commit': 'c' * 40}
+        for receipt in ({}, stale):
+            with self.subTest(receipt=receipt):
+                path.write_text(json.dumps({**preview, 'wallet_pilot_emulator_evidence': receipt}))
+                with self.assertRaisesRegex(ValueError, 'Wallet.*evidence'):
+                    release_bundle.build(self.directory, self.commit, self.tag, self.metadata['source_fingerprint'])
 
     def test_modified_desktop_binary_is_rejected(self):
         name = f'HeavenKey-{self.version}-windows-x64'

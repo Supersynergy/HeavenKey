@@ -4,41 +4,36 @@ Die Flutter-App unter `apps/mobile` ist auf Android ein eigenständiger lokaler 
 Ein Computer und ein Cloudkonto sind für Logins und Website-Passkeys nicht erforderlich.
 Die Kopplung mit dem Desktop ist optional. Die Oberfläche bietet einen direkten Passkey-Tab
 und ein Material-3-Design für Hell- und Dunkelmodus.
-Diese Entwicklungsversion ist für synthetische Testdaten vorgesehen. Der
-Quellstand 0.25 ergänzt auf Android die ausdrücklich gekoppelte, verschlüsselte
-Desktop-Synchronisierung und Website-Passkeys. Der Abgleich wird auf beiden
-Seiten manuell gestartet. Die adaptive Passwortfreigabe und die verschlüsselte
-Login-Sicherung bleiben erhalten. Einrichtung und Grenzen stehen unter
-[Desktop-Verbindung und Website-Passkeys](MOBILE-SYNC-PASSKEYS.md).
-
-## Android 0.28: Formulare und App-Autofill
-
-Der neue Android-Quellstand ergänzt verschlüsselte Formularprofile, Signaturbindung
-nativer Apps, Passworterzeugung im Registrierungsformular, Inline-Vorschläge und
-merkbare Passphrasen. V3-Sicherungen enthalten Logins, Website-Passkeys und Profile.
-App-Freigaben werden auf einem neuen Gerät neu erteilt; Profile sind noch nicht im
-Desktop-Sync. [Bedienung, Grenzen und nächste Schritte](ANDROID-AUTOFILL-PLAN.md).
-Die [getrennte neue Vorschau](https://github.com/Supersynergy/HeavenKey/releases/tag/android-v0.28.0-preview.1) heißt `android-v0.28.0-preview.1` und verwendet eine eigene
-App-Kennung. Desktop und Erweiterungen bleiben bei 0.26.
+Die Vorschau ist für synthetische Testdaten vorgesehen. Der verschlüsselte
+[Desktop-Abgleich](MOBILE-SYNC-PASSKEYS.md) wird auf beiden Geräten manuell
+gestartet.
 
 ## Android-Vorschau installieren
 
-Das [Android-Release 0.28 als Vorschau](https://github.com/Supersynergy/HeavenKey/releases/tag/android-v0.28.0-preview.1)
-enthält drei APKs, `SHA256SUMS` und `PREVIEW.json`. Für die meisten aktuellen Handys
-`HeavenKey-0.28.0-android-preview-arm64-v8a.apk` wählen; ARMv7 ist für passende
-32-Bit-Geräte, x86-64 für entsprechende Geräte/Emulatoren. Lade das APK auf ein
-Android-Gerät und folge dessen Installationsdialog. Erforderlich sind Android
-API 30 oder neuer und eine eingerichtete Gerätesperre.
+Die [gemeinsame Vorschau 0.32](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.32.0-preview.1)
+enthält drei Android-APKs, `SHA256SUMS` und `PREVIEW.json`. Für die meisten
+aktuellen Geräte ist `HeavenKey-0.32.0-android-preview-arm64-v8a.apk` passend.
+ARMv7 ist für 32-Bit-ARM-Geräte, x86-64 für passende Geräte und Emulatoren.
+HeavenKey benötigt Android 11 oder neuer und eine eingerichtete Gerätesperre.
+Website-Passkeys benötigen Android 14.
 
-Die Vorschau heißt **HeavenKey Vorschau** und kann durch ihre separate App-Kennung
-parallel zur bisherigen App installiert werden. Sie verwendet Release-/AOT-Code
-ohne Debugger, aber eine kurzlebige Debug-Signatur und ausschließlich Testdaten.
-Eine dauerhafte Update-Identität ist damit nicht zugesagt. Bestehende Tresore werden
-nicht automatisch übernommen; vor einem Kanalwechsel Sicherung und getrennten
-Schlüssel aufbewahren und die Wiederherstellung prüfen. Eine alte App dabei nicht
-ungeprüft deinstallieren. Für den optionalen Abgleich den Desktop aus dem
-[Release 0.26](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.26.0-preview.1)
-verwenden; lokale Profile bleiben zunächst vom Sync ausgenommen.
+Die App heißt **HeavenKey Vorschau**, verwendet eine eigene App-Kennung und eine
+Testsignatur. Sichere den Tresor und den getrennten Wiederherstellungsschlüssel,
+bevor du den Installationskanal wechselst. Prüfe die Wiederherstellung vor
+einer Deinstallation. Für den optionalen Abgleich nutze das Desktop-Paket aus
+derselben Vorschau.
+
+## Formulare, Sicherungen und Nachweise
+
+Android verwaltet verschlüsselte Formularprofile, geprüft gebundene native
+Apps, Passworterzeugung bei der Registrierung und merkbare Passphrasen.
+V3-Sicherungen enthalten Logins, Website-Passkeys und Profile. App-Freigaben
+werden auf einem neuen Gerät neu erteilt. Der Desktop-Abgleich umfasst Logins
+und Website-Passkeys. [Bedienung und Grenzen](ANDROID-AUTOFILL-PLAN.md).
+
+Für synthetische Mitgliedschaften und Freigaben braucht der
+[Wallet-Pilot](MEMBERSHIP-WALLET.md) einen separaten Build mit lokalem
+Vertrauensprofil. Die allgemeine Download-App enthält den lokalen Tresor.
 
 ## Funktionen
 

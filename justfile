@@ -8,6 +8,14 @@ _build:
 check:
     python3 scripts/run.py check 900 -- just _check
 
+check-fast:
+    cargo metadata --no-deps --locked --offline --format-version 1 > /dev/null
+    cargo fmt --check
+    bun run node_modules/typescript/bin/tsc --noEmit
+    bun test apps/web/src/passwords-privacy.test.ts apps/extension
+    bun test --test-name-pattern CSV apps/web/src/passwords-crypto.test.ts
+    bun scripts/test_extension.mjs
+
 _check:
     HEAVENKEY_ADVISORIES_OFFLINE=1 bash scripts/ci.sh check
 

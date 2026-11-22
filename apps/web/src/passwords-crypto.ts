@@ -187,16 +187,38 @@ export async function totp(value: string, time = Date.now()): Promise<{ code: st
     return { code: String(n % 10 ** config.digits).padStart(config.digits, "0"), remaining: config.period - Math.floor(time / 1000) % config.period };
   } finally { config.secret.fill(0); }
 }
+/** Infer a comma, semicolon or tab separator from the first nonempty header record. */
+function csvSeparator(text: string): string {
+  const counts = new Map([[",", 0], [";", 0], ["\t", 0]]);
+  let quoted = false, content = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === '"') {
+      if (quoted && text[i + 1] === '"') { i++; continue; }
+      quoted = !quoted;
+    } else if (!quoted && (char === "\n" || char === "\r")) {
+      if (content) break;
+      continue;
+    } else if (!quoted && counts.has(char)) counts.set(char, counts.get(char)! + 1);
+    content = true;
+  }
+  const maximum = Math.max(...counts.values());
+  if (!maximum) return ",";
+  const candidates = [...counts].filter(([, count]) => count === maximum);
+  if (candidates.length !== 1) throw new Error("CSV-Trennzeichen ist nicht eindeutig. Verwende Komma, Semikolon oder Tabulator.");
+  return candidates[0][0];
+}
 /** RFC4180 quoting; validate every row before returning anything to the caller. */
 export function parseCsv(text: string): Login[] {
   if (utf8.encode(text).length > MAX_FILE_BYTES) throw new Error("CSV darf höchstens 2 MB groß sein.");
   text = text.replace(/^\uFEFF/, "");
+  const separator = csvSeparator(text);
   const rows: string[][] = [];
   let row: string[] = [], cell = "", quoted = false, closed = false;
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
     if (quoted) { if (char === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else { quoted = false; closed = true; } } else cell += char; }
-    else if (char === ",") { row.push(cell); cell = ""; closed = false; }
+    else if (char === separator) { row.push(cell); cell = ""; closed = false; }
     else if (char === "\n" || char === "\r") { if (char === "\r" && text[i + 1] === "\n") i++; row.push(cell); if (row.some(Boolean)) rows.push(row); row = []; cell = ""; closed = false; }
     else if (char === '"' && !cell && !closed) quoted = true;
     else { if (closed || char === '"') throw new Error("Ungültige CSV-Anführungszeichen."); cell += char; }

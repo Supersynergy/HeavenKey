@@ -48,6 +48,8 @@ Auf dem öffentlichen Host weist HeavenKey Verwaltungs-, Konfigurations-, Passke
 
 Die Release-Abnahme prüft virtuelle WebAuthn-Geräte und lokale Host-/Origin-Grenzen. Ein öffentlicher TLS-Betrieb, physische Passkeys, native mobile Credential-Provider und eine Verfügbarkeit außerhalb des laufenden eigenen Dienstes sind damit nicht zugesichert.
 
-## Private GitHub-Downloads
+## GitHub-Downloads
 
-Das Repository ist privat. Die Meldung „Could not resolve to a Repository“ in der GitHub-App beweist nicht, dass das Repository fehlt. Melde dich mit einem berechtigten Konto an und öffne [die Releases im Browser](https://github.com/Supersynergy/HeavenKey/releases/latest). Falls der Browser funktioniert, prüfe die Anmeldung der Handy-App erneut. Die App wird durch einen HeavenKey-Release nicht neu angemeldet; die Sichtbarkeit des Repositorys wird dafür nicht geändert.
+Das Repository und seine [Release-Übersicht](https://github.com/Supersynergy/HeavenKey/releases) sind öffentlich.
+Die [gemeinsame Vorschau 0.32](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.32.0-preview.1) bietet Android, Desktop und Browser-Erweiterungen.
+GitHubs allgemeiner Link für den letzten regulären Release führt zu [0.13.0](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.13.0).

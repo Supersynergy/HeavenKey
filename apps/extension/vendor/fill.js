@@ -4,6 +4,7 @@
    native setter and fire real events so React/Vue/Angular notice.
    dsgvo-shield-derived gating: high-tier entities (financial/identity)
    fill only with opts.sensitive and only into their exact field type. */
+import { fieldLabel } from '../../../packages/forms/field-label.ts';
 "use strict";
 (function (root) {
 
@@ -79,6 +80,8 @@ function visible(el) {
 }
 
 function labelText(el) {
+  const accessible = fieldLabel(el);
+  if (accessible) return accessible;
   const parts = [];
   if (el.labels) for (const l of el.labels) parts.push(l.innerText);
   if (el.id) {
@@ -111,7 +114,6 @@ function tokens(el) {
     el.name || "", el.id || "", el.type === "email" ? "email" : "",
     el.placeholder || "", el.getAttribute("aria-label") || "",
     el.getAttribute("data-placeholder") || "",
-    el.getAttribute("aria-labelledby") ? (document.getElementById(el.getAttribute("aria-labelledby"))?.innerText || "") : "",
     labelText(el)
   ].join(" ").replace(/[_\-]+/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2"); /* camelCase */
 }

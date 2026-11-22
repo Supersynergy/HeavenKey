@@ -8,6 +8,10 @@ on:
       - '.github/workflows/mobile.yml'
       - 'scripts/mobile_native_gate.py'
       - 'scripts/android_device_acceptance.py'
+      - 'scripts/android_wallet_device.py'
+      - 'scripts/android_ci_retry.sh'
+      - 'apps/membership-pilot/**'
+      - 'scripts/membership_wallet_*.mjs'
       - 'scripts/android_release.py'
       - 'scripts/android_signing_test.py'
       - 'scripts/android_preview.py'
@@ -18,6 +22,10 @@ on:
       - 'apps/mobile/**'
       - '.github/workflows/mobile.yml'
       - 'scripts/android_device_acceptance.py'
+      - 'scripts/android_wallet_device.py'
+      - 'scripts/android_ci_retry.sh'
+      - 'apps/membership-pilot/**'
+      - 'scripts/membership_wallet_*.mjs'
       - 'scripts/android_release.py'
       - 'scripts/android_signing_test.py'
       - 'scripts/android_preview.py'
@@ -56,19 +64,64 @@ jobs:
       - name: Install pinned Android build dependencies
         run: |
           for attempt in 1 2 3; do
-            if "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358' 'platforms;android-36' 'build-tools;36.0.0'; then
+            if "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358' 'platforms;android-36' 'build-tools;36.0.0' 'cmake;3.22.1'; then
               exit 0
             fi
             echo "SDK download/extraction failed on attempt $attempt; retrying with the SDK manager."
           done
           exit 1
-      - name: Build Android and execute portable backup tests
+      - name: Configure Android dependency repositories
+        run: |
+          init_dir="${GRADLE_USER_HOME:-$HOME/.gradle}/init.d"
+          mkdir -p "$init_dir"
+          # The pinned included build can resolve Kotlin directly if the Plugin Portal redirect is unavailable.
+          cat > "$init_dir/heavenkey-flutter-repositories.gradle" <<'GRADLE'
+          gradle.beforeSettings { settings ->
+              if (settings.settingsDir.name == 'gradle' && settings.settingsDir.parentFile.name == 'flutter_tools') {
+                  settings.pluginManagement.repositories {
+                      mavenCentral()
+                      gradlePluginPortal()
+                  }
+              }
+          }
+          gradle.beforeProject { project ->
+              if (project.path == ':app' && project.rootProject.projectDir.name == 'android') {
+                  def mirror = project.repositories.maven {
+                      name = 'MavenCentralRobolectricMirror'
+                      url = project.uri('https://maven-central.storage-download.googleapis.com/maven2/')
+                  }
+                  project.repositories.exclusiveContent {
+                      forRepositories(mirror)
+                      filter {
+                          includeVersion('org.robolectric', 'nativeruntime-dist-compat', '1.0.18')
+                      }
+                  }
+                  def runtimeJars = System.getenv('HEAVENKEY_ROBOLECTRIC_DIR')
+                  if (runtimeJars) {
+                      project.tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
+                          systemProperty('robolectric.dependency.dir', runtimeJars)
+                          testLogging.exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+                      }
+                  }
+              }
+          }
+          GRADLE
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - name: Provision synthetic Wallet test trust
+        run: |
+          npm ci --ignore-scripts --prefix apps/membership-pilot
+          preview_dir="$(node scripts/membership_wallet_preview.mjs init)"
+          node scripts/membership_wallet_preview.mjs verify-setup "$preview_dir"
+          echo "HEAVENKEY_WALLET_CI_DIRECTORY=$preview_dir" >> "$GITHUB_ENV"
+      - name: Build Android and device instrumentation
         working-directory: apps/mobile
         run: |
-          flutter build apk --debug --no-pub
+          export HEAVENKEY_WALLET_PROFILE="$HEAVENKEY_WALLET_CI_DIRECTORY/android-wallet.json"
+          bash ../../scripts/android_ci_retry.sh flutter build apk --debug --no-pub
           cd android
-          ./gradlew :app:testDebugUnitTest --no-daemon
-          ./gradlew :app:assembleDebugAndroidTest --no-daemon
+          bash ../../../scripts/android_ci_retry.sh ./gradlew :app:assembleDebugAndroidTest --no-daemon
       - name: Install isolated Android emulator
         run: |
           for attempt in 1 2 3; do
@@ -80,15 +133,34 @@ jobs:
           done
           test -e /dev/kvm
           sudo chmod a+rw /dev/kvm
-      - name: Execute actual Keystore and portable passkey recovery
+      - name: Execute Android Keystore, portable passkey and Wallet acceptance
         run: python3 scripts/android_device_acceptance.py
+      - name: Run Android JVM unit tests
+        working-directory: apps/mobile/android
+        run: |
+          export HEAVENKEY_ROBOLECTRIC_DIR="$RUNNER_TEMP/robolectric-4.16.1"
+          mkdir -p "$HEAVENKEY_ROBOLECTRIC_DIR"
+          # Robolectric loads these SDK jars inside the test JVM, separately from Gradle dependencies.
+          (
+            cd "$HEAVENKEY_ROBOLECTRIC_DIR"
+            for version in 11-robolectric-6757853-i7 16-robolectric-13921718-i7; do
+              jar="android-all-instrumented-$version.jar"
+              path="org/robolectric/android-all-instrumented/$version/$jar"
+              curl --fail --location --retry 2 --max-time 90 --output "$jar" "https://maven-central.storage-download.googleapis.com/maven2/$path"
+            done
+            sha512sum --check <<'CHECKSUMS'
+          686c3d5faf7772795fc28f356baf9a92dcd89dedc2f7a16720ce4eb8d7b5ee5932500c623c3028355cc13a14c855210bcba796180681a01b0a7f2a276eb5303d  android-all-instrumented-11-robolectric-6757853-i7.jar
+          0576318b89abb0a1c9a760a61bb68ccd2d509b33164b8265d6b1fb587a4b7629e1e805b6c7f8fbefab94fc03c8db8100b1d4856a32728803c242d2677aa7ec76  android-all-instrumented-16-robolectric-13921718-i7.jar
+          CHECKSUMS
+          )
+          bash ../../../scripts/android_ci_retry.sh ./gradlew :app:testDebugUnitTest --no-daemon
       - name: Build and verify release artifacts with disposable keys
         run: python3 scripts/android_signing_test.py --release-artifacts
       - name: Build isolated preview with release runtime
         env:
           HEAVENKEY_ANDROID_PREVIEW: 'true'
         run: |
-          (cd apps/mobile && flutter build apk --release --split-per-abi)
+          (cd apps/mobile && bash ../../scripts/android_ci_retry.sh flutter build apk --release --split-per-abi --no-pub)
           python3 - <<'PY'
           import os, re, shutil, subprocess
           from pathlib import Path
@@ -97,7 +169,8 @@ jobs:
           for abi in ('arm64-v8a', 'armeabi-v7a', 'x86_64'):
               shutil.copyfile(f'apps/mobile/build/app/outputs/flutter-apk/app-{abi}-release.apk', output / f'HeavenKey-{version}-android-preview-{abi}.apk')
           subprocess.run(['python3', 'scripts/android_preview.py', str(output), '--version', version, '--code', code,
-                          '--commit', os.environ['GITHUB_SHA'], '--device-evidence', 'dist/android-device-acceptance/acceptance.json'], check=True)
+                          '--commit', os.environ['GITHUB_SHA'], '--device-evidence', 'dist/android-device-acceptance/acceptance.json',
+                          '--wallet-evidence', 'dist/android-device-acceptance/membership-wallet.json'], check=True)
           PY
       - name: Preserve verified installable preview
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

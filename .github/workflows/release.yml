@@ -32,6 +32,10 @@ jobs:
     if: github.event_name != 'pull_request'
     uses: ./.github/workflows/mobile.yml
 
+  membership:
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/membership.yml
+
   desktop:
     strategy:
       fail-fast: false
@@ -105,7 +109,7 @@ jobs:
 
   publish:
     if: github.event_name != 'pull_request'
-    needs: [verify, android, desktop]
+    needs: [verify, android, membership, desktop]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -145,4 +149,4 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          gh release create "$RELEASE_TAG" dist/release-input/HeavenKey-* dist/release-input/SHA256SUMS dist/release-input/RELEASE.json dist/release-input/PREVIEW.json --target "$GITHUB_SHA" --prerelease --latest=false --title "HeavenKey $RELEASE_VERSION – Sichere Freigabe & klare Abläufe" --notes-file "docs/releases/$RELEASE_VERSION.md"
+          gh release create "$RELEASE_TAG" dist/release-input/HeavenKey-* dist/release-input/SHA256SUMS dist/release-input/RELEASE.json dist/release-input/PREVIEW.json --target "$GITHUB_SHA" --prerelease --latest=false --title "HeavenKey $RELEASE_VERSION – Vorschau" --notes-file "docs/releases/$RELEASE_VERSION.md"
