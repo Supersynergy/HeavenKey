@@ -61,7 +61,7 @@ Voraussetzungen sind Node 24, OpenSSL, die im Projekt gepinnte Flutter-Version u
 npm ci --ignore-scripts --prefix apps/membership-pilot
 preview_dir="$(node scripts/membership_wallet_preview.mjs init)"
 node scripts/membership_wallet_preview.mjs verify-setup "$preview_dir"
-node scripts/membership_wallet_preview.mjs serve "$preview_dir"
+node scripts/membership_wallet_preview.mjs serve "$preview_dir" &
 ```
 
 Der Server bindet ausschließlich an `127.0.0.1:9444`. Öffne die ausgegebene HTTPS-Adresse in einem isolierten Testbrowser mit der lokalen Zertifikatsausnahme oder dem ausgegebenen Chromium-SPKI-Pin. Halte diese Browsersitzung für den Ergebnisabgleich geöffnet. Ein anderes Android-Gerät erreicht denselben Ursprung per `adb reverse tcp:9444 tcp:9444`. Der Android-Build bekommt nur `android-wallet.json` mit den öffentlichen Schlüsseln und dem lokalen CA-Zertifikat.
@@ -70,7 +70,7 @@ Der Server bindet ausschließlich an `127.0.0.1:9444`. Öffne die ausgegebene HT
 export HEAVENKEY_WALLET_PROFILE="$preview_dir/android-wallet.json"
 cd apps/mobile
 flutter pub get --enforce-lockfile
-HEAVENKEY_ANDROID_PREVIEW=true flutter build apk --release --split-per-abi --no-pub
+HEAVENKEY_ANDROID_PREVIEW=true flutter build apk --release --split-per-abi
 ```
 
 1. Installiere die Vorschau für die passende ABI. Entsperre HeavenKey und öffne im Testbrowser **Testnachweis ausstellen**. Übergib den Link per QR oder auf demselben Gerät aus dem Browser. Prüfe den Testaussteller und speichere die Mitgliedschaft.
@@ -82,6 +82,8 @@ HEAVENKEY_ANDROID_PREVIEW=true flutter build apk --release --split-per-abi --no-
 node scripts/membership_wallet_agent.mjs "$preview_dir" "$delegation_id" "$idempotency_key"
 npm test --prefix apps/membership-pilot
 ```
+
+Der Android-CI-Job provisioniert ein separates Testprofil und prüft auf einem API-36-Emulator mit seiner eigenen Geräte-PIN die Ausstellung, Projektfreigabe und Agentenaktion. Das erzeugte `membership-wallet.json`-Protokoll bleibt Teil der Geräteabnahme.
 
 Die CLI benötigt im Betrieb nur `machine.json` und `ca.pem`. Halte `server.json`, SQLite und die privaten Aussteller-, Verifier- und TLS-Schlüssel beim Betreiber. Der Testordner enthält keine echten Benutzeridentitäten. Wenn du den synthetischen Aussteller zurücksetzt, erzeuge ein neues Profil mit neuen Schlüsseln und stelle Nachweise neu aus. Alte SQLite-Kopien mit denselben Schlüsseln können einen alten Status enthalten.
 

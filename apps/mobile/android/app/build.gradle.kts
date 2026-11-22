@@ -185,6 +185,8 @@ dependencies {
     implementation("androidx.credentials:credentials:1.6.0")
     implementation("co.nstant.in:cbor:0.9")
     implementation("com.nimbusds:nimbus-jose-jwt:10.10")
+    // Nimbus shades Gson but its annotation references still need to resolve in R8.
+    implementation("com.google.errorprone:error_prone_annotations:2.41.0")
     implementation("eu.europa.ec.eudi:eudi-lib-jvm-sdjwt-kt:0.21.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.16.1")

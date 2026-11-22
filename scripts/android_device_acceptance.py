@@ -161,6 +161,10 @@ def main():
                 (EVIDENCE / "acceptance.json").write_text(json.dumps(receipt, indent=2) + "\n")
                 print("ANDROID_DEVICE_ACCEPTANCE=" + json.dumps(receipt, sort_keys=True), flush=True)
                 print("PASS: actual device authentication, Keystore recovery and rejection checks (4 tests).")
+                wallet_directory = os.environ.get("HEAVENKEY_WALLET_CI_DIRECTORY")
+                if wallet_directory:
+                    from android_wallet_device import run_wallet_acceptance
+                    run_wallet_acceptance(wallet_directory, EVIDENCE, adb)
             finally:
                 process.terminate()
                 try:
