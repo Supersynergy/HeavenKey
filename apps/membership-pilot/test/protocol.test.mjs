@@ -193,6 +193,22 @@ test('issuance validates fresh key proof and atomically consumes the offer and n
   assert.equal(f.db.prepare('SELECT count(*) AS n FROM credentials').get().n, 1);
 });
 
+test('browser forms preserve the same-origin header and reject foreign origins with a valid CSRF token', async (t) => {
+  const f = await setup(t);
+  const home = await f.call('/', { headers: { accept: 'text/html' } });
+  assert.equal(home.headers['referrer-policy'], 'same-origin');
+  assert.match(home.headers['content-security-policy'], /form-action 'self'/);
+  assert.match(home.data, /<form method="post" action="\/browser\/offer">/);
+  const session = await f.call('/');
+  const cookie = session.headers['set-cookie'][0].split(';')[0];
+  const submit = (origin) => f.call('/browser/offer', {
+    method: 'POST', headers: { cookie, origin }, form: { csrf: session.data.csrf },
+  });
+  assert.equal((await submit('null')).status, 403);
+  assert.equal((await submit('https://other.test')).status, 403);
+  assert.equal((await submit('https://127.0.0.1')).status, 200);
+});
+
 test('selective presentation grants only the initiating project session and rejects replay and wrong holder', async (t) => {
   const f = await setup(t);
   const issuer = await f.browser();

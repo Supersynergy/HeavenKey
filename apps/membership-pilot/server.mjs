@@ -34,7 +34,8 @@ function response(res, status, body, type) {
     'cache-control': 'no-store',
     'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
     'content-type': type,
-    'referrer-policy': 'no-referrer',
+    // Preserve the same-origin form Origin header without sending referrers to external apps.
+    'referrer-policy': 'same-origin',
     'x-content-type-options': 'nosniff',
   });
   res.end(body);
