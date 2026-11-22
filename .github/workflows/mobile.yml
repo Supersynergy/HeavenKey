@@ -9,6 +9,7 @@ on:
       - 'scripts/mobile_native_gate.py'
       - 'scripts/android_device_acceptance.py'
       - 'scripts/android_wallet_device.py'
+      - 'scripts/android_ci_retry.sh'
       - 'apps/membership-pilot/**'
       - 'scripts/membership_wallet_*.mjs'
       - 'scripts/android_release.py'
@@ -22,6 +23,7 @@ on:
       - '.github/workflows/mobile.yml'
       - 'scripts/android_device_acceptance.py'
       - 'scripts/android_wallet_device.py'
+      - 'scripts/android_ci_retry.sh'
       - 'apps/membership-pilot/**'
       - 'scripts/membership_wallet_*.mjs'
       - 'scripts/android_release.py'
@@ -62,7 +64,7 @@ jobs:
       - name: Install pinned Android build dependencies
         run: |
           for attempt in 1 2 3; do
-            if "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358' 'platforms;android-36' 'build-tools;36.0.0'; then
+            if "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358' 'platforms;android-36' 'build-tools;36.0.0' 'cmake;3.22.1'; then
               exit 0
             fi
             echo "SDK download/extraction failed on attempt $attempt; retrying with the SDK manager."
@@ -92,14 +94,13 @@ jobs:
           preview_dir="$(node scripts/membership_wallet_preview.mjs init)"
           node scripts/membership_wallet_preview.mjs verify-setup "$preview_dir"
           echo "HEAVENKEY_WALLET_CI_DIRECTORY=$preview_dir" >> "$GITHUB_ENV"
-      - name: Build Android and execute portable backup tests
+      - name: Build Android and device instrumentation
         working-directory: apps/mobile
         run: |
           export HEAVENKEY_WALLET_PROFILE="$HEAVENKEY_WALLET_CI_DIRECTORY/android-wallet.json"
-          flutter build apk --debug --no-pub
+          bash ../../scripts/android_ci_retry.sh flutter build apk --debug --no-pub
           cd android
-          ./gradlew :app:testDebugUnitTest --no-daemon
-          ./gradlew :app:assembleDebugAndroidTest --no-daemon
+          bash ../../../scripts/android_ci_retry.sh ./gradlew :app:assembleDebugAndroidTest --no-daemon
       - name: Install isolated Android emulator
         run: |
           for attempt in 1 2 3; do
@@ -113,6 +114,9 @@ jobs:
           sudo chmod a+rw /dev/kvm
       - name: Execute Android Keystore, portable passkey and Wallet acceptance
         run: python3 scripts/android_device_acceptance.py
+      - name: Run Android JVM unit tests
+        working-directory: apps/mobile/android
+        run: bash ../../../scripts/android_ci_retry.sh ./gradlew :app:testDebugUnitTest --no-daemon
       - name: Build and verify release artifacts with disposable keys
         run: python3 scripts/android_signing_test.py --release-artifacts
       - name: Build isolated preview with release runtime
