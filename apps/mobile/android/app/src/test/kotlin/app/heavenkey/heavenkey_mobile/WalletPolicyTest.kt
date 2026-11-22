@@ -4,12 +4,15 @@ import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.crypto.ECDSASigner
+import com.nimbusds.jose.crypto.ECDSAVerifier
 import com.nimbusds.jose.crypto.MACSigner
 import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator
 import com.nimbusds.jose.util.Base64URL
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
+import eu.europa.ec.eudi.sdjwt.NimbusSdJwtOps
+import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -19,7 +22,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.net.URLEncoder
 import java.security.MessageDigest
+import java.util.Date
 import java.util.zip.Deflater
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30], manifest = Config.NONE)
@@ -34,6 +40,27 @@ class WalletPolicyTest {
     private fun configuration() = JSONObject().put("origin", origin).put("verifierClientId", verifierId)
         .put("issuerJwk", JSONObject(issuer.toPublicJWK().toJSONString()))
         .put("verifierJwk", JSONObject(verifier.toPublicJWK().toJSONString()))
+
+    @Test fun sdJwtVerificationAllowsOnlyTheConfiguredNotBeforeTolerance() = runBlocking {
+        val seconds = 1_795_356_000L
+        val clock = object : Clock {
+            override fun now(): Instant = Instant.fromEpochSeconds(seconds)
+        }
+        val verifier = walletSdJwtVerifier(clock)
+        fun signed(delay: Long): String = SignedJWT(
+            JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType("dc+sd-jwt")).build(),
+            JWTClaimsSet.Builder()
+                .issuer(origin)
+                .issueTime(Date(seconds * 1000))
+                .notBeforeTime(Date((seconds + delay) * 1000))
+                .expirationTime(Date((seconds + 60) * 1000))
+                .build(),
+        ).apply { sign(ECDSASigner(issuer)) }.serialize() + "~"
+
+        val signature = with(NimbusSdJwtOps) { ECDSAVerifier(issuer.toPublicJWK()).asJwtVerifier() }
+        assertTrue(verifier.verify(signature, signed(4)).isSuccess)
+        assertTrue(verifier.verify(signature, signed(6)).isFailure)
+    }
 
     @Test fun linksAllowOnlyTheProvisionedEndpointsAndExactVerifier() {
         val profile = WalletProfile.parse(configuration().toString())

@@ -12,6 +12,8 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import eu.europa.ec.eudi.sdjwt.NimbusSdJwtOps
 import eu.europa.ec.eudi.sdjwt.SdJwt
+import eu.europa.ec.eudi.sdjwt.SdJwtVerifier
+import eu.europa.ec.eudi.sdjwt.jsonObject
 import eu.europa.ec.eudi.sdjwt.vc.ClaimPath
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
@@ -22,8 +24,15 @@ import java.security.PrivateKey
 import java.time.Instant
 import java.util.Date
 import java.util.zip.Inflater
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 
 internal fun walletNow(): Long = Instant.now().epochSecond
+
+private const val WALLET_CLOCK_SKEW_SECONDS = 5L
+
+internal fun walletSdJwtVerifier(clock: Clock = Clock.System): SdJwtVerifier<SignedJWT> =
+    SdJwtVerifier(clock, WALLET_CLOCK_SKEW_SECONDS.seconds) { jwt -> jwt.jwtClaimsSet.jsonObject() }
 
 private fun digest(text: String): String = Base64URL.encode(
     MessageDigest.getInstance("SHA-256").digest(text.toByteArray(Charsets.US_ASCII)),
@@ -87,6 +96,7 @@ internal data class MembershipCredential(
 }
 
 internal class MembershipProtocol(private val profile: WalletProfile, private val store: WalletStore) {
+    private val credentialVerifier = walletSdJwtVerifier()
     private val claimNames = setOf("org_id", "membership")
     private val claimPaths = claimNames.map { ClaimPath.claim(it) }.toSet()
     private val origin = profile.origin
@@ -96,7 +106,7 @@ internal class MembershipProtocol(private val profile: WalletProfile, private va
     private fun times(claims: JSONObject, maxAge: Long, now: Long): Pair<Long, Long> {
         val issued = claims.walletNumber("iat")
         val expires = claims.walletNumber("exp")
-        walletCheck(issued in (now - maxAge)..(now + 5) && expires in (now + 1)..(issued + maxAge), "wallet_expired")
+        walletCheck(issued in (now - maxAge)..(now + WALLET_CLOCK_SKEW_SECONDS) && expires in (now + 1)..(issued + maxAge), "wallet_expired")
         return issued to expires
     }
 
@@ -196,11 +206,11 @@ internal class MembershipProtocol(private val profile: WalletProfile, private va
         val expires = fields.walletNumber("exp")
         val now = walletNow()
         val notBefore = if (fields.has("nbf")) fields.walletNumber("nbf") else issued
-        walletCheck(issued in 1..(now + 5) && expires in (issued + 1)..(issued + 86_400) &&
-            notBefore in (issued - 5) until expires, "wallet_invalid_credential")
+        walletCheck(issued in 1..(now + WALLET_CLOCK_SKEW_SECONDS) && expires in (issued + 1)..(issued + 86_400) &&
+            notBefore in (issued - WALLET_CLOCK_SKEW_SECONDS) until expires, "wallet_invalid_credential")
         val selected = runBlocking {
             with(NimbusSdJwtOps) {
-                val jwt = verify(ECDSAVerifier(profile.issuerKey).asJwtVerifier(), raw).getOrThrow()
+                val jwt = credentialVerifier.verify(ECDSAVerifier(profile.issuerKey).asJwtVerifier(), raw).getOrThrow()
                 val disclosed = jwt.recreateClaimsAndDisclosuresPerClaim()
                 walletCheck(claimPaths.all { disclosed.second.containsKey(it) }, "wallet_invalid_credential")
                 val claims = claimNames.associateWith { name ->
@@ -232,7 +242,7 @@ internal class MembershipProtocol(private val profile: WalletProfile, private va
         val now = walletNow()
         if (credential.expiresAt <= now) return "expired"
         if (!credential.holderBound) return "key_lost"
-        if (credential.validFrom > now + 5 || list == null || credential.statusIndex / 8 >= list.size)
+        if (credential.validFrom > now + WALLET_CLOCK_SKEW_SECONDS || list == null || credential.statusIndex / 8 >= list.size)
             return "status_unavailable"
         return if (walletStatusRevoked(list, credential.statusIndex)) "revoked" else "valid"
     }
