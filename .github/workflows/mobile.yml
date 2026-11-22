@@ -96,6 +96,13 @@ jobs:
                           includeVersion('org.robolectric', 'nativeruntime-dist-compat', '1.0.18')
                       }
                   }
+                  def runtimeJars = System.getenv('HEAVENKEY_ROBOLECTRIC_DIR')
+                  if (runtimeJars) {
+                      project.tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
+                          systemProperty('robolectric.dependency.dir', runtimeJars)
+                          testLogging.exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+                      }
+                  }
               }
           }
           GRADLE
@@ -130,7 +137,23 @@ jobs:
         run: python3 scripts/android_device_acceptance.py
       - name: Run Android JVM unit tests
         working-directory: apps/mobile/android
-        run: bash ../../../scripts/android_ci_retry.sh ./gradlew :app:testDebugUnitTest --no-daemon
+        run: |
+          export HEAVENKEY_ROBOLECTRIC_DIR="$RUNNER_TEMP/robolectric-4.16.1"
+          mkdir -p "$HEAVENKEY_ROBOLECTRIC_DIR"
+          # Robolectric loads these SDK jars inside the test JVM, separately from Gradle dependencies.
+          (
+            cd "$HEAVENKEY_ROBOLECTRIC_DIR"
+            for version in 11-robolectric-6757853-i7 16-robolectric-13921718-i7; do
+              jar="android-all-instrumented-$version.jar"
+              path="org/robolectric/android-all-instrumented/$version/$jar"
+              curl --fail --location --retry 2 --max-time 90 --output "$jar" "https://maven-central.storage-download.googleapis.com/maven2/$path"
+            done
+            sha512sum --check <<'CHECKSUMS'
+          686c3d5faf7772795fc28f356baf9a92dcd89dedc2f7a16720ce4eb8d7b5ee5932500c623c3028355cc13a14c855210bcba796180681a01b0a7f2a276eb5303d  android-all-instrumented-11-robolectric-6757853-i7.jar
+          0576318b89abb0a1c9a760a61bb68ccd2d509b33164b8265d6b1fb587a4b7629e1e805b6c7f8fbefab94fc03c8db8100b1d4856a32728803c242d2677aa7ec76  android-all-instrumented-16-robolectric-13921718-i7.jar
+          CHECKSUMS
+          )
+          bash ../../../scripts/android_ci_retry.sh ./gradlew :app:testDebugUnitTest --no-daemon
       - name: Build and verify release artifacts with disposable keys
         run: python3 scripts/android_signing_test.py --release-artifacts
       - name: Build isolated preview with release runtime
