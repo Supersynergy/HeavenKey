@@ -64,7 +64,7 @@ def instrument(adb, method, **references):
         raise RuntimeError(f"Wallet device instrumentation failed: {method}.\n{output[:8000]}")
 
 
-def run_wallet_acceptance(directory, evidence, adb):
+def run_wallet_acceptance(directory, evidence, adb, source_identity):
     browser = BrowserSession(Path(directory))
     launcher = ROOT / "scripts/membership_wallet_preview.mjs"
     with subprocess.Popen(["node", str(launcher), "serve", str(directory)], cwd=ROOT,
@@ -113,11 +113,8 @@ def run_wallet_acceptance(directory, evidence, adb):
             finally:
                 adb("reverse", "--remove", local)
 
-            app_evidence = json.loads((evidence / "acceptance.json").read_text())
             receipt = {
-                "source_commit": app_evidence["source_commit"],
-                "app_sha256": app_evidence["app_sha256"],
-                "test_apk_sha256": app_evidence["test_apk_sha256"],
+                **source_identity,
                 "passed": True,
                 "kind": "Android API 36 emulator and local TLS",
                 "synthetic_only": True,
