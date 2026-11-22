@@ -6,7 +6,7 @@
 - Unveränderliche Freigaben für einen einmaligen Rechnungsentwurf. Der lokale Testdienst prüft Rechte und Widerruf vor der Ausführung. Wiederholungen erzeugen keinen weiteren Entwurf.
 - Optionales AYA-Profil und dokumentierter Integrationsvertrag für einen Office-Testmandanten. Wallet-Nutzung erfordert einen separat konfigurierten App-Build.
 - Übernimmt Tresorwahl, Browserkopplung, Formularhilfen und Sperrkorrekturen aus 0.31. Die Vorschau trennt Wallet-Emulatornachweis, allgemeine Android-Pakete und Herausgebersignaturen.
-- Überarbeitetes Schlüssel-Titelbild, aktuelle Installationslinks und gemeinsame Paketabnahme. [Release-Details](docs/releases/0.32.0.md)
+- Überarbeitetes Schlüssel-Titelbild, aktuelle Installationslinks und gemeinsame Paketabnahme. Die einmaligen Office-Betriebsskripte aus der früheren Vorschau sind aus dem aktuellen Paketquellstand entfernt. [Release-Details](docs/releases/0.32.0.md)
 
 ## 0.31.0 – 2026-11-16 (Vorschau 7)
 
