@@ -70,7 +70,7 @@ jobs:
             echo "SDK download/extraction failed on attempt $attempt; retrying with the SDK manager."
           done
           exit 1
-      - name: Resolve Flutter Gradle plugin dependencies from Maven Central
+      - name: Configure Android dependency repositories
         run: |
           init_dir="${GRADLE_USER_HOME:-$HOME/.gradle}/init.d"
           mkdir -p "$init_dir"
@@ -81,6 +81,21 @@ jobs:
                   settings.pluginManagement.repositories {
                       mavenCentral()
                       gradlePluginPortal()
+                  }
+              }
+          }
+          gradle.beforeProject { project ->
+              if (project.path == ':app' && project.rootProject.projectDir.name == 'android') {
+                  project.repositories.exclusiveContent {
+                      forRepository {
+                          maven {
+                              name = 'MavenCentralRobolectricMirror'
+                              url = uri('https://maven-central.storage-download.googleapis.com/maven2/')
+                          }
+                      }
+                      filter {
+                          includeVersion('org.robolectric', 'nativeruntime-dist-compat', '1.0.18')
+                      }
                   }
               }
           }
@@ -123,7 +138,7 @@ jobs:
         env:
           HEAVENKEY_ANDROID_PREVIEW: 'true'
         run: |
-          (cd apps/mobile && flutter build apk --release --split-per-abi)
+          (cd apps/mobile && bash ../../scripts/android_ci_retry.sh flutter build apk --release --split-per-abi --no-pub)
           python3 - <<'PY'
           import os, re, shutil, subprocess
           from pathlib import Path
@@ -132,7 +147,8 @@ jobs:
           for abi in ('arm64-v8a', 'armeabi-v7a', 'x86_64'):
               shutil.copyfile(f'apps/mobile/build/app/outputs/flutter-apk/app-{abi}-release.apk', output / f'HeavenKey-{version}-android-preview-{abi}.apk')
           subprocess.run(['python3', 'scripts/android_preview.py', str(output), '--version', version, '--code', code,
-                          '--commit', os.environ['GITHUB_SHA'], '--device-evidence', 'dist/android-device-acceptance/acceptance.json'], check=True)
+                          '--commit', os.environ['GITHUB_SHA'], '--device-evidence', 'dist/android-device-acceptance/acceptance.json',
+                          '--wallet-evidence', 'dist/android-device-acceptance/membership-wallet.json'], check=True)
           PY
       - name: Preserve verified installable preview
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

@@ -8,20 +8,15 @@ erzeugt und speichert. Eine Android-PIN und ein separat gesicherter
 Wiederherstellungsschlüssel bleiben erforderlich.
 
 Android 11 / API 30 ist die Mindestversion. Der Website-Passkey-Anbieter benötigt
-Android 14 / API 34. Die Desktop-Version und ihre bisherigen Vorschau-Releases
-werden unabhängig versioniert.
+Android 14 / API 34. Die gemeinsame Vorschau und der Android-Produktionskanal
+haben getrennte Tags und Signaturen.
 
-## Aktueller Stand: 0.30-Vorschau (5.11.2026)
+## Gemeinsame Vorschau 0.32
 
-Die [gemeinsame Vorschau 0.30](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.30.0-preview.1)
-fasst App, Desktop und Browser-Erweiterungen zusammen. Android ergänzt direkte
-Einstiege für private und geschäftliche Formularprofile. Die dauerhaften
-Herausgeberwerte fehlen weiterhin: Die neue Ausgabe enthält Vorschau-APKs mit
-Testsignatur, keine Produktions-APK/AAB und keinen Store-Upload. Eine bereits
-installierte Vorschau kann bei anderer Signatur kein direktes Update annehmen;
-eine vorhandene App erst nach unabhängig gesicherter und geprüfter
-Wiederherstellung entfernen. Der nachfolgende Stand von 0.28 bleibt als historischer
-Prüfnachweis mit seinem eigenen Quellcommit erhalten.
+Die [gemeinsame Vorschau 0.32](https://github.com/Supersynergy/HeavenKey/releases/tag/v0.32.0-preview.1) fasst Android, Desktop und Browser-Erweiterungen zusammen. Die Android-Pakete verwenden eine Testsignatur und eine eigene App-Kennung. Für den [Wallet-Pilot](MEMBERSHIP-WALLET.md) ist ein separater Build mit lokalem Vertrauensprofil erforderlich.
+Eine bereits installierte Vorschau kann bei anderer Signatur kein direktes
+Update annehmen. Sichere den Tresor und prüfe seine Wiederherstellung vor einem
+Kanalwechsel. Der nachfolgende Prüfstand beschreibt die historische 0.28.
 
 ## Veröffentlichungsstand vom 27.10.2026 (historischer Nachweis)
 

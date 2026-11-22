@@ -15,7 +15,7 @@ Für einen bezahlten Supersynergy-Pilot bleibt der kaufbare Nutzen der nachvollz
 
 ## Bestandsaufnahme
 
-Ausgangsstand HeavenKey `c701545` auf `main`. Quellversionen in Rust und Flutter sind 0.30.0, GitHub führt 0.31.0-preview.7 als veröffentlichte Vorschau. Lizenz und Release-Kanäle sind im Repository dokumentiert. Die Server- und Desktop-Dienste verwenden Rust und eine TypeScript-Weboberfläche. Desktop öffnet WebKit oder den Systembrowser. Die Chromium-/Firefox-Erweiterung hat eigene PRF-/Autofill-Grenzen. Android nutzt Flutter, Kotlin, Android Keystore, Website-Passkeys, optionale Desktop-Kopplung und portable Passwort-Tresorsicherungen. iOS besitzt einen eigenen nativen Tresorpfad. Der getrennte OIDC-Pilot ist für Kontoanmeldung zuständig.
+Die Wallet-Entwicklung begann bei `c701545` (Quellversion 0.30.0). Die gemeinsame 0.32-Vorschau übernimmt auch die bereits veröffentlichte `v0.31.0-preview.7`. Die Server- und Desktop-Dienste verwenden Rust und eine TypeScript-Weboberfläche. Desktop öffnet WebKit oder den Systembrowser. Die Chromium-/Firefox-Erweiterung hat eigene PRF-/Autofill-Grenzen. Android nutzt Flutter, Kotlin, Android Keystore, Website-Passkeys, optionale Desktop-Kopplung und portable Passwort-Tresorsicherungen. iOS besitzt einen eigenen nativen Tresorpfad. Der getrennte OIDC-Pilot ist für Kontoanmeldung zuständig.
 
 | Anforderung | Vorhandener Baustein und belegte Grenze | Änderung | Abnahme |
 | --- | --- | --- | --- |
@@ -83,7 +83,9 @@ node scripts/membership_wallet_agent.mjs "$preview_dir" "$delegation_id" "$idemp
 npm test --prefix apps/membership-pilot
 ```
 
-Der Android-CI-Job provisioniert ein separates Testprofil und prüft auf einem API-36-Emulator mit seiner eigenen Geräte-PIN die Ausstellung, Projektfreigabe und Agentenaktion. Das erzeugte `membership-wallet.json`-Protokoll bleibt Teil der Geräteabnahme.
+Der Android-CI-Job provisioniert ein separates Testprofil und prüft auf einem API-36-Emulator mit seiner eigenen Geräte-PIN die Ausstellung, Projektfreigabe, Agentenaktion, Wiederholung und Widerruf. Die gemeinsame Vorschau verlangt dieses Ergebnis zum selben Quellcommit wie die Pakete. `PREVIEW.json` weist den Wallet-Test getrennt von der nativen Tresor-, Backup- und Autofill-Abnahme aus. Das allgemeine Download-APK hat den Wallet-Link ohne Testprofil deaktiviert.
+
+Der Testdienst prüft Austausch über TLS auch mit einer unabhängigen Holder-Implementierung der OpenWallet Foundation. Der Test deckt dieses konkrete Profil ab. Ein Office-Testmandant, offizielle Konformitätsprüfung und die physische Geräteabnahme stehen weiterhin aus.
 
 Die CLI benötigt im Betrieb nur `machine.json` und `ca.pem`. Halte `server.json`, SQLite und die privaten Aussteller-, Verifier- und TLS-Schlüssel beim Betreiber. Der Testordner enthält keine echten Benutzeridentitäten. Wenn du den synthetischen Aussteller zurücksetzt, erzeuge ein neues Profil mit neuen Schlüsseln und stelle Nachweise neu aus. Alte SQLite-Kopien mit denselben Schlüsseln können einen alten Status enthalten.
 

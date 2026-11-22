@@ -655,7 +655,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1879,15 +1879,15 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "1.1.5"
+version = "1.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "891efababe418670775f199f0d233d84843c227a0949a883ce15b37c78d6629d"
+checksum = "e5e76742e5294153d4dde1207dbec5bdd81eef6fabdc0d2118babadabfd858aa"
 dependencies = [
  "bitflags",
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2131,7 +2131,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -2264,7 +2264,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2497,7 +2497,7 @@ checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
 
 [[package]]
 name = "uac-api"
-version = "0.30.0"
+version = "0.32.0"
 dependencies = [
  "axum",
  "axum-server",
@@ -2525,7 +2525,7 @@ dependencies = [
 
 [[package]]
 name = "uac-browser-pipe"
-version = "0.30.0"
+version = "0.32.0"
 dependencies = [
  "base64 0.22.1",
  "libc",
@@ -2538,7 +2538,7 @@ dependencies = [
 
 [[package]]
 name = "uac-gate"
-version = "0.30.0"
+version = "0.32.0"
 dependencies = [
  "axum",
  "serde",
@@ -2549,7 +2549,7 @@ dependencies = [
 
 [[package]]
 name = "uac-keystore"
-version = "0.30.0"
+version = "0.32.0"
 dependencies = [
  "base64 0.22.1",
  "keyring",
@@ -2563,7 +2563,7 @@ dependencies = [
 
 [[package]]
 name = "uac-recovery"
-version = "0.30.0"
+version = "0.32.0"
 dependencies = [
  "base64 0.22.1",
  "rand 0.9.5",
@@ -2572,7 +2572,7 @@ dependencies = [
 
 [[package]]
 name = "uac-tenancy"
-version = "0.30.0"
+version = "0.32.0"
 dependencies = [
  "rusqlite",
  "serde",
@@ -2582,7 +2582,7 @@ dependencies = [
 
 [[package]]
 name = "uac-ucan-bridge"
-version = "0.30.0"
+version = "0.32.0"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek",
@@ -2593,7 +2593,7 @@ dependencies = [
 
 [[package]]
 name = "uac-verifier"
-version = "0.30.0"
+version = "0.32.0"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek",
@@ -2610,7 +2610,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]

@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "synthetic_only": true,
+  "apk_sha256": "81695def31792964ef24275d373a2f3648822b4df9fdd1f5994c023f970faf97",
+  "package": "app.heavenkey.heavenkey_mobile.preview",
+  "api": 36,
+  "source_files": {
+    "scripts/mobile_onboarding_e2e.py": "0f97ce7a9d32f93a83a4783b0795d5d246472ca6ade01596098355a493255533",
+    "apps/mobile/lib/main.dart": "116db0bc0d8eda8a4c0fb68307645c19ae8279ce76dda8a346d81fd0e47c813a",
+    "apps/mobile/lib/website_input.dart": "7d81fe64dd7ddae62b2ec32f9a605e8d14fd3de630ca149eec7a2f9615a6f116",
+    "apps/mobile/lib/vault_entry.dart": "3462682aaabf6346550cd9ab1629abd6cbc476307c1252dad571308405336065",
+    "apps/mobile/lib/vault_controller.dart": "8e78b7deed4d2cea0808aa600b97a41b54727bfd2eb6279088216513be65474d",
+    "apps/mobile/pubspec.yaml": "3b5c1700e7bdc2c76c0eb2d54aa66fc69fc29e219e82688fcccedc42907f49a2",
+    "apps/mobile/pubspec.lock": "ffcdd4478ddf82a8286eca8102c69deb9046abed72d7d838388124669af68eb3"
+  },
+  "actual_device_credential": true,
+  "empty_state_choices": true,
+  "backup_and_desktop_navigation": true,
+  "bare_website_accepted": true,
+  "exact_origin_preview": true,
+  "explicit_http_rejected": true,
+  "existing_password_confirmation": true,
+  "explicit_generation": true,
+  "local_username_suggestion": true,
+  "optional_notes": true,
+  "name_preserved": true,
+  "process_restart_persistence": true,
+  "lock_clears_ui": true,
+  "physical_device_acceptance": false,
+  "human_time_delta_seconds": null,
+  "action_frequency_per_day": null
+}

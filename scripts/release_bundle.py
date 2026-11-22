@@ -8,6 +8,8 @@ import tarfile
 import tomllib
 import zipfile
 
+from android_preview import verify_wallet_evidence
+
 ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -63,6 +65,8 @@ def build(directory, commit, tag, expected_fingerprint):
     require(preview['source_commit'] == commit and preview['version'] == version + '-preview', 'Android source/version mismatch')
     require(preview['production'] is False and preview['stable_publisher_identity'] is False, 'Unexpected Android production identity')
     require(preview['application_id'] == 'app.heavenkey.heavenkey_mobile.preview', 'Unexpected Android app ID')
+    require(preview.get('wallet_profile_included') is False, 'Expected the general Android preview without pilot trust')
+    verify_wallet_evidence(preview.get('wallet_pilot_emulator_evidence', {}), commit)
     require(len(preview['artifacts']) == 3 and {row['name'] for row in preview['artifacts']} == set(names[7:]), 'Incomplete Android ABI set')
     for row in preview['artifacts']:
         require(digest(directory / row['name']) == row['sha256'], 'Android digest mismatch: ' + row['name'])
@@ -117,6 +121,9 @@ mit getrenntem Schlüssel erstellen und die Wiederherstellung prüfen.
 `SHA256SUMS` prüft auch dieses Gesamtarchiv. Unter Linux `sha256sum -c
 PACKAGE-SHA256SUMS`, auf macOS `shasum -a 256 -c PACKAGE-SHA256SUMS` verwenden.
 `RELEASE.json` und `PREVIEW.json` enthalten Quellstand, Version und Android-Zertifikat.
+Die allgemeine Android-APK enthält kein Test-Vertrauensprofil. Der separate
+[Wallet-Pilot](https://github.com/Supersynergy/HeavenKey/blob/{commit}/docs/MEMBERSHIP-WALLET.md)
+beschreibt den lokalen Build für synthetische Mitgliedschaften und Freigaben.
 
 [Vollständige README](https://github.com/Supersynergy/HeavenKey/blob/{commit}/README.md)
 · [Release](https://github.com/Supersynergy/HeavenKey/releases/tag/{tag})
@@ -128,7 +135,8 @@ PACKAGE-SHA256SUMS`, auf macOS `shasum -a 256 -c PACKAGE-SHA256SUMS` verwenden.
             archive.write(directory / name, name)
         archive.writestr('README.md', guide)
         archive.writestr('PACKAGE-SHA256SUMS', package_sums)
-        for name in ['LICENSE', 'docs/DISTRIBUTION.md', 'docs/AUTOFILL-COMPETITORS.md', 'docs/AUTOFILL-FLOWS.md', 'docs/REVIEW-0.30.md', f'docs/releases/{version}.md']:
+        for name in ['LICENSE', 'docs/DISTRIBUTION.md', 'docs/AUTOFILL-COMPETITORS.md', 'docs/AUTOFILL-FLOWS.md',
+                     'docs/MEMBERSHIP-WALLET.md', 'docs/REVIEW-0.30.md', f'docs/releases/{version}.md']:
             archive.write(ROOT / name, name)
     sums = [*names, bundle.name, 'RELEASE.json', 'PREVIEW.json']
     (directory / 'SHA256SUMS').write_text(''.join(f'{digest(directory / name)}  {name}\n' for name in sums))

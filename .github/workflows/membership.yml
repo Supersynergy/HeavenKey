@@ -1,6 +1,7 @@
 name: HeavenKey Membership Pilot
 
 on:
+  workflow_call:
   pull_request:
     paths:
       - 'apps/membership-pilot/**'

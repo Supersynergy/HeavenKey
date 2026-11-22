@@ -1,0 +1,67 @@
+{
+  "base_commit": "ffb85fafb009b30f193e7bb84e66b78daebc4ee8",
+  "working_tree_changes_uncommitted_at_measurement": true,
+  "gates": [
+    {
+      "name": "check-fast",
+      "exit_code": 0,
+      "elapsed_seconds": null,
+      "time_utc": null,
+      "log_sha256": "ec46677d555db712320c2ae4bb2f4583ad6704e0a2f34a4a7971e4e0c556fb5f"
+    },
+    {
+      "name": "mobile-check",
+      "exit_code": 0,
+      "elapsed_seconds": 30.083,
+      "time_utc": "2026-11-11T20:28:14.701925+00:00",
+      "log_sha256": "8e7a92f2e822ca5f42a15bcc8e97442595f1ecd4fac7a03e4488d518623c45b1"
+    },
+    {
+      "name": "check",
+      "exit_code": 1,
+      "elapsed_seconds": 24.775,
+      "time_utc": "2026-11-11T20:28:53.773195+00:00",
+      "log_sha256": null
+    },
+    {
+      "name": "check",
+      "exit_code": 0,
+      "elapsed_seconds": 424.803,
+      "time_utc": "2026-11-11T20:38:33.997881+00:00",
+      "log_sha256": "ec512950c6508e9547c86735b4db7dd8289d52da35ce9621e9858cc60b85424c"
+    },
+    {
+      "name": "e2e",
+      "exit_code": 0,
+      "elapsed_seconds": 17.198,
+      "time_utc": "2026-11-11T20:39:52.782055+00:00",
+      "log_sha256": "1e13897c16b1a5a829236ac1141488bd0dd88152c58749bdaf6174ac9bc78653"
+    },
+    {
+      "name": "check",
+      "exit_code": 0,
+      "elapsed_seconds": 404.016,
+      "time_utc": "2026-11-11T22:17:18.298200+00:00",
+      "log_sha256": "b0f1199648a5cc9ae4393d1a09c1b6bc746937550177059f09ec53355b450ac4"
+    },
+    {
+      "name": "e2e",
+      "exit_code": 0,
+      "elapsed_seconds": 20.121,
+      "time_utc": "2026-11-11T22:18:00.940518+00:00",
+      "log_sha256": "3ebcdc7123b3875e081b9dd34b4a760053bf2dd7f12b6bf23d437b4ee681fb59"
+    }
+  ],
+  "notes": [
+    "the first local check failed a 5s Bun crypto-sync test under unrelated host load; focused and full reruns passed",
+    "preview.1 exposed a real in-flight save lock race on hosted Linux ARM64; local red/green reproduced and the subsequent check/e2e passed on corrected source",
+    "new preview.2 GitHub CI remains a separate gate"
+  ],
+  "preview_1_ci": {
+    "run_id": 43106587319,
+    "conclusion": "failure",
+    "failed_job": "verify / verify-public",
+    "case": "lock while POST in flight allowed an old vault read to re-enable unlock",
+    "release_published": false
+  }
+}

@@ -1,3 +1,4 @@
+/// <reference types="bun" />
 import { describe, test, expect } from "bun:test";
 import { createVault, openVault, sealVault, encode64, decode64, freshBytes, validateEnvelope, validateVault, generatePassword, parseCsv, totp, type Vault } from "./passwords-crypto";
 const sample: Vault = { version: 1, entries: [{ id: "synthetic-1", title: "Beispiel 🗝", username: "demo@example.invalid", password: "synthetic-only-123", url: "https://example.invalid", notes: "Nur Test", totp: "", tags: ["Test"], favorite: true }] };
@@ -46,7 +47,7 @@ const base32 = (text: string) => { let result = "", bits = 0, value = 0; for (co
 test("RFC6238 appendix B vectors for SHA1/SHA256/SHA512", async () => {
   const vectors = [ [59, "94287082", "46119246", "90693936"], [1111111109, "07081804", "68084774", "25091201"], [1111111111, "14050471", "67062674", "99943326"], [1234567890, "89005924", "91819424", "93441116"], [2000000000, "69279037", "90698825", "38618901"], [20000000000, "65353130", "77737706", "47863826"] ] as const;
   const secrets = ["12345678901234567890", "12345678901234567890123456789012", "1234567890123456789012345678901234567890123456789012345678901234"];
-  for (const vector of vectors) for (let i = 0; i < 3; i++) { const uri = `otpauth://totp/Test?secret=${base32(secrets[i])}&algorithm=${["SHA1", "SHA256", "SHA512"][i]}&digits=8`; expect((await totp(uri, vector[0] * 1000)).code).toBe(vector[i + 1]); }
+  for (const [time, ...codes] of vectors) for (let i = 0; i < 3; i++) { const uri = `otpauth://totp/Test?secret=${base32(secrets[i])}&algorithm=${["SHA1", "SHA256", "SHA512"][i]}&digits=8`; expect((await totp(uri, time * 1000)).code).toBe(codes[i]); }
   expect((await totp(base32(secrets[0]), 59000)).code).toBe("287082");
   await expect(totp("bad")).rejects.toThrow();
   await expect(totp(`otpauth://hotp/Test?secret=${base32(secrets[0])}`)).rejects.toThrow();
@@ -57,6 +58,21 @@ test("CSV Bitwarden and Enpass quoted fields, multiline notes and aliases", () =
   expect(entry.title).toBe("Demo, one"); expect(entry.notes).toBe('line 1\nline "2"'); expect(entry.tags).toEqual(["Work"]); expect(entry.favorite).toBe(true);
   const [enpass] = parseCsv('Title,Username,Password,URL,Notes,Tags\nDemo,demo,synthetic,https://example.invalid,note,"work;test"');
   expect(enpass.tags).toEqual(["work", "test"]);
+});
+test("CSV semicolon and tab exports preserve quoted delimiters and multiline notes", () => {
+  for (const separator of [";", "\t"]) {
+    const csv = ['Title', 'Username', 'Password', 'URL', 'Notes'].join(separator) + '\r\n' + ['"Demo; tab\tand, comma"', 'demo', 'synthetic', 'https://example.invalid', '"line 1\nline ""2"";\t,"'].join(separator);
+    const [entry] = parseCsv(csv);
+    expect(entry.title).toBe("Demo; tab\tand, comma");
+    expect(entry.notes).toBe('line 1\nline "2";\t,');
+    expect(entry.password).toBe("synthetic");
+    expect(() => parseCsv(csv + '\n' + ['Invalid', 'demo', 'synthetic', 'javascript:evil()', ''].join(separator))).toThrow();
+  }
+});
+test("CSV quoted headers, blank prefix and ambiguous delimiters fail closed", () => {
+  expect(parseCsv('\uFEFF\r\n"Title";"Password";"URL"\r\nDemo;synthetic;https://example.invalid')[0].title).toBe("Demo");
+  expect(() => parseCsv('title,password;notes\nDemo,synthetic;note')).toThrow("Trennzeichen");
+  expect(() => parseCsv('title;password;url\nDemo;synthetic;https://example.invalid;extra')).toThrow();
 });
 test("CSV invalid final row fails whole import and bounds hold", () => {
   for (const csv of ['title,password\nValid,synthetic\nInvalid,too,many', 'title,password\nDemo,"unclosed', 'title,password\nDemo,"closed"junk', 'title,title,password\nA,B,C', 'name,password,type\nCard,test,card', 'title,password,url\nDemo,test,javascript:evil()', 'title,password\n,synthetic', 'title,password\n' + 'x'.repeat(2_000_001)]) expect(() => parseCsv(csv)).toThrow();
