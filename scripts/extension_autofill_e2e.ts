@@ -94,7 +94,8 @@ try {
   check('real PRF passkey unlock crosses single-use encrypted channel into paired extension without clipboard');
   assert(!handoffBodies.some(body=>body.includes(master)||body.includes('Synthetic-login-only#42')));check('passkey enrollment and handoff API bodies contain neither master nor login plaintext');
   const stored=await popup.evaluate(async()=>await (globalThis as any).chrome.storage.local.get(null));check('browser storage has connection/token only',Object.keys(stored).join()==='heavenkey.extension.v1'&&!JSON.stringify(stored).includes(master)&&!JSON.stringify(stored).includes('Synthetic-login-only'));
-    const uiStatus=async(text:string)=>popup.waitForFunction(text=>document.querySelector('#smart-status')!.textContent!.includes(text),text).catch(async error=>{console.log('Popup status diagnostic',JSON.stringify({expected:text,actual:await popup.locator('#smart-status').textContent(),errors}));throw error;});
+    await target.bringToFront();
+  const uiStatus=async(text:string)=>popup.waitForFunction(text=>document.querySelector('#smart-status')!.textContent!.includes(text),text).catch(async error=>{console.log('Popup status diagnostic',JSON.stringify({expected:text,actual:await popup.locator('#smart-status').textContent(),errors}));throw error;});
   const scanPopup=async(label:string)=>{
     let diagnostic='';
     for(let attempt=0;attempt<3;attempt++){
