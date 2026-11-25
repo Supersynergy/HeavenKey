@@ -99,10 +99,10 @@ try {
     let diagnostic='';
     for(let attempt=0;attempt<3;attempt++){
       await popup.locator('#scan-page').click();
-      const visible=await popup.waitForFunction(()=>!document.querySelector('#fill-confirmation')?.hasAttribute('hidden')||document.querySelector('#smart-status')?.textContent?.includes('Inhaltsskript'),undefined,{timeout:15000}).then(()=>popup.locator('#fill-confirmation').isVisible()).catch(async()=>false);
+      const visible=await popup.waitForFunction(()=>!document.querySelector('#fill-confirmation')?.hasAttribute('hidden')||['Inhaltsskript','Zielseite antwortet nicht'].some(text=>document.querySelector('#smart-status')?.textContent?.includes(text)),undefined,{timeout:15000}).then(()=>popup.locator('#fill-confirmation').isVisible()).catch(async()=>false);
       if(visible) return;
       diagnostic=await popup.locator('#smart-status').textContent()||'';
-      if(!diagnostic.includes('Inhaltsskript')) break;
+      if(!diagnostic.includes('Inhaltsskript')&&!diagnostic.includes('Zielseite antwortet nicht')) break;
     }
     console.log('Scan diagnostic',JSON.stringify({label,diagnostic,errors}));throw new Error(`scan confirmation unavailable: ${label}: ${diagnostic}`);
   };
