@@ -4,7 +4,7 @@ version = 2
 version = 2
 allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "BSD-2-Clause", "ISC", "Unicode-3.0", "MPL-2.0", "OpenSSL", "Zlib"]
 exceptions = [
-    { crate = "sqlcipher-src@419.0.6", allow = ["blessing", "WTFPL"] },
+    { crate = "sqlcipher-src@420.0.0", allow = ["blessing", "WTFPL"] },
 ]
 [licenses.private]
 ignore = true
