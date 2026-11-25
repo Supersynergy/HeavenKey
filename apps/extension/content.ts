@@ -59,8 +59,8 @@ function exactSensitive(el: any, entity: string) {
   const exact: Record<string, RegExp> = {
     iban: /\biban\b/i, bic: /\bbic\b|\bswift\b/i, creditcard: /credit ?card|kreditkarte|card ?number|kartennummer/i,
     cvc: /\bcvc\b|\bcvv\b|\bcsc\b|kartenprüfnummer/i, ccExp: /kartenablauf|card ?exp|cc ?exp|expiry|ablaufdatum/i,
-    ccHolder: /karteninhaber|card ?holder|name on card/i, steuernr: /steuernummer|steuer ?nr|tax ?number/i,
-    steuerid: /steuer ?id|tax ?id/i, perso: /personalausweis|passport|identity ?card|reisepass/i,
+    ccHolder: /karteninhaber|card ?holder|name on card/i, steuernr: /\bsteuernummer\b|\bsteuer[\s-]*nr\b|\btax[\s-]*number\b/i,
+    steuerid: /\bsteuer[\s-]*id\b|\btax[\s-]*id\b|\bsteuerliche[\s-]+identifikationsnummer\b|\bsteueridentifikationsnummer\b|\bidnr\b/i, vat: /\bvat\b|\bumsatzsteuer[\s-]*(?:id|identifikationsnummer)\b|\bust[\s-]*id[\s-]*(?:nr)?\b/i, perso: /personalausweis|passport|identity ?card|reisepass/i,
     sozialvers: /sozialversicherung|social ?security|\bssn\b/i, gkv: /krankenversicherung|versichertennummer|\bkvnr\b|\bgkv\b/i,
     ahv: /\bahv\b/i, konfession: /konfession|religion|denomination/i, blz: /\bblz\b|bankleitzahl|sort ?code/i,
     accountHolder: /kontoinhaber|account ?holder/i, bankName: /bankname|bank ?name|name der bank|kreditinstitut/i,
@@ -121,7 +121,10 @@ function makeEngine() {
     if (req.action === 'scan' || req.action === 'capture') {
       targets = new Map(); scan = crypto.randomUUID(); href = location.href; expires = Date.now() + 120000; scanAnchor = req.anchor;
       const fields: Field[] = [], captured: Entities = {}, forms=new Map<Node,string>();
-      for (const el of P.allFields().slice(0, 500)) {
+      const candidates = P.allFields();
+      let inspected = 0;
+      for (const el of candidates.slice(0, 500)) {
+        inspected++;
         if (!usable(el)) continue;
         if (anchor && (fieldGroup(el) !== fieldGroup(anchor.el) || el.getRootNode() !== anchor.el.getRootNode())) continue;
         const match = identify(el), key = match.entity, id = crypto.randomUUID();
@@ -138,7 +141,14 @@ function makeEngine() {
         }
         if (fields.length === 200) break;
       }
-      return { scan, href, origin: location.origin, fields, ...(req.action === 'capture' ? { entities: captured } : {}) };
+      const coverage = {
+        inspected, eligible: fields.length,
+        truncated: candidates.length > 500 || fields.length === 200,
+        frames: document.querySelectorAll('iframe,frame').length,
+        fileInputs: candidates.filter((el: HTMLInputElement) => el.type === 'file').length,
+        unknown: fields.filter(field => !field.entity).length,
+      };
+      return { scan, href, origin: location.origin, fields, coverage, ...(req.action === 'capture' ? { entities: captured } : {}) };
     }
     if (req.action === 'undo') {
       const item = undo.pop();

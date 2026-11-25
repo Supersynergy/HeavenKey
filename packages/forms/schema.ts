@@ -5,7 +5,7 @@ export function profileKeyAllowed(name: string): boolean {
   return (PROFILE_KEYS as readonly string[]).includes(name) || CUSTOM_PROFILE_KEY.test(name);
 }
 export type FormProfile = { id: string; title: string; entities: ProfileEntities; updatedAt: string };
-export const HIGH_FIELDS = new Set<string>(["iban","bic","creditcard","cvc","ccExp","ccHolder","blz","accountHolder","bankName","mandatsref","creditorId","steuernr","steuerid","perso","sozialvers","gkv","ahv","konfession"]);
+export const HIGH_FIELDS = new Set<string>(["iban","bic","creditcard","cvc","ccExp","ccHolder","blz","accountHolder","bankName","mandatsref","creditorId","steuernr","steuerid","vat","perso","sozialvers","gkv","ahv","konfession"]);
 export function profileKeySensitive(name: string): boolean {
   return HIGH_FIELDS.has(name) || CUSTOM_PROFILE_KEY.test(name);
 }

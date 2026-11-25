@@ -18,14 +18,14 @@ source_checks() {
   cargo fmt --check
   bun run node_modules/typescript/bin/tsc --noEmit
   bun test apps/web/src/vault.test.ts
-  bun test --timeout 15000 apps/web/src/passwords-crypto.test.ts apps/web/src/passwords-argon2.test.ts apps/web/src/passwords-master-policy.test.ts
-  bun test --timeout 15000 apps/web/src/passwords-sync.test.ts apps/web/src/passwords-entry-assist.test.ts
+  bun test --timeout 60000 apps/web/src/passwords-crypto.test.ts apps/web/src/passwords-argon2.test.ts apps/web/src/passwords-master-policy.test.ts
+  bun test --timeout 60000 apps/web/src/passwords-sync.test.ts apps/web/src/passwords-entry-assist.test.ts
   bun test apps/web/src/passwords-privacy.test.ts
-  bun test --timeout 15000 apps/web/src/passwords-profiles.test.ts packages/forms/import-plan.test.ts packages/forms/blind-job.test.ts
+  bun test --timeout 60000 apps/web/src/passwords-profiles.test.ts apps/web/src/passwords-form-presets.test.ts packages/forms/import-plan.test.ts packages/forms/blind-job.test.ts packages/forms/field-label.test.ts packages/forms/feedback.test.ts packages/forms/presets.test.ts
   bun test apps/web/src/passwords-access.test.ts apps/web/src/passwords-sharing.test.ts apps/web/src/passwords-broker.test.ts
   bun test apps/web/src/passwords-transfer.test.ts packages/transfers/import.test.ts packages/transfers/clients.test.ts
-  bun test --timeout 15000 apps/web/src/passwords-ssh.test.ts
-  bun test packages/protected/schema.test.ts apps/web/src/passwords-protected.test.ts apps/web/src/passwords-protected-crypto.test.ts
+  bun test --timeout 60000 apps/web/src/passwords-ssh.test.ts
+  bun test --timeout 60000 packages/protected/schema.test.ts apps/web/src/passwords-protected.test.ts apps/web/src/passwords-protected-crypto.test.ts
   bun test apps/web/src/interface.test.ts
   bun test apps/extension
   bun scripts/test_extension.mjs

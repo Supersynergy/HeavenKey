@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.32.0 – Vorschau
+
+- Android-Wallet-Pilot für synthetische Mitgliedschaften, ausgewählte Angaben und sitzungsgebundenen Zugang zu genau einem Testprojekt. Nachweise und Schlüssel liegen in einer eigenen nativen Ablage.
+- Unveränderliche Freigaben für einen einmaligen Rechnungsentwurf. Der lokale Testdienst prüft Rechte und Widerruf vor der Ausführung. Wiederholungen erzeugen keinen weiteren Entwurf.
+- Optionales AYA-Profil und dokumentierter Integrationsvertrag für einen Office-Testmandanten. Wallet-Nutzung erfordert einen separat konfigurierten App-Build.
+- Übernimmt Tresorwahl, Browserkopplung, Formularhilfen und Sperrkorrekturen aus 0.31. Die Vorschau trennt Wallet-Emulatornachweis, allgemeine Android-Pakete und Herausgebersignaturen.
+- Überarbeitetes Schlüssel-Titelbild, aktuelle Installationslinks und gemeinsame Paketabnahme. Die einmaligen Office-Betriebsskripte aus der früheren Vorschau sind aus dem aktuellen Paketquellstand entfernt. [Release-Details](docs/releases/0.32.0.md)
+
+## 0.31.0 – 2026-11-16 (Vorschau 7)
+
+- macOS öffnet den zuletzt gewählten Tresor. Gesperrte Ansichten, Wiederherstellung und Fokusführung wurden überarbeitet.
+- Ausdrücklich freigegebene Browserkopplungen überstehen lokale Dienstneustarts. Der Widerruf bleibt wirksam.
+- Kleinere Feldschlüssel, nur bei freiem Platz neben dem Feld. Erweiterte Formularvorlagen, getrennte Steuerkennungen und Hinweise zu nicht erkannten Feldern.
+- Ablaufprüfung nach Hintergrundwechsel, konsistentes Sperren während Schreibvorgängen, robustere CSV-Erkennung und aktualisiertes SQLite-Binding. [Release-Details](docs/releases/0.31.0.md)
+
+## 0.30.0 – 2026-11-05 (Vorschau)
+
+- Browser-Erweiterung mit getrennten Aufgaben für Login, Formular, Generator und Verwaltung. Die Freigabe zeigt Feldanzahl und vorhandene Eingaben und läuft nach zwei Minuten ab.
+- Geänderte Formularziele oder Feldgrenzen erfordern eine neue Freigabe. Passwörter und Einmalcodes werden bei fremden Formularzielen ausgelassen.
+- Android ergänzt direkte Einstiege für private und geschäftliche Formularprofile. [Release-Details](docs/releases/0.30.0.md)
+
 ## 0.29.0 – 2026-11-05 (preview)
 
 - Optional per-website key buttons with login, identity, generator and management actions.
@@ -11,15 +32,7 @@
 - Preview distribution retains existing signing, store, hardware and independent-audit limitations.
 
 
-## 0.27.0 Alpha — 2026-10-30
-
-- „Erste Schritte“ bietet zufällige Beispieldaten: drei mit dem Tag `Beispiel` markierte Logins auf reservierten `.example`-Domains (RFC 2606) mit frisch generierten 20-Zeichen-Passwörtern, Benutzernamen auf `@example.invalid` und einem Hinweis im Notizfeld. Damit lässt sich der Tresor ohne eigene Daten ausprobieren.
-- Beispieldaten lassen sich in zwei Schritten wieder entfernen („Beispieldaten entfernen“ → Bestätigung). Das Entfernen löscht ausschließlich Einträge mit dem Tag `Beispiel`; eigene Logins bleiben unverändert, auch bei gleichem Titel. Regressionstests decken Zufallsquelle, Kollisionsfreiheit, Grenzwerte der Zufallsfunktion und gemischte Tresore ab.
-- macOS-/MK-Abnahme der Alpha: echter Rust-Dienst, Tresor anlegen, Beispieldaten einfügen (3 Einträge, Tag `Beispiel`, `https://*.example`), Neuladen und Entsperren (Persistenz), Entfernen (0 Einträge). `passwords.sqlite` enthält keine Klartextspuren der Beispieldaten.
-- Korrekturen in Alpha 2: jede Zufallsentscheidung zieht genau einen Wert (vorher zwei, was eine eingespeiste Zufallsquelle verschob); der Bestätigungszustand von „Beispieldaten entfernen“ endet mit dem Dialog; scheitert das Speichern, fällt die Auswahl auf den vorherigen Eintrag zurück. Ein Test prüft die Ziehungszahl.
-- Grenzen dieser Alpha: keine neue Android-APK (Android bleibt bei der getrennten 0.28-Vorschau), unveränderte Herausgeber- und Audit-Grenzen.
-
-## Unreleased — Android ohne Desktop
+## Android 0.28.0 – 2026-10-27 (Vorschau)
 
 - Eigener Passkey-Bereich, kompakterer Sperrbildschirm und ruhiges Material-3-Design mit Hell-/Dunkelmodus, größeren Bedienelementen und Login-Karten.
 - Drei sichtbare Login-Felder beim Einstieg; eigener Name und Notizen bei Bedarf. Passwortlängen 16/24/32/48 direkt wählbar; bestehende Passwörter werden weiterhin nur nach Bestätigung ersetzt.
@@ -27,6 +40,13 @@
 - Android-V2-Sicherungen enthalten Logins und Website-Passkeys einschließlich verschlüsselter privater Schlüssel. Import prüft beide Bestände, Schlüsselpaare, Duplikate und die Vorschau-Bindung; bestehende Passkeys bleiben erhalten. V1-Login-Sicherungen bleiben lesbar. V2 erfordert einen neuen Android-Client; iOS und alte Clients unterstützen das Format nicht.
 - Native Schlüssel verlassen den Android-Teil nur innerhalb der verschlüsselten Datei. Geräteverlust erfordert weiterhin eine extern gespeicherte Sicherung und ihren getrennt aufbewahrten Wiederherstellungsschlüssel. Telefon- und externe Sicherheitsabnahme bleiben offen.
 
+## 0.27.0 Alpha — 2026-10-30
+
+- „Erste Schritte“ bietet zufällige Beispieldaten: drei mit dem Tag `Beispiel` markierte Logins auf reservierten `.example`-Domains (RFC 2606) mit frisch generierten 20-Zeichen-Passwörtern, Benutzernamen auf `@example.invalid` und einem Hinweis im Notizfeld. Damit lässt sich der Tresor ohne eigene Daten ausprobieren.
+- Beispieldaten lassen sich in zwei Schritten wieder entfernen („Beispieldaten entfernen“ → Bestätigung). Das Entfernen löscht ausschließlich Einträge mit dem Tag `Beispiel`; eigene Logins bleiben unverändert, auch bei gleichem Titel. Regressionstests decken Zufallsquelle, Kollisionsfreiheit, Grenzwerte der Zufallsfunktion und gemischte Tresore ab.
+- macOS-/MK-Abnahme der Alpha: echter Rust-Dienst, Tresor anlegen, Beispieldaten einfügen (3 Einträge, Tag `Beispiel`, `https://*.example`), Neuladen und Entsperren (Persistenz), Entfernen (0 Einträge). `passwords.sqlite` enthält keine Klartextspuren der Beispieldaten.
+- Korrekturen in Alpha 2: jede Zufallsentscheidung zieht genau einen Wert (vorher zwei, was eine eingespeiste Zufallsquelle verschob); der Bestätigungszustand von „Beispieldaten entfernen“ endet mit dem Dialog; scheitert das Speichern, fällt die Auswahl auf den vorherigen Eintrag zurück. Ein Test prüft die Ziehungszahl.
+- Grenzen dieser Alpha: keine neue Android-APK (Android bleibt bei der getrennten 0.28-Vorschau), unveränderte Herausgeber- und Audit-Grenzen.
 
 ## 0.26.0 Preview
 

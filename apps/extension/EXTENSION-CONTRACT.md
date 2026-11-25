@@ -1,6 +1,6 @@
 # HeavenKey extension contract
 
-The extension connects only to a local `http://localhost:PORT` password manager after an explicit optional host-permission request and a one-use pairing code. Browser storage contains the local origin and extension-specific pairing token only. The token never authorizes `/config` or app pairing management. Revocation and process restart require pairing again.
+The extension connects only to a local `http://localhost:PORT` password manager after an explicit optional host-permission request and a one-use pairing code. Browser storage contains the local origin and extension-specific pairing token only. The token never authorizes `/config` or app pairing management. Revocation requires pairing again. Process restart retains origin-bound grants: the owner-only local SQLite database stores SHA-256 token verifiers, never extension bearer tokens. Pending pairing codes and unlock handoffs remain memory-only and expire. Distinct stable installation directories give Iron and Helium separate extension origins so re-pairing one browser does not replace the other.
 
 Unlock reads the current encrypted record and revision, then reuses HeavenKey's versioned Argon2id/AES-GCM implementation (with PBKDF2-SHA256 legacy unlock). No master password, plaintext vault, derived key or session key is persisted. Closing the popup, explicit lock and two minutes of inactivity discard its decrypted state. Profile saves encrypt the complete vault and use the current compare-and-swap revision. A conflict locks the popup and requires a new read.
 

@@ -12,6 +12,7 @@ import 'vault_controller.dart';
 import 'vault_entry.dart';
 import 'passphrase.dart';
 import 'form_profiles_panel.dart';
+import 'wallet_panel.dart';
 import 'website_input.dart';
 
 void main() {
@@ -48,6 +49,9 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
   late final vault = widget.controller ?? VaultController();
   final search = TextEditingController();
   bool editing = false, covered = false, firstLoginSaved = false;
+  bool walletAvailable = false, walletPending = false, walletOpen = false;
+  bool walletStatusRequested = false;
+  int walletStatusGeneration = 0;
   VaultEntry? selected;
   int tab = 0;
 
@@ -56,17 +60,43 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     vault.addListener(changed);
+    walletChannel.setMethodCallHandler((call) async {
+      if (call.method == 'changed') await refreshWalletStatus();
+    });
     unawaited(vault.refreshStatus());
+  }
+
+  Future<void> refreshWalletStatus() async {
+    if (!mounted || vault.status['platform'] != 'android') return;
+    walletStatusRequested = true;
+    final generation = ++walletStatusGeneration;
+    Map<Object?, Object?>? status;
+    try {
+      status = await walletChannel.invokeMapMethod('status');
+    } on MissingPluginException {
+      // Wallet entry points are available only on configured Android builds.
+    } on PlatformException {
+      // A transient status error must leave any open flow intact.
+      return;
+    }
+    if (!mounted || generation != walletStatusGeneration) return;
+    setState(() {
+      walletAvailable = status?['available'] == true;
+      walletPending = status?['pending'] == true;
+      if (!walletAvailable) walletOpen = false;
+    });
   }
 
   void changed() {
     if (!mounted) return;
     if (!vault.unlocked) {
       editing = false;
+      walletOpen = false;
       selected = null;
       firstLoginSaved = false;
       search.clear();
     }
+    if (!walletStatusRequested) unawaited(refreshWalletStatus());
     setState(() {});
   }
 
@@ -77,7 +107,10 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
         state == AppLifecycleState.detached) {
       unawaited(vault.lock());
     }
-    if (state == AppLifecycleState.resumed) unawaited(vault.refreshStatus());
+    if (state == AppLifecycleState.resumed) {
+      unawaited(vault.refreshStatus());
+      unawaited(refreshWalletStatus());
+    }
     setState(() {
       covered = state != AppLifecycleState.resumed;
     });
@@ -87,6 +120,7 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     vault.removeListener(changed);
+    walletChannel.setMethodCallHandler(null);
     unawaited(vault.lock());
     if (widget.controller == null) vault.dispose();
     search.dispose();
@@ -106,22 +140,41 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
             (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
           );
     return PopScope(
-      canPop: !editing,
+      canPop: !editing && !walletOpen,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && editing) closeEditor();
+        if (!didPop && walletOpen) setState(() => walletOpen = false);
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('HeavenKey'),
-          leading: editing
+          title: Text(walletOpen && !covered ? 'Nachweise' : 'HeavenKey'),
+          leading: editing || walletOpen
               ? IconButton(
                   tooltip: 'Zurück zum Tresor',
-                  onPressed: vault.busy ? null : closeEditor,
+                  onPressed: vault.busy || covered
+                      ? null
+                      : walletOpen
+                      ? () => setState(() => walletOpen = false)
+                      : closeEditor,
                   icon: const Icon(Icons.arrow_back),
                 )
               : const Icon(Icons.key_rounded, color: Color(0xffab7c23)),
           actions: [
-            if (vault.unlocked)
+            if (vault.unlocked &&
+                !covered &&
+                walletAvailable &&
+                !editing &&
+                !walletOpen)
+              TextButton.icon(
+                onPressed: () => setState(() => walletOpen = true),
+                icon: Icon(
+                  walletPending
+                      ? Icons.mark_email_unread_outlined
+                      : Icons.badge_outlined,
+                ),
+                label: Text(walletPending ? 'Anfrage' : 'Nachweise'),
+              ),
+            if (vault.unlocked && !covered)
               IconButton(
                 onPressed: () => vault.lock(),
                 tooltip: 'Tresor sperren',
@@ -129,7 +182,9 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
               ),
           ],
         ),
-        body: covered
+        body: walletOpen
+            ? walletBody()
+            : covered
             ? const Center(child: Icon(Icons.lock_outline, size: 64))
             : SafeArea(
                 child: Center(
@@ -274,6 +329,7 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
             vault.unlocked &&
                 vault.entries.isNotEmpty &&
                 !editing &&
+                !walletOpen &&
                 tab == 0 &&
                 !covered
             ? FloatingActionButton.extended(
@@ -282,7 +338,8 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
                 label: const Text('Neuer Login'),
               )
             : null,
-        bottomNavigationBar: vault.unlocked && !editing
+        bottomNavigationBar:
+            vault.unlocked && !editing && !walletOpen && !covered
             ? NavigationBar(
                 selectedIndex: tab,
                 onDestinationSelected: (value) => setState(() {
@@ -316,6 +373,32 @@ class _VaultHomeState extends State<VaultHome> with WidgetsBindingObserver {
       ),
     );
   }
+
+  Widget walletBody() => SafeArea(
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // The system authentication prompt can briefly make Flutter
+            // inactive. A real background transition locks the vault and
+            // disposes this panel, including any displayed approval plan.
+            Visibility(
+              visible: !covered,
+              maintainState: true,
+              child: WalletPanel(
+                pending: walletPending,
+                onPendingChanged: refreshWalletStatus,
+              ),
+            ),
+            if (covered)
+              const Center(child: Icon(Icons.lock_outline, size: 64)),
+          ],
+        ),
+      ),
+    ),
+  );
 
   void closeEditor() {
     if (!vault.unlocked) return;

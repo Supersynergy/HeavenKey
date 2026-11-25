@@ -42,10 +42,37 @@ func stopBackend(_ process: Process) -> Bool {
     return !process.isRunning
 }
 
+// Native bottom-right grip; resizing changes the existing window, never its document.
+final class ResizeGrip: NSView {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+    override func resetCursorRects() { addCursorRect(bounds, cursor: .resizeLeftRight) }
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.secondaryLabelColor.withAlphaComponent(0.45).setStroke()
+        let path = NSBezierPath(); path.lineWidth = 1
+        for offset in [CGFloat(3), 7, 11] {
+            path.move(to: NSPoint(x: bounds.maxX - offset - 7, y: 3))
+            path.line(to: NSPoint(x: bounds.maxX - 3, y: offset + 7))
+        }
+        path.stroke()
+    }
+    override func mouseDown(with event: NSEvent) {
+        guard let window else { return }
+        let start = window.convertPoint(toScreen: event.locationInWindow), frame = window.frame
+        while let next = window.nextEvent(matching: [.leftMouseDragged, .leftMouseUp]) {
+            if next.type == .leftMouseUp { break }
+            let point = window.convertPoint(toScreen: next.locationInWindow)
+            let width = max(window.minSize.width, frame.width + point.x - start.x)
+            let height = max(window.minSize.height, frame.height - point.y + start.y)
+            window.setFrame(NSRect(x: frame.minX, y: frame.maxY - height, width: width, height: height), display: true)
+        }
+    }
+}
+
 @MainActor
-final class HeavenKeyApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate {
+final class HeavenKeyApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate, WKScriptMessageHandler {
     var window: NSWindow!
     var web: WKWebView!
+    var resizeGrip: ResizeGrip!
     var backend: Process?
     var output: Pipe?
     var port = 18240
@@ -58,25 +85,158 @@ final class HeavenKeyApp: NSObject, NSApplicationDelegate, WKNavigationDelegate,
     var failed = false
     var webCrashCount = 0
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        installMenu()
+    var choosing = false
+    private var personalVault: Bool { dataDirectory == profile(true).directory }
+
+    private func command(_ path: String, _ arguments: [String]) -> String? {
+        let process = Process(), pipe = Pipe()
+        process.executableURL = URL(fileURLWithPath: path)
+        process.arguments = arguments
+        process.standardOutput = pipe
+        process.standardError = FileHandle.nullDevice
+        do { try process.run() } catch { return nil }
+        let bytes = pipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else { return nil }
+        return String(decoding: bytes, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func profile(_ personal: Bool) -> (port: Int, directory: String, title: String) {
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        return (personal ? 18246 : 18240, support.appendingPathComponent(personal ? "HeavenKey-Persoenlich" : "HeavenKey").path, personal ? "Persönlich" : "Standard")
+    }
+
+    // Activate only our native app holding this database, never trust the port alone.
+    private func activateExisting(port: Int, directory: String) -> Bool {
+        // Only a second native instance can own another vault. Avoid a system-wide
+        // lsof scan on the main thread for the normal single-window switch.
+        let bundle = Bundle.main.bundleURL.standardizedFileURL
+        guard NSWorkspace.shared.runningApplications.contains(where: {
+            $0.processIdentifier != ProcessInfo.processInfo.processIdentifier
+                && $0.bundleURL?.standardizedFileURL == bundle
+        }) else { return false }
+        guard let pid = command("/usr/sbin/lsof", ["-nP", "-t", directory + "/passwords.sqlite"]),
+              Int32(pid) != nil,
+              command("/usr/sbin/lsof", ["-a", "-p", pid, directory + "/passwords.sqlite"]) != nil,
+              let parent = command("/bin/ps", ["-p", pid, "-o", "ppid="]).flatMap(Int32.init),
+              let owner = NSRunningApplication(processIdentifier: parent),
+              owner.bundleURL?.standardizedFileURL == Bundle.main.bundleURL.standardizedFileURL else { return false }
+        return owner.activate(options: [.activateAllWindows])
+    }
+
+    @objc func switchProfile() {
+        guard !choosing else { return }
+        web.evaluateJavaScript("if (!document.getElementById('workspace').hidden) document.getElementById('nav-settings').click(); Array.from(document.querySelectorAll('[data-vault-choice]')).find(el => el.getClientRects().length)?.focus()", completionHandler: nil)
+    }
+
+    func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+        let origin = message.frameInfo.securityOrigin
+        guard message.frameInfo.isMainFrame, ready, !quitting,
+              origin.protocol == "http", origin.host == "localhost", origin.port == port,
+              let choice = message.body as? String else { return }
+        if choice == "ready" {
+            if choosing, message.webView === web { finishProfileSwitch() }
+            return
+        }
+        guard ["standard", "personal"].contains(choice) else { return }
+        profileChanged(personal: choice == "personal")
+    }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        if choosing, webView === web { fail("Der gewählte Tresor konnte nicht geladen werden. Starte HeavenKey erneut; deine gespeicherten Daten bleiben erhalten.") }
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        if choosing, webView === web { fail("Der gewählte Tresor konnte nicht geladen werden. Starte HeavenKey erneut; deine gespeicherten Daten bleiben erhalten.") }
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        guard ready, let url = webView.url, isVaultURL(url, port: port) else { return }
+        webView.evaluateJavaScript("window.dispatchEvent(new CustomEvent('heavenkey-desktop', {detail: '\(personalVault ? "personal" : "standard")'}))", completionHandler: nil)
+    }
+
+    func profileChanged(personal: Bool) {
+        guard !choosing else { return }
+        let selected = profile(personal)
+        guard selected.directory != dataDirectory else { cancelProfileSwitch(); return }
+        if activateExisting(port: selected.port, directory: selected.directory) {
+            cancelProfileSwitch()
+            return
+        }
+        choosing = true
+        ready = false; startupTimer?.invalidate()
+        // The sender has synchronously locked and cleared its vault. Keep that
+        // non-secret shell visible while the replacement service becomes ready.
+        output?.fileHandleForReading.readabilityHandler = nil
+        let previous = backend
+        previous?.terminationHandler = nil
+        DispatchQueue.global().async {
+            let stopped = previous.map(stopBackend) ?? true
+            DispatchQueue.main.async {
+                guard stopped else { self.fail("Der bisherige lokale Dienst konnte nicht beendet werden."); return }
+                self.dataDirectory = selected.directory
+                UserDefaults.standard.set(personal, forKey: "personalVault")
+                self.window.title = "HeavenKey · " + selected.title
+                self.startupOutput = ""; self.webCrashCount = 0
+                guard !self.quitting else { return }
+                self.startBackend()
+            }
+        }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        window.makeKeyAndOrderFront(nil)
+        return true
+    }
+
+    private func makeWebView() -> WKWebView {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .nonPersistent()
+        config.userContentController.add(self, name: "heavenkeyVault")
         config.preferences.javaScriptCanOpenWindowsAutomatically = false
-        web = WKWebView(frame: .zero, configuration: config)
-        web.navigationDelegate = self
-        web.uiDelegate = self
-        web.allowsBackForwardNavigationGestures = false
-        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1280, height: 840),
-                          styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+        let view = WKWebView(frame: .zero, configuration: config)
+        view.navigationDelegate = self; view.uiDelegate = self
+        view.allowsBackForwardNavigationGestures = false
+        return view
+    }
+
+    private func cancelProfileSwitch() {
+        web.evaluateJavaScript("window.dispatchEvent(new Event('heavenkey-switch-cancelled'))", completionHandler: nil)
+    }
+
+    private func finishProfileSwitch() {
+        guard choosing, !quitting else { return }
+        startupTimer?.invalidate(); choosing = false
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        installMenu()
+        web = makeWebView()
+        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1040, height: 720),
+                          styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
         window.title = "HeavenKey"
-        window.minSize = NSSize(width: 820, height: 600)
-        window.contentView = web
+        window.minSize = NSSize(width: 720, height: 540)
+        window.titlebarAppearsTransparent = true; window.titleVisibility = .hidden
+        let surface = NSView(frame: NSRect(x: 0, y: 0, width: 1040, height: 720))
+        web.frame = surface.bounds; web.autoresizingMask = [.width, .height]
+        surface.addSubview(web)
+        resizeGrip = ResizeGrip(frame: NSRect(x: 1016, y: 0, width: 24, height: 24))
+        resizeGrip.autoresizingMask = [.minXMargin, .maxYMargin]
+        resizeGrip.setAccessibilityLabel("Fenstergröße ändern")
+        surface.addSubview(resizeGrip)
+        window.contentView = surface
         window.center()
+        window.setFrameAutosaveName("HeavenKeyMainWindow")
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         do { (port, dataDirectory) = try launchOptions(Array(CommandLine.arguments.dropFirst())) }
         catch { fail("Ungültige Startoptionen. Verwende --port 1024…65535 und einen absoluten --data-dir-Pfad."); return }
+        if CommandLine.arguments.dropFirst().isEmpty {
+            let selected = profile(UserDefaults.standard.bool(forKey: "personalVault"))
+            if activateExisting(port: selected.port, directory: selected.directory) { NSApp.terminate(nil); return }
+            port = selected.port; dataDirectory = selected.directory
+        }
+        window.title = "HeavenKey · " + (personalVault ? "Persönlich" : "Standard")
         startBackend()
     }
 
@@ -85,6 +245,7 @@ final class HeavenKeyApp: NSObject, NSApplicationDelegate, WKNavigationDelegate,
         let app = NSMenuItem(); menu.addItem(app)
         let appMenu = NSMenu(); app.submenu = appMenu
         appMenu.addItem(withTitle: "Über HeavenKey", action: #selector(about), keyEquivalent: "")
+        appMenu.addItem(withTitle: "Tresor auswählen …", action: #selector(switchProfile), keyEquivalent: "o")
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "HeavenKey beenden", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         let edit = NSMenuItem(); menu.addItem(edit)
@@ -100,10 +261,10 @@ final class HeavenKeyApp: NSObject, NSApplicationDelegate, WKNavigationDelegate,
     }
 
     @objc func openBrowser() {
-        if ready { NSWorkspace.shared.open(URL(string: "http://localhost:\(port)/passwords/")!) }
+        if ready && !choosing { NSWorkspace.shared.open(URL(string: "http://localhost:\(port)/passwords/")!) }
     }
     @objc func about() { NSApp.orderFrontStandardAboutPanel(options: [:]) }
-    @objc func reload() { if ready { webCrashCount = 0; web.reload() } }
+    @objc func reload() { if ready && !choosing { webCrashCount = 0; web.reload() } }
 
     func startBackend() {
         guard let executable = Bundle.main.url(forResource: "heavenkey", withExtension: nil) else {
@@ -149,7 +310,21 @@ final class HeavenKeyApp: NSObject, NSApplicationDelegate, WKNavigationDelegate,
         let expected = "http://localhost:\(port)/passwords/"
         guard startupOutput.split(separator: "\n").contains(where: { $0.hasPrefix("HeavenKey ") && $0.hasSuffix(": " + expected) }), backend?.isRunning == true else { return }
         ready = true; startupOutput = ""; startupTimer?.invalidate()
-        web.load(URLRequest(url: URL(string: expected)!))
+        if choosing {
+            startupTimer = Timer.scheduledTimer(withTimeInterval: 20, repeats: false) { [weak self] _ in
+                DispatchQueue.main.async {
+                    guard let self, self.choosing, !self.quitting else { return }
+                    self.fail("Der gewählte Tresor konnte nicht geladen werden. Starte HeavenKey erneut; deine gespeicherten Daten bleiben erhalten.")
+                }
+            }
+        }
+        if choosing {
+            // Keep the same document, decoded image and compositing layers.
+            // Only the local service changes; JS has already cleared its vault.
+            web.evaluateJavaScript("window.dispatchEvent(new CustomEvent('heavenkey-vault-connected', {detail: '\(personalVault ? "personal" : "standard")'}))", completionHandler: nil)
+        } else {
+            web.load(URLRequest(url: URL(string: expected)!))
+        }
     }
 
     func fail(_ message: String) {

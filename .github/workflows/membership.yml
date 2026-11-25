@@ -1,0 +1,39 @@
+name: HeavenKey Membership Pilot
+
+on:
+  workflow_call:
+  pull_request:
+    paths:
+      - 'apps/membership-pilot/**'
+      - 'scripts/membership_wallet_*.mjs'
+      - '.github/workflows/membership.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/membership-pilot/**'
+      - 'scripts/membership_wallet_*.mjs'
+      - '.github/workflows/membership.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  membership-pilot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - name: Check the locked synthetic membership and agent flow
+        run: |
+          npm ci --ignore-scripts --prefix apps/membership-pilot
+          npm test --prefix apps/membership-pilot
+          npm audit --prefix apps/membership-pilot
+          preview_dir="$(node scripts/membership_wallet_preview.mjs init)"
+          node scripts/membership_wallet_preview.mjs verify-setup "$preview_dir"
+          rm -rf -- "$preview_dir"

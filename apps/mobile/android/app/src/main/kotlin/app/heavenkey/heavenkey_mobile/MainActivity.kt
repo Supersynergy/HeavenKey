@@ -19,14 +19,17 @@ class MainActivity : FlutterActivity() {
     private val connectedWorker = ThreadPoolExecutor(1, 1, 0, TimeUnit.MILLISECONDS, ArrayBlockingQueue(1))
     private lateinit var vault: VaultStore
     private lateinit var backupFiles: BackupFiles
+    private val wallet by lazy { WalletBridge(this, vault::walletSessionActive) }
     override fun onCreate(savedInstanceState: Bundle?) {
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         vault = VaultStore(this)
         backupFiles = BackupFiles(this) { vault.lock() }
         super.onCreate(savedInstanceState)
+        wallet.incoming(intent)
     }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        wallet.attach(MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "heavenkey/wallet"))
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "heavenkey/vault").setMethodCallHandler { call, result ->
             fun fail(code: String) = result.error(code, "HeavenKey konnte die Aktion nicht ausführen.", null)
             try {
@@ -99,7 +102,7 @@ class MainActivity : FlutterActivity() {
                             call.argument<String>("archiveFingerprint") ?: throw BackupFailure("vault_changed"), replace == true)
                         result.success(restored.map { value -> value.keys().asSequence().associateWith { value.getString(it) } })
                     }
-                    "lock" -> { vault.lock(); result.success(null) }
+                    "lock" -> { wallet.lock(); vault.lock(); result.success(null) }
                     "configureDeviceSecurity" -> {
                         startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))
                         result.success(null)
@@ -131,10 +134,15 @@ class MainActivity : FlutterActivity() {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) vault.clearClipboard()
     }
-    override fun onStop() { vault.lock(); super.onStop() }
+    override fun onStart() { super.onStart(); wallet.start() }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        wallet.incoming(intent)
+    }
+    override fun onStop() { wallet.stop(); vault.lock(); super.onStop() }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         backupFiles.onActivityResult(requestCode, resultCode, data)
     }
-    override fun onDestroy() { connectedWorker.shutdownNow(); backupFiles.destroy(); vault.lock(); super.onDestroy() }
+    override fun onDestroy() { wallet.destroy(); connectedWorker.shutdownNow(); backupFiles.destroy(); vault.lock(); super.onDestroy() }
 }
