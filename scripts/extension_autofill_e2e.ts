@@ -48,11 +48,19 @@ try {
   const manager = await browser.newPage(); await manager.goto('chrome://extensions');
   const item = manager.locator('extensions-item').filter({hasText:'HeavenKey'});await item.waitFor(); const id = await item.getAttribute('id');assert.match(id,/^[a-p]{32}$/);
   const target = await browser.newPage();await gotoRetry(target,'http://localhost:18258/');
-  const popup = await browser.newPage(); await gotoRetry(popup,`chrome-extension://${id}/popup.html`); popup.on('pageerror',(e:any)=>errors.push(e.message));
+  const openPopup = async (url:string) => {
+    for(let attempt=0;;attempt++) {
+      const page = await browser.newPage(); page.on('pageerror',(e:any)=>errors.push(e.message));
+      try { await page.goto(url,{waitUntil:'domcontentloaded',timeout:8000}); return page; }
+      catch(error) { await page.close().catch(()=>{}); if(attempt===2) throw error; await Bun.sleep(250); }
+    }
+  };
+  let popup = await openPopup(`chrome-extension://${id}/popup.html`);
   // Query the actual browser tab ID; all following scripting calls use native APIs.
   await target.bringToFront();
   const targetId = await popup.evaluate(async () => { const ext=(globalThis as any).chrome;return (await ext.tabs.query({active:true,currentWindow:true}))[0].id; });
-  await gotoRetry(popup,`chrome-extension://${id}/popup.html?target=${targetId}`);
+  await popup.close();
+  popup = await openPopup(`chrome-extension://${id}/popup.html?target=${targetId}`);
   let app: any = null;
   if(!process.argv.includes('--engine-only')) {
     app = await browser.newPage();await gotoRetry(app,origin+'/passwords/');
