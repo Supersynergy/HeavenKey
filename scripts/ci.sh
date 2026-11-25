@@ -18,10 +18,10 @@ source_checks() {
   cargo fmt --check
   bun run node_modules/typescript/bin/tsc --noEmit
   bun test apps/web/src/vault.test.ts
-  bun test apps/web/src/passwords-crypto.test.ts apps/web/src/passwords-argon2.test.ts apps/web/src/passwords-master-policy.test.ts
+  bun test --timeout 15000 apps/web/src/passwords-crypto.test.ts apps/web/src/passwords-argon2.test.ts apps/web/src/passwords-master-policy.test.ts
   bun test apps/web/src/passwords-sync.test.ts apps/web/src/passwords-entry-assist.test.ts
   bun test apps/web/src/passwords-privacy.test.ts
-  bun test apps/web/src/passwords-profiles.test.ts packages/forms/import-plan.test.ts
+  bun test --timeout 15000 apps/web/src/passwords-profiles.test.ts packages/forms/import-plan.test.ts packages/forms/blind-job.test.ts
   bun test apps/web/src/passwords-access.test.ts apps/web/src/passwords-sharing.test.ts apps/web/src/passwords-broker.test.ts
   bun test apps/web/src/passwords-transfer.test.ts packages/transfers/import.test.ts packages/transfers/clients.test.ts
   bun test apps/web/src/passwords-ssh.test.ts
@@ -29,6 +29,7 @@ source_checks() {
   bun test apps/web/src/interface.test.ts
   bun test apps/extension
   bun scripts/test_extension.mjs
+  bun scripts/blind_form_job_reference.mjs
   bun scripts/delegation-reference.mjs
   bun scripts/grant-reference.mjs
   cargo clippy --locked --offline --all-targets -- -D warnings

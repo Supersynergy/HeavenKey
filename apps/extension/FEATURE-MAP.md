@@ -29,6 +29,8 @@
 | Random passwords and six-word EFF passphrases | `generator.ts`; existing CSPRNG, field length limits |
 | New-password and confirmation fill | Separate generated provenance; no current-password delivery |
 | Private/business profile editor | Browser quick editor; Android profile entry points |
+| Blind scan/job exchange for agents | `packages/forms/blind-job.ts`; metadata-only visible JSON, strict scan/origin binding, owner-created `custom_…` application keys |
+| Optional bounded submit | Separate owner approval; one same-origin POST form only, no payments/consent/GET/cross-origin |
 
 [Ten reference products and feature maps](../../docs/AUTOFILL-COMPETITORS.md) ·
 [Process maps](../../docs/AUTOFILL-FLOWS.md).

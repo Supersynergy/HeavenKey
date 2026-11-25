@@ -84,6 +84,15 @@ Passwörter gelangen ausschließlich in ausdrücklich als `new-password`
 gekennzeichnete Felder. Bei unklaren Registrierungsfeldern kann der Login trotzdem
 gespeichert und anschließend in HeavenKey verwaltet werden.
 
+
+Eigene Antragsfelder lassen sich im Profil-Entwurf mit einem verständlichen Feldnamen ergänzen.
+HeavenKey speichert sie als begrenzte `custom_…`-Schlüssel im selben verschlüsselten Tresor.
+Sie werden nicht automatisch erraten oder aus fremden Texten übernommen; die Zuordnung erfolgt
+durch den blinden Auftrag oder manuell und bleibt wie jede andere Füllung freigabepflichtig. Weil HeavenKey
+den Inhalt eigener Felder nicht einordnen kann, gelten sie vorsorglich als sensibel und benötigen die zusätzliche
+Finanz-/Identitätsfreigabe.
+Ältere HeavenKey-Versionen können solche Profile nicht lesen und müssen fail-closed ablehnen.
+
 ## Verwaltung und Android
 
 **Passwörter verwalten** öffnet die lokale Tresoroberfläche. In der Erweiterung
@@ -98,6 +107,39 @@ in einen passend benannten Editor. Das Formular wird weiterhin nach Auswahl
 ausgefüllt; neue Passwörter und Passphrasen lassen sich im bestehenden nativen
 Registrierungsablauf erzeugen und sichern. Ein Browser-Feldsymbol ist eine
 Funktion der Desktop-Erweiterungen, kein Bildschirm-Overlay über Android-Apps.
+
+
+## Blinder Agentenauftrag für Formulare (0.31)
+
+Die Erweiterung kann nach einer manuellen Feldprüfung einen **blinden Scan** als
+sichtbaren JSON-Text bereitstellen. Er enthält Scan- und Feld-IDs, Feldbezeichnungen,
+erkannte Feldtypen, Sensitivitätsmarkierungen, Feldlängen sowie Formularmethode und
+Herkunftsziele. Er enthält keine Profilwerte, Klartextdaten, Cookies, Screenshots oder
+sonstigen Seiteninhalte. Verfügbare Profilfeldtypen werden nur soweit angezeigt, wie sie
+zu erkannten Feldern dieses Scans gehören. Zusätzlich erscheinen vom Betreuer ausdrücklich
+angelegte eigene Feldtypen (`custom_…`), damit nicht standardisierte Behörden-, Vereins- und
+Fachformularfelder überhaupt automatisiert zugeordnet werden können; auch dann sieht der
+Agent nur den technischen Feldnamen und niemals den Wert.
+
+Ein lokales Werkzeug oder ein Agent kann daraus einen ebenfalls wertefreien
+**blinden Auftrag** erzeugen: Feld-ID → Profilfeldtyp plus Freigabeoptionen. Der mitgelieferte
+Referenzplaner `bun scripts/blind_form_job.ts scan.json > job.json` nutzt nur diese Metadaten,
+hat keinen Tresorzugriff und kann mit `--map FIELD_ID=ENTITY` ein neutrales Feld manuell
+zuordnen sowie mit `--submit` das separate Absenden anfragen. Der Auftrag
+wird in der Erweiterung eingefügt, strikt gegen Scan-ID, vollständige Adresse und Herkunft
+geprüft und übernimmt nur die Zuordnung in der Oberfläche. Angefragte Sonderfreigaben für sensible Werte, Geheimnisse, Überschreiben oder Auswahlfelder werden nicht vormarkiert. Der Auftrag füllt nicht automatisch.
+Die Besitzerin oder der Besitzer prüft die sichtbare Zuordnung, bestätigt die Zielherkunft
+und startet das Füllen selbst. Änderungen an Seite, Feld, Formular oder Formularziel
+machen den Auftrag unbrauchbar.
+
+Füllen und Absenden bleiben getrennte Risiken. Ein Auftrag kann einmaliges Absenden nur
+anfragen. Zusätzlich zur normalen Herkunftsbestätigung ist eine eigene Absende-Freigabe
+nötig. Die erste Version löst Absenden ausschließlich bei genau einem zusammenhängenden
+HTML-POST-Formular mit genau einem sichtbaren Absende-Button aus, dessen sämtliche Ziele auf derselben Herkunft bleiben. GET-Formulare,
+mehrere Formulare, formularlose Schaltflächen, Zahlungen, Einwilligungen und fremde oder
+geänderte Ziele bleiben gesperrt. `requestSubmit` wird höchstens einmal ausgelöst. Ob der
+Server den Antrag annimmt, kann HeavenKey nicht sehen; das Ergebnis muss auf der Website
+oder beim Empfänger geprüft werden.
 
 ## Schutz und Grenzen
 

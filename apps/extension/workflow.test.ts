@@ -21,3 +21,5 @@ test('derived date and expiry fields request their source rather than unrelated 
   expect(deliveryEntities({street:'Gartenstraße 3',streetName:'Gartenstraße',houseNumber:'3',password:'Synthetic'},[{entity:'street'}]))
     .toEqual({street:'Gartenstraße 3',streetName:'Gartenstraße'});
 });
+
+test('custom application values cross only when explicitly selected',()=>{expect(deliveryEntities({custom_einkommen:'Synthetic only',firstName:'Alex'},[{entity:'custom_einkommen'}])).toEqual({});const out=deliveryEntities({custom_einkommen:'Synthetic only',firstName:'Alex'},[{entity:'custom_einkommen'}],{sensitive:true});expect(out).toEqual({custom_einkommen:'Synthetic only'});});

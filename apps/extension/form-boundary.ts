@@ -38,3 +38,14 @@ export function secretDestinationAllowed(el: HTMLElement, origin: string): boole
     return destinations(el).every(action => { const url = new URL(action); return url.origin === origin && !url.username && !url.password; });
   } catch { return false; }
 }
+
+export function formPolicy(el: HTMLElement): { method: string; destinationOrigins: string[] } | null {
+  try {
+    const form = ownerForm(el);
+    if (!form) return null;
+    const rawMethod = (form.getAttribute('method') || 'get').toLowerCase();
+    const method = ['get', 'post', 'dialog'].includes(rawMethod) ? rawMethod : 'get';
+    const destinationOrigins = [...new Set(destinations(el).map(action => new URL(action).origin))];
+    return { method, destinationOrigins };
+  } catch { return null; }
+}

@@ -1,20 +1,28 @@
 import './vendor/extract.js';
 import { openVault, sealVault, validateEnvelope, validateVault, totp, type Vault, type Envelope, type Login } from '../web/src/passwords-crypto';
-import { PROFILE_KEYS, HIGH_FIELDS, validateProfiles, type FormProfile } from '../../packages/forms/schema';
+import { PROFILE_KEYS, validateProfiles, profileKeyAllowed, profileKeySensitive, type FormProfile } from '../../packages/forms/schema';
 import { generateChannel, channelCode, openUnlock, validateRequest, type UnlockRequest } from './unlock-channel';
 import { website, scriptId } from './site-access';
 import { password, passphrase } from './generator';
 import { taskFrom, deliveryEntities, type Task } from './workflow';
+import { blindScanText, createBlindScan, entityBase, parseBlindJob, type BlindJob, type BlindScan } from '../../packages/forms/blind-job';
 const extension = (globalThis as any).browser || (globalThis as any).chrome;
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const input = (id: string) => $<HTMLInputElement>(id);
 const labels: Record<string,string> = { accountHolder:'Kontoinhaber',address2:'Adresszusatz',ahv:'AHV-Nummer',amount:'Betrag',bankName:'Bankname',bic:'BIC',birthdate:'Geburtsdatum',blz:'Bankleitzahl',caseno:'Aktenzeichen',ccExp:'Kartenablauf',ccHolder:'Karteninhaber',city:'Ort',company:'Firma',contractno:'Vertragsnummer',country:'Land',creditcard:'Kartennummer',creditorId:'Gläubiger-ID',currency:'Währung',customerno:'Kundennummer',cvc:'Kartenprüfnummer',date:'Datum',email:'E-Mail',familienstand:'Familienstand',firstName:'Vorname',geburtsname:'Geburtsname',geburtsort:'Geburtsort',gkv:'Krankenversicherung',houseNumber:'Hausnummer',hrb:'Handelsregister',iban:'IBAN',jobTitle:'Beruf / Position',konfession:'Konfession',language:'Sprache',lastName:'Nachname',mandatsref:'Mandatsreferenz',memberno:'Mitgliedsnummer',message:'Nachricht',name:'Name',nationality:'Staatsangehörigkeit',number:'Nummer',password:'Passwort',perso:'Ausweisnummer',phone:'Telefon',postbox:'Postfach',purpose:'Verwendungszweck',salutation:'Anrede',sozialvers:'Sozialversicherung',state:'Bundesland',steuerid:'Steuer-ID',steuernr:'Steuernummer',street:'Straße und Hausnummer',streetName:'Straße',subject:'Betreff',title:'Titel',url:'Webseite',username:'Benutzername',vat:'Umsatzsteuer-ID',zip:'Postleitzahl',otp:'Einmalcode',bday_day:'Geburtstag (Tag)',bday_month:'Geburtstag (Monat)',bday_year:'Geburtstag (Jahr)',cc_exp:'Kartenablauf',cc_month:'Kartenablauf (Monat)',cc_year:'Kartenablauf (Jahr)' };
+function entityLabel(name: string) { return labels[name] || (name.startsWith('custom_') ? `Eigenes Feld · ${name.slice(7).replace(/[_-]+/g, ' ')}` : name); }
+function customKey(label: string) {
+  const slug = label.trim().replace(/ß/g, 'ss').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 59);
+  if (!slug) throw new Error('Einen verständlichen Feldnamen eingeben.');
+  return `custom_${slug}`;
+}
 type Connection = { origin: string; token: string };
 type ExtendedVault = Vault & { profiles?: FormProfile[] };
-type Field = { id: string; field: string; entity: string | null; score: number; hasValue: boolean; sensitive: boolean; secret: boolean; kind: string; form: string; maxLength?: number; anchored?: boolean };
+type Field = { id: string; field: string; entity: string | null; score: number; hasValue: boolean; sensitive: boolean; secret: boolean; kind: string; form: string; maxLength?: number; formMethod?: string; formDestinations?: string[]; anchored?: boolean };
 let connection: Connection | null = null, key: CryptoKey | null = null, vault: ExtendedVault | null = null, envelope: Envelope | null = null;
 let revision = 0, epoch = 0, busy = false, lastActivity = Date.now(), entities: Record<string,string> = {}, sourceLogin: any = null, sourceProfile: FormProfile | null = null;
-let pageTarget: { id: number; origin: string; href: string } | null = null, preview: { scan: string; fields: Field[] } | null = null;
+let pageTarget: { id: number; origin: string; href: string } | null = null, preview: { scan: string; fields: Field[]; origin: string; href: string } | null = null;
+let blindScan: BlindScan | null = null, blindJob: BlindJob | null = null;
 let siteOrigin = '', pendingUnlock: {request: UnlockRequest; privateKey: CryptoKey; expires: number} | null = null;
 let nextFocus: HTMLElement | null=null;
 let editLogin: Login | null = null, draftGenerated = false, sourceGenerated = false, savedGenerated = '';
@@ -23,8 +31,8 @@ let currentTask = taskFrom(new URL(location.href).searchParams.get('intent'));
 function focusAfter(control: HTMLElement) { if(busy) nextFocus=control;else control.focus(); }
 const button = (label: string, fn: () => void, kind = 'secondary') => { const b = document.createElement('button'); b.type = 'button'; b.className = kind; b.textContent = label; b.addEventListener('click', () => { if (!busy) fn(); }); return b; };
 function status(message: string, error = false) { $('smart-status').textContent = message; $('smart-status').dataset.error = String(error); }
-function resetPreview() { preview = null; $('field-map').replaceChildren(); $('fill-confirmation').hidden = true; input('confirm-origin').checked = false; $('fill-summary').textContent = ''; $('task-progress').textContent = '1 · Eintrag auswählen oder neu anlegen'; }
-function resetSource() { sourceGenerated=false; $('quick-login').hidden=true; entities = {}; sourceLogin = null; sourceProfile = null; $('entity-preview').replaceChildren(); input('source-text').value = ''; input('profile-title').value = ''; input('include-sensitive').checked = false; input('include-secrets').checked = false; input('overwrite').checked = false; input('include-choices').checked = false; resetPreview(); }
+function resetPreview() { preview = null; blindScan = null; blindJob = null; $('field-map').replaceChildren(); $('fill-confirmation').hidden = true; input('confirm-origin').checked = false; input('allow-submit').checked = false; $('submit-row').hidden = true; input('agent-scan-output').value = ''; input('agent-job-input').value = ''; $('fill-summary').textContent = ''; $('task-progress').textContent = '1 · Eintrag auswählen oder neu anlegen'; }
+function resetSource() { sourceGenerated=false; $('quick-login').hidden=true; entities = {}; sourceLogin = null; sourceProfile = null; $('entity-preview').replaceChildren(); input('source-text').value = ''; input('profile-title').value = ''; input('custom-field-label').value = ''; input('custom-field-value').value = ''; input('include-sensitive').checked = false; input('include-secrets').checked = false; input('overwrite').checked = false; input('include-choices').checked = false; resetPreview(); }
 function clearEditor() {
   editLogin=null; draftGenerated=false; savedGenerated='';
   for (const id of ['login-title','login-username','login-password','login-url']) input(id).value='';
@@ -115,7 +123,7 @@ function renderSources() {
         entities = { username: (entry.v as any).username, email: (entry.v as any).username, password: (entry.v as any).password };
         status('Login gewählt. Füllen ist nur auf seiner exakt gespeicherten Herkunft erlaubt.');
         startLogin(entry.v as Login,currentTask==='generate' || currentTask==='manage');
-      } else { sourceProfile = entry.v as FormProfile; entities = { ...sourceProfile.entities }; input('profile-title').value = sourceProfile.title; status('Profil gewählt. Prüfe die Werte und die Zielseite.'); }
+      } else { sourceProfile = entry.v as FormProfile; entities = { ...sourceProfile.entities } as Record<string,string>; input('profile-title').value = sourceProfile.title; status('Profil gewählt. Prüfe die Werte und die Zielseite.'); }
       renderEntities();
       $('quick-login').hidden=entry.kind!=='login' || !matches(entry.v);
       if(entry.kind==='login' && matches(entry.v)) $('quick-login').textContent=`Login auf ${siteOrigin} prüfen`;
@@ -128,8 +136,8 @@ function renderSources() {
 function renderEntities() {
   const list = $('entity-preview'); list.replaceChildren(); resetPreview();
   for (const [name,value] of Object.entries(entities)) {
-    if (!PROFILE_KEYS.includes(name as any) && name !== 'otp') continue;
-    const label = document.createElement('label'); label.className = 'entity-row'; label.textContent = (labels[name] || name) + (HIGH_FIELDS.has(name) ? ' · sensibel' : '');
+    if (!profileKeyAllowed(name) && name !== 'otp') continue;
+    const label = document.createElement('label'); label.className = 'entity-row'; label.textContent = entityLabel(name) + (profileKeySensitive(name) ? ' · sensibel' : '');
     const field = document.createElement('input'); field.value = value; field.dataset.entity = name; field.maxLength = 10000; field.autocomplete = 'off'; field.type = ['password','otp'].includes(name) ? 'password' : 'text'; field.addEventListener('input', () => { entities[name] = field.value; resetPreview(); }); label.append(field); list.append(label);
   }
 }
@@ -160,17 +168,20 @@ async function target() {
   }
   return { id: tab.id as number, href: tab.url as string, origin: url.origin };
 }
+async function bounded<T>(work: Promise<T>, message: string): Promise<T> {
+  return await Promise.race([work, new Promise<T>((_, reject) => setTimeout(() => reject(new Error(message)), 8000))]);
+}
 async function inject(target: { id: number; href: string; origin: string }, action: string, generation: number, args = {}) {
   active(generation);
   const current = await extension.tabs.get(target.id);
   active(generation);
   if (current.url !== target.href) throw new Error('Die Zielseite wurde gewechselt. Bitte erneut prüfen.');
-  await extension.scripting.executeScript({ target: { tabId: target.id, frameIds: [0] }, world: 'ISOLATED', files: ['content.js'] });
+  await bounded(extension.scripting.executeScript({ target: { tabId: target.id, frameIds: [0] }, world: 'ISOLATED', files: ['content.js'] }), 'Die Zielseite antwortet nicht. Erneut prüfen.');
   active(generation);
-  const results = await extension.scripting.executeScript({ target: { tabId: target.id, frameIds: [0] }, world: 'ISOLATED', func: (request: any) => {
+  const results = await bounded<any>(extension.scripting.executeScript({ target: { tabId: target.id, frameIds: [0] }, world: 'ISOLATED', func: (request: any) => {
     try { return { ok: true, value: (globalThis as any).__heavenkeyEngine(request) }; }
     catch (e) { return { ok: false, error: e instanceof Error ? e.message : 'Formularaktion fehlgeschlagen.' }; }
-  }, args: [{ action, href: target.href, origin: target.origin, anchor: new URL(location.href).searchParams.get('anchor') || undefined, ...args }] });
+  }, args: [{ action, href: target.href, origin: target.origin, anchor: new URL(location.href).searchParams.get('anchor') || undefined, ...args }] }), 'Die Zielseite antwortet nicht. Erneut prüfen.');
   active(generation);
   const result = results[0]?.result;
   if (!result?.ok) throw new Error(result?.error || 'Die Zielseite ist nicht erreichbar.');
@@ -178,7 +189,10 @@ async function inject(target: { id: number; href: string; origin: string }, acti
 }
 function available(entity: string) { return !!entities[entity] || entity.startsWith('bday_') && !!entities.birthdate || ['cc_exp','cc_month','cc_year'].includes(entity) && !!entities.ccExp || entity === 'cc_csc' && !!entities.cvc; }
 function showMap(result: any) {
-  preview = { scan: result.scan, fields: result.fields }; const list = $('field-map'); list.replaceChildren();
+  preview = { scan: result.scan, fields: result.fields, origin: result.origin, href: result.href }; const list = $('field-map'); list.replaceChildren();
+  const relevant = new Set(result.fields.flatMap((field: Field) => field.entity ? [field.entity, entityBase(field.entity)] : []));
+  blindScan = createBlindScan({ scan: result.scan, origin: result.origin, href: result.href, availableEntities: Object.entries(entities).filter(([name, value]) => !!value && (relevant.has(name) || name.startsWith('custom_'))).map(([name]) => name), fields: result.fields });
+  blindJob = null; input('allow-submit').checked = false; $('submit-row').hidden = true;
   for (const field of preview!.fields) {
     const row = document.createElement('div'); row.className = 'mapping-row';
     const label = document.createElement('label'); label.className = 'choice';
@@ -189,7 +203,7 @@ function showMap(result: any) {
     const options = document.createElement('select'); options.dataset.mapping = field.id; options.setAttribute('aria-label',`Wert für ${field.field}`);
     const empty = document.createElement('option'); empty.value = ''; empty.textContent = 'Nicht füllen'; options.append(empty);
     for (const name of [...Object.keys(entities), ...['bday_day','bday_month','bday_year','cc_exp','cc_month','cc_year'].filter(available)]) {
-      const option = document.createElement('option'); option.value = name; option.textContent = labels[name] || name; options.append(option);
+      const option = document.createElement('option'); option.value = name; option.textContent = entityLabel(name); options.append(option);
     }
     options.value = field.entity || ''; options.addEventListener('change', () => { check.checked = !!options.value; input('confirm-origin').checked = false; updateFillSummary(); });
     check.addEventListener('change', () => { input('confirm-origin').checked = false; updateFillSummary(); });
@@ -202,10 +216,51 @@ function selectedFields() {
   return [...document.querySelectorAll<HTMLInputElement>('[data-field]:checked')].map(field => ({ id: field.dataset.field!, entity: document.querySelector<HTMLSelectElement>(`[data-mapping="${field.dataset.field}"]`)!.value })).filter(row => row.entity);
 }
 function updateFillSummary() {
-  const selected = selectedFields(), secrets = selected.filter(row => ['password','otp'].includes(row.entity)).length;
-  $('fill-summary').textContent = `${selected.length} Felder${secrets ? ` · ${secrets} Geheimnisse` : ''} · ${input('overwrite').checked ? 'Überschreiben ausdrücklich erlaubt' : 'Vorhandene Eingaben bleiben erhalten'} · kein Absenden`;
-  $('fill-selected').textContent = `${selected.length} gewählte Felder füllen`;
+  const selected = selectedFields(), secrets = selected.filter(row => ['password','otp'].includes(row.entity)).length, sensitive = selected.filter(row => profileKeySensitive(entityBase(row.entity))).length;
+  const submit = blindJob?.options.submit ? input('allow-submit').checked ? ' · Absenden ausdrücklich freigegeben' : ' · Absenden angefragt, noch nicht freigegeben' : ' · kein Absenden';
+  $('fill-summary').textContent = `${selected.length} Felder${sensitive ? ` · ${sensitive} sensible` : ''}${secrets ? ` · ${secrets} Geheimnisse` : ''} · ${input('overwrite').checked ? 'Überschreiben ausdrücklich erlaubt' : 'Vorhandene Eingaben bleiben erhalten'}${submit}`;
+  $('fill-selected').textContent = `${selected.length} gewählte Felder füllen${blindJob?.options.submit && input('allow-submit').checked ? ' und einmal absenden' : ''}`;
 }
+function applyBlindJob(job: BlindJob) {
+  for (const control of document.querySelectorAll<HTMLInputElement>('[data-field]')) control.checked = false;
+  for (const control of document.querySelectorAll<HTMLSelectElement>('[data-mapping]')) control.value = '';
+  for (const selection of job.fields) {
+    const check = document.querySelector<HTMLInputElement>(`[data-field="${selection.id}"]`), mapping = document.querySelector<HTMLSelectElement>(`[data-mapping="${selection.id}"]`);
+    if (!check || !mapping || ![...mapping.options].some(option => option.value === selection.entity)) throw new Error('Der Auftrag passt nicht zur aktuellen Feldauswahl. Erneut scannen.');
+    mapping.value = selection.entity; check.checked = true;
+  }
+  input('include-sensitive').checked = false;
+  input('include-secrets').checked = false;
+  input('overwrite').checked = false;
+  input('include-choices').checked = false;
+  blindJob = job;
+  input('allow-submit').checked = false;
+  $('submit-row').hidden = !job.options.submit;
+  input('confirm-origin').checked = false;
+  updateFillSummary();
+}
+$('copy-agent-scan').addEventListener('click', () => void run(async generation => {
+  if (!blindScan) throw new Error('Zuerst die Felder der Seite prüfen.');
+  const exported = blindScanText(blindScan);
+  input('agent-scan-output').value = exported;
+  input('agent-scan-output').focus(); input('agent-scan-output').select();
+  let copied = false;
+  try { await navigator.clipboard.writeText(exported); copied = true; } catch { copied = false; }
+  active(generation);
+  status(copied ? 'Blinder Scan kopiert und sichtbar bereitgestellt. Er enthält keine Profilwerte; der Agent kann daraus einen Auftrag erzeugen.' : 'Blinder Scan sichtbar bereitgestellt. Bitte manuell kopieren; er enthält keine Profilwerte.');
+}));
+$('read-agent-job').addEventListener('click', () => void run(async generation => {
+  if (!blindScan) throw new Error('Zuerst die Felder der Seite prüfen.');
+  if (Date.parse(blindScan.expiresAt) <= Date.now()) throw new Error('Der Scan ist abgelaufen. Bitte erneut prüfen.');
+  const raw = input('agent-job-input').value;
+  if (!raw.trim()) throw new Error('Den JSON-Auftrag des Agenten in das Auftragsfeld einfügen.');
+  const job = parseBlindJob(raw, blindScan);
+  active(generation);
+  applyBlindJob(job);
+  const requested = [job.options.sensitive ? 'sensible Werte' : '', job.options.secrets ? 'Geheimnisse' : '', job.options.overwrite ? 'Überschreiben' : '', job.options.choices ? 'Auswahlfelder' : ''].filter(Boolean).join(', ');
+  status(`Agentenauftrag geprüft: ${job.fields.length} Zielfelder, keine Werte übertragen. Zuordnung, Herkunft und ${requested ? `angefragte Freigaben (${requested}) ` : ''}selbst bestätigen.`);
+}));
+
 $('pairing-form').addEventListener('submit', event => {
   event.preventDefault();
   const port = input('pair-port').value, code = input('pair-code').value.trim();
@@ -308,19 +363,32 @@ $('fill-selected').addEventListener('click', () => void run(async generation => 
   const selected = selectedFields();
   if (sourceLogin?.totp) { const code = (await totp(sourceLogin.totp)).code; active(generation); entities.otp = code; }
   if(sourceGenerated && (entities.password!==savedGenerated || sourceLogin?.password!==savedGenerated)) throw Error('Das neue Passwort wurde geändert. Erneut verschlüsselt speichern.');
-  const result = await inject(pageTarget,'fill',generation,{ scan: preview.scan, entities: deliveryEntities(entities,selected,{sensitive:input('include-sensitive').checked,secrets:input('include-secrets').checked}), selected, sensitive: input('include-sensitive').checked, secrets: input('include-secrets').checked, overwrite: input('overwrite').checked, choices: input('include-choices').checked, generated: sourceGenerated }); active(generation);
-  resetPreview(); status(`${result.count} Felder gefüllt.${result.blocked.length ? ` ${result.blocked.length} Felder wegen fehlender Freigabe oder Zuordnung ausgelassen.` : ''} Es wurde kein Formular abgesendet.`);
-  $('task-progress').textContent = result.count ? 'Fertig · Werte eingefügt. Auf der Website prüfen und selbst absenden.' : 'Keine Werte eingefügt · Auswahl und Freigaben prüfen.';
+  const submitRequested = blindJob?.options.submit === true;
+  if (submitRequested && !input('allow-submit').checked) throw new Error('Das angefragte Absenden ausdrücklich freigeben oder den Agentenauftrag verwerfen.');
+  const result = await inject(pageTarget,'fill',generation,{ scan: preview.scan, entities: deliveryEntities(entities,selected,{sensitive:input('include-sensitive').checked,secrets:input('include-secrets').checked}), selected, sensitive: input('include-sensitive').checked, secrets: input('include-secrets').checked, overwrite: input('overwrite').checked, choices: input('include-choices').checked, generated: sourceGenerated, submit: submitRequested }); active(generation);
+  const submitText = submitRequested ? result.submitted ? ' Das Absenden wurde einmal ausgelöst; der Server-Erfolg ist nicht bestätigt.' : ' Das Absenden wurde nicht ausgelöst; die Website-Prüfung oder Validierung hat es verhindert.' : ' Es wurde kein Formular abgesendet.';
+  resetPreview(); status(`${result.count} Felder gefüllt.${result.blocked.length ? ` ${result.blocked.length} Felder wegen fehlender Freigabe oder Zuordnung ausgelassen.` : ''}${submitText}`);
+  $('task-progress').textContent = result.count ? submitRequested && result.submitted ? 'Fertig · Werte eingefügt und Absenden ausgelöst. Ergebnis auf der Website prüfen.' : 'Fertig · Werte eingefügt. Auf der Website prüfen und selbst absenden.' : 'Keine Werte eingefügt · Auswahl und Freigaben prüfen.';
 }));
 $('undo-fill').addEventListener('click', () => void run(async generation => { if (!key || !pageTarget) throw new Error('Keine Füllung in dieser Sitzung.'); const result = await inject(pageTarget,'undo',generation); active(generation); resetPreview(); status(`${result.count} Felder zurückgesetzt. Unveränderte Zielseite und maximal 2 Minuten erforderlich.`); }));
 $('capture-page').addEventListener('click', () => void run(async generation => {
   if (!key) return; sourceGenerated=false; sourceLogin = null; sourceProfile = null; pageTarget = await target(); active(generation);
   const result = await inject(pageTarget,'capture',generation,{ sensitive: input('include-sensitive').checked }); active(generation); entities = result.entities; renderEntities(); status(`${Object.keys(entities).length} Werte als Vorschau übernommen. Geheimnisse bleiben ausgeschlossen. Erst Speichern schreibt ein Profil.`);
 }));
+$('add-custom-entity').addEventListener('click', () => void run(async generation => {
+  if (!key) return;
+  const name = customKey(input('custom-field-label').value), value = input('custom-field-value').value;
+  if (!value) throw new Error('Einen Wert für das eigene Antragsfeld eingeben.');
+  if (entities[name]) throw new Error('Dieses eigene Feld ist bereits vorhanden. Den vorhandenen Wert direkt ändern.');
+  entities[name] = value;
+  input('custom-field-label').value = ''; input('custom-field-value').value = '';
+  active(generation); renderEntities();
+  status('Eigenes Antragsfeld im Entwurf ergänzt. Erst „Profil speichern“ schreibt es verschlüsselt in den Tresor.');
+}));
 $('save-profile').addEventListener('click', () => void run(async generation => {
   if (!vault || !key || !envelope) return;
   const title = input('profile-title').value.trim(); if (!title) throw new Error('Einen Profilnamen eingeben.');
-  const values = Object.fromEntries(Object.entries(entities).filter(([name,value]) => PROFILE_KEYS.includes(name as any) && !!value));
+  const values = Object.fromEntries(Object.entries(entities).filter(([name,value]) => profileKeyAllowed(name) && !!value));
   if (values.password && values.password !== sourceProfile?.entities.password && !input('include-secrets').checked) throw new Error('Zum Speichern eines neuen Profilpassworts zuerst die Geheimnis-Freigabe aktivieren.');
   if (!Object.keys(values).length) throw new Error('Keine Profilwerte vorhanden.');
   const profile: FormProfile = { id: sourceProfile?.id || crypto.randomUUID(), title, entities: values, updatedAt: new Date().toISOString() };
@@ -329,7 +397,7 @@ $('save-profile').addEventListener('click', () => void run(async generation => {
   const saved = snapshot(await api('/api/password-vault',{ expected_revision: revision, record: sealed })); active(generation);
   vault = next; envelope = sealed; revision = saved.revision; sourceProfile = profile; renderSources(); status('Profil verschlüsselt gespeichert.');
 }));
-for (const id of ['include-sensitive','include-secrets','overwrite','include-choices']) input(id).addEventListener('change', () => { input('confirm-origin').checked = false; updateFillSummary(); });
+for (const id of ['include-sensitive','include-secrets','overwrite','include-choices','allow-submit']) input(id).addEventListener('change', () => { input('confirm-origin').checked = false; updateFillSummary(); });
 
 async function refreshInline() {
   try {

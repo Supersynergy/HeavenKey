@@ -54,5 +54,18 @@ export async function redteamCases({target,popup,targetId,invoke,check}:any) {
   check('red team: missing or expired inline anchor never falls back to another form',!result.ok);
   request=await one('firstName');result=await invoke('fill',request);assert(result.ok);
   result=await invoke('fill',{...request,overwrite:true});check('red team: consumed scan cannot be replayed',!result.ok);
+
+  await reset();scan=await invoke('scan');
+  const incomplete=scan.value.fields.filter((f:any)=>['firstName','lastName'].includes(f.entity)).map((f:any)=>({id:f.id,entity:f.entity}));assert.equal(incomplete.length,2);
+  result=await invoke('fill',{scan:scan.value.scan,selected:incomplete,entities:{firstName:'Alex'},submit:true});
+  check('red team: blind submit never writes a partial job when a selected value is unavailable',!result.ok && await target.locator('#firstName').inputValue()==='' && await target.locator('#lastName').inputValue()==='');
+
+  await reset();await target.evaluate(()=>document.querySelector('form')!.insertAdjacentHTML('beforeend','<button type="submit">Zweiter Button</button>'));
+  request=await one('firstName');result=await invoke('fill',{...request,submit:true});
+  check('red team: ambiguous submit controls block blind submission before writing',!result.ok && await target.locator('#firstName').inputValue()==='');
+
+  await reset();await target.evaluate(()=>document.querySelector('form button')!.setAttribute('formmethod','get'));
+  request=await one('firstName');result=await invoke('fill',{...request,submit:true});
+  check('red team: submit-button method override cannot turn blind POST into GET',!result.ok && await target.locator('#firstName').inputValue()==='');
   await reset();
 }

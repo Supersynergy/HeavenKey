@@ -1,13 +1,13 @@
 /** Injected in frame 0 / ISOLATED after a popup gesture. No network or storage. */
 import './vendor/extract.js';
 import './vendor/fill.js';
-import { PROFILE_KEYS, HIGH_FIELDS } from '../../packages/forms/schema';
-import { captureBoundary, sameBoundary, fieldGroup, secretDestinationAllowed } from './form-boundary';
+import { PROFILE_KEYS, HIGH_FIELDS, CUSTOM_PROFILE_KEY, profileKeyAllowed } from '../../packages/forms/schema';
+import { captureBoundary, sameBoundary, fieldGroup, secretDestinationAllowed, formPolicy, ownerForm } from './form-boundary';
 
 type Entities = Record<string, string>;
-type Field = { id: string; field: string; entity: string | null; score: number; hasValue: boolean; sensitive: boolean; secret: boolean; kind: string; form: string; maxLength?: number; anchored?: boolean };
+type Field = { id: string; field: string; entity: string | null; score: number; hasValue: boolean; sensitive: boolean; secret: boolean; kind: string; form: string; maxLength?: number; formMethod?: string; formDestinations?: string[]; anchored?: boolean };
 type Target = { el: HTMLElement; fingerprint: string; boundary: ReturnType<typeof captureBoundary>; field: Field };
-type Request = { action: 'scan' | 'fill' | 'undo' | 'capture' | 'clear'; origin: string; href: string; scan?: string; entities?: Entities; selected?: { id: string; entity: string }[]; sensitive?: boolean; secrets?: boolean; overwrite?: boolean; choices?: boolean; generated?: boolean; anchor?: string };
+type Request = { action: 'scan' | 'fill' | 'undo' | 'capture' | 'clear'; origin: string; href: string; scan?: string; entities?: Entities; selected?: { id: string; entity: string }[]; sensitive?: boolean; secrets?: boolean; overwrite?: boolean; choices?: boolean; generated?: boolean; anchor?: string; submit?: boolean };
 const root = globalThis as any;
 const P = root.HeavenKeyFieldPrimitives;
 const EX = root.SmartFieldExtract;
@@ -17,7 +17,7 @@ const secret = new Set(['password', 'otp']);
 const consent = /consent|terms|condition|privacy|cookie|newsletter|subscribe|marketing|payment|paymethod|zahlungsart|zahlungsmethode|lastschrift|sepa|agb|datenschutz|einwillig|zustimm|widerruf|akzeptier/i;
 const acMap: Record<string, string> = { 'one-time-code': 'otp', 'current-password': 'password', 'new-password': 'password', 'cc-name': 'ccHolder', 'cc-exp': 'ccExp', 'cc-exp-month': 'cc_month', 'cc-exp-year': 'cc_year', 'cc-csc': 'cvc', 'cc-number': 'creditcard' };
 const base = (key: string): string => key.startsWith('bday_') ? 'birthdate' : key === 'cc_month' || key === 'cc_year' || key === 'cc_exp' ? 'ccExp' : key === 'cc_csc' ? 'cvc' : key;
-const allowed = (key: string) => PROFILE_KEYS.includes(base(key) as any) || key === 'otp';
+const allowed = (key: string) => profileKeyAllowed(base(key)) || key === 'otp';
 const text = (el: any): string => el.isContentEditable ? el.innerText : el.getAttribute('role') === 'listbox' ? [...el.querySelectorAll('[aria-selected="true"]')].map((o: any) => o.textContent).join(', ') : el.getAttribute('role') === 'combobox' && !/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) ? el.textContent || '' : el.value ?? '';
 const hasValue = (el: any) => ['checkbox','radio'].includes(el.type) ? !!el.checked : !!text(el).trim();
 const fingerprint = (el: any) => [el.tagName, el.type, el.id, el.name, el.getAttribute('autocomplete'), P.tokens(el)].join('|');
@@ -75,6 +75,36 @@ function choices(el: any, value: string) {
   const aliases = P.SALUTATIONS[value.toLowerCase()] || P.COUNTRIES[value.toLowerCase()] || [];
   return !!label && (label === valueNorm || norm(el.value || '') === valueNorm || aliases.some((s: string) => norm(s) === label));
 }
+function submitControls(form: HTMLFormElement): (HTMLButtonElement | HTMLInputElement)[] {
+  return [...form.querySelectorAll<HTMLElement>('button,input')]
+    .filter(el => P.visible(el) && !(el as HTMLButtonElement).disabled && ownerForm(el) === form)
+    .filter(el => el instanceof HTMLButtonElement && (!el.type || el.type === 'submit') || el instanceof HTMLInputElement && ['submit', 'image'].includes(el.type)) as (HTMLButtonElement | HTMLInputElement)[];
+}
+function validateSubmitPlan(elements: HTMLElement[], origin: string): HTMLFormElement {
+  if (!elements.length) throw new Error('Ohne ausgewählte Felder wird nicht abgesendet.');
+  const form = ownerForm(elements[0]);
+  if (!form || elements.some(el => ownerForm(el) !== form)) throw new Error('Abgesendet wird nur ein vollständig zusammenhängendes HTML-Formular.');
+  if (!elements.every(el => secretDestinationAllowed(el, origin))) throw new Error('Formularziele müssen exakt auf der freigegebenen Herkunft bleiben.');
+  const policy = formPolicy(elements[0]);
+  if (policy?.method !== 'post' || !policy.destinationOrigins.length || policy.destinationOrigins.some(destination => destination !== origin)) throw new Error('Blindes Absenden ist nur für zielgleiche POST-Formulare freigegeben.');
+  if ((form.getAttribute('target') || '_self').toLowerCase() !== '_self') throw new Error('Blindes Absenden ist nur im selben Browsing-Kontext freigegeben.');
+  const submitters = submitControls(form);
+  if (submitters.length !== 1) throw new Error('Blindes Absenden verlangt genau einen sichtbaren Absende-Button.');
+  const submitter = submitters[0];
+  if ((submitter.getAttribute('formmethod') || 'post').toLowerCase() !== 'post') throw new Error('Absende-Buttons mit abweichender Methode sind gesperrt.');
+  if (submitter.hasAttribute('formnovalidate')) throw new Error('Absende-Buttons ohne Validierung sind gesperrt.');
+  if ((submitter.getAttribute('formtarget') || '_self').toLowerCase() !== '_self') throw new Error('Absende-Buttons mit abweichendem Zielkontext sind gesperrt.');
+  return form;
+}
+function submitFilledForm(elements: HTMLElement[], origin: string): boolean {
+  const form = validateSubmitPlan(elements, origin);
+  if (!form.checkValidity()) return false;
+  let submitEvent: SubmitEvent | null = null;
+  form.addEventListener('submit', event => { submitEvent = event; }, { once: true });
+  form.requestSubmit(submitControls(form)[0]);
+  return !!submitEvent;
+}
+
 function makeEngine() {
   let targets = new Map<string, Target>(), scan = '', href = '', expires = 0, scanAnchor: string | undefined;
   let undo: { href: string; expires: number; rows: { el: any; value: string; checked: boolean; fingerprint: string; after: string; afterChecked: boolean; aria?: { el: Element; value: string | null }[] }[] }[] = [];
@@ -97,12 +127,14 @@ function makeEngine() {
         const match = identify(el), key = match.entity, id = crypto.randomUUID();
         const form=fieldGroup(el);
         if(!forms.has(form)) forms.set(form,crypto.randomUUID());
-        const field: Field = { id, field: (P.labelText(el) || el.name || el.id || el.tagName).trim().slice(0, 120), entity: key, score: match.score, hasValue: hasValue(el), sensitive: !!key && high.has(base(key)), secret: !!key && secret.has(base(key)), kind: /\bnew-password\b/i.test(el.autocomplete || '') ? 'new-password' : el.type || el.tagName.toLowerCase(), form:forms.get(form)! };
+        const field: Field = { id, field: (P.labelText(el) || el.name || el.id || el.tagName).replace(/\s+/g, ' ').trim().slice(0, 120), entity: key, score: match.score, hasValue: hasValue(el), sensitive: !!key && high.has(base(key)), secret: !!key && secret.has(base(key)), kind: /\bnew-password\b/i.test(el.autocomplete || '') ? 'new-password' : el.type || el.tagName.toLowerCase(), form:forms.get(form)! };
         field.maxLength = el.maxLength >= 0 ? el.maxLength : undefined;
+        const policy = formPolicy(el);
+        if (policy) { field.formMethod = policy.method; field.formDestinations = policy.destinationOrigins; }
         field.anchored = !!req.anchor && anchor?.token === req.anchor && anchor.el === el && anchor.href === location.href && anchor.expires > Date.now();
         targets.set(id, { el, fingerprint: fingerprint(el), boundary: captureBoundary(el), field }); fields.push(field);
         if (req.action === 'capture' && key && !secret.has(base(key)) && (!high.has(base(key)) || req.sensitive) && (!high.has(base(key)) || exactSensitive(el, key)) && !['checkbox','radio'].includes(el.type)) {
-          const value = text(el).trim(); if (value && value.length <= 10000 && PROFILE_KEYS.includes(key as any) && !captured[key]) captured[key] = value;
+          const value = text(el).trim(); if (value && value.length <= 10000 && profileKeyAllowed(key) && !captured[key]) captured[key] = value;
         }
         if (fields.length === 200) break;
       }
@@ -129,7 +161,7 @@ function makeEngine() {
     }
     if (req.action !== 'fill' || !scan || req.scan !== scan || href !== location.href || Date.now() >= expires || req.anchor !== scanAnchor) throw new Error('Die Vorschau ist abgelaufen. Bitte erneut prüfen.');
     if (!req.selected?.length || req.selected.length > 200 || !req.entities || Object.values(req.entities).some(v => typeof v !== 'string' || v.length > 10000)) throw new Error('Ungültige Feldauswahl.');
-    const rows: any[] = [], blocked: string[] = [];
+    const rows: any[] = [], blocked: string[] = [], written: HTMLElement[] = [];
     const planned = req.selected.map(selection => {
       const target = targets.get(selection.id), key = selection.entity;
       if (!target || !allowed(key) || !usable(target.el) || fingerprint(target.el) !== target.fingerprint || !sameBoundary(target.el, target.boundary)) throw new Error('Ein Feld oder Formularziel hat sich geändert. Bitte erneut prüfen.');
@@ -138,7 +170,7 @@ function makeEngine() {
       if (req.generated && key === 'password' && target.field.kind !== 'new-password') { blocked.push(target.field.field); return null; }
       if (secret.has(base(key)) && !secretDestinationAllowed(el, req.origin)) { blocked.push(target.field.field); return null; }
       // Re-mapping cannot downgrade the sensitivity of the actual target.
-      if ((original && (high.has(base(original)) || secret.has(base(original))) && base(original) !== base(key)) || (high.has(base(key)) && (!req.sensitive || !exactSensitive(el, key))) || (secret.has(base(key)) && (!req.secrets || !exactSensitive(el, key)))) { blocked.push(target.field.field); return null; }
+      if ((original && (high.has(base(original)) || secret.has(base(original))) && base(original) !== base(key)) || ((high.has(base(key)) || CUSTOM_PROFILE_KEY.test(base(key))) && (!req.sensitive || (!CUSTOM_PROFILE_KEY.test(base(key)) && !exactSensitive(el, key)))) || (secret.has(base(key)) && (!req.secrets || !exactSensitive(el, key)))) { blocked.push(target.field.field); return null; }
       if (hasValue(el) && !req.overwrite) return null;
       if (['checkbox','radio'].includes(el.type) && (!req.choices || consent.test(P.tokens(el)))) return null;
       const bp = P.bdayParts(req.entities), value = P.resolveValue(key, req.entities, bp, el);
@@ -146,6 +178,10 @@ function makeEngine() {
       if (el.maxLength >= 0 && value.length > el.maxLength) { blocked.push(target.field.field); return null; }
       return { el, value, target };
     });
+    if (req.submit === true) {
+      if (planned.some(item => !item)) throw new Error('Blindes Absenden verlangt, dass jedes ausgewählte Feld eindeutig ausführbar ist.');
+      validateSubmitPlan(planned.map(item => item!.el), req.origin);
+    }
     // Consume before dispatching input events: page listeners cannot replay a scan.
     targets.clear(); scan = ''; expires = 0;
     for (const item of planned) {
@@ -176,10 +212,12 @@ function makeEngine() {
       }
       else continue;
       rows.push({ ...old, after: text(el), afterChecked: !!el.checked });
+      written.push(el);
     }
     if (rows.length) { undo = undo.filter(item => item.expires > Date.now()).slice(-4); undo.push({ href, expires: Date.now() + 120000, rows }); setTimeout(() => { undo = undo.filter(item => item.expires > Date.now()); }, 120100); }
     targets.clear(); scan = '';
-    return { count: rows.length, blocked };
+    const submitted = req.submit === true && written.length === planned.length ? (safePage(req), submitFilledForm(written, req.origin)) : false;
+    return { count: rows.length, blocked, submitted };
   };
 }
 root.__heavenkeyEngine ||= makeEngine();

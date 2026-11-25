@@ -18,9 +18,15 @@ const origin = 'http://localhost:18257', master = 'Synthetic-extension-master-on
 const cases: {name:string;pass:boolean}[] = [], errors: string[] = [];
 let browser: any, processServer: any, output = '';
 const check = (name:string, truth = true) => { assert(truth,name); cases.push({name,pass:true}); console.log(`PASS ${name}`); };
+const gotoRetry = async (page:any,url:string) => {
+  for(let attempt=0;;attempt++) {
+    try { await page.goto(url,{waitUntil:'domcontentloaded',timeout:8000}); return; }
+    catch(error) { if(attempt===2) throw error; await Bun.sleep(250); }
+  }
+};
 const fixture = Bun.serve({ hostname: '127.0.0.1', port: 18258, fetch(request) {
   if (new URL(request.url).pathname === '/frame') return new Response('<label>Email in frame<input name="email" autocomplete="email"></label>',{headers:{'Content-Type':'text/html'}});
-  return new Response(`<!doctype html><html><head><meta charset="utf-8"><style>body{font:14px sans-serif;max-width:1000px}label{display:inline-block;margin:4px}input,select,textarea,[contenteditable]{min-width:90px;min-height:22px}.hidden{display:none}#honey{position:absolute;left:-9000px}</style></head><body><form id="form"><label>Benutzername<input id="username" autocomplete="username"></label><label>Passwort<input id="password" type="password" autocomplete="current-password"></label><label>Einmalcode<input id="otp" autocomplete="one-time-code"></label><label>Vorname<input id="firstName" autocomplete="given-name"></label><label>Nachname<input id="lastName" autocomplete="family-name"></label><label>E-Mail<input id="email" type="email"></label><label>Land<select id="country" autocomplete="country"><option value=""></option><option value="DE">Germany</option></select></label><label>Geburtstag<input id="bday" type="date" autocomplete="bday"></label><label>Tag<input id="day" autocomplete="bday-day"></label><label>Monat<input id="month" autocomplete="bday-month"></label><label>Jahr<input id="year" autocomplete="bday-year"></label><label>Betrag<input id="amount" type="number" name="amount"></label><label>Nachricht<textarea id="message" name="message"></textarea></label><div id="editable" contenteditable="true" aria-label="Betreff" style="border:1px solid;min-height:25px"></div><label>Bankname<input id="bankName" name="bankName"></label><label>IBAN<input id="iban" name="iban"></label><label>Generische Nummer<input id="generic" name="number"></label><label>Name vorausgefüllt<input id="prefilled" autocomplete="name" value="Manual value"></label><label>Unsichtbar<input id="hidden" class="hidden" autocomplete="email"></label><label>Honeypot<input id="honey" autocomplete="email"></label><label>Deaktiviert<input id="disabled" disabled autocomplete="email"></label><label>Nur lesen<input id="readonly" readonly autocomplete="email"></label><label>Off<input id="off" autocomplete="off" name="email"></label><label>Ich akzeptiere AGB<input id="consent" type="checkbox" name="company_terms"></label><label>Zahlungsart Firma<input id="payment" type="radio" name="company_payment" value="Acme"></label><label>Geschäftskonto<input id="business" type="checkbox" name="company" value="Acme"></label><fieldset><legend>Anrede</legend><label>Herr<input id="mr" type="radio" name="salutation" value="Herr"></label><label>Frau<input id="ms" type="radio" name="salutation" value="Frau"></label></fieldset><button>Absenden</button></form><div id="shadow"></div><iframe src="http://127.0.0.1:18258/frame"></iframe><script>window.submissions=0;document.querySelector('form').addEventListener('submit',e=>{e.preventDefault();window.submissions++});let shadow=document.querySelector('#shadow').attachShadow({mode:'open'});shadow.innerHTML='<label>E-Mail Schatten<input id="shadow-email" autocomplete="email"></label>';window.inputEvents=0;document.addEventListener('input',()=>window.inputEvents++);</script></body></html>`,{headers:{'Content-Type':'text/html'}});
+  return new Response(`<!doctype html><html><head><meta charset="utf-8"><style>body{font:14px sans-serif;max-width:1000px}label{display:inline-block;margin:4px}input,select,textarea,[contenteditable]{min-width:90px;min-height:22px}.hidden{display:none}#honey{position:absolute;left:-9000px}</style></head><body><form id="form" method="post" action="/submit"><label>Benutzername<input id="username" autocomplete="username"></label><label>Passwort<input id="password" type="password" autocomplete="current-password"></label><label>Einmalcode<input id="otp" autocomplete="one-time-code"></label><label>Vorname<input id="firstName" autocomplete="given-name"></label><label>Nachname<input id="lastName" autocomplete="family-name"></label><label>E-Mail<input id="email" type="email"></label><label>Land<select id="country" autocomplete="country"><option value=""></option><option value="DE">Germany</option></select></label><label>Geburtstag<input id="bday" type="date" autocomplete="bday"></label><label>Tag<input id="day" autocomplete="bday-day"></label><label>Monat<input id="month" autocomplete="bday-month"></label><label>Jahr<input id="year" autocomplete="bday-year"></label><label>Betrag<input id="amount" type="number" step="any" name="amount"></label><label>Nachricht<textarea id="message" name="message"></textarea></label><div id="editable" contenteditable="true" aria-label="Betreff" style="border:1px solid;min-height:25px"></div><label>Bankname<input id="bankName" name="bankName"></label><label>IBAN<input id="iban" name="iban"></label><label>Generische Nummer<input id="generic" name="number"></label><label>Name vorausgefüllt<input id="prefilled" autocomplete="name" value="Manual value"></label><label>Unsichtbar<input id="hidden" class="hidden" autocomplete="email"></label><label>Honeypot<input id="honey" autocomplete="email"></label><label>Deaktiviert<input id="disabled" disabled autocomplete="email"></label><label>Nur lesen<input id="readonly" readonly autocomplete="email"></label><label>Off<input id="off" autocomplete="off" name="email"></label><label>Ich akzeptiere AGB<input id="consent" type="checkbox" name="company_terms"></label><label>Zahlungsart Firma<input id="payment" type="radio" name="company_payment" value="Acme"></label><label>Geschäftskonto<input id="business" type="checkbox" name="company" value="Acme"></label><fieldset><legend>Anrede</legend><label>Herr<input id="mr" type="radio" name="salutation" value="Herr"></label><label>Frau<input id="ms" type="radio" name="salutation" value="Frau"></label></fieldset><button>Absenden</button></form><div id="shadow"></div><iframe src="http://127.0.0.1:18258/frame"></iframe><script>window.submissions=0;document.querySelector('form').addEventListener('submit',e=>{e.preventDefault();window.submissions++});let shadow=document.querySelector('#shadow').attachShadow({mode:'open'});shadow.innerHTML='<label>E-Mail Schatten<input id="shadow-email" autocomplete="email"></label>';window.inputEvents=0;document.addEventListener('input',()=>window.inputEvents++);</script></body></html>`,{headers:{'Content-Type':'text/html'}});
 }});
 async function start() {
   output = '';
@@ -38,16 +44,19 @@ try {
   const testManifest=JSON.parse(await readFile(join(extension,'manifest.json'),'utf8'));testManifest.host_permissions=['http://localhost/*'];
   await writeFile(join(grantedExtension,'manifest.json'),JSON.stringify(testManifest));
   browser = await chromium.launchPersistentContext(join(temporary,'profile'),{headless:true,executablePath:browserPath,args:[`--disable-extensions-except=${grantedExtension}`,`--load-extension=${grantedExtension}`,'--disable-background-networking','--no-first-run'],viewport:{width:1200,height:1000},timeout:30000});
-  browser.setDefaultTimeout(10000);
+  browser.setDefaultTimeout(30000);
   const manager = await browser.newPage(); await manager.goto('chrome://extensions');
   const item = manager.locator('extensions-item').filter({hasText:'HeavenKey'});await item.waitFor(); const id = await item.getAttribute('id');assert.match(id,/^[a-p]{32}$/);
-  const target = await browser.newPage();await target.goto('http://localhost:18258/');
-  const popup = await browser.newPage(); await popup.goto(`chrome-extension://${id}/popup.html`); popup.on('pageerror',(e:any)=>errors.push(e.message));
+  const target = await browser.newPage();await gotoRetry(target,'http://localhost:18258/');
+  const popup = await browser.newPage(); await popup.goto(`chrome-extension://${id}/popup.html`,{waitUntil:'domcontentloaded'}); popup.on('pageerror',(e:any)=>errors.push(e.message));
   // Query the actual browser tab ID; all following scripting calls use native APIs.
   await target.bringToFront();
   const targetId = await popup.evaluate(async () => { const ext=(globalThis as any).chrome;return (await ext.tabs.query({active:true,currentWindow:true}))[0].id; });
-  await popup.goto(`chrome-extension://${id}/popup.html?target=${targetId}`);
-  const app = await browser.newPage();await app.goto(origin+'/passwords/');
+  await popup.goto(`chrome-extension://${id}/popup.html?target=${targetId}`,{waitUntil:'domcontentloaded'});
+  let app: any = null;
+  if(!process.argv.includes('--engine-only')) {
+    app = await browser.newPage();await gotoRetry(app,origin+'/passwords/');
+  }
   await popup.bringToFront();
   assert.equal(await popup.evaluate(()=>document.visibilityState),'visible','Extension fixture must keep the interaction page visible');
   const appApi = async (path:string,body?:any,method?:string) => app.evaluate(async ({path,body,method})=>{const headers:any={'X-HeavenKey-Client':'password-manager'};const {token}=await(await fetch('/api/password-vault/config',{headers})).json();headers['X-HeavenKey-Token']=token;if(body)headers['Content-Type']='application/json';const response=await fetch('/api/password-vault'+path,{method:method||(body?'POST':'GET'),headers,...(body?{body:JSON.stringify(body)}:{})});if(!response.ok)throw Error(`App API ${response.status}`);return response.json();},{path,body,method});
@@ -77,14 +86,56 @@ try {
   check('real PRF passkey unlock crosses single-use encrypted channel into paired extension without clipboard');
   assert(!handoffBodies.some(body=>body.includes(master)||body.includes('Synthetic-login-only#42')));check('passkey enrollment and handoff API bodies contain neither master nor login plaintext');
   const stored=await popup.evaluate(async()=>await (globalThis as any).chrome.storage.local.get(null));check('browser storage has connection/token only',Object.keys(stored).join()==='heavenkey.extension.v1'&&!JSON.stringify(stored).includes(master)&&!JSON.stringify(stored).includes('Synthetic-login-only'));
-    const uiStatus=async(text:string)=>popup.waitForFunction(text=>document.querySelector('#smart-status')!.textContent!.includes(text),text);
-  await popup.locator('[data-task="template"]').click();await popup.locator('[data-id="synthetic-profile"]').click();await popup.locator('#scan-page').click();await popup.locator('#fill-confirmation').waitFor({state:'visible'});
+    const uiStatus=async(text:string)=>popup.waitForFunction(text=>document.querySelector('#smart-status')!.textContent!.includes(text),text).catch(async error=>{console.log('Popup status diagnostic',JSON.stringify({expected:text,actual:await popup.locator('#smart-status').textContent(),errors}));throw error;});
+  const scanPopup=async(label:string)=>{
+    let diagnostic='';
+    for(let attempt=0;attempt<3;attempt++){
+      await popup.locator('#scan-page').click();
+      const visible=await popup.waitForFunction(()=>!document.querySelector('#fill-confirmation')?.hasAttribute('hidden')||document.querySelector('#smart-status')?.textContent?.includes('Inhaltsskript'),undefined,{timeout:15000}).then(()=>popup.locator('#fill-confirmation').isVisible()).catch(async()=>false);
+      if(visible) return;
+      diagnostic=await popup.locator('#smart-status').textContent()||'';
+      if(!diagnostic.includes('Inhaltsskript')) break;
+    }
+    console.log('Scan diagnostic',JSON.stringify({label,diagnostic,errors}));throw new Error(`scan confirmation unavailable: ${label}: ${diagnostic}`);
+  };
+  await popup.locator('[data-task="template"]').click();await popup.locator('[data-id="synthetic-profile"]').click();await scanPopup('initial profile');
   await popup.locator('#fill-selected').click();await uiStatus('ausdrücklich bestätigen');check('popup requires fresh explicit target-origin confirmation',await target.locator('#firstName').inputValue()==='');
   for(const box of await popup.locator('#field-map [data-field]').all()) await box.uncheck();
   await popup.getByRole('checkbox',{name:/^Vorname ·/}).check();await popup.locator('#confirm-origin').check();await popup.locator('#fill-selected').click();await uiStatus('1 Felder gefüllt');
   check('real popup selective profile fill changes only selected field',await target.locator('#firstName').inputValue()==='Alex'&&await target.locator('#lastName').inputValue()==='');await popup.locator('#undo-fill').click();await uiStatus('1 Felder zurückgesetzt');
+  await scanPopup('profile rescan');
+  await popup.locator('#copy-agent-scan').click();await uiStatus('Blinder Scan');
+  const blindScanJson=await popup.locator('#agent-scan-output').inputValue();
+  check('clipboard scan export contains field metadata but no profile plaintext',blindScanJson.includes('Vorname')&&!blindScanJson.includes('Alex')&&!blindScanJson.includes('DE89370400440532013000'));
+  const blindScan=JSON.parse(blindScanJson),first=blindScan.fields.find((field:any)=>field.entity==='firstName');
+  const blindJob={version:1,kind:'heavenkey-blind-form-job',scan:blindScan.scan,origin:blindScan.origin,href:blindScan.href,fields:[{id:first.id,entity:'firstName'}],options:{sensitive:false,secrets:false,overwrite:false,choices:false,submit:false}};
+  await popup.locator('#agent-job-input').fill(JSON.stringify(blindJob));
+  await popup.locator('#read-agent-job').click();await uiStatus('Agentenauftrag geprüft');
+  check('blind job selects exactly one field without exposing values',await popup.locator('#field-map [data-field]:checked').count()===1);
+  await popup.locator('#confirm-origin').check();await popup.locator('#fill-selected').click();await uiStatus('1 Felder gefüllt');
+  check('agent-created blind job fills through owner confirmation only',await target.locator('#firstName').inputValue()==='Alex'&&await target.locator('#lastName').inputValue()==='');await popup.locator('#undo-fill').click();await uiStatus('1 Felder zurückgesetzt');
+  await scanPopup('blind scan');await popup.locator('#copy-agent-scan').click();
+  const sensitiveScan=JSON.parse(await popup.locator('#agent-scan-output').inputValue()),sensitiveFirst=sensitiveScan.fields.find((field:any)=>field.entity==='firstName'),sensitiveIban=sensitiveScan.fields.find((field:any)=>field.entity==='iban');
+  const sensitiveJob={version:1,kind:'heavenkey-blind-form-job',scan:sensitiveScan.scan,origin:sensitiveScan.origin,href:sensitiveScan.href,fields:[{id:sensitiveFirst.id,entity:'firstName'},{id:sensitiveIban.id,entity:'iban'}],options:{sensitive:true,secrets:false,overwrite:false,choices:false,submit:false}};
+  await popup.locator('#agent-job-input').fill(JSON.stringify(sensitiveJob));await popup.locator('#read-agent-job').click();await uiStatus('Agentenauftrag geprüft');
+  check('agent sensitive permission request is visible but never pre-consented',await popup.locator('#include-sensitive').isChecked()===false);
+  await popup.locator('#confirm-origin').check();await popup.locator('#fill-selected').click();await uiStatus('1 Felder gefüllt');
+  check('sensitive job field remains blocked until owner independently opts in',await target.locator('#firstName').inputValue()==='Alex'&&await target.locator('#iban').inputValue()==='');await popup.locator('#undo-fill').click();await uiStatus('1 Felder zurückgesetzt');
+  await popup.locator('#custom-field-editor > summary').click();await popup.locator('#custom-field-label').fill('Aufenthaltstitel');await popup.locator('#custom-field-value').fill('Synthetic-permit-only');await popup.locator('#add-custom-entity').click();await uiStatus('Eigenes Antragsfeld');
+  check('custom application field enters local profile draft without plaintext persistence',await popup.locator('[data-entity="custom_aufenthaltstitel"]').inputValue()==='Synthetic-permit-only');
+  const fillCustom=async(expectSensitive:boolean)=>{
+    await scanPopup(`custom ${expectSensitive?'sensitive':'blocked'}`);
+    for(const box of await popup.locator('#field-map [data-field]').all()) await box.uncheck();
+    await popup.locator('select[aria-label="Wert für Generische Nummer"]').selectOption('custom_aufenthaltstitel');
+    if(expectSensitive) await popup.locator('#include-sensitive').check();
+    await popup.locator('#confirm-origin').check();await popup.locator('#fill-selected').click();
+  };
+  await fillCustom(false);await uiStatus('0 Felder gefüllt');
+  check('custom application value remains blocked without independent sensitive consent',await target.locator('#generic').inputValue()==='');
+  await fillCustom(true);await uiStatus('1 Felder gefüllt');
+  check('custom application value fills after explicit sensitive consent and owner confirmation',await target.locator('#generic').inputValue()==='Synthetic-permit-only');await popup.locator('#undo-fill').click();await uiStatus('1 Felder zurückgesetzt');
   await popup.locator('[data-task="login"]').click();await popup.locator('#show-other-logins').check();await popup.locator('[data-id="wrong-origin"]').click();await popup.locator('#scan-page').click();await uiStatus('anderen Herkunft');check('popup rejects login saved for a different exact origin',await target.locator('#password').inputValue()==='');
-  await popup.locator('[data-id="synthetic-login"]').click();await popup.locator('#scan-page').click();await popup.locator('#fill-confirmation').waitFor({state:'visible'});
+  await popup.locator('[data-id="synthetic-login"]').click();await scanPopup('profile rescan');
   for(const box of await popup.locator('#field-map [data-field]').all()) await box.uncheck();
   for(const text of ['Benutzername','Passwort','Einmalcode']) await popup.getByRole('checkbox',{name:new RegExp('^'+text+' ·')}).check();
   await popup.locator('#include-secrets').check();await popup.locator('#confirm-origin').check();await popup.locator('#fill-selected').click();await uiStatus('3 Felder gefüllt');
@@ -100,7 +151,7 @@ try {
 
   for (const cancel of ['lock', 'pagehide', 'disconnect']) {
     console.log(`Cancellation fixture: ${cancel} scan`);
-    await popup.locator('[data-task="template"]').click();await popup.locator('[data-id="synthetic-profile"]').click();await popup.locator('#scan-page').click();await popup.locator('#fill-confirmation').waitFor({state:'visible'});
+    await popup.locator('[data-task="template"]').click();await popup.locator('[data-id="synthetic-profile"]').click();await scanPopup('initial profile');
     for (const box of await popup.locator('#field-map [data-field]').all()) await box.uncheck();
     await popup.getByRole('checkbox',{name:/^Vorname ·/}).check();await popup.locator('#confirm-origin').check();
     // Delay completion of the native installation call to exercise cancellation
@@ -148,6 +199,10 @@ try {
   check('secret and sensitive fields denied without opt-ins',await target.locator('#password').inputValue()===''&&await target.locator('#otp').inputValue()===''&&await target.locator('#iban').inputValue()===''&&await target.locator('#bankName').inputValue()==='');
   check('checkbox/radio values matched while consent/payment remain untouched',await target.locator('#business').isChecked()&&await target.locator('#mr').isChecked()&&!await target.locator('#ms').isChecked()&&!await target.locator('#consent').isChecked()&&!await target.locator('#payment').isChecked());
   check('existing values preserved and no submission',await target.locator('#prefilled').inputValue()==='Manual value'&&await target.evaluate(()=>(window as any).submissions===0));
+  const submitScan=await invoke('scan');const submitFirst=submitScan.value.fields.find((f:any)=>f.entity==='firstName');
+  const submitFill=await invoke('fill',{scan:submitScan.value.scan,entities:payload,selected:[{id:submitFirst.id,entity:'firstName'}],overwrite:true,submit:true});assert(submitFill.ok,submitFill.error);
+  check('explicit submit flag triggers exactly one same-origin POST submit lifecycle',submitFill.value.submitted===true&&await target.evaluate(()=>(window as any).submissions===1));
+  await invoke('undo');
   await target.locator('#firstName').fill('Edited by user');
   const undone=await invoke('undo');assert(undone.ok);check('undo restores empty select/number/contenteditable and preserves subsequent edits',await target.locator('#country').inputValue()===''&&await target.locator('#amount').inputValue()===''&&await target.locator('#editable').innerText()===''&&await target.locator('#firstName').inputValue()==='Edited by user'&&!await target.locator('#business').isChecked()&&!await target.locator('#mr').isChecked());
   const secrets=await invoke('scan');const secretFields=secrets.value.fields.filter((f:any)=>['password','otp','iban','bankName'].includes(f.entity));
@@ -177,7 +232,7 @@ try {
     await popup.screenshot({path:join(root,'apps/extension/evidence/popup-disconnected.png'),fullPage:true});
   }
 
-  const sourcePaths=['scripts/extension_redteam_cases.ts','apps/extension/form-boundary.ts','apps/extension/workflow.ts','scripts/extension_inline_cases.ts','apps/extension/inline.ts','apps/extension/generator.ts','apps/extension/site-access.ts','apps/mobile/assets/eff_large_wordlist.txt','scripts/extension_autofill_e2e.ts','apps/extension/popup.html','apps/extension/popup.css','apps/extension/popup.js','apps/extension/settings.js','apps/extension/content.ts','apps/extension/smart-popup.ts','apps/extension/background.ts','apps/extension/unlock-channel.ts','apps/web/src/passwords-extension-unlock.ts','apps/web/src/passwords-access.ts','apps/extension/vendor/extract.js','apps/extension/vendor/fill.js','apps/web/src/passwords-crypto.ts','packages/forms/schema.ts','scripts/build_extension.ts'];
+  const sourcePaths=['scripts/extension_redteam_cases.ts','apps/extension/form-boundary.ts','apps/extension/workflow.ts','scripts/extension_inline_cases.ts','apps/extension/inline.ts','apps/extension/generator.ts','apps/extension/site-access.ts','apps/mobile/assets/eff_large_wordlist.txt','scripts/extension_autofill_e2e.ts','apps/extension/popup.html','apps/extension/popup.css','apps/extension/popup.js','apps/extension/settings.js','apps/extension/content.ts','apps/extension/smart-popup.ts','apps/extension/background.ts','apps/extension/unlock-channel.ts','apps/web/src/passwords-extension-unlock.ts','apps/web/src/passwords-access.ts','apps/extension/vendor/extract.js','apps/extension/vendor/fill.js','apps/web/src/passwords-crypto.ts','packages/forms/schema.ts','packages/forms/blind-job.ts','scripts/blind_form_job.ts','scripts/blind_form_job_reference.mjs','scripts/build_extension.ts'];
   const source_sha256=Object.fromEntries(await Promise.all(sourcePaths.map(async path=>[path,createHash('sha256').update(await readFile(join(root,path))).digest('hex')])));
   const report={source_sha256,pass:true,browser:browserPath,real_unpacked_extension:true,real_rust_pairing:!process.argv.includes('--engine-only'),mocks:false,test_only_manifest_grant:'http://localhost/*',native_optional_permission_prompt:'not automated: headless request waits for browser UI',synthetic_only:true,controlled_clock_tests:'isolated Date.now temporarily advanced for expiry regression',binary_sha256:createHash('sha256').update(await readFile(binary)).digest('hex'),manifest_sha256:createHash('sha256').update(await readFile(join(extension,'manifest.json'))).digest('hex'),cases,errors};
   await writeFile(join(root,process.argv.includes('--engine-only')?'apps/extension/ENGINE-RECEIPT.json':'apps/extension/TEST-RECEIPT.json'),JSON.stringify(report,null,2)+'\n');

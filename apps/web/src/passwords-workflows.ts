@@ -1,5 +1,5 @@
 import type {Login,Vault} from './passwords-crypto';
-import {PROFILE_KEYS,HIGH_FIELDS,type FormProfile} from '../../../packages/forms/schema';
+import {PROFILE_KEYS,CUSTOM_PROFILE_KEY,profileKeySensitive,type FormProfile} from '../../../packages/forms/schema';
 import {planImport,applyImport,type ImportAction} from '../../../packages/forms/import-plan';
 export type WorkflowContext = {
   vault:()=>Vault|null; revision:()=>number; generation:()=>number; current:(run:number)=>boolean; busy:()=>boolean; discreet:()=>boolean;
@@ -51,8 +51,10 @@ export function initWorkflows(ctx:WorkflowContext){
   document.addEventListener('keydown',event=>{if(event.key==='F2'&&!event.ctrlKey&&!event.metaKey&&!event.altKey){event.preventDefault();openQuick();}});
   function field(name:string='email',text=''){
     const row=el('div');row.className='profile-field';const select=el('select');select.setAttribute('aria-label','Profilfeld');
-    for(const key of PROFILE_KEYS){const option=el('option',labels[key]||key);option.value=key;select.append(option);}select.value=name;
-    const input=el('input');input.autocomplete='off';input.maxLength=10000;input.value=text;const update=()=>{input.type=HIGH_FIELDS.has(select.value)||select.value==='password'?'password':'text';input.setAttribute('aria-label',`${labels[select.value]||select.value}: Wert`);};update();select.addEventListener('change',update);
+    for(const key of PROFILE_KEYS){const option=el('option',labels[key]||key);option.value=key;select.append(option);}
+    if(CUSTOM_PROFILE_KEY.test(name)&&![...select.options].some(option=>option.value===name)){const option=el('option',`Eigenes Feld · ${name.slice(7).replace(/[_-]+/g,' ')}`);option.value=name;select.append(option);}
+    select.value=name;
+    const input=el('input');input.autocomplete='off';input.maxLength=10000;input.value=text;const update=()=>{input.type=profileKeySensitive(select.value)||select.value==='password'?'password':'text';input.setAttribute('aria-label',`${labels[select.value]||select.value}: Wert`);};update();select.addEventListener('change',update);
     row.append(select,input,button('Entfernen',()=>row.remove()));get('profile-fields').append(row);return input;
   }
   function editProfile(id?:string){if(ctx.busy()||!ctx.vault())return;if(ctx.discreet()){announce('Beende die diskrete Ansicht, um Profile zu bearbeiten.');return;}clearProfile();const profile=ctx.vault()?.profiles?.find(p=>p.id===id);editing=profile?.id||null;get<HTMLInputElement>('profile-title').value=profile?.title||'';for(const[name,value]of Object.entries(profile?.entities||{}))field(name,value);if(!profile)field();open('profile-editor');get('profile-title').focus();}

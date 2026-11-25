@@ -38,6 +38,11 @@ cargo +nightly-2026-10-11 -Zscript broker.rs /absoluter/pfad/heavenkey 18240 req
 
 Die festgelegte Toolchain ist Rust 1.101 nightly. `-Zscript` kompiliert das Hilfsskript automatisch und verwendet Caches. Es ersetzt weder den Produktbuild noch die Sicherheitsprüfung. Das Releaseprogramm verwendet keinen Script-Interpreter.
 
+
+## Ergänzung: blinde Formularaufträge in der Browser-Erweiterung
+
+Der Broker bleibt der strengere Weg für opaque Logins ohne Seitenansicht. Zusätzlich kann die Browser-Erweiterung ab 0.31 einen wertefreien Scan als sichtbares JSON bereitstellen und einen wertefreien Formularauftrag dagegen prüfen. Dieser Weg ist für allgemeine Antragsformulare gedacht: Der Agent wählt nur Feld-ID und Feldtyp, während die verschlüsselten Profilwerte ausschließlich lokal in der Erweiterung aufgelöst werden. Die Zuordnung muss weiterhin sichtbar bestätigt werden; optional ist einmaliges Absenden eines einzelnen zielgleichen POST-Formulars mit eigener Freigabe möglich. Es gibt darüber weder generisches Lesen, Screenshots, Cookies, Netzwerkzugriff noch einen Server-Erfolgsbeleg. Details stehen in [AUTOFILL-FLOWS.md](AUTOFILL-FLOWS.md#blinder-agentenauftrag-für-formulare-031).
+
 ## Schutzgrenze und Trust-Marker
 
 - Der ausgewählte Login wird mit AES-256-GCM und einem RSA-OAEP-SHA256-verpackten Zufallsschlüssel an den lokalen Ausführer übergeben. Die Bindung enthält Anfrage, Entsperr-Epoche und Tresorrevision. Masterpasswort und vollständiger Tresor werden nicht übertragen.
