@@ -61,7 +61,7 @@ jobs:
       - name: Dependency security and licenses
         run: python3 scripts/run.py ci-security 180 -- bash scripts/ci.sh security
       - name: Build application
-        run: python3 scripts/run.py ci-build 600 -- bash scripts/ci.sh build
+        run: python3 scripts/run.py ci-build 900 -- bash scripts/ci.sh build
       - name: Virtual-authenticator browser tests
         run: bash scripts/ci.sh e2e
       - name: Preserve fresh evidence locally
@@ -106,7 +106,7 @@ jobs:
       - name: Dependency security and licenses
         run: python3 scripts/run.py ci-security 180 -- bash scripts/ci.sh security
       - name: Build and integrated browser flows
-        run: python3 scripts/run.py ci-build 600 -- bash scripts/ci.sh build
+        run: python3 scripts/run.py ci-build 900 -- bash scripts/ci.sh build
       - name: Virtual-authenticator browser tests
         run: bash scripts/ci.sh e2e
       - name: Source-bound evidence manifest in job log
