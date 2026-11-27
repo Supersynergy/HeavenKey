@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -49,7 +50,8 @@ def main():
                             "ANDROID_EMULATOR_HOME": scratch}
         run([str(SDK / "cmdline-tools/latest/bin/avdmanager"), "create", "avd",
              "--force", "--name", NAME, "--package",
-             "system-images;android-36;google_apis;x86_64",
+             os.environ.get("HEAVENKEY_ANDROID_IMAGE",
+                                 "system-images;android-36;google_apis;x86_64"),
              "--path", str(Path(scratch) / "device")], input="no\n", env=env)
         config = Path(scratch) / "device/config.ini"
         lines = [line for line in config.read_text().splitlines()
@@ -64,7 +66,9 @@ def main():
                    "-no-audio", "-no-boot-anim", "-no-snapshot", "-no-metrics",
                    "-show-kernel", "-gpu", "swiftshader", "-memory", "2560", "-cores", "2",
                    "-partition-size", "2048"]
-        if not Path("/dev/kvm").exists():
+        # Linux without KVM crawls without acceleration hints; macOS uses
+        # Hypervisor.framework automatically for host-arch images.
+        if sys.platform.startswith("linux") and not Path("/dev/kvm").exists():
             command += ["-accel", "off"]
         with (EVIDENCE / "emulator.log").open("w") as log:
             process = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
