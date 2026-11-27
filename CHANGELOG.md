@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.33.0 – Vorschau
+
+- Vermittelte blinde Formularautomation ohne Kopieren: Scan und Auftrag reisen wertefrei über den lokalen Dienst zwischen Erweiterung und angemeldetem Agentenwerkzeug. Das scoped Vermittlungs-Token erreicht niemals den Tresor; Widerruf beendet alle Vermittlungen. Jeder Füllvorgang bleibt an die sichtbare Bestätigung in der Erweiterung gebunden. [Release-Details](docs/releases/0.33.0.md)
+
 ## 0.32.0 – Vorschau
 
 - Android-Wallet-Pilot für synthetische Mitgliedschaften, ausgewählte Angaben und sitzungsgebundenen Zugang zu genau einem Testprojekt. Nachweise und Schlüssel liegen in einer eigenen nativen Ablage.
