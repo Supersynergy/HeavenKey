@@ -31,7 +31,8 @@ type Field = { id: string; field: string; entity: string | null; score: number; 
 let connection: Connection | null = null, key: CryptoKey | null = null, vault: ExtendedVault | null = null, envelope: Envelope | null = null;
 let revision = 0, epoch = 0, busy = false, lastActivity = Date.now(), entities: Record<string,string> = {}, sourceLogin: any = null, sourceProfile: FormProfile | null = null;
 let pageTarget: { id: number; origin: string; href: string } | null = null, preview: { scan: string; fields: Field[]; origin: string; href: string } | null = null;
-let blindScan: BlindScan | null = null, blindJob: BlindJob | null = null;
+let blindScan: BlindScan | null = null, blindJob: BlindJob | null = null, blindPoll: ReturnType<typeof setInterval> | null = null;
+function stopBlindPoll() { if (blindPoll) { clearInterval(blindPoll); blindPoll = null; } }
 let siteOrigin = '', pendingUnlock: {request: UnlockRequest; privateKey: CryptoKey; expires: number} | null = null;
 let nextFocus: HTMLElement | null=null;
 let editLogin: Login | null = null, draftGenerated = false, sourceGenerated = false, savedGenerated = '';
@@ -40,7 +41,7 @@ let currentTask = taskFrom(new URL(location.href).searchParams.get('intent'));
 function focusAfter(control: HTMLElement) { if(busy) nextFocus=control;else control.focus(); }
 const button = (label: string, fn: () => void, kind = 'secondary') => { const b = document.createElement('button'); b.type = 'button'; b.className = kind; b.textContent = label; b.addEventListener('click', () => { if (!busy) fn(); }); return b; };
 function status(message: string, error = false) { $('smart-status').textContent = message; $('smart-status').dataset.error = String(error); }
-function resetPreview() { coverageStatus.textContent=''; preview = null; blindScan = null; blindJob = null; $('field-map').replaceChildren(); $('fill-confirmation').hidden = true; input('confirm-origin').checked = false; input('allow-submit').checked = false; $('submit-row').hidden = true; input('agent-scan-output').value = ''; input('agent-job-input').value = ''; $('fill-summary').textContent = ''; $('task-progress').textContent = '1 · Eintrag auswählen oder neu anlegen'; }
+function resetPreview() { coverageStatus.textContent=''; preview = null; blindScan = null; blindJob = null; stopBlindPoll(); $('field-map').replaceChildren(); $('fill-confirmation').hidden = true; input('confirm-origin').checked = false; input('allow-submit').checked = false; $('submit-row').hidden = true; input('agent-scan-output').value = ''; input('agent-job-input').value = ''; $('fill-summary').textContent = ''; $('task-progress').textContent = '1 · Eintrag auswählen oder neu anlegen'; }
 function resetSource() { sourceGenerated=false; $('quick-login').hidden=true; entities = {}; sourceLogin = null; sourceProfile = null; $('entity-preview').replaceChildren(); input('source-text').value = ''; input('profile-title').value = ''; input('custom-field-label').value = ''; input('custom-field-value').value = ''; input('include-sensitive').checked = false; input('include-secrets').checked = false; input('overwrite').checked = false; input('include-choices').checked = false; resetPreview(); }
 function clearEditor() {
   formFeedback.get('login-form')?.clear();
@@ -212,7 +213,7 @@ function showMap(result: any) {
   preview = { scan: result.scan, fields: result.fields, origin: result.origin, href: result.href }; const list = $('field-map'); list.replaceChildren();
   const relevant = new Set(result.fields.flatMap((field: Field) => field.entity ? [field.entity, entityBase(field.entity)] : []));
   blindScan = createBlindScan({ scan: result.scan, origin: result.origin, href: result.href, availableEntities: Object.entries(entities).filter(([name, value]) => !!value && (relevant.has(name) || name.startsWith('custom_'))).map(([name]) => name), fields: result.fields });
-  blindJob = null; input('allow-submit').checked = false; $('submit-row').hidden = true;
+  blindJob = null; void relayBlindScan(blindScan); input('allow-submit').checked = false; $('submit-row').hidden = true;
   for (const field of preview!.fields) {
     const row = document.createElement('div'); row.className = 'mapping-row';
     const label = document.createElement('label'); label.className = 'choice';
@@ -240,6 +241,27 @@ function updateFillSummary() {
   const submit = blindJob?.options.submit ? input('allow-submit').checked ? ' · Absenden ausdrücklich freigegeben' : ' · Absenden angefragt, noch nicht freigegeben' : ' · kein Absenden';
   $('fill-summary').textContent = `${selected.length} Felder${sensitive ? ` · ${sensitive} sensible` : ''}${secrets ? ` · ${secrets} Geheimnisse` : ''} · ${input('overwrite').checked ? 'Überschreiben ausdrücklich erlaubt' : 'Vorhandene Eingaben bleiben erhalten'}${submit}`;
   $('fill-selected').textContent = `${selected.length} gewählte Felder füllen${blindJob?.options.submit && input('allow-submit').checked ? ' und einmal absenden' : ''}`;
+}
+async function relayBlindScan(scan: BlindScan) {
+  stopBlindPoll();
+  try {
+    await api('/api/password-vault/extension/blind-scan', { scan });
+    blindPoll = setInterval(() => void pollBlindJob(scan.scan, scan), 2000);
+  } catch { /* Die lokale Vermittlung ist optional; der sichtbare manuelle Austausch bleibt verfügbar. */ }
+}
+async function pollBlindJob(scanId: string, scan: BlindScan) {
+  if (blindScan !== scan || blindJob || Date.parse(scan.expiresAt) <= Date.now()) { stopBlindPoll(); return; }
+  let result: any;
+  try { result = await api('/api/password-vault/extension/blind-job/poll', { scan_id: scanId }); }
+  catch { stopBlindPoll(); return; }
+  if (!result?.job || blindScan !== scan || blindJob) return;
+  stopBlindPoll();
+  try {
+    const job = parseBlindJob(typeof result.job === 'string' ? result.job : JSON.stringify(result.job), scan);
+    applyBlindJob(job);
+    const requested = [job.options.sensitive ? 'sensible Werte' : '', job.options.secrets ? 'Geheimnisse' : '', job.options.overwrite ? 'Überschreiben' : '', job.options.choices ? 'Auswahlfelder' : ''].filter(Boolean).join(', ');
+    status(`Agentenauftrag über die lokale Vermittlung eingegangen: ${job.fields.length} Zielfelder, keine Werte übertragen. Zuordnung, Herkunft und ${requested ? `angefragte Freigaben (${requested}) ` : ''}selbst bestätigen.`);
+  } catch (error) { status(error instanceof Error ? error.message : 'Der vermittelte Auftrag ist ungültig.', true); }
 }
 function applyBlindJob(job: BlindJob) {
   for (const control of document.querySelectorAll<HTMLInputElement>('[data-field]')) control.checked = false;

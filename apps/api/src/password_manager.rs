@@ -28,8 +28,22 @@ pub struct VaultApp {
 struct Extensions {
     pending: Option<Pairing>,
     grants: HashMap<String, String>,
+    relay_agents: HashMap<String, String>,
+    form_scans: HashMap<String, FormScan>,
     unlocks: HashMap<String, extension_unlock::Pending>,
 }
+
+struct FormScan {
+    scan: String,
+    job: Option<String>,
+    extension: String,
+    expires: Instant,
+}
+
+const MAX_FORM_SCANS: usize = 8;
+const MAX_RELAY_AGENTS: usize = 4;
+const FORM_SCAN_TTL: Duration = Duration::from_secs(15 * 60);
+const MAX_FORM_DOCUMENT: usize = 96 * 1024;
 
 struct Pairing {
     code: String,
@@ -59,8 +73,26 @@ fn extension_token_hash(token: &str) -> String {
     URL_SAFE_NO_PAD.encode(Sha256::digest(token.as_bytes()))
 }
 
+impl Extensions {
+    fn sweep_scans(&mut self) {
+        let now = Instant::now();
+        self.form_scans.retain(|_, scan| now < scan.expires);
+        while self.form_scans.len() >= MAX_FORM_SCANS {
+            let Some(oldest) = self
+                .form_scans
+                .iter()
+                .min_by_key(|(_, scan)| scan.expires)
+                .map(|(id, _)| id.clone())
+            else {
+                break;
+            };
+            self.form_scans.remove(&oldest);
+        }
+    }
+}
+
 fn persistent_extensions(db: &Connection) -> rusqlite::Result<Extensions> {
-    db.execute_batch("CREATE TABLE IF NOT EXISTS password_extension_clients(origin TEXT PRIMARY KEY,token_hash TEXT NOT NULL CHECK(length(token_hash)=43));")?;
+    db.execute_batch("CREATE TABLE IF NOT EXISTS password_extension_clients(origin TEXT PRIMARY KEY,token_hash TEXT NOT NULL CHECK(length(token_hash)=43));CREATE TABLE IF NOT EXISTS password_form_relay_agents(id TEXT PRIMARY KEY,token_hash TEXT NOT NULL CHECK(length(token_hash)=43));")?;
     let mut extensions = Extensions::default();
     let mut statement = db.prepare("SELECT origin,token_hash FROM password_extension_clients")?;
     let rows = statement.query_map([], |row| {
@@ -75,6 +107,23 @@ fn persistent_extensions(db: &Connection) -> rusqlite::Result<Extensions> {
             return Err(rusqlite::Error::InvalidQuery);
         }
         extensions.grants.insert(origin, hash);
+    }
+    let mut statement = db.prepare("SELECT id,token_hash FROM password_form_relay_agents")?;
+    let rows = statement.query_map([], |row| {
+        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+    })?;
+    for row in rows {
+        let (id, hash) = row?;
+        if id.len() != 43
+            || !id
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_'))
+            || !decoded(&hash, 32, 32)
+            || extensions.relay_agents.len() >= MAX_RELAY_AGENTS
+        {
+            return Err(rusqlite::Error::InvalidQuery);
+        }
+        extensions.relay_agents.insert(id, hash);
     }
     Ok(extensions)
 }
@@ -106,6 +155,40 @@ fn extension_access(app: &VaultApp, headers: &HeaderMap) -> ApiResult<()> {
         return Err(forbidden("local_vault_denied"));
     }
     Ok(())
+}
+
+fn form_relay_access(app: &VaultApp, headers: &HeaderMap) -> ApiResult<()> {
+    if headers
+        .get("x-heavenkey-client")
+        .and_then(|v| v.to_str().ok())
+        != Some("form-relay-agent")
+    {
+        return Err(forbidden("local_vault_denied"));
+    }
+    let Some(token) = headers
+        .get("x-heavenkey-token")
+        .and_then(|v| v.to_str().ok())
+    else {
+        return Err(forbidden("local_vault_denied"));
+    };
+    let hash = extension_token_hash(token);
+    let extensions = app.extensions.lock().map_err(internal)?;
+    if !extensions.relay_agents.values().any(|grant| *grant == hash) {
+        return Err(forbidden("local_vault_denied"));
+    }
+    Ok(())
+}
+
+pub(crate) fn form_relay_transport(headers: &HeaderMap, path: &str) -> bool {
+    matches!(
+        path,
+        "/api/password-vault/form-relay/connect"
+            | "/api/password-vault/form-relay/scan/latest"
+            | "/api/password-vault/form-relay/job"
+    ) && headers
+        .get("x-heavenkey-client")
+        .and_then(|v| v.to_str().ok())
+        == Some("form-relay-agent")
 }
 
 fn vault_access(app: &VaultApp, headers: &HeaderMap) -> ApiResult<()> {
@@ -150,7 +233,9 @@ async fn pairing_revoke(State(app): State<VaultApp>, headers: HeaderMap) -> ApiR
     app.db
         .lock()
         .map_err(internal)?
-        .execute("DELETE FROM password_extension_clients", [])
+        .execute_batch(
+            "DELETE FROM password_extension_clients;DELETE FROM password_form_relay_agents",
+        )
         .map_err(internal)?;
     *extensions = Extensions::default();
     Ok(Json(json!({"paired": 0})))
@@ -202,6 +287,184 @@ async fn connect(
     db.execute("INSERT INTO password_extension_clients(origin,token_hash) VALUES(?1,?2) ON CONFLICT(origin) DO UPDATE SET token_hash=excluded.token_hash", rusqlite::params![origin, hash]).map_err(internal)?;
     extensions.grants.insert(origin.to_owned(), hash);
     Ok(Json(json!({"token": token, "revision": revision})))
+}
+
+async fn relay_connect(
+    State(app): State<VaultApp>,
+    headers: HeaderMap,
+    Json(input): Json<Connect>,
+) -> ApiResult<Json<Value>> {
+    if headers
+        .get("x-heavenkey-client")
+        .and_then(|v| v.to_str().ok())
+        != Some("form-relay-agent")
+    {
+        return Err(forbidden("local_vault_denied"));
+    }
+    let mut extensions = app.extensions.lock().map_err(internal)?;
+    extensions.expire();
+    let Some(pending) = extensions.pending.as_mut() else {
+        return Err(forbidden("extension_pairing_denied"));
+    };
+    if input.code != pending.code {
+        pending.attempts += 1;
+        if pending.attempts >= MAX_PAIRING_ATTEMPTS {
+            extensions.pending = None;
+        }
+        return Err(forbidden("extension_pairing_denied"));
+    }
+    extensions.pending = None;
+    if extensions.relay_agents.len() >= MAX_RELAY_AGENTS {
+        return Err(ApiError(StatusCode::CONFLICT, "form_relay_agent_limit"));
+    }
+    let id = random_secret();
+    let token = random_secret();
+    let hash = extension_token_hash(&token);
+    app.db
+        .lock()
+        .map_err(internal)?
+        .execute(
+            "INSERT INTO password_form_relay_agents(id,token_hash) VALUES(?1,?2)",
+            rusqlite::params![id, hash],
+        )
+        .map_err(internal)?;
+    extensions.relay_agents.insert(id.clone(), hash);
+    Ok(Json(json!({"token": token, "agent": id})))
+}
+
+fn scan_document(value: &Value) -> ApiResult<(String, String)> {
+    let Some(object) = value.as_object() else {
+        return Err(invalid_request());
+    };
+    let Some(id) = object.get("scan").and_then(Value::as_str) else {
+        return Err(invalid_request());
+    };
+    if id.is_empty()
+        || id.len() > 96
+        || object.get("kind").and_then(Value::as_str) != Some("heavenkey-blind-form-scan")
+        || object.get("expiresAt").and_then(Value::as_str).is_none()
+    {
+        return Err(invalid_request());
+    }
+    let text = serde_json::to_string(value).map_err(internal)?;
+    if text.len() > MAX_FORM_DOCUMENT {
+        return Err(invalid_request());
+    }
+    Ok((id.to_owned(), text))
+}
+
+fn invalid_request() -> ApiError {
+    ApiError(StatusCode::UNPROCESSABLE_ENTITY, "invalid_form_document")
+}
+
+async fn blind_scan_publish(
+    State(app): State<VaultApp>,
+    headers: HeaderMap,
+    Json(input): Json<Value>,
+) -> ApiResult<Json<Value>> {
+    extension_access(&app, &headers)?;
+    let extension = headers
+        .get("origin")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or_default()
+        .to_owned();
+    let Some(scan) = input.get("scan") else {
+        return Err(invalid_request());
+    };
+    if input.as_object().is_none_or(|object| object.len() != 1) {
+        return Err(invalid_request());
+    }
+    let (id, text) = scan_document(scan)?;
+    let mut extensions = app.extensions.lock().map_err(internal)?;
+    extensions.sweep_scans();
+    extensions.form_scans.insert(
+        id.clone(),
+        FormScan {
+            scan: text,
+            job: None,
+            extension,
+            expires: Instant::now() + FORM_SCAN_TTL,
+        },
+    );
+    Ok(Json(json!({"scan_id": id, "relayed": true})))
+}
+
+async fn blind_job_poll(
+    State(app): State<VaultApp>,
+    headers: HeaderMap,
+    Json(input): Json<Value>,
+) -> ApiResult<Json<Value>> {
+    extension_access(&app, &headers)?;
+    let extension = headers
+        .get("origin")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or_default();
+    let Some(scan_id) = input.get("scan_id").and_then(Value::as_str) else {
+        return Err(invalid_request());
+    };
+    if input.as_object().is_none_or(|object| object.len() != 1) || scan_id.len() > 96 {
+        return Err(invalid_request());
+    }
+    let mut extensions = app.extensions.lock().map_err(internal)?;
+    extensions.sweep_scans();
+    let job = extensions
+        .form_scans
+        .get(scan_id)
+        .filter(|scan| scan.extension == extension)
+        .and_then(|scan| scan.job.clone());
+    Ok(Json(json!({"job": job})))
+}
+
+async fn relay_scan_latest(
+    State(app): State<VaultApp>,
+    headers: HeaderMap,
+    Json(input): Json<Value>,
+) -> ApiResult<Json<Value>> {
+    form_relay_access(&app, &headers)?;
+    if input.as_object().is_none_or(|object| !object.is_empty()) {
+        return Err(invalid_request());
+    }
+    let mut extensions = app.extensions.lock().map_err(internal)?;
+    extensions.sweep_scans();
+    let scan = extensions
+        .form_scans
+        .values()
+        .max_by_key(|scan| scan.expires)
+        .map(|scan| scan.scan.clone());
+    drop(extensions);
+    let scan = scan.and_then(|text| serde_json::from_str::<Value>(&text).ok());
+    Ok(Json(json!({"scan": scan})))
+}
+
+async fn relay_job_submit(
+    State(app): State<VaultApp>,
+    headers: HeaderMap,
+    Json(input): Json<Value>,
+) -> ApiResult<Json<Value>> {
+    form_relay_access(&app, &headers)?;
+    let Some(scan_id) = input.get("scan_id").and_then(Value::as_str) else {
+        return Err(invalid_request());
+    };
+    let Some(job) = input.get("job") else {
+        return Err(invalid_request());
+    };
+    if input.as_object().is_none_or(|object| object.len() != 2) || scan_id.len() > 96 {
+        return Err(invalid_request());
+    }
+    let text = serde_json::to_string(job).map_err(internal)?;
+    if text.len() > MAX_FORM_DOCUMENT
+        || job.get("kind").and_then(Value::as_str) != Some("heavenkey-blind-form-job")
+        || job.get("scan").and_then(Value::as_str) != Some(scan_id)
+    {
+        return Err(invalid_request());
+    }
+    let mut extensions = app.extensions.lock().map_err(internal)?;
+    extensions.sweep_scans();
+    let Some(scan) = extensions.form_scans.get_mut(scan_id) else {
+        return Err(ApiError(StatusCode::NOT_FOUND, "form_scan_unknown"));
+    };
+    scan.job = Some(text);
+    Ok(Json(json!({"accepted": true, "scan_id": scan_id})))
 }
 
 #[derive(Serialize, Deserialize)]
@@ -488,6 +751,8 @@ async fn guard(State(app): State<VaultApp>, req: Request, next: Next) -> Respons
         "/api/password-vault/extension/unlock/start"
             | "/api/password-vault/extension/unlock/poll"
             | "/api/password-vault/extension/unlock/cancel"
+            | "/api/password-vault/extension/blind-scan"
+            | "/api/password-vault/extension/blind-job/poll"
     );
     let cors_origin = origin
         .filter(|value| extension_route && extension_origin(value))
@@ -532,6 +797,7 @@ async fn guard(State(app): State<VaultApp>, req: Request, next: Next) -> Respons
         && cors_origin.is_none()
         && !broker::agent_transport(req.headers(), req.uri().path())
         && !transfer::agent_transport(req.headers(), req.uri().path())
+        && !form_relay_transport(req.headers(), req.uri().path())
     {
         forbidden("local_vault_denied").into_response()
     } else {
@@ -669,6 +935,26 @@ pub async fn run(data: &Path, port: u16, open: bool) -> Result<(), Box<dyn std::
         .route(
             "/api/password-vault/extension/connect",
             axum::routing::post(connect),
+        )
+        .route(
+            "/api/password-vault/extension/blind-scan",
+            axum::routing::post(blind_scan_publish),
+        )
+        .route(
+            "/api/password-vault/extension/blind-job/poll",
+            axum::routing::post(blind_job_poll),
+        )
+        .route(
+            "/api/password-vault/form-relay/connect",
+            axum::routing::post(relay_connect),
+        )
+        .route(
+            "/api/password-vault/form-relay/scan/latest",
+            axum::routing::post(relay_scan_latest),
+        )
+        .route(
+            "/api/password-vault/form-relay/job",
+            axum::routing::post(relay_job_submit),
         )
         .route("/api/password-vault", get(read).post(save))
         .route("/api/password-vault/read", axum::routing::post(read_post))

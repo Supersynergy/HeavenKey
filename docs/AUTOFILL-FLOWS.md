@@ -132,6 +132,28 @@ Die Besitzerin oder der Besitzer prüft die sichtbare Zuordnung, bestätigt die 
 und startet das Füllen selbst. Änderungen an Seite, Feld, Formular oder Formularziel
 machen den Auftrag unbrauchbar.
 
+## Vermittelter Agentenauftrag ohne Kopieren (0.32)
+
+Zusätzlich zum sichtbaren Kopierweg kann die lokale Vermittlung (form relay) denselben
+wertefreien Austausch automatisch transportieren. Die Besitzerin oder der Besitzer erzeugt
+in HeavenKey wie bei der Browserkopplung einen Einmal-Code und meldet das Agentenwerkzeug
+einmalig an: `bun scripts/blind_form_agent.ts enroll CODE`. Der Agent erhält ein eigenes,
+widerrufliches **Vermittlungs**-Zugangstoken. Dieses Token berechtigt ausschließlich zum
+Lesen des neuesten Scans und zum Einreichen von Aufträgen — niemals zum Tresor, zu
+Profilwerten, zu Kopplungsverwaltung oder zu sonstigen Endpunkten.
+
+Nach der manuellen Feldprüfung überträgt die Erweiterung den blinden Scan an den lokalen
+Dienst; der Agent holt ihn mit `scan` ab oder erzeugt und reicht den Auftrag in einem
+Schritt mit `bun scripts/blind_form_agent.ts auto` ein (Optionen wie `--submit`,
+`--overwrite`, `--no-choices`, `--map FIELD_ID=ENTITY` entsprechen dem Referenzplaner).
+Scans und Aufträge liegen nur flüchtig im Speicher des Dienstes, sind an Scan-ID und die
+publishierende Erweiterung gebunden und überleben keinen Neustart. Die Abnahmepflichten
+bleiben unverändert: Die Erweiterung zeigt den eingegangenen Auftrag nur als Vorauswahl,
+sämtliche Sonderfreigaben bleiben unmarkiert und die Besitzerin oder der Besitzer bestätigt
+Zuordnung, Herkunft und Füllen selbst. Der sichtbare Kopierweg bleibt als Ausweichweg
+bestehen. Mehrstufige Anträge werden als Folge einzelner Seiten bearbeitet: Scan, Auftrag,
+Bestätigung und gebundenes Absenden je Schritt, danach die nächste Seite.
+
 Füllen und Absenden bleiben getrennte Risiken. Ein Auftrag kann einmaliges Absenden nur
 anfragen. Zusätzlich zur normalen Herkunftsbestätigung ist eine eigene Absende-Freigabe
 nötig. Die erste Version löst Absenden ausschließlich bei genau einem zusammenhängenden
