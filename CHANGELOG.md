@@ -5,6 +5,7 @@
 - Android-Wallet-Pilot für synthetische Mitgliedschaften, ausgewählte Angaben und sitzungsgebundenen Zugang zu genau einem Testprojekt. Nachweise und Schlüssel liegen in einer eigenen nativen Ablage.
 - Unveränderliche Freigaben für einen einmaligen Rechnungsentwurf. Der lokale Testdienst prüft Rechte und Widerruf vor der Ausführung. Wiederholungen erzeugen keinen weiteren Entwurf.
 - Optionales AYA-Profil und dokumentierter Integrationsvertrag für einen Office-Testmandanten. Wallet-Nutzung erfordert einen separat konfigurierten App-Build.
+- Blinde Formularautomatisierung für Drittwerkzeuge: Die Browser-Erweiterung stellt nach manueller Feldprüfung einen wertefreien Scan bereit und prüft den ebenfalls wertefreien Agentenauftrag strikt gegen Scan, Adresse und Herkunft. Gefüllt wird erst nach ausdrücklicher Bestätigung; Absenden bleibt eine getrennte Freigabe für ein einzelnes zielgleiches POST-Formular. Eigene `custom_…`-Antragsfelder decken nicht standardisierte Behörden- und Fachformulare ab und gelten vorsorglich als sensibel.
 - Übernimmt Tresorwahl, Browserkopplung, Formularhilfen und Sperrkorrekturen aus 0.31. Die Vorschau trennt Wallet-Emulatornachweis, allgemeine Android-Pakete und Herausgebersignaturen.
 - Überarbeitetes Schlüssel-Titelbild, aktuelle Installationslinks und gemeinsame Paketabnahme. Die einmaligen Office-Betriebsskripte aus der früheren Vorschau sind aus dem aktuellen Paketquellstand entfernt. [Release-Details](docs/releases/0.32.0.md)
 
